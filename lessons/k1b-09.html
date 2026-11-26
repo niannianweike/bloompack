@@ -1,0 +1,1937 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第9课 天空中的太阳 · 日影规律与太阳辨方向</title>
+<style>
+:root{--accent:#e56d17;--ink:#2a241b;--line:#e5d4b6;--card:rgba(255,253,248,.94)}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#88c8f7;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.46em;color:#7a674d;font-weight:600}
+body.no-py rt{display:none}
+
+/* 护目镜淡暖色防护滤镜框线（pointer-events:none 绝不阻挡点击） */
+#goggleOverlay{position:fixed;inset:0;pointer-events:none;z-index:2;opacity:0;transition:opacity .3s;
+  background:radial-gradient(ellipse at center,rgba(255,212,130,.06) 48%,rgba(120,72,18,.28) 100%);
+  box-shadow:inset 0 0 0 8px rgba(72,48,20,.38),inset 0 0 36px rgba(245,158,11,.20)}
+body.goggles-on #goggleOverlay{opacity:1}
+#goggleTag{position:fixed;bottom:92px;left:14px;z-index:5;pointer-events:none;opacity:0;transition:opacity .25s;
+  padding:5px 12px;border-radius:99px;background:rgba(44,32,16,.86);border:1.5px solid #fbbf24;color:#fef3c7;
+  font-size:12.5px;font-weight:900}
+body.goggles-on #goggleTag{opacity:1}
+
+/* 安全警告浮条（未戴护目镜直视太阳时弹出） */
+#warnToast{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-10px);z-index:12;
+  padding:9px 16px;border-radius:14px;background:#fef3c7;border:2px solid #d97706;color:#92400e;
+  font-size:13.5px;font-weight:900;box-shadow:0 8px 22px rgba(146,64,14,.25);
+  opacity:0;pointer-events:none;transition:all .25s;max-width:min(460px,92vw);text-align:center}
+#warnToast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* 日影规律总结横幅（5个时段集齐后清晰总结3段日影规律） */
+#shadowSummary{position:fixed;left:14px;top:76px;z-index:5;display:none;flex-direction:column;gap:5px;
+  padding:9px 13px;border-radius:15px;background:rgba(255,252,242,.95);border:2px solid #e56d17;
+  box-shadow:0 6px 18px rgba(130,68,12,.18);max-width:246px;font-size:12px;font-weight:800;color:#5a3309;line-height:1.45}
+#shadowSummary.show{display:flex;animation:pop .3s ease-out}
+.ss-title{font-size:12.5px;font-weight:900;color:#b8500a}
+.ss-chips{display:flex;flex-direction:column;gap:3px}
+.ss-chip{padding:3px 7px;border-radius:8px;font-size:11.5px;font-weight:900;display:flex;justify-content:space-between}
+.ss-chip.c8{background:#fef3c7;color:#92400e;border:1px solid #f59e0b}
+.ss-chip.c12{background:#dbeafe;color:#1e40af;border:1px solid #3b82f6}
+.ss-chip.c16{background:#ffedd5;color:#9a3412;border:1px solid #ea580c}
+
+/* 步骤3 指向 3D 空白方位牌的悬浮方向选字气泡（使用 div role=button，零底部文本按钮！） */
+#dirPicker{position:fixed;left:0;top:0;transform:translate(-50%,-100%);z-index:11;display:none;
+  flex-direction:column;align-items:center;gap:7px;padding:10px 13px 11px;border-radius:18px;
+  background:rgba(255,253,246,.98);border:2.5px solid #2563eb;
+  box-shadow:0 10px 28px rgba(30,58,138,.28);min-width:198px;max-width:265px}
+#dirPicker.show{display:flex;animation:pop .24s cubic-bezier(.2,1.5,.4,1)}
+#dirPicker::after{content:'';position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);
+  border-width:9px 9px 0 9px;border-style:solid;border-color:#2563eb transparent transparent transparent}
+.dp-head{font-size:13px;font-weight:900;color:#1e3a8a;text-align:center;line-height:1.35}
+.dp-sub{font-size:11px;font-weight:800;color:#64748b;text-align:center}
+.dp-row{display:flex;gap:8px;justify-content:center;width:100%}
+.dp-chip{flex:1;min-width:52px;height:44px;border-radius:13px;display:grid;place-items:center;
+  font-size:21px;font-weight:900;cursor:pointer;border:2px solid #93c5fd;background:#eff6ff;color:#1d4ed8;
+  box-shadow:0 3px 0 #93c5fd;transition:all .14s}
+.dp-chip:hover{transform:translateY(-2px);background:#2563eb;color:#fff;border-color:#1d4ed8;box-shadow:0 4px 0 #1e40af}
+.dp-chip:active{transform:translateY(1px);box-shadow:0 1px 0 #1e40af}
+.dp-chip.wrong{background:#fee2e2;border-color:#ef4444;color:#b91c1c;box-shadow:0 2px 0 #f87171;animation:shake .32s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* 左上标题卡片 */
+#hudTL{position:fixed;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:10px;
+  padding:7px 14px 7px 9px;border-radius:16px;background:var(--card);border:1.5px solid var(--line);
+  box-shadow:0 4px 16px rgba(45,30,10,.16)}
+#backBtn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:#5c4b34;font-size:19px;font-weight:900}
+#backBtn:hover{border-color:var(--accent);color:var(--accent)}
+.hd-t{font-size:16px;font-weight:900;line-height:1.5}
+.hd-sub{font-size:11.5px;color:#7b6c56;font-weight:700}
+
+/* 顶部中央动态分步小助手 */
+#guideBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:6;
+  max-width:min(460px,calc(100vw - 640px));display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:15px;background:rgba(255,250,240,.96);
+  border:2px solid #f08a24;box-shadow:0 6px 18px rgba(130,68,12,.18);
+  font-size:13.5px;font-weight:800;color:#753a07;cursor:pointer;line-height:1.38;transition:all .2s}
+#guideBar:active{transform:translateX(-50%) scale(.98)}
+#guideBar.done{border-color:#16a34a;background:#f0fdf4;color:#166534}
+@media (max-width:1180px){
+  #guideBar{top:62px;left:12px;transform:none;max-width:min(450px,calc(100vw - 260px))}
+  #guideBar:active{transform:scale(.98)}
+  #shadowSummary{top:116px}
+}
+
+/* 右上工具条 */
+#hudTR{position:fixed;top:12px;right:12px;z-index:7;display:flex;align-items:center;gap:6px}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:38px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);
+  background:var(--card);font-family:inherit;font-size:13.5px;font-weight:800;color:#4a3c28;cursor:pointer;
+  box-shadow:0 3px 0 #d9c8ab;transition:all .14s;white-space:nowrap}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:#b8500a;color:#fff;box-shadow:0 3px 0 #b8500a}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#ffedd5;border:1.5px solid var(--accent);color:#b44908;font-size:10.5px;font-weight:900;
+  white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(229,109,23,.24);
+  animation:cuePop 1.6s ease-in-out infinite;transition:opacity .25s}
+body.interacted .entry-cue{opacity:0;animation:none}
+@keyframes cuePop{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+
+/* 右上可收起窄版发现栏（D3） */
+#notes{position:fixed;top:60px;right:12px;z-index:6;width:224px;padding:9px 11px;border-radius:15px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 6px 18px rgba(40,30,15,.14)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+.nt-title{font-size:13.5px;font-weight:900}
+.nt-cnt{font-size:12.5px;font-weight:900;color:var(--accent)}
+.nt-tog{padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:11px;font-weight:800;color:#6c5c45;cursor:pointer}
+.stamps{display:flex;gap:4px;margin-bottom:6px}
+.st{flex:1;text-align:center;padding:3px 2px;border-radius:8px;font-size:11px;font-weight:800;
+  border:1.5px dashed #d7c5a4;color:#9b8a70;background:#faf4e8;transition:all .2s;line-height:1.45}
+.st.lit{border-style:solid;border-color:var(--accent);background:#fff2df;color:#b8500a;animation:pop .4s cubic-bezier(.2,1.6,.4,1)}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList,#notes.collapsed .stamps{display:none}
+#notes.collapsed .nt-head{margin-bottom:0}
+.stk{padding:5px 8px;border-radius:10px;background:#fff;border:1px solid #ece0c9;font-size:12px;font-weight:700;line-height:1.42;animation:pop .4s cubic-bezier(.2,1.5,.4,1)}
+@keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* 飘浮反馈词 */
+#floatLayer{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden}
+.fword{position:absolute;transform:translate(-50%,-100%);padding:5px 12px;border-radius:99px;
+  background:rgba(255,253,245,.96);border:2px solid var(--accent);color:#9a3c07;
+  font-size:14.5px;font-weight:900;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.15);
+  animation:floatUp 1.65s ease-out forwards}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-60%) scale(.7)}18%{opacity:1;transform:translate(-50%,-100%) scale(1.05)}100%{opacity:0;transform:translate(-50%,-185%) scale(1)}}
+
+/* 单焦点 3D 跳动指引气泡（pointer-events:none 绝不遮挡点击） */
+#targetCue{position:fixed;left:0;top:0;transform:translate(-50%,-100%);z-index:5;pointer-events:none;
+  padding:5px 13px;border-radius:99px;background:#fff7ed;border:2px solid #ea580c;color:#9a3412;
+  font-size:13px;font-weight:900;white-space:nowrap;box-shadow:0 4px 14px rgba(234,88,12,.30);
+  display:none;animation:cueBob 1.3s ease-in-out infinite}
+#targetCue.show{display:block}
+@keyframes cueBob{0%,100%{transform:translate(-50%,-100%) translateY(0)}50%{transform:translate(-50%,-100%) translateY(-6px)}}
+
+/* 底部极简太阳时间滑杆（U7：extraBtns === 0） */
+#bottomDock{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:6;
+  width:min(540px,calc(100vw - 24px));padding:8px 14px 9px;border-radius:20px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 8px 24px rgba(30,22,12,.18);
+  display:flex;flex-direction:column;gap:6px}
+.slot-dots{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+.sdot{padding:2px 8px;border-radius:99px;font-size:11.5px;font-weight:800;
+  background:#faf4e8;border:1.5px solid #e5d4b6;color:#8c775c;transition:all .18s}
+.sdot.active{border-color:var(--accent);background:#fff3e0;color:#b8500a}
+.sdot.done{border-color:#16a34a;background:#dcfce7;color:#166534}
+.slider-row{display:flex;align-items:center;gap:9px}
+.time-pill{min-width:104px;padding:4px 10px;border-radius:10px;background:#fff4e2;border:1.5px solid #f0c286;
+  text-align:center;font-size:12.5px;font-weight:900;color:#9a3c07;white-space:nowrap}
+.end-tag{font-size:12px;font-weight:900;color:#7b6c56;white-space:nowrap;flex:none}
+#sunSlider{flex:1;height:10px;-webkit-appearance:none;appearance:none;border-radius:99px;
+  background:linear-gradient(90deg,#f59e0b,#38bdf8,#f97316);border:1.5px solid #d7c5a4;outline:none;cursor:pointer}
+#sunSlider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:23px;height:23px;border-radius:50%;
+  background:#fff;border:3px solid var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.22);cursor:pointer}
+
+/* 通关弹窗 */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+#winToast{position:fixed;inset:0;z-index:35;display:none;place-items:center;background:rgba(36,24,10,.36);padding:16px}
+#winToast.show{display:grid}
+.win-card{width:min(460px,100%);max-height:86vh;overflow-y:auto;background:#fffdf8;
+  border:2.5px solid var(--accent);border-radius:22px;padding:18px 20px;text-align:center;
+  box-shadow:0 20px 50px rgba(40,22,4,.28);animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+.win-concl{margin:10px 0;padding:10px 12px;border-radius:13px;background:#fff8eb;border:1.5px solid #f2cf9b;
+  text-align:left;font-size:13.5px;line-height:1.6;color:#5a3309}
+.win-quiz{margin:10px 0;padding:10px 12px;border-radius:13px;background:#f8fafc;border:1.5px solid #d9e2ec;text-align:left}
+.win-quiz h4{margin:0 0 7px;font-size:13.5px;color:#2b3a4a}
+.qopts{display:flex;flex-direction:column;gap:7px}
+.qopt{padding:8px 11px;border-radius:11px;border:1.5px solid #d9d0be;background:#fff;
+  font-family:inherit;font-size:13.5px;font-weight:800;text-align:left;cursor:pointer;transition:all .14s;color:var(--ink)}
+.qopt:hover{border-color:var(--accent);background:#fff9f0}
+.qopt.ok{border-color:#2b8a3e;background:#ebfbee;color:#2b8a3e}
+.qopt.bad{border-color:#e03131;background:#fff5f5;color:#c92a2a}
+.qfb{margin-top:7px;font-size:12.5px;font-weight:800;min-height:18px;color:#b45309}
+.qfb.ok{color:#2b8a3e}
+.win-acts{display:flex;justify-content:center;gap:10px;margin-top:12px}
+
+@media (max-width:760px){
+  #hudTL{top:8px;left:8px;padding:5px 10px 5px 6px}
+  .hd-t{font-size:14px}.hd-sub{display:none}
+  #hudTR{top:8px;right:8px;gap:4px}.tbtn{height:32px;padding:0 8px;font-size:12px}
+  .entry-cue{display:none}
+  #guideBar{top:48px;left:8px;right:8px;max-width:none;font-size:12px;padding:5px 10px}
+  #shadowSummary{display:none!important}
+  #notes{top:auto;bottom:112px;right:8px;width:200px}
+  #ntList{max-height:66px}
+  #bottomDock{bottom:8px;padding:6px 10px}
+  .sdot{padding:2px 6px;font-size:10.5px}
+  .time-pill{min-width:86px;font-size:11.5px}
+}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="goggleOverlay"></div>
+<div id="goggleTag">🕶️ 护目镜已戴好 · 可安全拖动太阳观察</div>
+<div id="warnToast">⚠️ 太阳太刺眼啦！先把草地上的护目镜拖到小朋友脸上戴好再观察吧！</div>
+<div id="targetCue">👆 拖或点护目镜戴上 🕶️</div>
+
+<div id="shadowSummary">
+  <div class="ss-title">☀️ 3段日影规律对比（太阳和影子对着跑！）</div>
+  <div class="ss-chips">
+    <span class="ss-chip c8"><span>🌅 8时·太阳在东</span><span>影子朝西很长</span></span>
+    <span class="ss-chip c12"><span>☀️ 12时·太阳最高</span><span>影子朝北最短</span></span>
+    <span class="ss-chip c16"><span>🌇 16时·太阳在西</span><span>影子朝东很长</span></span>
+  </div>
+</div>
+
+<div id="dirPicker">
+  <div class="dp-head" id="dpHead">贴到【身后】方位牌：</div>
+  <div class="dp-sub" id="dpSub">口诀：早晨面朝东，前东后西左北右南</div>
+  <div class="dp-row" id="dpRow"></div>
+</div>
+
+<div id="floatLayer"></div>
+<canvas id="confetti"></canvas>
+
+<div id="hudTL">
+  <a id="backBtn" href="../index.html" title="返回书包">‹</a>
+  <div>
+    <div class="hd-t" data-py="dì kè tiān kōng zhōng de tài yáng">第9课 天空中的太阳</div>
+    <div class="hd-sub">活页 · 课本第 40 页「日影规律对比与太阳辨方向」</div>
+  </div>
+</div>
+
+<div id="guideBar" title="点我重听当前步骤">
+  <span id="guideIco">🕶️</span>
+  <span id="guideTxt">第1步：太阳很刺眼！把操场草地上的3D护目镜拖到小同学脸上戴好吧！</span>
+</div>
+
+<div id="hudTR">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<aside id="notes">
+  <div class="nt-head">
+    <span class="nt-title" data-py="wǒ de fā xiàn">我的发现</span>
+    <span class="nt-cnt" id="ntCnt">0/8</span>
+    <button class="nt-tog" id="ntTog" type="button">收起</button>
+  </div>
+  <div class="stamps">
+    <span class="st" id="st1" data-py="hù mù ān quán">护目安全</span>
+    <span class="st" id="st2" data-py="rì guǐ yǔ yǐng">日轨与影</span>
+    <span class="st" id="st3" data-py="tài yáng biàn xiàng">太阳辨向</span>
+  </div>
+  <div id="ntList"></div>
+</aside>
+
+<div id="bottomDock">
+  <div class="slot-dots">
+    <span class="sdot active" id="dot_t8" data-slot="t8">8时·东</span>
+    <span class="sdot" id="dot_t10" data-slot="t10">10时</span>
+    <span class="sdot" id="dot_t12" data-slot="t12">12时·南</span>
+    <span class="sdot" id="dot_t14" data-slot="t14">14时</span>
+    <span class="sdot" id="dot_t16" data-slot="t16">16时·西</span>
+  </div>
+  <div class="slider-row">
+    <span class="time-pill" id="timeLabel">☀️ 早上 8 时</span>
+    <span class="end-tag">🌅 8时</span>
+    <input id="sunSlider" type="range" min="8" max="16" step="0.25" value="8" aria-label="8时到16时太阳位置滑杆">
+    <span class="end-tag">🌇 16时</span>
+  </div>
+</div>
+
+<div id="winToast">
+  <div class="win-card">
+    <div style="font-size:40px">🏆</div>
+    <h3 style="margin:4px 0" data-py="tài bàng la tài yáng guī lǜ quán zhǎng wò">太棒啦！太阳规律全掌握！</h3>
+    <div class="win-concl">
+      <b>✨ 科学小结论：</b>一天中太阳东升西落、中午最高，<b>太阳和影子总是对着跑</b>（早西长、午北短、晚东长）；早晨面向东方太阳是<b>前东、后西、左北、右南</b>，傍晚面向西方太阳方向全反过来！
+    </div>
+    <div class="win-quiz">
+      <h4>💡 考考你 · 答对领小红花 🌸</h4>
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:8px">傍晚放学时，小同学面向西边的太阳张开双臂，他的前面、后面、左边、右边分别是什么方向？</div>
+      <div class="qopts" id="qOpts">
+        <button class="qopt" type="button" data-ok="1">🧭 前面是西，后面是东，左边是南，右边是北</button>
+        <button class="qopt" type="button" data-hint="再想想哦！那是早晨面向东方太阳时的方向。">🌅 前面是东，后面是西，左边是北，右边是南</button>
+        <button class="qopt" type="button" data-hint="再想想哦！太阳在西边时，前面肯定是西边呢！">☀️ 前面是南，后面是北，左边是东，右边是西</button>
+      </div>
+      <div class="qfb" id="qFb"></div>
+    </div>
+    <div class="win-acts">
+      <button class="tbtn" id="winKeepBtn" type="button">继续玩</button>
+      <button class="tbtn on" id="winAgainBtn" type="button">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js"></script>
+<script src="../vendor/voice.js"></script>
+<script>
+(function () {
+'use strict';
+
+try { sessionStorage.setItem('xk_last_vol', 'k1b'); } catch (e) {}
+
+var LESSON_ID = 'k1b-09';
+var BOOK_PROGRESS_KEY = 'xk_k1b_progress';
+
+var $ = function (s) { return document.querySelector(s); };
+var HAN = /[\u3400-\u9fff]/;
+var pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function ruby(text, py) {
+  if (!py) return esc(text);
+  var syl = py.trim().split(/\s+/), i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) {
+      var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; }
+      out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>';
+    } else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+document.querySelectorAll('[data-py]').forEach(function (el) { el.innerHTML = ruby(el.textContent, el.dataset.py); });
+
+$('#backBtn').addEventListener('click', function () {
+  try { sessionStorage.setItem('xk_last_vol', 'k1b'); } catch (e) {}
+});
+
+/* ===== 语音与音效 ===== */
+var voiceOn = true;
+function stopVoice() {
+  if (window.__xkVoice) window.__xkVoice.stop();
+  else if (window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
+}
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
+  if (!('speechSynthesis' in window)) return;
+  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+}
+var audioCtx = null;
+function playChime(freqs) {
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!audioCtx) audioCtx = new AC();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    var now = audioCtx.currentTime;
+    freqs.forEach(function (f, idx) {
+      var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(f, now + idx * 0.08);
+      g.gain.setValueAtTime(0.001, now + idx * 0.08);
+      g.gain.exponentialRampToValueAtTime(0.11, now + idx * 0.08 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.24);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(now + idx * 0.08); o.stop(now + idx * 0.08 + 0.26);
+    });
+  } catch (e) {}
+}
+
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem(BOOK_PROGRESS_KEY) || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem(BOOK_PROGRESS_KEY, JSON.stringify(d));
+  } catch (e) {}
+}
+
+/* ===== 彩带 ===== */
+var cCv = $('#confetti'), cCtx = cCv.getContext('2d'), confettiParts = [];
+function resizeConfetti() { cCv.width = window.innerWidth; cCv.height = window.innerHeight; }
+function burstConfetti() {
+  confettiParts = [];
+  var cols = ['#f59e0b', '#ef4444', '#3b82f6', '#10b981', '#ec4899', '#eab308'];
+  for (var i = 0; i < 85; i++) {
+    confettiParts.push({
+      x: cCv.width * (0.2 + Math.random() * 0.6), y: cCv.height * 0.3,
+      vx: (Math.random() - 0.5) * 9, vy: -4 - Math.random() * 7,
+      s: 6 + Math.random() * 6, r: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.25,
+      col: cols[i % cols.length], life: 1
+    });
+  }
+}
+function tickConfetti() {
+  if (!confettiParts.length) return;
+  cCtx.clearRect(0, 0, cCv.width, cCv.height);
+  for (var i = confettiParts.length - 1; i >= 0; i--) {
+    var p = confettiParts[i];
+    p.x += p.vx; p.y += p.vy; p.vy += 0.22; p.r += p.vr; p.life -= 0.008;
+    if (p.life <= 0 || p.y > cCv.height + 20) { confettiParts.splice(i, 1); continue; }
+    cCtx.save(); cCtx.globalAlpha = Math.max(0, p.life);
+    cCtx.translate(p.x, p.y); cCtx.rotate(p.r);
+    cCtx.fillStyle = p.col; cCtx.fillRect(-p.s * 0.5, -p.s * 0.3, p.s, p.s * 0.6);
+    cCtx.restore();
+  }
+}
+
+/* ===== CanvasTexture 工具函数 ===== */
+function makePillTex(txt, bg, border, fg, w, h, fontSize) {
+  var c = document.createElement('canvas'); c.width = w || 260; c.height = h || 78;
+  var g = c.getContext('2d');
+  g.fillStyle = bg;
+  g.beginPath();
+  if (g.roundRect) g.roundRect(4, 4, c.width - 8, c.height - 8, 22);
+  else g.rect(4, 4, c.width - 8, c.height - 8);
+  g.fill();
+  g.strokeStyle = border; g.lineWidth = 6; g.stroke();
+  g.fillStyle = fg || '#ffffff';
+  g.font = 'bold ' + (fontSize || 34) + 'px "Microsoft YaHei", sans-serif';
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText(txt, c.width / 2, c.height / 2 + 2);
+  return new THREE.CanvasTexture(c);
+}
+
+/* ===== Three.js r147 校园操场 + 教学楼 + 升旗台 + 3段日影轨迹 + 3D小同学 ===== */
+var cv = $('#cv');
+var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color('#80c8f6');
+
+var camera = new THREE.PerspectiveCamera(38, 16 / 9, 0.1, 100);
+camera.position.set(0.35, 6.45, 13.95);
+camera.lookAt(0.35, 1.72, -0.75);
+
+var hemiL = new THREE.HemisphereLight('#fffaf0', '#7e9468', 0.84);
+scene.add(hemiL);
+var sunL = new THREE.DirectionalLight('#fff6d9', 0.92);
+sunL.position.set(10, 5, 3);
+sunL.castShadow = true;
+sunL.shadow.mapSize.set(1024, 1024);
+sunL.shadow.camera.left = -10; sunL.shadow.camera.right = 10;
+sunL.shadow.camera.top = 10; sunL.shadow.camera.bottom = -10;
+scene.add(sunL);
+
+var toon = function (col, opts) { return new THREE.MeshToonMaterial(Object.assign({ color: col }, opts || {})); };
+var live = new THREE.Group();
+scene.add(live);
+
+/* 1. 操场与草坪 */
+var lawn = new THREE.Mesh(new THREE.BoxGeometry(24, 0.4, 18), toon('#78ba5e'));
+lawn.position.set(0, -0.2, -0.5); lawn.receiveShadow = true;
+live.add(lawn);
+
+var yard = new THREE.Mesh(new THREE.BoxGeometry(12.2, 0.08, 7.8), toon('#dec396'));
+yard.position.set(0, 0.02, 0.85); yard.receiveShadow = true;
+live.add(yard);
+
+// 中央辨方向圆形活动垫
+var compassMat = new THREE.Mesh(new THREE.CylinderGeometry(2.35, 2.35, 0.04, 36), toon('#f6c774'));
+compassMat.position.set(0, 0.07, 1.95); compassMat.receiveShadow = true;
+live.add(compassMat);
+
+/* 2. 校园教学楼 */
+var school = new THREE.Group();
+school.position.set(0, 0, -4.8);
+live.add(school);
+
+var bMain = new THREE.Mesh(new THREE.BoxGeometry(2.8, 3.1, 1.8), toon('#f5edd9'));
+bMain.position.set(0, 1.55, 0); bMain.castShadow = true; bMain.receiveShadow = true; school.add(bMain);
+var bMainRoof = new THREE.Mesh(new THREE.BoxGeometry(2.96, 0.16, 1.94), toon('#f3d37a'));
+bMainRoof.position.set(0, 3.18, 0); school.add(bMainRoof);
+
+var bLeft = new THREE.Mesh(new THREE.BoxGeometry(3.2, 2.2, 1.6), toon('#f5edd9'));
+bLeft.position.set(-2.95, 1.1, -0.1); bLeft.castShadow = true; bLeft.receiveShadow = true; school.add(bLeft);
+var bLeftRoof = new THREE.Mesh(new THREE.BoxGeometry(3.32, 0.14, 1.72), toon('#e7a4b5'));
+bLeftRoof.position.set(-2.95, 2.26, -0.1); school.add(bLeftRoof);
+
+var bRight = new THREE.Mesh(new THREE.BoxGeometry(3.2, 2.2, 1.6), toon('#f5edd9'));
+bRight.position.set(2.95, 1.1, -0.1); bRight.castShadow = true; bRight.receiveShadow = true; school.add(bRight);
+var bRightRoof = new THREE.Mesh(new THREE.BoxGeometry(3.32, 0.14, 1.72), toon('#e7a4b5'));
+bRightRoof.position.set(2.95, 2.26, -0.1); school.add(bRightRoof);
+
+var door = new THREE.Mesh(new THREE.PlaneGeometry(1.15, 0.92), new THREE.MeshBasicMaterial({ color: '#9cd0e8' }));
+door.position.set(0, 0.52, 0.92); school.add(door);
+var winM = new THREE.MeshBasicMaterial({ color: '#a8d5e5' });
+for (var r = 0; r < 2; r++) {
+  for (var c = -1; c <= 1; c++) {
+    var wm = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.48), winM);
+    wm.position.set(c * 0.72, 1.55 + r * 0.85, 0.92); school.add(wm);
+  }
+}
+[-4.0, -3.2, -2.4, -1.8, 1.8, 2.4, 3.2, 4.0].forEach(function (wx) {
+  [0.75, 1.55].forEach(function (wy) {
+    var w = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.44), winM);
+    w.position.set(wx, wy, 0.72); school.add(w);
+  });
+});
+
+function makeTree(x, z, s) {
+  var g = new THREE.Group();
+  var tk = new THREE.Mesh(new THREE.CylinderGeometry(0.12 * s, 0.16 * s, 1.0 * s, 8), toon('#7c5230'));
+  tk.position.y = 0.5 * s; tk.castShadow = true; g.add(tk);
+  var cr = new THREE.Mesh(new THREE.SphereGeometry(0.68 * s, 12, 10), toon('#5aa84d'));
+  cr.position.y = 1.32 * s; cr.scale.set(1, 1.25, 1); cr.castShadow = true; g.add(cr);
+  g.position.set(x, 0, z); live.add(g);
+}
+makeTree(-5.5, -4.4, 1.25);
+makeTree(-4.6, -3.7, 0.88);
+makeTree(5.4, -4.4, 1.2);
+makeTree(4.5, -3.6, 0.85);
+
+/* 3. 中央升旗台 + 红旗旗杆 + 实时日影 + 永久 3 段日影对比残影（8时/12时/16时） */
+var FLAG_Z = -1.45;
+var flagGroup = new THREE.Group();
+flagGroup.position.set(0, 0, FLAG_Z);
+live.add(flagGroup);
+
+var dais = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.24, 0.98), toon('#e2e8f0'));
+dais.position.y = 0.12; dais.receiveShadow = true; dais.castShadow = true; flagGroup.add(dais);
+
+var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.055, 3.35, 10), toon('#cbd5e1'));
+pole.position.y = 1.9; pole.castShadow = true; pole.userData.hit = 'flag'; flagGroup.add(pole);
+var poleTop = new THREE.Mesh(new THREE.SphereGeometry(0.09, 10, 8), toon('#f59e0b'));
+poleTop.position.y = 3.6; flagGroup.add(poleTop);
+
+var flagSegs = [];
+for (var fs = 0; fs < 3; fs++) {
+  var seg = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.62, 0.04), toon('#e11d48'));
+  seg.position.set(0.2 + fs * 0.34, 3.16, 0);
+  seg.castShadow = true; seg.userData.hit = 'flag';
+  flagGroup.add(seg);
+  flagSegs.push(seg);
+}
+
+// 实时旗杆地面日影
+var poleShadowPivot = new THREE.Group();
+poleShadowPivot.position.set(0, 0.092, FLAG_Z);
+live.add(poleShadowPivot);
+var poleShadowMat = new THREE.MeshBasicMaterial({ color: '#29221b', transparent: true, opacity: 0.48 });
+var poleShadowMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.20, 1.0), poleShadowMat);
+poleShadowMesh.rotation.x = -Math.PI / 2;
+poleShadowMesh.position.z = 0.5;
+poleShadowMesh.userData.hit = 'shadow';
+poleShadowPivot.add(poleShadowMesh);
+
+// 永久留在地上的 3 段半透明带标牌日影对比残影（8时朝西很长、12时朝北最短、16时朝东很长）
+var shadowTrails = {};
+var shadowTrailSignMeshes = [];
+function calcSunPhysics(h) {
+  var u = Math.max(0, Math.min(1, (h - 8) / 8));
+  var sunDirX = Math.cos(u * Math.PI);
+  var sunDirZ = 0.22 + 0.78 * Math.sin(u * Math.PI);
+  var alt = 0.34 + 0.66 * Math.sin(u * Math.PI);
+  var shAngle = Math.atan2(-sunDirX, -sunDirZ);
+  var poleLen = 3.1 - alt * 1.95; // 8时/16时 ~2.44，12时 ~1.15
+  return { u: u, sunDirX: sunDirX, sunDirZ: sunDirZ, alt: alt, shAngle: shAngle, poleLen: poleLen };
+}
+
+[
+  { id: 't8',  h: 8,  fill: '#92400e', edge: '#f59e0b', bg: '#fffbeb', fg: '#92400e', label: '8时·朝西很长', signY: 0.42, signOffX: 0.35,  signOffZ: -0.05 },
+  { id: 't12', h: 12, fill: '#1e40af', edge: '#3b82f6', bg: '#eff6ff', fg: '#1e3a8a', label: '12时·朝北最短', signY: 0.96, signOffX: 0.85,  signOffZ: -0.18 },
+  { id: 't16', h: 16, fill: '#9a3412', edge: '#ea580c', bg: '#fff7ed', fg: '#9a3412', label: '16时·朝东很长', signY: 0.42, signOffX: 0.25,  signOffZ: 0.08 }
+].forEach(function (cfg) {
+  var ph = calcSunPhysics(cfg.h);
+  var grp = new THREE.Group();
+  grp.position.set(0, 0.082, FLAG_Z);
+  grp.visible = false;
+
+  var piv = new THREE.Group();
+  piv.rotation.y = ph.shAngle;
+  // 彩色半透明对比影带
+  var band = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.38, ph.poleLen),
+    new THREE.MeshBasicMaterial({ color: cfg.fill, transparent: true, opacity: 0.56 })
+  );
+  band.rotation.x = -Math.PI / 2;
+  band.position.z = ph.poleLen * 0.5;
+  band.userData.hit = 'trail_' + cfg.id;
+  piv.add(band);
+
+  // 影带两侧亮边线 + 影尖小三角
+  var rim = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.46, ph.poleLen + 0.08),
+    new THREE.MeshBasicMaterial({ color: cfg.edge, transparent: true, opacity: 0.34 })
+  );
+  rim.rotation.x = -Math.PI / 2;
+  rim.position.set(0, -0.002, ph.poleLen * 0.5);
+  piv.add(rim);
+
+  var tipDot = new THREE.Mesh(
+    new THREE.CircleGeometry(0.16, 16),
+    new THREE.MeshBasicMaterial({ color: cfg.edge, transparent: true, opacity: 0.85 })
+  );
+  tipDot.rotation.x = -Math.PI / 2;
+  tipDot.position.set(0, 0.004, ph.poleLen);
+  piv.add(tipDot);
+  grp.add(piv);
+
+  // 残影末端的清晰时间标牌（插在地面小立柱上，始终朝向镜头！）
+  var tipX = Math.sin(ph.shAngle) * ph.poleLen + cfg.signOffX;
+  var tipZ = Math.cos(ph.shAngle) * ph.poleLen + cfg.signOffZ;
+  var pin = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, cfg.signY, 8), toon(cfg.edge));
+  pin.position.set(tipX, cfg.signY * 0.5, tipZ);
+  grp.add(pin);
+
+  var tex = makePillTex(cfg.label, cfg.bg, cfg.edge, cfg.fg, 270, 74, 34);
+  var card = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.66, 0.46),
+    new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide })
+  );
+  card.position.set(tipX, cfg.signY + 0.24, tipZ);
+  card.userData.hit = 'trail_' + cfg.id;
+  grp.add(card);
+  shadowTrailSignMeshes.push(card);
+
+  live.add(grp);
+  shadowTrails[cfg.id] = { grp: grp, cfg: cfg, card: card };
+});
+
+/* 4. 操场仅保留清晰的【东(日出)】与【西(日落)】参照牌（不再在步骤1-2堆杂乱的4块死牌！） */
+function makeHorizonSign(txt, col, x, z, hitTag) {
+  var g = new THREE.Group();
+  var post = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.9, 8), toon('#785536'));
+  post.position.y = 0.45; post.castShadow = true; g.add(post);
+  var c = document.createElement('canvas'); c.width = 240; c.height = 78;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#fffdf6'; ctx.fillRect(0, 0, 240, 78);
+  ctx.strokeStyle = col; ctx.lineWidth = 10; ctx.strokeRect(5, 5, 230, 68);
+  ctx.fillStyle = col; ctx.font = 'bold 36px "Microsoft YaHei", sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(txt, 120, 41);
+  var tex = new THREE.CanvasTexture(c);
+  var board = new THREE.Mesh(
+    new THREE.BoxGeometry(1.48, 0.50, 0.08),
+    new THREE.MeshBasicMaterial({ map: tex })
+  );
+  board.position.y = 0.92;
+  board.userData.hit = hitTag;
+  g.add(board);
+  g.position.set(x, 0, z);
+  live.add(g);
+  return g;
+}
+makeHorizonSign('东 · 日出', '#ea580c', 5.05, -0.35, 'horizon_东');
+makeHorizonSign('西 · 日落', '#c2410c', -5.05, -0.35, 'horizon_西');
+
+/* 5. 操场中央 3D 小同学（佩戴红领巾，辨方向时面向太阳张开双臂） */
+var KID_POS = new THREE.Vector3(0, 0.09, 1.95);
+var kidPivot = new THREE.Group();
+kidPivot.position.copy(KID_POS);
+live.add(kidPivot);
+
+var legL = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.08, 0.56, 8), toon('#f6cfa8'));
+legL.position.set(-0.14, 0.28, 0); legL.castShadow = true; kidPivot.add(legL);
+var legR = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.08, 0.56, 8), toon('#f6cfa8'));
+legR.position.set(0.14, 0.28, 0); legR.castShadow = true; kidPivot.add(legR);
+var skirt = new THREE.Mesh(new THREE.ConeGeometry(0.34, 0.48, 12), toon('#3b82f6'));
+skirt.position.set(0, 0.68, 0); skirt.castShadow = true; skirt.userData.hit = 'kid'; kidPivot.add(skirt);
+var torso = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.25, 0.56, 12), toon('#ffffff'));
+torso.position.set(0, 1.06, 0); torso.castShadow = true; torso.userData.hit = 'kid'; kidPivot.add(torso);
+var scarf = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.3, 4), toon('#ef4444'));
+scarf.rotation.x = Math.PI; scarf.position.set(0, 1.15, 0.2); kidPivot.add(scarf);
+var head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 14), toon('#fbd5b0'));
+head.position.set(0, 1.56, 0); head.castShadow = true; head.userData.hit = 'kid'; kidPivot.add(head);
+var hair = new THREE.Mesh(new THREE.SphereGeometry(0.295, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.58), toon('#2a221c'));
+hair.position.set(0, 1.6, -0.02); kidPivot.add(hair);
+var eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), new THREE.MeshBasicMaterial({ color: '#111827' }));
+eyeL.position.set(-0.09, 1.57, 0.25); kidPivot.add(eyeL);
+var eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), new THREE.MeshBasicMaterial({ color: '#111827' }));
+eyeR.position.set(0.09, 1.57, 0.25); kidPivot.add(eyeR);
+
+var armLPiv = new THREE.Group(); armLPiv.position.set(-0.27, 1.24, 0);
+var armL = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.055, 0.55, 8), toon('#fbd5b0'));
+armL.position.y = -0.24; armL.castShadow = true; armLPiv.add(armL); kidPivot.add(armLPiv);
+var armRPiv = new THREE.Group(); armRPiv.position.set(0.27, 1.24, 0);
+var armR = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.055, 0.55, 8), toon('#fbd5b0'));
+armR.position.y = -0.24; armR.castShadow = true; armRPiv.add(armR); kidPivot.add(armRPiv);
+
+var kidHit = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.88, 0.88, 2.2, 14),
+  new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false })
+);
+kidHit.position.y = 1.05; kidHit.userData.hit = 'kid'; kidPivot.add(kidHit);
+
+// 3D 护目镜
+function buildGogglesMesh(tag) {
+  var g = new THREE.Group();
+  var frameMat = toon('#f97316');
+  var lensMat = new THREE.MeshBasicMaterial({ color: '#1e293b' });
+  var shineMat = new THREE.MeshBasicMaterial({ color: '#fde68a', transparent: true, opacity: 0.72 });
+  [-0.14, 0.14].forEach(function (lx) {
+    var rim = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.15, 0.06), frameMat);
+    rim.position.set(lx, 0, 0); rim.castShadow = true; rim.userData.hit = tag; g.add(rim);
+    var lens = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.105, 0.072), lensMat);
+    lens.position.set(lx, 0, 0.006); lens.userData.hit = tag; g.add(lens);
+    var shine = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.024, 0.01), shineMat);
+    shine.position.set(lx - 0.04, 0.026, 0.044); shine.rotation.z = 0.45; g.add(shine);
+  });
+  var bridge = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.04, 0.055), frameMat);
+  bridge.position.set(0, 0.015, 0); bridge.userData.hit = tag; g.add(bridge);
+  [-0.25, 0.25].forEach(function (tx) {
+    var arm = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.045, 0.26), frameMat);
+    arm.position.set(tx, 0.01, -0.12); arm.userData.hit = tag; g.add(arm);
+  });
+  return g;
+}
+
+var kidGoggles = buildGogglesMesh('kid');
+kidGoggles.position.set(0, 1.57, 0.27);
+kidGoggles.scale.setScalar(1.06);
+kidGoggles.visible = false;
+kidPivot.add(kidGoggles);
+
+var kidFaceHaloMat = new THREE.MeshBasicMaterial({ color: '#fde047', transparent: true, opacity: 0.75, side: THREE.DoubleSide });
+var kidFaceHalo = new THREE.Mesh(new THREE.RingGeometry(0.38, 0.50, 28), kidFaceHaloMat);
+kidFaceHalo.position.set(0, 1.56, 0.34);
+kidFaceHalo.visible = false;
+kidPivot.add(kidFaceHalo);
+
+var GOGGLE_HOME = new THREE.Vector3(-2.35, 0.36, 2.55);
+var gogglesProp = buildGogglesMesh('goggles');
+gogglesProp.scale.setScalar(2.35);
+gogglesProp.position.copy(GOGGLE_HOME);
+gogglesProp.rotation.set(-0.35, 0.38, 0);
+var goggleHit = new THREE.Mesh(
+  new THREE.SphereGeometry(0.75, 14, 12),
+  new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false })
+);
+goggleHit.userData.hit = 'goggles';
+gogglesProp.add(goggleHit);
+live.add(gogglesProp);
+
+var gogglesGroundHaloMat = new THREE.MeshBasicMaterial({ color: '#f59e0b', transparent: true, opacity: 0.78, side: THREE.DoubleSide });
+var gogglesGroundHalo = new THREE.Mesh(new THREE.RingGeometry(0.68, 0.92, 32), gogglesGroundHaloMat);
+gogglesGroundHalo.rotation.x = -Math.PI / 2;
+gogglesGroundHalo.position.set(GOGGLE_HOME.x, 0.08, GOGGLE_HOME.z);
+live.add(gogglesGroundHalo);
+
+// 小同学地面影子
+var kidShadowPivot = new THREE.Group();
+kidShadowPivot.position.set(KID_POS.x, 0.10, KID_POS.z);
+live.add(kidShadowPivot);
+var kidShadowMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.45, 0.85), poleShadowMat);
+kidShadowMesh.rotation.x = -Math.PI / 2;
+kidShadowMesh.position.z = 0.45;
+kidShadowPivot.add(kidShadowMesh);
+
+/* 6. 步骤3 互动立体方位牌槽位系统（前/后/左/右 围绕小同学，支持空白 ? 发光槽位与亲手贴牌！） */
+var dirRibbonGroup = new THREE.Group();
+dirRibbonGroup.position.set(KID_POS.x, 0.12, KID_POS.z);
+dirRibbonGroup.visible = false;
+live.add(dirRibbonGroup);
+
+function makeSignCardTex(txt, mode, col) {
+  var c = document.createElement('canvas'); c.width = 240; c.height = 104;
+  var g = c.getContext('2d');
+  var isBlank = (mode === 'blank' || mode === 'active');
+  g.fillStyle = isBlank ? (mode === 'active' ? '#eff6ff' : '#fffbeb') : col;
+  g.beginPath();
+  if (g.roundRect) g.roundRect(6, 6, 228, 92, 22); else g.rect(6, 6, 228, 92);
+  g.fill();
+  g.strokeStyle = isBlank ? (mode === 'active' ? '#2563eb' : '#f59e0b') : '#ffffff';
+  g.lineWidth = isBlank ? 8 : 6;
+  if (isBlank) g.setLineDash([14, 8]);
+  g.stroke();
+  g.setLineDash([]);
+  g.fillStyle = isBlank ? (mode === 'active' ? '#1d4ed8' : '#b45309') : '#ffffff';
+  g.font = 'bold 46px "Microsoft YaHei", sans-serif';
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText(txt, 120, 54);
+  return new THREE.CanvasTexture(c);
+}
+
+var ribbonSlots = {}; // key: 'front' | 'back' | 'left' | 'right'
+var blankSlotHitMeshes = [];
+var SLOT_DEFS = [
+  { key: 'front', col: '#ea580c', rotY: 0,           dist: 2.35, initTxt: '前·东' },
+  { key: 'back',  col: '#475569', rotY: Math.PI,     dist: 2.35, initTxt: '后·?' },
+  { key: 'left',  col: '#16a34a', rotY: Math.PI / 2, dist: 1.95, initTxt: '左·?' },
+  { key: 'right', col: '#2563eb', rotY: -Math.PI / 2,dist: 1.85, initTxt: '右·?' }
+];
+
+SLOT_DEFS.forEach(function (sd) {
+  var g = new THREE.Group();
+  g.rotation.y = sd.rotY;
+
+  var barLen = sd.dist - 0.55;
+  var barMat = new THREE.MeshBasicMaterial({ color: sd.col, transparent: true, opacity: 0.85 });
+  var bar = new THREE.Mesh(new THREE.PlaneGeometry(0.32, barLen), barMat);
+  bar.rotation.x = -Math.PI / 2;
+  bar.position.z = 0.45 + barLen * 0.5;
+  g.add(bar);
+
+  var tipMat = new THREE.MeshBasicMaterial({ color: sd.col });
+  var tip = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.44, 3), tipMat);
+  tip.rotation.x = Math.PI / 2;
+  tip.position.set(0, 0.05, sd.dist - 0.12);
+  g.add(tip);
+
+  // 槽位发光底座光环
+  var ringMat = new THREE.MeshBasicMaterial({ color: '#f59e0b', transparent: true, opacity: 0.0, side: THREE.DoubleSide });
+  var ring = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.58, 24), ringMat);
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.set(0, 0.03, sd.dist + 0.16);
+  g.add(ring);
+
+  // 立体方位牌（面向摄像头，transparent:true 彻底消除黑角！）
+  var cardMat = new THREE.MeshBasicMaterial({ map: makeSignCardTex(sd.initTxt, 'filled', sd.col), transparent: true, side: THREE.DoubleSide });
+  var card = new THREE.Mesh(new THREE.PlaneGeometry(1.42, 0.62), cardMat);
+  card.position.set(0, 0.68, sd.dist + 0.18);
+  card.userData.hit = 'rslot_' + sd.key;
+  g.add(card);
+
+  // 宽松透明点击碰撞球
+  var hit = new THREE.Mesh(
+    new THREE.SphereGeometry(0.85, 12, 10),
+    new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false })
+  );
+  hit.position.copy(card.position);
+  hit.userData.hit = 'rslot_' + sd.key;
+  g.add(hit);
+  blankSlotHitMeshes.push(hit);
+
+  dirRibbonGroup.add(g);
+  ribbonSlots[sd.key] = { key: sd.key, grp: g, card: card, cardMat: cardMat, hit: hit, ring: ring, ringMat: ringMat, col: sd.col, mode: 'filled', txt: sd.initTxt };
+});
+
+function setRibbonSlotVisual(key, txt, mode) {
+  var rs = ribbonSlots[key];
+  if (!rs) return;
+  if (rs.txt === txt && rs.mode === mode) return;
+  rs.txt = txt;
+  rs.mode = mode;
+  var old = rs.cardMat.map;
+  rs.cardMat.map = makeSignCardTex(txt, mode, rs.col);
+  rs.cardMat.needsUpdate = true;
+  if (old) old.dispose();
+}
+
+/* 7. 3D 太阳 + 5 个时段的空中虚线轨迹点 + 天空方位标牌（东8时/南12时/西16时） */
+var ARC_RX = 4.75;
+var SLOTS = [
+  { id: 't8',  h: 8,  label: '早上 8 时',  skyTag: '东 (8时)',     pos: [ARC_RX, 2.35, -3.0],          dir: '东方',         shDir: '西边且很长',   dot: '#dot_t8' },
+  { id: 't10', h: 10, label: '上午 10 时', skyTag: null,           pos: [ARC_RX * 0.707, 4.40, -2.55], dir: '东南方',       shDir: '西北边且变短', dot: '#dot_t10' },
+  { id: 't12', h: 12, label: '中午 12 时', skyTag: '南 (12时·最高)', pos: [0.0, 5.25, -2.3],             dir: '正南方最高处', shDir: '正北边且最短', dot: '#dot_t12' },
+  { id: 't14', h: 14, label: '下午 2 时',  skyTag: null,           pos: [-ARC_RX * 0.707, 4.40, -2.55],dir: '西南方',       shDir: '东北边且变长', dot: '#dot_t14' },
+  { id: 't16', h: 16, label: '下午 4 时',  skyTag: '西 (16时)',    pos: [-ARC_RX, 2.35, -3.0],         dir: '西方',         shDir: '东边且很长',   dot: '#dot_t16' }
+];
+
+var slotMarkers = {};
+var skyTagMeshes = {};
+var slotHitMeshes = [];
+for (var a = 0; a <= 16; a++) {
+  var u = a / 16;
+  var ax = Math.cos(u * Math.PI) * ARC_RX;
+  var ay = 2.35 + Math.sin(u * Math.PI) * 2.9;
+  var az = -3.0 + Math.sin(u * Math.PI) * 0.7;
+  var dot = new THREE.Mesh(new THREE.SphereGeometry(0.085, 8, 8), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.58 }));
+  dot.position.set(ax, ay, az);
+  live.add(dot);
+}
+SLOTS.forEach(function (sl) {
+  var m = new THREE.Mesh(new THREE.SphereGeometry(0.36, 16, 12), new THREE.MeshBasicMaterial({ color: '#fbbf24', transparent: true, opacity: 0.42 }));
+  m.position.set(sl.pos[0], sl.pos[1], sl.pos[2]);
+  m.userData.hit = 'slot_' + sl.id;
+  var ring = new THREE.Mesh(
+    new THREE.RingGeometry(0.46, 0.62, 24),
+    new THREE.MeshBasicMaterial({ color: '#f97316', transparent: true, opacity: 0.0, side: THREE.DoubleSide })
+  );
+  m.add(ring);
+  m.userData.ring = ring;
+  var sHit = new THREE.Mesh(
+    new THREE.SphereGeometry(1.08, 12, 10),
+    new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false })
+  );
+  sHit.userData.hit = 'slot_' + sl.id;
+  m.add(sHit);
+  slotHitMeshes.push(sHit);
+  live.add(m);
+  slotMarkers[sl.id] = m;
+
+  if (sl.skyTag) {
+    var stex = makePillTex(sl.skyTag, '#fffef6', '#f59e0b', '#9a3412', 260, 70, 32);
+    var sm = new THREE.Mesh(
+      new THREE.PlaneGeometry(sl.id === 't12' ? 2.15 : 1.55, 0.46),
+      new THREE.MeshBasicMaterial({ map: stex, transparent: true, side: THREE.DoubleSide })
+    );
+    sm.position.set(sl.pos[0], sl.pos[1] + (sl.id === 't12' ? -0.72 : 1.48), sl.pos[2]);
+    sm.visible = false;
+    live.add(sm);
+    skyTagMeshes[sl.id] = sm;
+  }
+});
+
+var sunGroup = new THREE.Group();
+var sunCore = new THREE.Mesh(new THREE.SphereGeometry(0.74, 22, 16), new THREE.MeshBasicMaterial({ color: '#ffe147' }));
+sunCore.userData.hit = 'sun'; sunGroup.add(sunCore);
+var sunGlareMat = new THREE.MeshBasicMaterial({ color: '#fff3a1', transparent: true, opacity: 0.55 });
+var sunGlare = new THREE.Mesh(new THREE.SphereGeometry(1.22, 18, 14), sunGlareMat);
+sunGlare.userData.hit = 'sun'; sunGroup.add(sunGlare);
+var sunDragRingMat = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.55, side: THREE.DoubleSide });
+var sunDragRing = new THREE.Mesh(new THREE.RingGeometry(1.26, 1.46, 28), sunDragRingMat);
+sunDragRing.userData.hit = 'sun'; sunGroup.add(sunDragRing);
+var sunHit = new THREE.Mesh(
+  new THREE.SphereGeometry(1.95, 14, 12),
+  new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false })
+);
+sunHit.userData.hit = 'sun'; sunGroup.add(sunHit);
+live.add(sunGroup);
+
+/* ===== 状态与步骤 3 亲手推算贴方位牌挑战 ===== */
+var curHour = 8, targetHour = 8, prevDragHour = 8;
+var gogglesOn = false, compassMode = false;
+var recordedSlots = {};
+var stamps = { s1: false, s2: false, s3: false }, celebrated = false, demo = false;
+var resetGen = 0;
+var dragMode = null, dragStartX = 0, dragStartY = 0, dragMoved = false;
+var goggleFly = null;
+var curGuideSpeech = '';
+
+// 步骤 3 挑战状态：'idle' | 'morning' | 'evening' | 'done'
+var step3Phase = 'idle';
+var morningPlaced = { back: false, left: false, right: false }; // 答案：back=西, left=北, right=南
+var activeBlankKey = 'back';
+var eveningDone = false;
+
+var MORNING_ANS = { back: '西', left: '北', right: '南' };
+var MORNING_NAMES = { back: '身后', left: '左手边', right: '右手边' };
+
+function getNearestSlot(h) {
+  var best = SLOTS[0], bestD = 99;
+  SLOTS.forEach(function (sl) { var d = Math.abs(h - sl.h); if (d < bestD) { bestD = d; best = sl; } });
+  return best;
+}
+
+function getNextMorningBlank() {
+  if (!morningPlaced.back) return 'back';
+  if (!morningPlaced.left) return 'left';
+  if (!morningPlaced.right) return 'right';
+  return null;
+}
+
+function syncStep3Visuals() {
+  if (step3Phase === 'idle') {
+    compassMode = false;
+    $('#dirPicker').classList.remove('show');
+    return;
+  }
+  compassMode = true;
+  if (step3Phase === 'morning') {
+    setRibbonSlotVisual('front', '前·东', 'filled');
+    ['back', 'left', 'right'].forEach(function (k) {
+      var pre = k === 'back' ? '后' : (k === 'left' ? '左' : '右');
+      if (morningPlaced[k]) {
+        setRibbonSlotVisual(k, pre + '·' + MORNING_ANS[k], 'filled');
+      } else {
+        setRibbonSlotVisual(k, pre + '·?', k === activeBlankKey ? 'active' : 'blank');
+      }
+    });
+    renderDirPicker();
+  } else if (step3Phase === 'evening') {
+    setRibbonSlotVisual('front', '前·西', 'filled');
+    if (eveningDone) {
+      setRibbonSlotVisual('back', '后·东', 'filled');
+      setRibbonSlotVisual('left', '左·南', 'filled');
+      setRibbonSlotVisual('right', '右·北', 'filled');
+      $('#dirPicker').classList.remove('show');
+    } else {
+      setRibbonSlotVisual('back', '后·?', 'blank');
+      setRibbonSlotVisual('left', '左·?', 'active');
+      setRibbonSlotVisual('right', '右·?', 'blank');
+      activeBlankKey = 'left';
+      renderDirPicker();
+    }
+  } else if (step3Phase === 'done') {
+    // 自由复习模式：根据太阳时间实时显示四个正确方向牌
+    $('#dirPicker').classList.remove('show');
+    if (targetHour <= 10.5) {
+      setRibbonSlotVisual('front', '前·东', 'filled');
+      setRibbonSlotVisual('back', '后·西', 'filled');
+      setRibbonSlotVisual('left', '左·北', 'filled');
+      setRibbonSlotVisual('right', '右·南', 'filled');
+    } else if (targetHour >= 13.5) {
+      setRibbonSlotVisual('front', '前·西', 'filled');
+      setRibbonSlotVisual('back', '后·东', 'filled');
+      setRibbonSlotVisual('left', '左·南', 'filled');
+      setRibbonSlotVisual('right', '右·北', 'filled');
+    } else {
+      setRibbonSlotVisual('front', '前·南', 'filled');
+      setRibbonSlotVisual('back', '后·北', 'filled');
+      setRibbonSlotVisual('left', '左·东', 'filled');
+      setRibbonSlotVisual('right', '右·西', 'filled');
+    }
+  }
+}
+
+function renderDirPicker() {
+  var picker = $('#dirPicker');
+  if (demo || (step3Phase !== 'morning' && step3Phase !== 'evening') || (step3Phase === 'evening' && eveningDone)) {
+    picker.classList.remove('show');
+    return;
+  }
+  var row = $('#dpRow');
+  row.innerHTML = '';
+  if (step3Phase === 'morning') {
+    if (!activeBlankKey || morningPlaced[activeBlankKey]) activeBlankKey = getNextMorningBlank();
+    if (!activeBlankKey) { picker.classList.remove('show'); return; }
+    $('#dpHead').textContent = '贴到【' + MORNING_NAMES[activeBlankKey] + '】的 ? 牌：';
+    $('#dpSub').textContent = '早晨面朝东：前东、后西、左北、右南';
+    // 列出未贴完的选项（始终保持 3 选 1 或剩余可选，最少 2 个方便思考）
+    var opts = ['西', '北', '南'];
+    opts.forEach(function (ch) {
+      var used = (ch === '西' && morningPlaced.back) || (ch === '北' && morningPlaced.left) || (ch === '南' && morningPlaced.right);
+      if (used) return;
+      var chip = document.createElement('div');
+      chip.className = 'dp-chip';
+      chip.setAttribute('role', 'button');
+      chip.setAttribute('tabindex', '0');
+      chip.dataset.dir = ch;
+      chip.textContent = ch;
+      chip.addEventListener('click', function () { handleMorningPick(ch, chip); });
+      row.appendChild(chip);
+    });
+  } else if (step3Phase === 'evening') {
+    $('#dpHead').textContent = '傍晚面朝西，【左手边】变成：';
+    $('#dpSub').textContent = '小同学转身面朝西边太阳，左右反过来啦！';
+    ['南', '北', '东'].forEach(function (ch) {
+      var chip = document.createElement('div');
+      chip.className = 'dp-chip';
+      chip.setAttribute('role', 'button');
+      chip.setAttribute('tabindex', '0');
+      chip.dataset.dir = ch;
+      chip.textContent = ch;
+      chip.addEventListener('click', function () { handleEveningPick(ch, chip); });
+      row.appendChild(chip);
+    });
+  }
+  picker.classList.add('show');
+  positionDirPicker();
+}
+
+function getDesiredYaw() {
+  if (!compassMode) return 0;
+  if (step3Phase === 'morning') return Math.PI / 2;
+  if (step3Phase === 'evening') return -Math.PI / 2;
+  if (targetHour <= 10.5) return Math.PI / 2;
+  if (targetHour >= 13.5) return -Math.PI / 2;
+  return 0;
+}
+
+function positionDirPicker() {
+  var picker = $('#dirPicker');
+  if (!picker.classList.contains('show')) return;
+  var sd = SLOT_DEFS.find(function (s) { return s.key === activeBlankKey; });
+  if (!sd) return;
+  var totalYaw = getDesiredYaw() + sd.rotY;
+  var dist = sd.dist + 0.18;
+  var wx = KID_POS.x + Math.sin(totalYaw) * dist;
+  var wz = KID_POS.z + Math.cos(totalYaw) * dist;
+  var wy = (wz < 0.8 ? 1.28 : (wz > 2.9 ? 0.56 : 0.78)) + 0.44;
+  var sp = projV(new THREE.Vector3(wx, wy, wz));
+  var w = window.innerWidth, h = window.innerHeight;
+  var halfW = Math.max(118, (picker.offsetWidth || 226) * 0.5) + 12;
+  var x = Math.max(halfW, Math.min(w - halfW, sp.x));
+  var y = Math.max(168, Math.min(h - 138, sp.y - 10));
+  // 当指着左侧【身后】空白牌时，气泡微微偏左下方贴近【后·?】，完整露出上方【8时·朝西很长】残影标牌！
+  if (step3Phase === 'morning' && activeBlankKey === 'back') {
+    x = Math.max(halfW + 10, sp.x - 165);
+    y = Math.min(h - 145, sp.y + 118);
+  }
+  var notesEl = $('#notes');
+  if (notesEl) {
+    var nr = notesEl.getBoundingClientRect();
+    if (x + halfW > nr.left - 8 && y - 115 < nr.bottom + 12) {
+      x = Math.min(x, nr.left - halfW - 8);
+    }
+  }
+  var sumEl = $('#shadowSummary');
+  if (sumEl && sumEl.classList.contains('show')) {
+    var sr = sumEl.getBoundingClientRect();
+    if (x - halfW < sr.right + 8 && y - 115 < sr.bottom + 12) {
+      x = Math.max(x, sr.right + halfW + 8);
+    }
+  }
+  picker.style.left = x + 'px';
+  picker.style.top = y + 'px';
+}
+
+function startStep3Morning(silent) {
+  if (!gogglesOn) { showSafetyWarning(); return; }
+  step3Phase = 'morning';
+  targetHour = 8;
+  $('#sunSlider').value = 8;
+  activeBlankKey = getNextMorningBlank() || 'back';
+  syncStep3Visuals();
+  updateGuide(false);
+  if (!silent && !demo) {
+    speak('现在进入太阳辨方向挑战！早晨小同学面向东边的太阳，前面是东。请根据口诀“前东、后西、左北、右南”，亲手把西、北、南贴到空白问号牌上吧！');
+  }
+}
+
+function handleMorningPick(dirChar, chipEl) {
+  markInteracted();
+  var ans = MORNING_ANS[activeBlankKey];
+  if (dirChar === ans) {
+    morningPlaced[activeBlankKey] = true;
+    playChime([587, 740, 880]);
+    spawnFloat('✅ 对啦！' + MORNING_NAMES[activeBlankKey] + '就是【' + ans + '】！', 50, 44);
+    var nextKey = getNextMorningBlank();
+    if (nextKey) {
+      activeBlankKey = nextKey;
+      syncStep3Visuals();
+      updateGuide(false);
+      speak('贴对啦！面向东方太阳，' + MORNING_NAMES[activeBlankKey === 'left' ? 'back' : 'left'] + '贴好啦！接下来再贴【' + MORNING_NAMES[nextKey] + '】的方位牌吧！');
+    } else {
+      // 早晨 3 块牌全部贴对！
+      syncStep3Visuals();
+      addSticker('🧭 早晨面向东：前东、后西、左北、右南（全贴对！）');
+      spawnFloat('🎉 早晨四向全贴对！看太阳落到西边啦！', 50, 40);
+      $('#dirPicker').classList.remove('show');
+      updateGuide(false);
+      speak('太棒啦！早晨面向东方太阳，前东、后西、左北、右南全贴对啦！现在看太阳来到傍晚西边，小同学转身面向西边太阳，猜猜左手边变成哪面啦？');
+      var g = resetGen;
+      setTimeout(function () {
+        if (g !== resetGen || demo) return;
+        step3Phase = 'evening';
+        targetHour = 16;
+        $('#sunSlider').value = 16;
+        activeBlankKey = 'left';
+        syncStep3Visuals();
+        updateGuide(false);
+      }, 1450);
+    }
+  } else {
+    chipEl.classList.remove('wrong');
+    void chipEl.offsetWidth;
+    chipEl.classList.add('wrong');
+    playChime([310, 250]);
+    var hint = '再想想口诀哦！早晨面向东边的太阳：前东、后西、左北、右南，【' + MORNING_NAMES[activeBlankKey] + '】应该是哪面呀？';
+    spawnFloat('❓ 再想想：前东、后西、左北、右南！', 50, 44);
+    speak(hint);
+  }
+}
+
+function handleEveningPick(dirChar, chipEl) {
+  markInteracted();
+  if (dirChar === '南') {
+    eveningDone = true;
+    step3Phase = 'done';
+    stamps.s3 = true;
+    $('#st3').classList.add('lit');
+    syncStep3Visuals();
+    addSticker('🧭 傍晚面向西：前西、后东、左南、右北（方向全反过来！）');
+    playChime([523, 659, 784, 1046]);
+    spawnFloat('🎉 答对啦！傍晚面朝西：后东、左南、右北！', 50, 40);
+    updateGuide(false);
+    checkWin();
+  } else {
+    chipEl.classList.remove('wrong');
+    void chipEl.offsetWidth;
+    chipEl.classList.add('wrong');
+    playChime([310, 250]);
+    spawnFloat('❓ 转身面朝西，左右全反过来啦！再试一次！', 50, 44);
+    speak('再想想哦！早晨面朝东时左手边是北，傍晚转身180度面朝西边太阳，左手边就反过来变成哪面啦？');
+  }
+}
+
+/* ===== 太阳位置与严格反向日影物理更新 ===== */
+function updateSunAndShadows(h, t, dt) {
+  var stepDt = dt || 0.016;
+  var ph = calcSunPhysics(h);
+  var sx = Math.cos(ph.u * Math.PI) * ARC_RX;
+  var sy = 2.35 + Math.sin(ph.u * Math.PI) * 2.9;
+  var sz = -3.0 + Math.sin(ph.u * Math.PI) * 0.7;
+  sunGroup.position.set(sx, sy, sz);
+
+  sunGlareMat.opacity = gogglesOn ? 0.24 : (0.48 + 0.16 * Math.sin(t * 7));
+  sunGlare.scale.setScalar(gogglesOn ? 0.92 : (1.06 + 0.08 * Math.sin(t * 7)));
+
+  sunL.position.set(ph.sunDirX * 11, 4 + ph.alt * 9, ph.sunDirZ * 10);
+
+  poleShadowPivot.rotation.y = ph.shAngle;
+  poleShadowMesh.scale.set(1, ph.poleLen, 1);
+  poleShadowMesh.position.z = ph.poleLen * 0.5;
+
+  var kidLen = 1.85 - ph.alt * 1.05;
+  kidShadowPivot.rotation.y = ph.shAngle;
+  kidShadowMesh.scale.set(1, kidLen, 1);
+  kidShadowMesh.position.z = kidLen * 0.5;
+
+  // 3段对比影带标牌与天空方位标牌始终面向镜头
+  shadowTrailSignMeshes.forEach(function (cm) { if (cm.parent.visible) cm.lookAt(camera.position); });
+  Object.keys(skyTagMeshes).forEach(function (k) {
+    if (skyTagMeshes[k].visible) skyTagMeshes[k].lookAt(camera.position);
+  });
+
+  // 辨方向模式下小同学面向太阳并水平张开双臂（使用 dt 帧率无关顺滑转身）
+  var targetYaw = getDesiredYaw();
+  var yawAlpha = Math.min(1, stepDt * 12);
+  if (Math.abs(targetYaw - kidPivot.rotation.y) < 0.01) kidPivot.rotation.y = targetYaw;
+  else kidPivot.rotation.y += (targetYaw - kidPivot.rotation.y) * yawAlpha;
+  dirRibbonGroup.rotation.y = kidPivot.rotation.y;
+  dirRibbonGroup.visible = compassMode;
+
+  if (compassMode) {
+    var rcWp = new THREE.Vector3();
+    SLOT_DEFS.forEach(function (sd) {
+      var rs = ribbonSlots[sd.key];
+      rs.card.getWorldPosition(rcWp);
+      // 北侧（小同学身后靠里）适度抬高避开头部且低于12时影标；南侧（靠镜头前）放低避开底部滑杆
+      var desiredY = rcWp.z < 0.8 ? 1.28 : (rcWp.z > 2.9 ? 0.56 : 0.78);
+      rs.card.position.y = desiredY;
+      rs.hit.position.y = desiredY;
+      rs.card.lookAt(camera.position);
+      if (rs.mode === 'active') {
+        var sc = 1.08 + Math.sin(t * 6.0) * 0.08;
+        rs.card.scale.setScalar(sc);
+        rs.ringMat.color.set('#2563eb');
+        rs.ringMat.opacity = 0.65 + 0.3 * Math.sin(t * 6.0);
+        rs.ring.scale.setScalar(1.0 + Math.sin(t * 6.0) * 0.14);
+      } else if (rs.mode === 'blank') {
+        rs.card.scale.setScalar(1.0 + Math.sin(t * 4.0) * 0.04);
+        rs.ringMat.color.set('#f59e0b');
+        rs.ringMat.opacity = 0.48 + 0.25 * Math.sin(t * 4.0);
+        rs.ring.scale.setScalar(1.0);
+      } else {
+        rs.card.scale.setScalar(1.0);
+        rs.ringMat.opacity = 0;
+      }
+    });
+    positionDirPicker();
+  }
+
+  var targetArm = compassMode ? 1.48 : 0.12;
+  var armAlpha = Math.min(1, stepDt * 11);
+  armLPiv.rotation.z += (-targetArm - armLPiv.rotation.z) * armAlpha;
+  armRPiv.rotation.z += (targetArm - armRPiv.rotation.z) * armAlpha;
+
+  flagSegs.forEach(function (seg, idx) {
+    seg.position.z = Math.sin(t * 5.2 - idx * 0.9) * 0.06 * (idx + 1);
+  });
+
+  var pulse = 1 + Math.sin(t * 4.5) * 0.12;
+  gogglesGroundHalo.visible = !gogglesOn && !goggleFly && dragMode !== 'goggles';
+  if (gogglesGroundHalo.visible) {
+    gogglesGroundHalo.scale.setScalar(pulse);
+    gogglesGroundHaloMat.opacity = 0.45 + 0.35 * (0.5 + 0.5 * Math.sin(t * 4.5));
+    gogglesProp.position.y = GOGGLE_HOME.y + Math.sin(t * 3.2) * 0.05;
+  }
+  kidFaceHalo.visible = (dragMode === 'goggles') && !gogglesOn;
+  if (kidFaceHalo.visible) {
+    kidFaceHalo.scale.setScalar(1 + Math.sin(t * 6) * 0.14);
+    kidFaceHalo.lookAt(camera.position);
+  }
+
+  sunDragRing.visible = gogglesOn && !stamps.s2;
+  if (sunDragRing.visible) {
+    sunDragRing.scale.setScalar(dragMode === 'sun' ? 1.18 : (0.98 + Math.sin(t * 4.2) * 0.08));
+    sunDragRingMat.opacity = dragMode === 'sun' ? 0.9 : (0.35 + 0.22 * Math.sin(t * 4.2));
+  }
+
+  var focusSlotId = null;
+  if (gogglesOn && !stamps.s2) {
+    var nextS = SLOTS.find(function (s) { return !recordedSlots[s.id]; });
+    if (nextS) focusSlotId = nextS.id;
+  }
+
+  SLOTS.forEach(function (sl, idx) {
+    var m = slotMarkers[sl.id];
+    var ring = m.userData.ring;
+    if (sl.id === focusSlotId) {
+      m.material.opacity = 0.95;
+      m.scale.setScalar(1.38 + Math.sin(t * 5.5) * 0.14);
+      ring.material.opacity = 0.65 + 0.35 * Math.sin(t * 5.5);
+      ring.lookAt(camera.position);
+    } else if (recordedSlots[sl.id]) {
+      m.material.opacity = 0.92;
+      m.scale.setScalar(1.18);
+      ring.material.opacity = 0;
+    } else {
+      m.material.opacity = gogglesOn ? (0.42 + 0.25 * Math.sin(t * 4 + idx)) : 0.22;
+      m.scale.setScalar(gogglesOn ? (1.02 + 0.12 * Math.sin(t * 4 + idx)) : 0.92);
+      ring.material.opacity = 0;
+    }
+  });
+
+  var nearest = getNearestSlot(h);
+  $('#timeLabel').textContent = '☀️ ' + nearest.label;
+  document.querySelectorAll('.sdot').forEach(function (d) { d.classList.toggle('active', d.dataset.slot === nearest.id); });
+
+  updateTargetCue();
+}
+
+var projVec = new THREE.Vector3();
+function placeTargetCue(worldVec, text, show) {
+  var el = $('#targetCue');
+  if (!show || !worldVec) { el.classList.remove('show'); return; }
+  el.textContent = text;
+  projVec.copy(worldVec).project(camera);
+  var w = window.innerWidth, h = window.innerHeight;
+  var x = (projVec.x * 0.5 + 0.5) * w;
+  var y = (-projVec.y * 0.5 + 0.5) * h;
+  x = Math.max(115, Math.min(w - 115, x));
+  y = Math.max(98, Math.min(h - 115, y));
+  var notesEl = $('#notes');
+  if (notesEl) {
+    var nr = notesEl.getBoundingClientRect();
+    var halfW = Math.max(95, (el.offsetWidth || 210) * 0.5) + 14;
+    if (x + halfW > nr.left && y < nr.bottom + 42) {
+      x = Math.min(x, nr.left - halfW);
+    }
+  }
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  el.classList.add('show');
+}
+
+function updateTargetCue() {
+  if (demo || celebrated || (stamps.s1 && stamps.s2 && stamps.s3)) {
+    placeTargetCue(null, '', false);
+    return;
+  }
+  if (!gogglesOn) {
+    if (dragMode === 'goggles') {
+      placeTargetCue(new THREE.Vector3(0, 2.25, KID_POS.z), '👇 放到小同学脸上戴好！', true);
+    } else if (!goggleFly) {
+      placeTargetCue(new THREE.Vector3(gogglesProp.position.x, gogglesProp.position.y + 0.72, gogglesProp.position.z), '👆 点或拖护目镜给小同学戴上 🕶️', true);
+    } else {
+      placeTargetCue(null, '', false);
+    }
+    return;
+  }
+  if (!stamps.s2) {
+    if (dragMode === 'sun') {
+      placeTargetCue(null, '', false);
+      return;
+    }
+    var nextSl = SLOTS.find(function (s) { return !recordedSlots[s.id]; });
+    if (nextSl) {
+      var cnt = Object.keys(recordedSlots).length;
+      if (cnt === 0) {
+        placeTargetCue(new THREE.Vector3(sunGroup.position.x, sunGroup.position.y + 1.1, sunGroup.position.z), '👆 沿弧线拖太阳，看地上留影 ☀️', true);
+      } else {
+        placeTargetCue(new THREE.Vector3(nextSl.pos[0], nextSl.pos[1] + 0.85, nextSl.pos[2]), '👆 拖太阳或点【' + nextSl.label + '】', true);
+      }
+    }
+    return;
+  }
+  // 步骤 3 已有指向空白牌的 #dirPicker，不叠第二层气泡
+  placeTargetCue(null, '', false);
+}
+
+/* ===== 发现记录、护目安全规则与三步引导 ===== */
+function spawnFloat(text, xPct, yPct) {
+  var el = document.createElement('div');
+  el.className = 'fword';
+  el.textContent = text;
+  el.style.left = (xPct || 48) + '%';
+  el.style.top = (yPct || 40) + '%';
+  $('#floatLayer').appendChild(el);
+  setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1650);
+}
+
+var warnTimer = null;
+function showSafetyWarning() {
+  var g = resetGen;
+  $('#warnToast').classList.add('show');
+  playChime([330, 262]);
+  speak('太阳太刺眼啦！先把草地上的护目镜拖到小朋友脸上戴好再观察吧！', true);
+  clearTimeout(warnTimer);
+  warnTimer = setTimeout(function () { if (g === resetGen) $('#warnToast').classList.remove('show'); }, 3600);
+}
+
+function addSticker(text) {
+  var el = document.createElement('div');
+  el.className = 'stk';
+  el.textContent = text;
+  $('#ntList').prepend(el);
+  var mDone = (morningPlaced.back && morningPlaced.left && morningPlaced.right) ? 1 : 0;
+  var total = (stamps.s1 ? 1 : 0) + Object.keys(recordedSlots).length + mDone + (eveningDone ? 1 : 0);
+  $('#ntCnt').textContent = Math.min(8, total) + '/8';
+}
+
+function checkWin() {
+  if (!demo && !celebrated && stamps.s1 && stamps.s2 && stamps.s3) {
+    celebrated = true;
+    saveProgress(LESSON_ID, true);
+    burstConfetti();
+    playChime([523, 659, 784, 1046]);
+    var g = resetGen;
+    setTimeout(function () {
+      if (g !== resetGen) return;
+      $('#winToast').classList.add('show');
+      speak('太棒啦！你不仅发现了太阳和影子对着跑的规律，还亲手推算贴对了早晨和傍晚的东南西北！快来领小红花吧！', true);
+    }, 750);
+    return true;
+  }
+  return false;
+}
+
+function wearGoggles(on, silent) {
+  gogglesOn = !!on;
+  kidGoggles.visible = gogglesOn;
+  gogglesProp.visible = !gogglesOn;
+  if (!gogglesOn) {
+    gogglesProp.position.copy(GOGGLE_HOME);
+    gogglesProp.scale.setScalar(2.35);
+    gogglesProp.rotation.set(-0.35, 0.38, 0);
+  }
+  document.body.classList.toggle('goggles-on', gogglesOn);
+  $('#warnToast').classList.remove('show');
+  if (gogglesOn && !stamps.s1 && !demo) {
+    stamps.s1 = true;
+    $('#st1').classList.add('lit');
+    addSticker('🕶️ 护目安全：把护目镜戴到脸上，保护眼睛看太阳！');
+    playChime([523, 659, 784]);
+    spawnFloat('🕶️ 护目镜戴好啦！拖动太阳看日影！', 48, 44);
+    if (!silent) speak('护目镜稳稳戴好啦！现在按住天上的大太阳，沿着虚线弧轨从东向西滑一滑，看操场上留下三条影子对比！');
+  }
+  updateGuide(false);
+}
+
+function recordSlot(sl, speakNow) {
+  if (!gogglesOn) { showSafetyWarning(); return; }
+  if (!sl) sl = getNearestSlot(targetHour);
+  var isNew = !recordedSlots[sl.id];
+  if (isNew) {
+    recordedSlots[sl.id] = true;
+    slotMarkers[sl.id].material.opacity = 0.95;
+    slotMarkers[sl.id].scale.setScalar(1.3);
+    var dot = $(sl.dot);
+    if (dot) dot.classList.add('done');
+
+    // 点亮 8时/12时/16时 永久地面对比残影 + 天空方位标牌
+    if (shadowTrails[sl.id]) shadowTrails[sl.id].grp.visible = true;
+    if (skyTagMeshes[sl.id]) skyTagMeshes[sl.id].visible = true;
+
+    addSticker('☀️ ' + sl.label + '：太阳在' + sl.dir + '，影子朝' + sl.shDir + '！');
+    playChime([523, 659, 784]);
+    spawnFloat('☀️ ' + sl.label + '：太阳在' + sl.dir + '，影朝' + sl.shDir, 48, 34);
+  } else if (speakNow) {
+    spawnFloat('☀️ ' + sl.label + '：太阳在' + sl.dir + '，影朝' + sl.shDir, 48, 34);
+  }
+
+  if (Object.keys(recordedSlots).length === 5 && !stamps.s2) {
+    stamps.s2 = true;
+    $('#st2').classList.add('lit');
+    $('#shadowSummary').classList.add('show');
+    updateGuide(false);
+    if (!demo) {
+      speak('你看地上的3条影子！太阳和影子总是对着跑：太阳在东影子指西长，中午太阳最高影子最短，太阳在西影子指东长！接下来，亲手给早晨的小同学贴方位牌吧！');
+      var g = resetGen;
+      setTimeout(function () {
+        if (g !== resetGen || demo || step3Phase !== 'idle') return;
+        startStep3Morning(true);
+      }, 1400);
+    }
+    return;
+  }
+
+  updateGuide(false);
+  if (!demo && (isNew || speakNow)) {
+    speak(sl.label + '，太阳在' + sl.dir + '，地面旗杆的影子指向' + sl.shDir + '！');
+  }
+}
+
+function updateGuide(speakIt) {
+  var ico = '🕶️';
+  if (!gogglesOn) {
+    curGuideSpeech = '第1步：太阳很刺眼！点一下或拖动草地上的3D护目镜，给小同学戴好吧！';
+  } else if (!stamps.s2) {
+    ico = '☀️';
+    var nextSlot = SLOTS.find(function (s) { return !recordedSlots[s.id]; });
+    curGuideSpeech = nextSlot
+      ? '第2步：沿弧线拖动太阳（或点【' + nextSlot.label + '】），在地上留下早中晚3段日影对比！'
+      : '第2步：滑过全部五个时段点亮太阳轨迹与3段对比日影！';
+  } else if (!stamps.s3) {
+    ico = '🧭';
+    if (step3Phase === 'idle') {
+      curGuideSpeech = '太棒啦！3段影子规律找到啦！准备进入第3步：用太阳亲手贴东南西北牌！';
+    } else if (step3Phase === 'morning') {
+      var leftCnt = (!morningPlaced.back ? 1 : 0) + (!morningPlaced.left ? 1 : 0) + (!morningPlaced.right ? 1 : 0);
+      curGuideSpeech = '第3步：早晨面向东边太阳，根据“前东后西左北右南”，把【西/北/南】贴到' + leftCnt + '块空白 ? 牌上！';
+    } else if (step3Phase === 'evening') {
+      curGuideSpeech = '最后一步：傍晚太阳落到西边啦！小同学面朝西，选出左手边变成的正确方向！';
+    }
+  } else {
+    ico = '🏆';
+    curGuideSpeech = '太棒啦！日影规律与早晚太阳辨方向全部掌握啦！';
+  }
+  $('#guideIco').textContent = ico;
+  $('#guideTxt').textContent = curGuideSpeech;
+  $('#guideBar').classList.toggle('done', stamps.s1 && stamps.s2 && stamps.s3);
+  if (speakIt) speak(curGuideSpeech, true);
+}
+
+/* ===== 演示模式（不触发通关） ===== */
+function stopDemo() {
+  if (!demo) return;
+  demo = false;
+  $('#demoBtn').classList.remove('on');
+  $('#demoBtn').textContent = '▶ 演示';
+  syncStep3Visuals();
+}
+function startDemo() {
+  markInteracted();
+  if (demo) { stopDemo(); stopVoice(); return; }
+  demo = true;
+  resetGen++;
+  var g = resetGen;
+  $('#demoBtn').classList.add('on');
+  $('#demoBtn').textContent = '⏸ 停止';
+  $('#dirPicker').classList.remove('show');
+  var steps = [
+    { fn: function () {
+      wearGoggles(true, true);
+      targetHour = 8; $('#sunSlider').value = 8;
+      compassMode = false;
+      shadowTrails.t8.grp.visible = true; skyTagMeshes.t8.visible = true;
+    }, msg: '第一步，把草地上的护目镜戴到小同学脸上！早上八时太阳在东，地上留下朝西很长的影子！' },
+    { fn: function () {
+      targetHour = 12; $('#sunSlider').value = 12;
+      shadowTrails.t12.grp.visible = true; skyTagMeshes.t12.visible = true;
+    }, msg: '把太阳滑到中午十二时，太阳升到南方最高处，地上留下朝北最短的影子！' },
+    { fn: function () {
+      targetHour = 16; $('#sunSlider').value = 16;
+      shadowTrails.t16.grp.visible = true; skyTagMeshes.t16.visible = true;
+      $('#shadowSummary').classList.add('show');
+    }, msg: '下午四时太阳来到西边，影子朝东变长！三条影子一对比，太阳和影子总是对着跑！' },
+    { fn: function () {
+      targetHour = 8; $('#sunSlider').value = 8;
+      compassMode = true;
+      setRibbonSlotVisual('front', '前·东', 'filled');
+      setRibbonSlotVisual('back', '后·?', 'active');
+      setRibbonSlotVisual('left', '左·?', 'blank');
+      setRibbonSlotVisual('right', '右·?', 'blank');
+    }, msg: '最后一步，早晨面向东方太阳，亲手把西、北、南贴到身后、左手边、右手边的空白问号牌上，再验证傍晚方向反转！' }
+  ];
+  steps.forEach(function (st, idx) {
+    setTimeout(function () {
+      if (g !== resetGen || !demo) return;
+      st.fn();
+      speak(st.msg, true);
+    }, idx * 3600);
+  });
+  setTimeout(function () {
+    if (g !== resetGen) return;
+    stopDemo();
+    resetAll();
+    speak('演示结束！现在请你先戴好护目镜，拖动太阳留下三条对比影子，再亲手贴方位牌吧！', true);
+  }, steps.length * 3600 + 400);
+}
+
+function resetAll() {
+  resetGen++;
+  stopDemo();
+  stopVoice();
+  clearTimeout(warnTimer);
+  $('#warnToast').classList.remove('show');
+  $('#shadowSummary').classList.remove('show');
+  $('#dirPicker').classList.remove('show');
+  dragMode = null; goggleFly = null;
+  compassMode = false;
+  step3Phase = 'idle';
+  morningPlaced = { back: false, left: false, right: false };
+  activeBlankKey = 'back';
+  eveningDone = false;
+  wearGoggles(false, true);
+  recordedSlots = {};
+  stamps = { s1: false, s2: false, s3: false }; celebrated = false;
+  curHour = 8; targetHour = 8; prevDragHour = 8; $('#sunSlider').value = 8;
+  SLOTS.forEach(function (sl) {
+    slotMarkers[sl.id].material.opacity = 0.25;
+    slotMarkers[sl.id].scale.setScalar(1);
+    var dot = $(sl.dot);
+    if (dot) dot.classList.remove('done');
+  });
+  Object.keys(shadowTrails).forEach(function (k) { shadowTrails[k].grp.visible = false; });
+  Object.keys(skyTagMeshes).forEach(function (k) { skyTagMeshes[k].visible = false; });
+  $('#ntList').innerHTML = ''; $('#ntCnt').textContent = '0/8';
+  document.querySelectorAll('.st').forEach(function (s) { s.classList.remove('lit'); });
+  $('#winToast').classList.remove('show');
+  $('#qFb').textContent = ''; $('#qFb').className = 'qfb';
+  document.querySelectorAll('.qopt').forEach(function (b) { b.classList.remove('ok', 'bad'); });
+  updateGuide(false);
+}
+
+/* ===== 交互与直接 3D 拖拽（优先级拾取 + 宽容吸附 + 零漏记） ===== */
+function markInteracted() { document.body.classList.add('interacted'); }
+var ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+var gogglePlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -KID_POS.z);
+var sunArcPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 2.75);
+var hitPt = new THREE.Vector3();
+var KID_FACE_WORLD = new THREE.Vector3(KID_POS.x, 1.56, KID_POS.z);
+
+function updateRay(e) {
+  var r = cv.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+}
+function pickHit(e) {
+  updateRay(e);
+  if (!gogglesOn && !goggleFly) {
+    var hGog = ray.intersectObject(goggleHit, false);
+    if (hGog.length) return 'goggles';
+  }
+  if (compassMode && (step3Phase === 'morning' || step3Phase === 'evening')) {
+    var hBlanks = ray.intersectObjects(blankSlotHitMeshes, false);
+    if (hBlanks.length) return hBlanks[0].object.userData.hit;
+  }
+  var hSun = ray.intersectObject(sunHit, false);
+  if (hSun.length) return 'sun';
+  var hSlots = ray.intersectObjects(slotHitMeshes, false);
+  if (hSlots.length) return hSlots[0].object.userData.hit;
+  var hKid = ray.intersectObject(kidHit, false);
+  if (hKid.length) return 'kid';
+  var hits = ray.intersectObjects(live.children, true);
+  for (var i = 0; i < hits.length; i++) {
+    var tag = hits[i].object.userData && hits[i].object.userData.hit;
+    if (tag && tag !== 'goggles') return tag;
+  }
+  return null;
+}
+
+function sweepRecordSlots(hA, hB) {
+  var lo = Math.min(hA, hB) - 0.65;
+  var hi = Math.max(hA, hB) + 0.65;
+  SLOTS.forEach(function (sl) {
+    if (!recordedSlots[sl.id] && sl.h >= lo && sl.h <= hi) {
+      recordSlot(sl, false);
+    }
+  });
+}
+
+function nearKidFace(clientX, clientY) {
+  var d3 = Math.hypot(gogglesProp.position.x - KID_FACE_WORLD.x, gogglesProp.position.y - 1.38);
+  if (d3 < 1.85) return true;
+  var p = KID_FACE_WORLD.clone().project(camera);
+  var sx = (p.x * 0.5 + 0.5) * window.innerWidth;
+  var sy = (-p.y * 0.5 + 0.5) * window.innerHeight;
+  return Math.hypot(clientX - sx, clientY - sy) < 115;
+}
+
+cv.addEventListener('pointerdown', function (e) {
+  markInteracted();
+  if (demo) stopDemo();
+  var tag = pickHit(e);
+  if (tag === 'goggles' && !gogglesOn && !goggleFly) {
+    dragMode = 'goggles';
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    dragMoved = false;
+    cv.style.cursor = 'grabbing';
+    if (cv.setPointerCapture) try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+    return;
+  }
+  if (tag && tag.indexOf('rslot_') === 0) {
+    var rk = tag.slice(6);
+    if (step3Phase === 'morning') {
+      if (rk === 'front') {
+        spawnFloat('☀️ 面向东方太阳，前面已经标好【东】啦！', 50, 46);
+        speak('早晨小同学面向东方的太阳，前面就是东！请点其他空白问号牌贴上西、北、南吧！');
+      } else if (morningPlaced[rk]) {
+        spawnFloat('✅ 【' + MORNING_NAMES[rk] + '】已经贴好【' + MORNING_ANS[rk] + '】啦！', 50, 46);
+        speak(MORNING_NAMES[rk] + '已经贴对是' + MORNING_ANS[rk] + '啦！');
+      } else {
+        activeBlankKey = rk;
+        syncStep3Visuals();
+        playChime([520, 660]);
+        speak('现在来贴【' + MORNING_NAMES[rk] + '】的方位牌，从气泡里选出正确方向吧！');
+      }
+    } else if (step3Phase === 'evening') {
+      if (rk === 'front') {
+        speak('傍晚太阳在西边，小同学面向西方太阳，前面就是西！');
+      } else {
+        activeBlankKey = 'left';
+        syncStep3Visuals();
+        speak('选一选：傍晚面朝西边太阳，左手边变成了哪面呢？');
+      }
+    } else if (step3Phase === 'done') {
+      speak('利用太阳位置就能辨认东南西北，早晚面向太阳时方向刚好相反！');
+    }
+    return;
+  }
+  if (tag === 'sun') {
+    if (!gogglesOn) { showSafetyWarning(); return; }
+    dragMode = 'sun';
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    prevDragHour = curHour;
+    dragMoved = false;
+    cv.style.cursor = 'grabbing';
+    if (cv.setPointerCapture) try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+    return;
+  }
+  if (tag && tag.indexOf('slot_') === 0) {
+    if (!gogglesOn) { showSafetyWarning(); return; }
+    var sid = tag.slice(5);
+    var targetSl = SLOTS.find(function (s) { return s.id === sid; });
+    if (targetSl) {
+      targetHour = targetSl.h;
+      $('#sunSlider').value = targetSl.h;
+      if (!stamps.s2) {
+        recordSlot(targetSl, true);
+      } else if (step3Phase === 'done') {
+        syncStep3Visuals();
+        spawnFloat('🧭 ' + targetSl.label + '：太阳在' + targetSl.dir, 50, 38);
+      }
+    }
+    return;
+  }
+  if (tag === 'kid') {
+    if (!gogglesOn) { showSafetyWarning(); return; }
+    if (stamps.s2 && step3Phase === 'idle') {
+      startStep3Morning(false);
+    } else if (step3Phase === 'morning') {
+      speak('早晨面向东方太阳，前东、后西、左北、右南！点击气泡里的方向字块贴到空白问号牌上吧！');
+    } else if (step3Phase === 'evening') {
+      speak('傍晚面向西方太阳，方向全反过来啦！快选出左手边变成了哪面吧！');
+    } else if (step3Phase === 'done') {
+      syncStep3Visuals();
+      speak('太棒啦！拖动滑杆看看早中晚小同学面向太阳时的方向变化吧！');
+    } else {
+      speak('先把天上的大太阳从东边滑到西边，集齐5个时段并在地上留下3条影子对比吧！');
+    }
+  } else if (tag === 'flag' || tag === 'shadow') {
+    var sl = getNearestSlot(targetHour);
+    spawnFloat('🚩 太阳和影子对着跑：现在影朝' + sl.shDir, 48, 52);
+    speak('快看旗杆的影子！太阳在' + sl.dir + '，影子永远朝相反的' + sl.shDir + '！');
+  } else if (tag && tag.indexOf('trail_') === 0) {
+    var tk = tag.slice(6);
+    var tr = shadowTrails[tk];
+    if (tr) {
+      spawnFloat('☀️ ' + tr.cfg.label, 48, 48);
+      speak(tr.cfg.label + '！太阳在东影子指西长，中午太阳最高影子最短，太阳在西影子指东长！');
+    }
+  } else if (tag && tag.indexOf('horizon_') === 0) {
+    var hd = tag.slice(8);
+    spawnFloat(hd === '东' ? '🌅 东方是太阳升起的方向！' : '🌇 西方是太阳落下的方向！', 50, 56);
+    speak(hd === '东' ? '这边是东方，早晨太阳从东方升起！' : '这边是西方，傍晚太阳从西方落下！');
+  }
+});
+
+cv.addEventListener('pointermove', function (e) {
+  if (!dragMode) {
+    var hTag = pickHit(e);
+    cv.style.cursor = ((hTag === 'goggles' && !gogglesOn) || hTag === 'sun') ? 'grab' : (hTag ? 'pointer' : 'default');
+    return;
+  }
+  if (!dragMoved && Math.hypot(e.clientX - dragStartX, e.clientY - dragStartY) > 10) dragMoved = true;
+  updateRay(e);
+
+  if (dragMode === 'goggles') {
+    if (ray.ray.intersectPlane(gogglePlane, hitPt)) {
+      gogglesProp.position.set(
+        Math.max(-5.2, Math.min(5.2, hitPt.x)),
+        Math.max(0.32, Math.min(4.2, hitPt.y)),
+        KID_POS.z
+      );
+      gogglesProp.rotation.set(0, 0, 0);
+      if (nearKidFace(e.clientX, e.clientY)) {
+        dragMode = null;
+        cv.style.cursor = 'pointer';
+        if (cv.releasePointerCapture) try { cv.releasePointerCapture(e.pointerId); } catch (err) {}
+        wearGoggles(true, false);
+      }
+    }
+  } else if (dragMode === 'sun') {
+    if (ray.ray.intersectPlane(sunArcPlane, hitPt)) {
+      var clampedX = Math.max(-ARC_RX, Math.min(ARC_RX, hitPt.x));
+      var u = Math.acos(Math.max(-1, Math.min(1, clampedX / ARC_RX))) / Math.PI;
+      var h = 8 + u * 8;
+      var oldH = prevDragHour;
+      prevDragHour = h;
+      targetHour = h;
+      curHour = h;
+      $('#sunSlider').value = h.toFixed(2);
+      if (!stamps.s2) sweepRecordSlots(oldH, h);
+      else if (step3Phase === 'done') syncStep3Visuals();
+    }
+  }
+});
+
+function finishDrag(e) {
+  if (!dragMode) return;
+  var mode = dragMode;
+  dragMode = null;
+  cv.style.cursor = 'pointer';
+  if (cv.releasePointerCapture && e && e.pointerId !== undefined) try { cv.releasePointerCapture(e.pointerId); } catch (err) {}
+
+  if (mode === 'goggles') {
+    if (!dragMoved) {
+      goggleFly = { t: 0, start: gogglesProp.position.clone() };
+    } else if (nearKidFace(e ? e.clientX : -999, e ? e.clientY : -999)) {
+      wearGoggles(true, false);
+    } else {
+      gogglesProp.position.copy(GOGGLE_HOME);
+      gogglesProp.rotation.set(-0.35, 0.38, 0);
+      spawnFloat('🕶️ 拖到小朋友脸上或轻点护目镜戴好哦！', 46, 48);
+      speak('把护目镜拖到操场小朋友的脸上，或者轻点一下护目镜就能戴好哦！');
+    }
+  } else if (mode === 'sun') {
+    var nearest = getNearestSlot(targetHour);
+    targetHour = nearest.h;
+    $('#sunSlider').value = nearest.h;
+    if (!stamps.s2) {
+      recordSlot(nearest, true);
+    } else if (step3Phase === 'done') {
+      syncStep3Visuals();
+    }
+  }
+}
+cv.addEventListener('pointerup', finishDrag);
+cv.addEventListener('pointercancel', finishDrag);
+
+$('#sunSlider').addEventListener('input', function () {
+  markInteracted(); if (demo) stopDemo();
+  var oldH = targetHour;
+  targetHour = parseFloat(this.value); curHour = targetHour;
+  if (gogglesOn && !stamps.s2) {
+    sweepRecordSlots(oldH, targetHour);
+  } else if (step3Phase === 'done') {
+    syncStep3Visuals();
+  }
+  updateGuide(false);
+});
+
+$('#voiceBtn').addEventListener('click', function () {
+  markInteracted();
+  voiceOn = !voiceOn;
+  this.classList.toggle('on', voiceOn);
+  if (voiceOn) updateGuide(true); else stopVoice();
+});
+$('#demoBtn').addEventListener('click', startDemo);
+$('#guideBar').addEventListener('click', function () { markInteracted(); updateGuide(true); });
+$('#resetBtn').addEventListener('click', resetAll);
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+$('#winKeepBtn').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgainBtn').addEventListener('click', resetAll);
+$('#qOpts').addEventListener('click', function (e) {
+  var b = e.target.closest('.qopt');
+  if (!b) return;
+  if (b.dataset.ok === '1') {
+    b.classList.add('ok');
+    $('#qFb').textContent = '🌸 答对啦！傍晚面向西边太阳，前西、后东、左南、右北！获得小红花！';
+    $('#qFb').className = 'qfb ok';
+    saveProgress(LESSON_ID, true);
+    playChime([659, 784, 1046]);
+    speak('答对啦！获得本课小红花！', true);
+  } else {
+    b.classList.add('bad');
+    var h = b.dataset.hint || '再想想哦！';
+    $('#qFb').textContent = h;
+    $('#qFb').className = 'qfb';
+    speak(h, true);
+  }
+});
+
+/* ===== 帧循环 ===== */
+var introT0 = performance.now(), lastT = performance.now();
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  camera.updateProjectionMatrix();
+  resizeConfetti();
+}
+window.addEventListener('resize', fit);
+fit();
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (now - lastT) / 1000));
+  lastT = now;
+  var pop = Math.min(1, (performance.now() - introT0) / 680);
+  live.scale.setScalar(0.01 + 0.99 * (1 - Math.pow(1 - pop, 3)));
+
+  if (goggleFly) {
+    goggleFly.t = Math.min(1, goggleFly.t + dt * 3.4);
+    var ft = goggleFly.t;
+    var ease = 1 - Math.pow(1 - ft, 3);
+    gogglesProp.position.lerpVectors(goggleFly.start, KID_FACE_WORLD, ease);
+    gogglesProp.position.y += Math.sin(ft * Math.PI) * 1.1;
+    gogglesProp.scale.setScalar(2.35 - ease * 1.25);
+    gogglesProp.rotation.set(-0.35 * (1 - ease), 0.38 * (1 - ease), 0);
+    if (ft >= 1) {
+      goggleFly = null;
+      wearGoggles(true, false);
+    }
+  }
+
+  curHour += (targetHour - curHour) * Math.min(1, dt * 8);
+  updateSunAndShadows(curHour, now * 0.001, dt);
+  tickConfetti();
+  renderer.render(scene, camera);
+}
+
+function projV(v) {
+  var p = v.clone().project(camera);
+  return { x: (p.x * 0.5 + 0.5) * window.innerWidth, y: (-p.y * 0.5 + 0.5) * window.innerHeight };
+}
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () {
+    return {
+      triangles: renderer.info.render.triangles,
+      celebrated: celebrated,
+      gogglesOn: gogglesOn,
+      slots: Object.keys(recordedSlots).length,
+      shadowTrails: Object.keys(shadowTrails).filter(function (k) { return shadowTrails[k].grp.visible; }),
+      step3Phase: step3Phase,
+      morningPlaced: morningPlaced,
+      eveningDone: eveningDone,
+      stamps: stamps
+    };
+  },
+  targets: function () {
+    var slotPos = {};
+    SLOTS.forEach(function (sl) { slotPos[sl.id] = projV(new THREE.Vector3(sl.pos[0], sl.pos[1], sl.pos[2])); });
+    var blankPos = {};
+    SLOT_DEFS.forEach(function (sd) {
+      var wp = new THREE.Vector3();
+      ribbonSlots[sd.key].card.getWorldPosition(wp);
+      blankPos[sd.key] = projV(wp);
+    });
+    return {
+      goggles: projV(gogglesProp.position),
+      kidFace: projV(KID_FACE_WORLD),
+      kidBody: projV(new THREE.Vector3(KID_POS.x, 1.15, KID_POS.z)),
+      sun: projV(sunGroup.position),
+      slots: slotPos,
+      blankSlots: blankPos
+    };
+  },
+  startDemo: startDemo,
+  resetAll: resetAll
+};
+updateGuide(false);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

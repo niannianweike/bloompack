@@ -1,0 +1,1539 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第3课 认识常见的材料 · 课本换材料（活页）</title>
+<style>
+:root{--ink:#2a3040;--paper:#fffaf0;--line:#e3d6bd;--accent:#e56d17}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#d9c19b;color:var(--ink);
+  font-family:"Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+ruby{ruby-align:center}
+rt{font-size:.5em;font-weight:600;color:#8a6d4a;letter-spacing:0}
+body.no-py rt{display:none}
+
+.chip{position:fixed;left:14px;top:12px;z-index:5;display:flex;align-items:center;gap:10px;
+  padding:6px 14px 6px 6px;border-radius:16px;background:rgba(255,250,240,.92);border:1.5px solid var(--line);
+  box-shadow:0 6px 18px rgba(80,55,20,.12)}
+.home{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:var(--ink);font-size:20px;font-weight:800}
+.home:hover{border-color:var(--accent);color:var(--accent)}
+.chip h1{margin:0;font-size:20px;line-height:1.5;font-weight:800}
+.chip small{display:block;font-size:12px;color:#8a7b62;font-weight:700;margin-top:-2px}
+
+.tools{position:fixed;right:14px;top:12px;z-index:6;display:flex;gap:8px;align-items:flex-start}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:40px;padding:0 14px;border-radius:13px;border:1.5px solid var(--line);background:rgba(255,250,240,.94);
+  font:inherit;font-size:15px;font-weight:800;color:var(--ink);cursor:pointer;box-shadow:0 3px 0 #e2d2b5;transition:transform .15s,box-shadow .15s}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:#bf5409;color:#fff;box-shadow:0 3px 0 #bf5409}
+.tbtn.cue-pulse{animation:cuePulse 1.5s ease-in-out infinite}
+@keyframes cuePulse{0%,100%{box-shadow:0 3px 0 #bf5409,0 0 0 0 rgba(245,158,11,.55)}50%{box-shadow:0 3px 0 #bf5409,0 0 0 8px rgba(245,158,11,0)}}
+.cue-tag{position:absolute;top:calc(100% + 7px);left:50%;transform:translateX(-50%);white-space:nowrap;
+  padding:3px 9px;border-radius:99px;background:#fff7ed;color:#c2560c;border:1.5px solid #f59e0b;
+  font-size:11px;font-weight:900;box-shadow:0 4px 12px rgba(180,90,10,.2);pointer-events:none;
+  animation:cueBob 1.6s ease-in-out infinite;transition:opacity .35s,transform .35s}
+.cue-tag::before{content:"";position:absolute;left:50%;top:-5px;width:8px;height:8px;background:#fff7ed;
+  border-left:1.5px solid #f59e0b;border-top:1.5px solid #f59e0b;transform:translateX(-50%) rotate(45deg)}
+.cue-tag.hide{opacity:0;transform:translateX(-50%) translateY(-4px);animation:none}
+@keyframes cueBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(3px)}}
+
+#guideBar{position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:5;
+  max-width:min(460px,calc(100vw - 540px));min-width:220px;
+  display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:16px;
+  background:rgba(255,250,240,.96);border:2px solid #f59e0b;
+  box-shadow:0 6px 20px rgba(180,95,15,.16);
+  font-size:14px;font-weight:800;color:#9a440a;line-height:1.45;cursor:pointer;
+  transition:border-color .25s,background .25s,box-shadow .25s}
+#guideBar:hover{border-color:#e56d17;box-shadow:0 8px 22px rgba(229,109,23,.24)}
+#guideBar.pulse{animation:guidePop .55s ease}
+#guideBar.done{border-color:#16a34a;color:#15803d;background:#effaf2}
+.gd-ico{flex:none;font-size:18px;line-height:1}
+@keyframes guidePop{0%{transform:translateX(-50%) scale(.95)}45%{transform:translateX(-50%) scale(1.04)}100%{transform:translateX(-50%) scale(1)}}
+
+#notes{position:fixed;right:14px;top:84px;z-index:4;width:244px;overflow:hidden;
+  padding:8px 10px 10px;border-radius:16px;background:rgba(255,250,240,.92);border:1.5px solid var(--line);
+  box-shadow:0 8px 22px rgba(80,55,20,.12);transition:opacity .3s,top .3s}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:15px;font-weight:800;margin-bottom:6px}
+.nt-right{display:flex;align-items:center;gap:6px}
+#ntToggle{border:1px solid var(--line);background:#fff;color:#8a6d4a;border-radius:8px;padding:1px 7px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+#ntToggle:hover{border-color:var(--accent);color:var(--accent)}
+.stamps{display:flex;gap:5px;margin-bottom:6px}
+.stamp{flex:1;text-align:center;padding:3px 0 2px;border-radius:10px;border:1.5px dashed #d8c7a6;color:#b3a283;font-size:13px;font-weight:800;line-height:1.5}
+.stamp.lit{border-style:solid;border-color:#e56d17;background:#fff3e2;color:#c2560c;animation:pop .45s cubic-bezier(.2,1.6,.4,1)}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:158px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList{display:none}
+#notes.collapsed .stamps{margin-bottom:0}
+.stk{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:11px;background:#fff;border:1.5px solid #f0dcc0;
+  font-size:14px;font-weight:800;line-height:1.6;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+.stk i{font-style:normal;width:24px;height:24px;flex:none;border-radius:7px;display:grid;place-items:center;color:#fff;font-size:13px}
+.stk b{color:#c2560c}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:9;overflow:hidden}
+.conf{position:absolute;width:10px;height:14px;border-radius:3px;opacity:0;animation:confFall 2.1s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes confFall{0%{opacity:1;transform:translate(0,0) rotate(0deg) scale(.8)}15%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--rot)) scale(1)}}
+#winToast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.86);z-index:12;
+  width:min(450px,92vw);max-height:85vh;overflow-y:auto;
+  display:flex;flex-direction:column;align-items:stretch;gap:10px;padding:18px 20px;border-radius:22px;
+  background:rgba(255,250,240,.98);border:2.5px solid #f59e0b;box-shadow:0 18px 46px rgba(100,55,10,.28);
+  opacity:0;pointer-events:none;transition:opacity .32s,transform .35s cubic-bezier(.2,1.5,.4,1)}
+#winToast.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.win-trophy{font-size:40px;line-height:1.1;text-align:center}
+#winMsg{font-size:20px;font-weight:900;color:#c2560c;line-height:1.65;text-align:center}
+.win-concl{background:#fff7ed;border:1.5px solid #fdba74;border-radius:14px;padding:10px 13px;text-align:left}
+.win-concl-t{font-size:13px;font-weight:900;color:#c2560c;margin-bottom:4px}
+.win-concl-p{font-size:14px;font-weight:700;color:#4a3723;line-height:1.6;margin:0}
+.win-quiz{background:#f8fafc;border:1.5px solid #dbe4ee;border-radius:14px;padding:10px 12px;text-align:left}
+.win-quiz-t{font-size:13px;font-weight:900;color:#0f766e;margin-bottom:5px}
+.win-quiz-q{font-size:14px;font-weight:800;color:var(--ink);margin:0 0 8px;line-height:1.5}
+.quiz-opts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.qopt{display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 10px;border-radius:12px;
+  border:1.5px solid #d5dbe3;background:#fff;color:var(--ink);font:inherit;font-size:15px;font-weight:800;
+  cursor:pointer;box-shadow:0 2px 0 #dde2e8;transition:all .18s}
+.qopt:hover:not(:disabled){border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+.qopt.correct{background:#dcfce7;border-color:#16a34a;color:#15803d;box-shadow:0 2px 0 #86efac}
+.qopt.wrong{background:#fef3c7;border-color:#f59e0b;color:#b45309}
+.quiz-fb{min-height:20px;margin-top:8px;font-size:13px;font-weight:800;line-height:1.5;color:#64748b}
+.quiz-fb.ok{color:#15803d}
+.quiz-fb.try{color:#c2560c}
+.win-btns{display:flex;justify-content:center;gap:10px;margin-top:2px}
+.wbtn{height:38px;padding:0 18px;border-radius:12px;border:1.5px solid var(--line);background:#fff;color:var(--ink);font:inherit;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 2px 0 #e2d2b5}
+.wbtn.pri{background:#e56d17;border-color:#bf5409;color:#fff;box-shadow:0 2px 0 #bf5409}
+.wbtn:hover{filter:brightness(.96)}
+
+#verbs{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:4;display:flex;gap:10px;transition:opacity .5s}
+.verb{display:flex;align-items:center;gap:7px;padding:6px 14px;border-radius:99px;background:rgba(255,250,240,.94);
+  border:1.5px solid var(--line);font-size:17px;font-weight:800;box-shadow:0 4px 14px rgba(80,55,20,.12)}
+.verb svg{width:22px;height:22px}
+.verb.done{border-color:#16a34a;color:#15803d;background:#effaf2}
+.verb.done::after{content:"✓";font-weight:900;color:#16a34a}
+
+#labels{position:fixed;inset:0;pointer-events:none;z-index:3}
+.lbl{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:2px 10px;border-radius:99px;white-space:nowrap;
+  background:rgba(42,48,64,.88);color:#fff;font-size:15px;font-weight:800;line-height:1.75;opacity:0;transition:opacity .2s}
+.lbl rt{color:#ffe0b8}
+.lbl.show{opacity:1}
+.word{position:absolute;left:0;top:0;transform:translate(-50%,-100%);font-size:28px;font-weight:900;line-height:1.6;
+  color:#c2560c;text-shadow:0 2px 0 #fff,0 0 8px #fff;pointer-events:none;animation:floatUp 1.25s ease-out forwards;white-space:nowrap}
+.word.cool{color:#2f5fa8}
+.word.good{color:#15803d}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-60%) scale(.6)}18%{opacity:1;transform:translate(-50%,-100%) scale(1.08)}100%{opacity:0;transform:translate(-50%,-190%) scale(1)}}
+
+#hand{position:fixed;left:0;top:0;width:64px;height:64px;z-index:6;pointer-events:none;opacity:0;transition:opacity .3s;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.25))}
+
+@media (max-width:1120px){
+  #guideBar{top:68px;left:14px;transform:none;max-width:calc(100vw - 290px)}
+  @keyframes guidePop{0%{transform:scale(.95)}45%{transform:scale(1.03)}100%{transform:scale(1)}}
+}
+@media (max-width:760px){
+  .chip{left:8px;top:8px;padding:4px 10px 4px 4px}
+  .chip h1{font-size:16px}.chip small{display:none}
+  .home{width:32px;height:32px}
+  .tools{right:8px;top:8px;gap:6px}.tbtn{height:34px;padding:0 10px;font-size:13px}
+  .cue-tag{font-size:10px;padding:2px 6px}
+  #guideBar{top:54px;left:8px;right:8px;max-width:none;min-width:0;font-size:13px;padding:6px 10px}
+  #notes{top:auto;bottom:60px;right:8px;left:8px;width:auto;max-height:112px;padding:7px 10px}
+  #ntList .stk:nth-child(n+2){display:none}
+  .stk{font-size:14px}
+  #verbs{bottom:10px;gap:6px}.verb{font-size:14px;padding:4px 10px}.verb svg{width:18px;height:18px}
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="labels"></div>
+
+<div class="chip">
+  <a class="home" href="../index.html" title="回到书包">‹</a>
+  <div><h1 id="ttl"></h1><small>活页 · 课本第 13 页「课本换材料」</small></div>
+</div>
+<div id="guideBar" role="button" tabindex="0" title="点我再听一次提示">
+  <span class="gd-ico">🧭</span><span id="guideTxt"></span>
+</div>
+
+<div class="tools">
+  <span class="tbtn-wrap">
+    <button class="tbtn on cue-pulse" id="voiceBtn" type="button" title="语音引导">🔊 语音</button>
+    <span class="cue-tag" id="voiceCue">点我听玩法</span>
+  </span>
+  <span class="tbtn-wrap">
+    <button class="tbtn cue-pulse" id="demoBtn" type="button">▶ 演示</button>
+    <span class="cue-tag" id="demoCue">不会玩点演示</span>
+  </span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<aside id="notes">
+  <div class="nt-head"><span id="ntTitle"></span><span class="nt-right"><span id="ntCount" style="color:#c2560c">0</span><button id="ntToggle" type="button">收起</button></span></div>
+  <div class="stamps"><span class="stamp" id="stM"></span><span class="stamp" id="stF"></span><span class="stamp" id="stW"></span></div>
+  <div id="ntList"></div>
+</aside>
+
+<div id="confetti"></div>
+<div id="winToast" role="dialog" aria-live="polite">
+  <div class="win-trophy">🏆</div>
+  <div id="winMsg"></div>
+  <div class="win-concl">
+    <div class="win-concl-t">✨ 科学小结论</div>
+    <p class="win-concl-p">纸做的课本又轻、好翻页又方便写字，但有点怕水，要好好爱护；木板、铁板太硬太重，布太软，玻璃容易碎！</p>
+  </div>
+  <div class="win-quiz">
+    <div class="win-quiz-t">💡 考考你 · 答对领小红花 🌸</div>
+    <p class="win-quiz-q">比一比，下面哪种材料最适合做我们的科学课本？</p>
+    <div class="quiz-opts" id="quizOpts">
+      <button class="qopt" type="button" data-ans="paper">📄 纸</button>
+      <button class="qopt" type="button" data-ans="wood">🪵 木板</button>
+      <button class="qopt" type="button" data-ans="iron">⚙️ 铁板</button>
+      <button class="qopt" type="button" data-ans="glass">🪟 玻璃</button>
+    </div>
+    <div class="quiz-fb" id="quizFb"></div>
+  </div>
+  <div class="win-btns">
+    <button class="wbtn pri" id="winKeep" type="button">继续玩</button>
+    <button class="wbtn" id="winAgain" type="button">再玩一次</button>
+  </div>
+</div>
+
+<div id="verbs">
+  <span class="verb" data-v="swap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h12l-3-3M20 17H8l3 3"/></svg><span id="vb1"></span></span>
+  <span class="verb" data-v="flip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span id="vb2"></span></span>
+  <span class="verb" data-v="spray"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.7l5.6 6.4a7.5 7.5 0 1 1-11.2 0z"/></svg><span id="vb3"></span></span>
+</div>
+
+<svg id="hand" viewBox="0 0 64 64"><path d="M26 6c3 0 5 2 5 5v17l3-1c2-6 9-5 9 0 2-3 8-2 8 3 3-1 7 1 7 5v12c0 9-7 15-16 15h-6c-6 0-10-3-13-8L13 41c-2-3 0-7 4-7 2 0 3 1 4 2V11c0-3 2-5 5-5z" fill="#fff" stroke="#2a3040" stroke-width="3" stroke-linejoin="round"/></svg>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js"></script>
+<script src="../vendor/voice.js"></script>
+<script>
+(function () {
+'use strict';
+
+/* ===================== 拼音 ===================== */
+var HAN = /[\u3400-\u9fff]/, pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function ruby(text, py) {
+  var syl = py ? py.trim().split(/\s+/) : [], i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) { var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; } out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>'; }
+    else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+var $ = function (s) { return document.querySelector(s); };
+$('#ttl').innerHTML = ruby('第3课 认识常见的材料', 'dì kè rèn shi cháng jiàn de cái liào');
+$('#ntTitle').innerHTML = ruby('我的发现', 'wǒ de fā xiàn');
+$('#stM').innerHTML = ruby('换材', 'huàn cái');
+$('#stF').innerHTML = ruby('翻页', 'fān yè');
+$('#stW').innerHTML = ruby('喷水', 'pēn shuǐ');
+$('#vb1').innerHTML = ruby('换材料', 'huàn cái liào');
+$('#vb2').innerHTML = ruby('翻一翻', 'fān yi fān');
+$('#vb3').innerHTML = ruby('喷一喷', 'pēn yi pēn');
+$('#winMsg').innerHTML = ruby('太棒啦！全部实验完成啦！', 'tài bàng la quán bù shí yàn wán chéng la');
+
+/* ===================== Three 基础 ===================== */
+var canvas = $('#c');
+var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera(32, 1, 0.1, 200);
+var raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2();
+
+scene.add(new THREE.HemisphereLight(0xfff8ee, 0xcdb08a, 0.42));
+var sun = new THREE.DirectionalLight(0xfff1dc, 0.66);
+sun.position.set(-4, 12, 7);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+(function (c) { c.left = -7; c.right = 7; c.top = 6; c.bottom = -6; c.near = 1; c.far = 40; })(sun.shadow.camera);
+sun.shadow.bias = -0.0008;
+scene.add(sun);
+
+var ramp = new THREE.DataTexture(new Uint8Array([120, 120, 120, 255, 185, 185, 185, 255, 232, 232, 232, 255, 255, 255, 255, 255]), 4, 1, THREE.RGBAFormat);
+ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+var INK = new THREE.LineBasicMaterial({ color: 0x2a3040, transparent: true, opacity: 0.8 });
+function toon(hex, extra) {
+  var o = { color: new THREE.Color(hex), gradientMap: ramp };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshToonMaterial(o);
+}
+function mesh(geo, mat, ink) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  if (ink !== false) m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), INK));
+  return m;
+}
+function ctex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c);
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+
+/* ===================== 书桌 + 摊开的课本 ===================== */
+var deskTex = ctex(512, 512, function (g, w, h) {
+  g.fillStyle = '#c9a36b'; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 70; i++) { g.fillStyle = 'rgba(120,80,35,' + (Math.random() * 0.05).toFixed(3) + ')'; g.fillRect(0, Math.random() * h, w, 1 + Math.random() * 3); }
+});
+deskTex.wrapS = deskTex.wrapT = THREE.RepeatWrapping; deskTex.repeat.set(3, 3);
+var deskM = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshLambertMaterial({ map: deskTex }));
+deskM.rotation.x = -Math.PI / 2; deskM.position.y = -0.2; deskM.receiveShadow = true;
+scene.add(deskM);
+
+function pageTex(right) {
+  return ctex(512, 640, function (g, w, h) {
+    g.fillStyle = '#fbf6ea'; g.fillRect(0, 0, w, h);
+    var gr = g.createLinearGradient(right ? 0 : w, 0, right ? 60 : w - 60, 0);
+    gr.addColorStop(0, 'rgba(120,90,45,.18)'); gr.addColorStop(1, 'rgba(120,90,45,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#e4d8c2';
+    for (var r = 0; r < 15; r++) { var y = 60 + r * 36; if (r === 5 || r === 11) continue; g.fillRect(50, y, w - 100 - (r % 4) * 40, 8); }
+    g.fillStyle = '#b9a98c'; g.font = 'bold 22px sans-serif'; g.textAlign = right ? 'right' : 'left';
+    g.fillText(right ? '13' : '12', right ? w - 40 : 40, h - 26);
+  });
+}
+var baseBook = new THREE.Group(); scene.add(baseBook);
+[-1, 1].forEach(function (sx) {
+  var pg = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.16, 6.6), [
+    new THREE.MeshLambertMaterial({ color: 0xefe6d2 }), new THREE.MeshLambertMaterial({ color: 0xefe6d2 }),
+    new THREE.MeshLambertMaterial({ map: pageTex(sx > 0) }), new THREE.MeshLambertMaterial({ color: 0xe4d8c0 }),
+    new THREE.MeshLambertMaterial({ color: 0xefe6d2 }), new THREE.MeshLambertMaterial({ color: 0xefe6d2 })
+  ]);
+  pg.position.set(sx * 2.62, -0.08, 0); pg.receiveShadow = true; pg.castShadow = true;
+  baseBook.add(pg);
+});
+var coverM = new THREE.Mesh(new THREE.BoxGeometry(10.7, 0.06, 6.9), new THREE.MeshLambertMaterial({ color: 0xe56d17 }));
+coverM.position.y = -0.19; baseBook.add(coverM);
+
+/* ===================== 活页底板 ===================== */
+var BASE = 0.1;
+var BOARD = { x0: -4.1, x1: 4.1, z0: -2.35, z1: 2.35 };
+var live = new THREE.Group(); scene.add(live);
+var boardTex = ctex(512, 300, function (g, w, h) {
+  g.fillStyle = '#fffaf0'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(214,196,160,.55)'; g.lineWidth = 1;
+  for (var x = 0; x < w; x += 16) { g.beginPath(); g.moveTo(x + .5, 0); g.lineTo(x + .5, h); g.stroke(); }
+  for (var y = 0; y < h; y += 16) { g.beginPath(); g.moveTo(0, y + .5); g.lineTo(w, y + .5); g.stroke(); }
+});
+var board = mesh(new THREE.BoxGeometry(8.2, BASE, 4.7), [
+  toon('#ead6b0'), toon('#ead6b0'), new THREE.MeshToonMaterial({ map: boardTex, gradientMap: ramp, color: 0xf6ead2 }), toon('#ead6b0'), toon('#ead6b0'), toon('#ead6b0')
+]);
+board.position.y = BASE / 2; board.castShadow = false;
+live.add(board);
+
+var figTex = ctex(512, 300, function (g, w, h) {
+  g.fillStyle = '#fbf3e2'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = '#e56d17'; g.lineWidth = 6; g.strokeRect(6, 6, w - 12, h - 12);
+  g.strokeStyle = '#8a7b62'; g.lineWidth = 4;
+  g.strokeRect(150, 55, 105, 135); g.strokeRect(255, 55, 105, 135);
+  for (var i = 0; i < 5; i++) g.strokeRect(75 + i * 76, 210, 54, 34);
+  g.fillStyle = '#8a7b62'; g.font = 'bold 26px sans-serif'; g.textAlign = 'center'; g.fillText('课本换材料', w / 2, h - 18);
+});
+var figCard = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 4.7), new THREE.MeshBasicMaterial({ map: figTex, transparent: true }));
+figCard.rotation.x = -Math.PI / 2; figCard.position.y = 0.012;
+scene.add(figCard);
+
+/* ===================== 材料定义与程序贴图 ===================== */
+var MATS = [
+  { id: 'paper', name: '纸', py: 'zhǐ', color: '#fff7e4', edge: '#e8dec5', cover: '#ee7b2f', x: -2.6, water: 'absorb',
+    flipWord: ['轻便好翻!', 'qīng biàn hǎo fān', 'good'], liftWord: ['好轻呀!', 'hǎo qīng ya', 'good'],
+    discFlip: ['纸书轻便最好翻', 'zhǐ shū qīng biàn zuì hǎo fān', '#16a34a'] },
+  { id: 'wood',  name: '木板', py: 'mù bǎn', color: '#c88c48', edge: '#a26a2f', cover: '#8b5723', x: -1.3, water: 'damp',
+    flipWord: ['太厚太硬!', 'tài hòu tài yìng', ''], liftWord: ['有点重!', 'yǒu diǎn zhòng', ''],
+    discFlip: ['木书太厚又太硬', 'mù shū tài hòu yòu tài yìng', '#b46924'] },
+  { id: 'iron',  name: '铁板', py: 'tiě bǎn', color: '#8996a8', edge: '#5c6675', cover: '#47505e', x: 0.0, water: 'repel',
+    flipWord: ['太沉翻不动!', 'tài chén fān bu dòng', 'cool'], liftWord: ['搬不动!', 'bān bu dòng', 'cool'],
+    discFlip: ['铁书太沉翻不动', 'tiě shū tài chén fān bu dòng', '#475569'] },
+  { id: 'cloth', name: '布', py: 'bù', color: '#6cb7e8', edge: '#4f99cc', cover: '#3f7eb3', x: 1.3, water: 'absorb',
+    flipWord: ['软塌塌!', 'ruǎn tā tā', ''], liftWord: ['软绵绵!', 'ruǎn mián mián', ''],
+    discFlip: ['布书太软塌下去', 'bù shū tài ruǎn tā xià qù', '#2589c7'] },
+  { id: 'glass', name: '玻璃', py: 'bō li', color: '#bfeef7', edge: '#89d4e3', cover: '#6ac0d4', x: 2.6, water: 'repel',
+    flipWord: ['容易碎!', 'róng yì suì', 'cool'], liftWord: ['滑溜溜!', 'huá liū liū', 'cool'],
+    discFlip: ['玻璃书一翻容易碎', 'bō li shū yī fān róng yì suì', '#0891b2'] }
+];
+var MMAP = {}; MATS.forEach(function (m) { MMAP[m.id] = m; });
+
+function makeMatTex(id, isPage) {
+  return ctex(512, 512, function (g, w, h) {
+    if (id === 'paper') {
+      g.fillStyle = '#fff9ec'; g.fillRect(0, 0, w, h);
+      if (isPage) {
+        g.fillStyle = '#e6dac0';
+        for (var i = 0; i < 9; i++) g.fillRect(46, 56 + i * 44, w - 92 - (i % 3) * 48, 10);
+        g.fillStyle = '#f8b96a'; g.beginPath(); g.arc(w - 115, 130, 42, 0, Math.PI * 2); g.fill();
+        g.strokeStyle = '#e56d17'; g.lineWidth = 5; g.stroke();
+        g.fillStyle = '#8cc474'; g.fillRect(60, 290, 150, 95);
+        g.strokeStyle = '#4e8a3c'; g.lineWidth = 4; g.strokeRect(60, 290, 150, 95);
+      } else {
+        g.strokeStyle = '#e5dac2'; g.lineWidth = 4;
+        for (var j = 1; j < 7; j++) { g.beginPath(); g.moveTo(24, j * 70); g.lineTo(w - 24, j * 70); g.stroke(); }
+      }
+    } else if (id === 'wood') {
+      g.fillStyle = '#c88c48'; g.fillRect(0, 0, w, h);
+      for (var y = 0; y < h; y += 8) {
+        g.strokeStyle = y % 24 === 0 ? 'rgba(92,52,18,.32)' : 'rgba(122,72,24,.18)';
+        g.lineWidth = 3; g.beginPath();
+        for (var x = 0; x <= w; x += 24) g.lineTo(x, y + Math.sin(x * 0.02 + y * 0.05) * 5);
+        g.stroke();
+      }
+      g.strokeStyle = 'rgba(92,52,18,.35)'; g.lineWidth = 4;
+      g.beginPath(); g.ellipse(340, 220, 46, 18, 0.1, 0, Math.PI * 2); g.stroke();
+    } else if (id === 'iron') {
+      var gr = g.createLinearGradient(0, 0, w, h);
+      gr.addColorStop(0, '#9aa8ba'); gr.addColorStop(0.5, '#7a8899'); gr.addColorStop(1, '#98a7b8');
+      g.fillStyle = gr; g.fillRect(0, 0, w, h);
+      g.strokeStyle = 'rgba(255,255,255,.22)'; g.lineWidth = 2;
+      for (var k = 0; k < 40; k++) { g.beginPath(); g.moveTo(0, k * 14); g.lineTo(w, k * 14); g.stroke(); }
+      g.fillStyle = '#4f5a69';
+      [[38, 38], [w - 38, 38], [38, h - 38], [w - 38, h - 38]].forEach(function (p) {
+        g.beginPath(); g.arc(p[0], p[1], 14, 0, Math.PI * 2); g.fill();
+        g.fillStyle = '#cbd5e1'; g.beginPath(); g.arc(p[0] - 3, p[1] - 3, 4, 0, Math.PI * 2); g.fill();
+        g.fillStyle = '#4f5a69';
+      });
+    } else if (id === 'cloth') {
+      g.fillStyle = '#79c0ec'; g.fillRect(0, 0, w, h);
+      g.fillStyle = 'rgba(255,255,255,.25)';
+      for (var a = 0; a < w; a += 32) g.fillRect(a, 0, 14, h);
+      for (var b = 0; b < h; b += 32) g.fillRect(0, b, w, 14);
+      g.strokeStyle = '#ffffff'; g.lineWidth = 5; g.setLineDash([14, 10]);
+      g.strokeRect(22, 22, w - 44, h - 44);
+    } else {
+      var gg = g.createLinearGradient(0, 0, w, h);
+      gg.addColorStop(0, '#d8f6fc'); gg.addColorStop(0.45, '#aee8f5'); gg.addColorStop(1, '#c8f2fb');
+      g.fillStyle = gg; g.fillRect(0, 0, w, h);
+      g.fillStyle = 'rgba(255,255,255,.55)';
+      g.beginPath(); g.moveTo(60, 0); g.lineTo(155, 0); g.lineTo(0, 195); g.lineTo(0, 95); g.fill();
+      g.beginPath(); g.moveTo(220, 0); g.lineTo(265, 0); g.lineTo(0, 320); g.lineTo(0, 275); g.fill();
+      g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 10; g.strokeRect(8, 8, w - 16, h - 16);
+    }
+  });
+}
+
+var pageMats = {}, swatchMats = {};
+MATS.forEach(function (m) {
+  var isG = m.id === 'glass';
+  pageMats[m.id] = new THREE.MeshToonMaterial({
+    map: makeMatTex(m.id, true), gradientMap: ramp, color: 0xffffff,
+    transparent: isG, opacity: isG ? 0.78 : 1, side: THREE.DoubleSide
+  });
+  swatchMats[m.id] = new THREE.MeshToonMaterial({
+    map: makeMatTex(m.id, false), gradientMap: ramp, color: 0xffffff,
+    transparent: isG, opacity: isG ? 0.78 : 1
+  });
+});
+
+/* ===================== 中心 3D 大课本 ===================== */
+var BOOK_POS = new THREE.Vector3(-0.1, BASE, -0.45);
+var bookG = new THREE.Group();
+bookG.position.copy(BOOK_POS);
+live.add(bookG);
+
+var bookBody = new THREE.Group();
+bookG.add(bookBody);
+
+// 底部高亮环（拖材料靠近时发光）
+var bookGlow = new THREE.Mesh(
+  new THREE.RingGeometry(1.85, 2.15, 48),
+  new THREE.MeshBasicMaterial({ color: 0xffb23c, transparent: true, opacity: 0, side: THREE.DoubleSide })
+);
+bookGlow.rotation.x = -Math.PI / 2;
+bookGlow.position.y = 0.02;
+bookG.add(bookGlow);
+
+var PW = 1.65, PD = 2.15, PH = 0.24;
+var coverMat = toon('#ee7b2f');
+var edgeMat = toon('#e8dec5');
+
+// 底层封面
+var bCover = mesh(new THREE.BoxGeometry(PW * 2 + 0.16, 0.06, PD + 0.14), coverMat);
+bCover.position.y = 0.03;
+bookBody.add(bCover);
+
+// 中间书脊
+var bSpine = mesh(new THREE.CylinderGeometry(0.08, 0.08, PD + 0.12, 12), coverMat);
+bSpine.rotation.x = Math.PI / 2;
+bSpine.position.set(0, 0.08, 0);
+bookBody.add(bSpine);
+
+// 左半叠书页 & 右半叠书页
+var leftBlock = mesh(new THREE.BoxGeometry(PW, PH, PD), [edgeMat, edgeMat, pageMats.paper, edgeMat, edgeMat, edgeMat]);
+leftBlock.position.set(-PW / 2 - 0.02, 0.06 + PH / 2, 0);
+bookBody.add(leftBlock);
+
+var rightBlock = mesh(new THREE.BoxGeometry(PW, PH, PD), [edgeMat, edgeMat, pageMats.paper, edgeMat, edgeMat, edgeMat]);
+rightBlock.position.set(PW / 2 + 0.02, 0.06 + PH / 2, 0);
+bookBody.add(rightBlock);
+
+// 可弯曲翻转的顶页（12段细分，支持左翻下一页与右翻上一页双向弯曲）
+var SEGS = 12;
+var flipGeo = new THREE.PlaneGeometry(PW, PD, SEGS, 2);
+flipGeo.rotateX(-Math.PI / 2);
+flipGeo.translate(PW / 2, 0, 0);
+var flipBasePos = new Float32Array(flipGeo.attributes.position.array);
+var flipPage = new THREE.Mesh(flipGeo, pageMats.paper);
+flipPage.castShadow = true; flipPage.receiveShadow = true;
+flipPage.position.set(0.02, 0.06 + PH + 0.02, 0);
+bookBody.add(flipPage);
+var flipEdgeLine = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(PW, PD)), INK);
+flipEdgeLine.rotation.x = -Math.PI / 2;
+flipEdgeLine.position.x = PW / 2;
+flipPage.add(flipEdgeLine);
+
+// 左右双侧硬质厚页块（木板/铁板/玻璃时左右对称，双向都可掀动/破裂）
+var slabGeoR = new THREE.BoxGeometry(PW, 0.1, PD);
+slabGeoR.translate(PW / 2, 0.05, 0);
+var flipSlabR = mesh(slabGeoR, [edgeMat, edgeMat, pageMats.wood, edgeMat, edgeMat, edgeMat]);
+flipSlabR.position.set(0.02, 0.06 + PH + 0.005, 0);
+flipSlabR.visible = false;
+bookBody.add(flipSlabR);
+
+var slabGeoL = new THREE.BoxGeometry(PW, 0.1, PD);
+slabGeoL.translate(-PW / 2, 0.05, 0);
+var flipSlabL = mesh(slabGeoL, [edgeMat, edgeMat, pageMats.wood, edgeMat, edgeMat, edgeMat]);
+flipSlabL.position.set(-0.02, 0.06 + PH + 0.005, 0);
+flipSlabL.visible = false;
+bookBody.add(flipSlabL);
+
+// 左右双向翻页小折角提示标签
+var tabG = new THREE.Group();
+var tabM = mesh(new THREE.BoxGeometry(0.28, 0.04, 0.42), toon('#ff9f2e'));
+tabM.position.set(PW + 0.04, 0.06 + PH + 0.04, PD * 0.34);
+var tabL = mesh(new THREE.BoxGeometry(0.28, 0.04, 0.42), toon('#ff9f2e'));
+tabL.position.set(-PW - 0.04, 0.06 + PH + 0.04, PD * 0.34);
+tabG.add(tabM, tabL);
+bookBody.add(tabG);
+
+// 玻璃裂纹层（左右页各自独立）
+var crackTex = ctex(512, 512, function (g, w, h) {
+  g.strokeStyle = 'rgba(255,255,255,0.95)'; g.lineWidth = 4;
+  var cx = 290, cy = 260;
+  var rays = [[50, 40], [490, 90], [470, 460], [110, 480], [20, 270], [340, 20], [230, 495]];
+  rays.forEach(function (r) {
+    g.beginPath(); g.moveTo(cx, cy);
+    var mx = (cx + r[0]) / 2 + (Math.random() - 0.5) * 40, my = (cy + r[1]) / 2 + (Math.random() - 0.5) * 40;
+    g.lineTo(mx, my); g.lineTo(r[0], r[1]); g.stroke();
+  });
+  g.strokeStyle = 'rgba(30,60,80,0.65)'; g.lineWidth = 2;
+  [55, 115, 185].forEach(function (rad) {
+    g.beginPath();
+    for (var a = 0; a <= Math.PI * 2; a += 0.55) g.lineTo(cx + Math.cos(a) * rad, cy + Math.sin(a) * rad);
+    g.closePath(); g.stroke();
+  });
+});
+var crackMeshR = new THREE.Mesh(
+  new THREE.PlaneGeometry(PW * 0.94, PD * 0.94),
+  new THREE.MeshBasicMaterial({ map: crackTex, transparent: true, opacity: 0, depthWrite: false })
+);
+crackMeshR.rotation.x = -Math.PI / 2;
+crackMeshR.position.set(PW / 2, 0.11, 0);
+flipSlabR.add(crackMeshR);
+
+var crackMeshL = new THREE.Mesh(
+  new THREE.PlaneGeometry(PW * 0.94, PD * 0.94),
+  new THREE.MeshBasicMaterial({ map: crackTex, transparent: true, opacity: 0, depthWrite: false })
+);
+crackMeshL.rotation.x = -Math.PI / 2;
+crackMeshL.position.set(-PW / 2, 0.11, 0);
+flipSlabL.add(crackMeshL);
+
+// 吸水变湿的深色水渍层（纸/布/木）
+var wetTex = ctex(256, 256, function (g, w, h) {
+  var gr = g.createRadialGradient(128, 128, 10, 128, 128, 110);
+  gr.addColorStop(0, 'rgba(72,95,125,0.52)');
+  gr.addColorStop(0.65, 'rgba(72,95,125,0.34)');
+  gr.addColorStop(1, 'rgba(72,95,125,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+});
+var wetPatch = new THREE.Mesh(
+  new THREE.PlaneGeometry(1.2, 1.35),
+  new THREE.MeshBasicMaterial({ map: wetTex, transparent: true, opacity: 0, depthWrite: false })
+);
+wetPatch.rotation.x = -Math.PI / 2;
+wetPatch.position.set(PW * 0.52, 0.06 + PH + 0.04, 0.05);
+bookBody.add(wetPatch);
+
+// 玻璃/铁板上的晶莹水珠（喷水后滚落并自然淡出）
+var beadsG = new THREE.Group();
+var beadMat = toon('#7fe0ff', { transparent: true, opacity: 0.9 });
+var beads = [];
+for (var bi = 0; bi < 10; bi++) {
+  var rad = 0.045 + (bi % 3) * 0.02;
+  var bm = mesh(new THREE.SphereGeometry(rad, 10, 8), beadMat, false);
+  bm.scale.set(1, 0.55, 1);
+  var bx = 0.25 + (bi % 4) * 0.32 + Math.random() * 0.1;
+  var bz = -0.55 + Math.floor(bi / 4) * 0.45 + Math.random() * 0.12;
+  bm.position.set(bx, 0.06 + PH + 0.12, bz);
+  beadsG.add(bm);
+  beads.push({ m: bm, x0: bx, z0: bz, roll: 0 });
+}
+beadsG.visible = false;
+bookBody.add(beadsG);
+
+// 给课本各部分打标记，方便射线拾取
+bookG.traverse(function (o) { if (o.isMesh) o.userData.kind = 'book'; });
+flipPage.userData.kind = 'page';
+flipSlabR.userData.kind = 'page';
+flipSlabL.userData.kind = 'page';
+tabM.userData.kind = 'page';
+tabM.userData.side = 1;
+tabL.userData.kind = 'page';
+tabL.userData.side = -1;
+
+/* ===================== 5 块可拖拽材料样本 ===================== */
+var swatches = [];
+MATS.forEach(function (m, idx) {
+  // 小木托盘 + 引导高亮环
+  var pad = mesh(new THREE.CylinderGeometry(0.5, 0.54, 0.05, 24), toon('#e2c79a'));
+  pad.position.set(m.x, BASE + 0.025, 1.58);
+  live.add(pad);
+  var ringMat = new THREE.MeshBasicMaterial({ color: 0xffa834, transparent: true, opacity: 0, side: THREE.DoubleSide });
+  var ring = new THREE.Mesh(new THREE.RingGeometry(0.52, 0.63, 28), ringMat);
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.set(m.x, BASE + 0.055, 1.58);
+  live.add(ring);
+
+  var g = new THREE.Group(), body = new THREE.Group(); g.add(body);
+  var h = 0.16;
+  if (m.id === 'paper') {
+    for (var s = 0; s < 3; s++) {
+      var sh = mesh(new THREE.BoxGeometry(0.74, 0.035, 0.62), swatchMats.paper);
+      sh.position.set(s * 0.015, 0.02 + s * 0.04, -s * 0.01);
+      sh.rotation.y = (s - 1) * 0.08;
+      body.add(sh);
+    }
+    h = 0.15;
+  } else if (m.id === 'wood') {
+    var wd = mesh(new THREE.BoxGeometry(0.76, 0.2, 0.62), swatchMats.wood);
+    wd.position.y = 0.1; body.add(wd); h = 0.2;
+  } else if (m.id === 'iron') {
+    var ir = mesh(new THREE.BoxGeometry(0.76, 0.14, 0.62), swatchMats.iron);
+    ir.position.y = 0.07; body.add(ir); h = 0.14;
+  } else if (m.id === 'cloth') {
+    var cl1 = mesh(new THREE.BoxGeometry(0.76, 0.09, 0.6), swatchMats.cloth);
+    cl1.position.y = 0.045; body.add(cl1);
+    var cl2 = mesh(new THREE.BoxGeometry(0.56, 0.07, 0.5), swatchMats.cloth);
+    cl2.position.set(0.06, 0.12, -0.02); cl2.rotation.y = 0.14; body.add(cl2);
+    h = 0.17;
+  } else {
+    var gl = mesh(new THREE.BoxGeometry(0.76, 0.11, 0.62), swatchMats.glass);
+    gl.position.y = 0.055; body.add(gl); h = 0.11;
+  }
+
+  var sw = {
+    mat: m, g: g, body: body, h: h, ringMat: ringMat,
+    home: new THREE.Vector3(m.x, BASE + 0.05, 1.58),
+    cur: new THREE.Vector3(m.x, BASE + 0.05, 1.58),
+    target: new THREE.Vector3(m.x, BASE + 0.05, 1.58),
+    pop: 0.01, hover: 0, dragging: false, flying: null
+  };
+  g.traverse(function (o) { if (o.isMesh) { o.userData.kind = 'swatch'; o.userData.sw = sw; } });
+  g.position.copy(sw.cur);
+  live.add(g);
+  swatches.push(sw);
+});
+
+/* ===================== 左侧 3D 小喷水壶 ===================== */
+var bottle = {
+  g: new THREE.Group(), body: new THREE.Group(),
+  home: new THREE.Vector3(-3.05, BASE, -0.35),
+  cur: new THREE.Vector3(-3.05, BASE, -0.35),
+  target: new THREE.Vector3(-3.05, BASE, -0.35),
+  h: 1.15, pop: 0.01, hover: 0, dragging: false, anim: null
+};
+bottle.g.add(bottle.body);
+var bBase = mesh(new THREE.CylinderGeometry(0.28, 0.34, 0.62, 18), toon('#66ccf2', { transparent: true, opacity: 0.85 }));
+bBase.position.y = 0.31; bottle.body.add(bBase);
+var bWater = mesh(new THREE.CylinderGeometry(0.24, 0.29, 0.38, 16), toon('#2ba5e8'), false);
+bWater.position.y = 0.21; bottle.body.add(bWater);
+var bNeck = mesh(new THREE.CylinderGeometry(0.11, 0.22, 0.22, 14), toon('#f5f7fa'));
+bNeck.position.y = 0.72; bottle.body.add(bNeck);
+var bHead = mesh(new THREE.BoxGeometry(0.42, 0.18, 0.2), toon('#ffffff'));
+bHead.position.set(0.09, 0.92, 0); bottle.body.add(bHead);
+var bNoz = mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.14, 10), toon('#e56d17'));
+bNoz.rotation.z = Math.PI / 2; bNoz.position.set(0.32, 0.92, 0); bottle.body.add(bNoz);
+var bTrig = mesh(new THREE.BoxGeometry(0.06, 0.22, 0.06), toon('#e56d17'));
+bTrig.position.set(0.22, 0.76, 0); bTrig.rotation.z = 0.35; bottle.body.add(bTrig);
+
+bottle.g.traverse(function (o) { if (o.isMesh) o.userData.kind = 'bottle'; });
+var bottleGlowMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0, side: THREE.DoubleSide });
+var bottleGlow = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.56, 32), bottleGlowMat);
+bottleGlow.rotation.x = -Math.PI / 2;
+bottleGlow.position.set(bottle.home.x, BASE + 0.03, bottle.home.z);
+live.add(bottleGlow);
+bottle.g.position.copy(bottle.cur);
+live.add(bottle.g);
+
+// 喷水粒子
+var droplets = [];
+for (var di = 0; di < 18; di++) {
+  var dm = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), toon('#5cd0ff'), false);
+  dm.visible = false;
+  live.add(dm);
+  droplets.push({ m: dm, v: new THREE.Vector3(), life: 0 });
+}
+
+/* ===================== 相机取景 ===================== */
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  var portrait = w / h < 0.85;
+  var tgt = new THREE.Vector3(portrait ? -0.1 : 0.1, 0.45, portrait ? 0.2 : 0.12);
+  var dir = portrait ? new THREE.Vector3(0.48, 0.82, 0.32).normalize() : new THREE.Vector3(0, 0.72, 0.69).normalize();
+  var needW = portrait ? 6.2 : 8.7, needH = portrait ? 9.2 : 6.1;
+  var vf = THREE.MathUtils.degToRad(camera.fov), hf = 2 * Math.atan(Math.tan(vf / 2) * camera.aspect);
+  var d = Math.max(needW / 2 / Math.tan(hf / 2), needH / 2 / Math.tan(vf / 2) * 0.82);
+  camera.position.copy(tgt).addScaledVector(dir, d);
+  camera.lookAt(tgt);
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', fit);
+
+/* ===================== WebAudio 音效 ===================== */
+var AC = null;
+function audio() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } } if (AC && AC.state === 'suspended') AC.resume(); return AC; }
+function tone(f, dur, type, vol, f2, delay) {
+  var a = audio(); if (!a) return;
+  var t = a.currentTime + (delay || 0), o = a.createOscillator(), g = a.createGain();
+  o.type = type || 'sine'; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.14, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + 0.02);
+}
+function noise(dur, freq, vol, q) {
+  var a = audio(); if (!a) return;
+  var n = Math.floor(a.sampleRate * dur), b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0);
+  for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 1.8);
+  var s = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+  s.buffer = b; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q || 1.2; g.gain.value = vol || 0.35;
+  s.connect(f); f.connect(g); g.connect(a.destination); s.start();
+}
+var SND = {
+  paper: function () { noise(0.22, 2400, 0.32, 0.8); tone(420, 0.08, 'sine', 0.04, 620); },
+  wood:  function () { tone(165, 0.15, 'triangle', 0.24, 95); noise(0.05, 650, 0.35); },
+  iron:  function () { tone(110, 0.22, 'sawtooth', 0.14, 72); tone(340, 0.18, 'square', 0.05, 220); },
+  cloth: function () { noise(0.18, 800, 0.22, 0.7); tone(190, 0.14, 'sine', 0.08, 120); },
+  glass: function () { tone(2400, 0.28, 'sine', 0.12, 1800); tone(3650, 0.18, 'triangle', 0.09, 2100, 0.04); noise(0.08, 5200, 0.28, 2); },
+  spray: function () { noise(0.28, 4200, 0.34, 0.9); tone(520, 0.12, 'sine', 0.06, 980); },
+  swap:  function () { tone(360, 0.1, 'sine', 0.12, 560); tone(560, 0.14, 'sine', 0.1, 740, 0.06); },
+  ding:  function () { tone(880, 0.15, 'sine', 0.11); tone(1320, 0.26, 'sine', 0.09, null, 0.09); },
+  win:   function () {
+    tone(523, 0.14, 'sine', 0.13, null, 0);
+    tone(659, 0.14, 'sine', 0.13, null, 0.11);
+    tone(784, 0.16, 'sine', 0.14, null, 0.22);
+    tone(1046, 0.36, 'sine', 0.15, null, 0.34);
+    tone(784, 0.32, 'triangle', 0.07, null, 0.34);
+  }
+};
+
+/* ===================== 儿童离线语音引导 & 进度持久化 ===================== */
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem('xk_k1a_progress') || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem('xk_k1a_progress', JSON.stringify(d));
+  } catch (e) {}
+}
+
+var voiceOn = true, voiceWelcomed = false, cuesDismissed = false;
+var nextHintTimer = 0, guidePulse = 0, guideTarget = 'swatches', currentGuideSpeech = '';
+var INTRO_VOICE = '把下面不同的材料点一点或拖到课本上，试试换上木板、铁板、布和玻璃，再翻一翻页、喷一喷水，看看哪种材料最适合做课本吧！';
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
+  if (!('speechSynthesis' in window)) return;
+  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+}
+function clearNextHint() {
+  if (nextHintTimer) { clearTimeout(nextHintTimer); nextHintTimer = 0; }
+}
+function scheduleNextHint(text, delayMs) {
+  clearNextHint();
+  if (!text || !voiceOn) return;
+  var gen = resetGen;
+  nextHintTimer = setTimeout(function () {
+    nextHintTimer = 0;
+    if (gen !== resetGen || demo || celebrated) return;
+    speak(text);
+  }, delayMs || 1900);
+}
+function dismissEntryCues() {
+  if (cuesDismissed) return;
+  cuesDismissed = true;
+  var vc = $('#voiceCue'), dc = $('#demoCue');
+  if (vc) vc.classList.add('hide');
+  if (dc) dc.classList.add('hide');
+  $('#voiceBtn').classList.remove('cue-pulse');
+  $('#demoBtn').classList.remove('cue-pulse');
+}
+function welcomeVoiceOnce() {
+  dismissEntryCues();
+  if (voiceWelcomed) return;
+  voiceWelcomed = true;
+  speak(currentGuideSpeech || INTRO_VOICE);
+}
+
+/* ===================== 标签与发现 ===================== */
+var labelsEl = $('#labels');
+function makeLbl(name, py) {
+  var el = document.createElement('div'); el.className = 'lbl'; el.innerHTML = ruby(name, py);
+  labelsEl.appendChild(el); return el;
+}
+swatches.forEach(function (sw) { sw.lbl = makeLbl(sw.mat.name, sw.mat.py); });
+bottle.lbl = makeLbl('喷水壶', 'pēn shuǐ hú');
+var bookLbl = makeLbl('课本', 'kè běn');
+
+var vtmp = new THREE.Vector3();
+function toScreen(v) { vtmp.copy(v).project(camera); return { x: (vtmp.x + 1) / 2 * window.innerWidth, y: (1 - vtmp.y) / 2 * window.innerHeight }; }
+function floatWord(text, py, worldPos, cls) {
+  var p = toScreen(worldPos), el = document.createElement('div');
+  el.className = 'word' + (cls ? ' ' + cls : ''); el.innerHTML = ruby(text, py);
+  el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
+  labelsEl.appendChild(el); setTimeout(function () { el.remove(); }, 1300);
+}
+
+var found = {}, foundN = 0, kinds = { m: false, f: false, w: false };
+var triedMats = {}, quizSolved = false;
+var acted = { swap: false, flip: false, spray: false }, actions = 0;
+var celebrated = false, resetGen = 0;
+function markAct(v) {
+  if (!acted[v]) { acted[v] = true; var el = document.querySelector('.verb[data-v="' + v + '"]'); if (el) el.classList.add('done'); }
+  actions++;
+}
+function countNonPaperMats() {
+  var n = 0;
+  for (var k in triedMats) if (triedMats[k] && k !== 'paper') n++;
+  return n;
+}
+function checkMatStamp() {
+  if (demo) return false;
+  var nonP = countNonPaperMats();
+  var total = Object.keys(triedMats).length;
+  if (!kinds.m && triedMats.paper && nonP >= 2 && total >= 3) {
+    kinds.m = true;
+    $('#stM').classList.add('lit');
+    return true;
+  }
+  return false;
+}
+function updateGuide(speakIt) {
+  var bar = $('#guideBar'), txt = $('#guideTxt');
+  if (!bar || !txt) return;
+  if (demo) {
+    bar.classList.remove('done');
+    return;
+  }
+  var nonP = countNonPaperMats();
+  var msg = '', speech = '';
+  if (!kinds.m) {
+    if (nonP < 2) {
+      guideTarget = 'nonPaper';
+      msg = '步骤1：把下面不同的材料点一点或拖到课本上，试试木板、铁板、布和玻璃！（已比 ' + nonP + '/2 种）';
+      speech = '把下面不同的材料点一点或拖到课本上，试试换上木板、铁板、布和玻璃看看！';
+    } else {
+      guideTarget = 'paper';
+      msg = '步骤1：再把下面的「纸」点一点或拖到课本上，和刚才的材料比一比！';
+      speech = '再把下面的纸点一点或拖到课本上，比一比纸做的课本怎么样！';
+    }
+    bar.classList.remove('done');
+  } else if (!kinds.f) {
+    guideTarget = 'book';
+    msg = '步骤2：现在点一点或拖一拖课本左右两页，试试这种材料好不好翻页！';
+    speech = '真棒！现在点一点或拖一拖课本左右两页，试试这种材料好不好翻页！';
+    bar.classList.remove('done');
+  } else if (!kinds.w) {
+    guideTarget = 'bottle';
+    msg = '步骤3：再点一点左边的喷水壶，看看课本怕不怕水！';
+    speech = '太好了！再点一点左边的喷水壶，看看课本怕不怕水！';
+    bar.classList.remove('done');
+  } else {
+    guideTarget = 'done';
+    msg = '🎉 换材、翻页、喷水全部完成啦！还可以继续自由比较不同材料哦！';
+    speech = '换材、翻页、喷水全部完成啦！还可以继续自由探索不同材料哦！';
+    bar.classList.add('done');
+  }
+  currentGuideSpeech = speech;
+  txt.textContent = msg;
+  bar.classList.remove('pulse');
+  void bar.offsetWidth;
+  bar.classList.add('pulse');
+  if (speakIt) {
+    guidePulse = 2.0;
+    scheduleNextHint(speech, 1950);
+  }
+}
+function launchConfetti() {
+  var box = $('#confetti');
+  var cols = ['#f97316', '#facc15', '#22c55e', '#38bdf8', '#ec4899', '#a855f7'];
+  for (var i = 0; i < 36; i++) {
+    var d = document.createElement('div');
+    d.className = 'conf';
+    d.style.left = (20 + Math.random() * 60) + '%';
+    d.style.top = (14 + Math.random() * 14) + '%';
+    d.style.background = cols[i % cols.length];
+    d.style.setProperty('--dx', ((Math.random() - 0.5) * 340).toFixed(0) + 'px');
+    d.style.setProperty('--dy', (180 + Math.random() * 320).toFixed(0) + 'px');
+    d.style.setProperty('--rot', ((Math.random() - 0.5) * 720).toFixed(0) + 'deg');
+    d.style.animationDelay = (Math.random() * 0.28).toFixed(2) + 's';
+    box.appendChild(d);
+    (function (el) { setTimeout(function () { el.remove(); }, 2500); })(d);
+  }
+}
+function checkComplete() {
+  if (celebrated || demo) return;
+  if (kinds.m && kinds.f && kinds.w) {
+    celebrated = true;
+    clearNextHint();
+    saveProgress('k1a-03-book', true);
+    updateGuide(false);
+    var gen = resetGen;
+    setTimeout(function () {
+      if (gen !== resetGen) return;
+      SND.win();
+      launchConfetti();
+      $('#winToast').classList.add('show');
+      speak('太棒啦！换材、翻页和喷水全部探索完成啦！科学小结论：纸做的课本又轻、好翻页又方便写字，但有点怕水，要好好爱护；木板、铁板太硬太重，布太软，玻璃容易碎！快来答对下面的小问题，领取本课小红花吧！');
+    }, 520);
+  }
+}
+function discover(key, kind, text, py, color) {
+  var isNew = !found[key];
+  if (isNew) {
+    found[key] = true; foundN++;
+    var el = document.createElement('div'); el.className = 'stk';
+    var icon = kind === 'm' ? '✨' : kind === 'f' ? '📖' : '💧';
+    el.innerHTML = '<i style="background:' + color + '">' + icon + '</i><span>' + ruby(text, py) + '</span>';
+    var list = $('#ntList'); list.insertBefore(el, list.firstChild);
+    while (list.children.length > 12) list.removeChild(list.lastChild);
+    $('#ntCount').textContent = foundN;
+    SND.ding();
+  }
+  var phaseJustDone = false;
+  if (!demo) {
+    if (kind === 'f' && !kinds.f) { kinds.f = true; $('#stF').classList.add('lit'); phaseJustDone = true; }
+    else if (kind === 'w' && !kinds.w) { kinds.w = true; $('#stW').classList.add('lit'); phaseJustDone = true; }
+  }
+  if (!demo && isNew) speak(text);
+  checkComplete();
+  if (!celebrated && !demo) updateGuide(phaseJustDone);
+}
+
+/* ===================== 课本材料状态与双向翻页/喷水/掂重动画 ===================== */
+var curMatId = 'paper', matGen = 0;
+var bookPop = 0, bookShake = 0, bookLift = 0, bookLiftGoal = 0;
+var flipAnim = { active: false, t: 0, dur: 0.9, dir: 1 };
+var glassCrackedR = false, glassCrackedL = false;
+var wetAlpha = 0, wetGoal = 0, wetTimer = 0, beadsTimer = 0;
+
+function applyMaterial(id, silent) {
+  curMatId = id; matGen++;
+  var m = MMAP[id];
+  var pm = pageMats[id];
+  coverMat.color.set(m.cover);
+  edgeMat.color.set(m.edge);
+  leftBlock.material[2] = pm;
+  rightBlock.material[2] = pm;
+  flipPage.material = pm;
+  flipSlabR.material[2] = pm;
+  flipSlabL.material[2] = pm;
+
+  var thick = (id === 'wood' || id === 'iron' || id === 'glass');
+  flipPage.visible = !thick;
+  flipSlabR.visible = thick;
+  flipSlabL.visible = thick;
+  flipSlabR.rotation.z = 0;
+  flipSlabL.rotation.z = 0;
+  var sy = id === 'wood' ? 1.45 : id === 'iron' ? 0.95 : 0.72;
+  flipSlabR.scale.y = sy;
+  flipSlabL.scale.y = sy;
+  resetFlipVerts();
+
+  glassCrackedR = false; glassCrackedL = false;
+  crackMeshR.material.opacity = 0;
+  crackMeshL.material.opacity = 0;
+  wetGoal = 0; wetAlpha = 0; wetTimer = 0; wetPatch.material.opacity = 0;
+  beadsTimer = 0; beadsG.visible = false; beadMat.opacity = 0.9;
+  bookPop = 1;
+  flipAnim.active = false;
+
+  if (!silent) {
+    SND.swap();
+    markAct('swap');
+    floatWord(m.name, m.py, BOOK_POS.clone().add(new THREE.Vector3(0, 0.95, 0)), '');
+    if (!demo) {
+      triedMats[id] = true;
+      var matDone = checkMatStamp();
+      speak(id === 'paper' ? '换成纸课本啦！纸又轻又薄，真好翻！' : ('换成' + m.name + '课本啦！'));
+      checkComplete();
+      if (!celebrated) updateGuide(matDone);
+    }
+  }
+}
+
+function resetFlipVerts() {
+  var pos = flipGeo.attributes.position;
+  for (var i = 0; i < pos.count; i++) {
+    pos.setXYZ(i, flipBasePos[i * 3], flipBasePos[i * 3 + 1], flipBasePos[i * 3 + 2]);
+  }
+  pos.needsUpdate = true;
+  flipGeo.computeVertexNormals();
+  flipEdgeLine.visible = true;
+  flipPage.position.x = 0.02;
+}
+
+function updateFlipGeo(u, mode, dir) {
+  var pos = flipGeo.attributes.position;
+  flipEdgeLine.visible = false;
+  flipPage.position.x = dir > 0 ? 0.02 : -0.02;
+  for (var i = 0; i < pos.count; i++) {
+    var x0 = flipBasePos[i * 3], z0 = flipBasePos[i * 3 + 2];
+    var frac = x0 / PW; // 0 at spine, 1 at outer edge
+    if (mode === 'paper') {
+      var ang = dir > 0 ? u * Math.PI : (1 - u) * Math.PI;
+      var curl = Math.sin(u * Math.PI) * 0.42 * Math.sin(frac * Math.PI);
+      var nx = Math.cos(ang) * x0;
+      var ny = Math.sin(ang) * x0 + curl;
+      pos.setXYZ(i, nx, ny, z0);
+    } else if (mode === 'cloth') {
+      // 软塌塌：无论左翻还是右翻，拎起一小段就向下耷拉折皱
+      var lift = Math.sin(u * Math.PI) * 0.65;
+      var droop = Math.pow(frac, 1.8) * 0.55 * Math.sin(u * Math.PI);
+      var wave = Math.sin(frac * 7 + u * 6) * 0.05 * Math.sin(u * Math.PI);
+      var nx2 = x0 * (1 - 0.35 * Math.sin(u * Math.PI) * frac) * (dir > 0 ? 1 : -1);
+      var ny2 = Math.max(0.01, lift * Math.sin(frac * Math.PI * 0.85) - droop * 0.5 + wave);
+      pos.setXYZ(i, nx2, ny2, z0);
+    }
+  }
+  pos.needsUpdate = true;
+  flipGeo.computeVertexNormals();
+}
+
+function triggerFlip(dir) {
+  dir = dir < 0 ? -1 : 1; // 1 = 右页往左翻(下一页), -1 = 左页往右翻(上一页)
+  var m = MMAP[curMatId];
+  flipAnim.active = true;
+  flipAnim.t = 0;
+  flipAnim.dir = dir;
+  flipAnim.dur = curMatId === 'paper' ? 0.9 : curMatId === 'cloth' ? 0.85 : 0.65;
+  SND[curMatId]();
+  markAct('flip');
+  var wTxt = m.flipWord[0];
+  if (curMatId === 'paper') wTxt = dir > 0 ? '← 轻便好翻!' : '轻便好翻! →';
+  if (!demo && curMatId === 'paper') {
+    triedMats.paper = true;
+    checkMatStamp();
+  }
+  floatWord(wTxt, m.flipWord[1], BOOK_POS.clone().add(new THREE.Vector3(dir * 0.65, 1.05, 0)), m.flipWord[2]);
+  discover('flip:' + curMatId, 'f', m.discFlip[0], m.discFlip[1], m.discFlip[2]);
+  if (curMatId === 'iron' || curMatId === 'wood') bookShake = 0.8;
+  if (curMatId === 'glass') {
+    if (dir > 0) glassCrackedR = true;
+    else glassCrackedL = true;
+  }
+}
+
+function triggerLift() {
+  var m = MMAP[curMatId];
+  bookLiftGoal = curMatId === 'iron' ? 0.04 : curMatId === 'wood' ? 0.25 : 0.72;
+  if (curMatId === 'iron') { bookShake = 1.0; SND.iron(); }
+  else SND[curMatId]();
+  floatWord(m.liftWord[0], m.liftWord[1], BOOK_POS.clone().add(new THREE.Vector3(0, 1.15, 0)), m.liftWord[2]);
+  if (curMatId === 'paper') discover('lift:paper', 'm', '纸书好轻便', 'zhǐ shū hǎo qīng biàn', '#16a34a');
+  if (curMatId === 'iron') discover('lift:iron', 'm', '铁书沉甸甸', 'tiě shū chén diàn diàn', '#475569');
+}
+
+function triggerSpray() {
+  bottle.anim = { t: 0, sprayed: false };
+  ghost.off = true;
+}
+
+function emitSpray() {
+  SND.spray();
+  markAct('spray');
+  var origin = bottle.cur.clone().add(new THREE.Vector3(0.35, 0.9, 0));
+  droplets.forEach(function (d) {
+    d.m.visible = true;
+    d.m.position.copy(origin);
+    d.v.set(1.4 + Math.random() * 1.1, 0.3 + Math.random() * 0.7, (Math.random() - 0.5) * 1.1);
+    d.life = 0.45 + Math.random() * 0.25;
+  });
+  var m = MMAP[curMatId], sprayGen = matGen, sprayMatId = curMatId;
+  if (!demo && sprayMatId === 'paper') {
+    triedMats.paper = true;
+    checkMatStamp();
+  }
+  setTimeout(function () {
+    if (sprayGen !== matGen) return;
+    if (m.water === 'absorb') {
+      wetGoal = 1; wetTimer = 3.6;
+      beadsG.visible = false; beadsTimer = 0;
+      floatWord('吸水变湿!', 'xī shuǐ biàn shī', BOOK_POS.clone().add(new THREE.Vector3(0.5, 1.0, 0)), 'cool');
+      if (sprayMatId === 'paper') discover('w:paper', 'w', '纸会吸水变湿', 'zhǐ huì xī shuǐ biàn shī', '#2589c7');
+      else discover('w:cloth', 'w', '布会吸水变湿', 'bù huì xī shuǐ biàn shī', '#2589c7');
+    } else if (m.water === 'damp') {
+      wetGoal = 0.55; wetTimer = 3.2;
+      beadsG.visible = false; beadsTimer = 0;
+      floatWord('有点吸水!', 'yǒu diǎn xī shuǐ', BOOK_POS.clone().add(new THREE.Vector3(0.5, 1.0, 0)), '');
+      discover('w:wood', 'w', '木板会慢慢吸水', 'mù bǎn huì màn màn xī shuǐ', '#b46924');
+    } else {
+      wetGoal = 0; wetTimer = 0;
+      beadsG.visible = true; beadsTimer = 2.6; beadMat.opacity = 0.9;
+      beads.forEach(function (b) { b.roll = 1; b.m.scale.set(1, 0.55, 1); b.m.position.set(b.x0, 0.06 + PH + 0.12, b.z0); });
+      floatWord('不吸水!', 'bù xī shuǐ', BOOK_POS.clone().add(new THREE.Vector3(0.5, 1.0, 0)), 'good');
+      if (sprayMatId === 'iron') discover('w:iron', 'w', '铁板不会吸水', 'tiě bǎn bù huì xī shuǐ', '#0891b2');
+      else discover('w:glass', 'w', '玻璃不会吸水', 'bō li bù huì xī shuǐ', '#0891b2');
+    }
+  }, 260);
+}
+
+/* ===================== 交互：拖拽样本/喷水壶 + 翻页 + 长按掂重 ===================== */
+var P = null, hoveredObj = null, now = 0;
+var pickables = [];
+swatches.forEach(function (sw) { sw.g.traverse(function (o) { if (o.isMesh) pickables.push(o); }); });
+bottle.g.traverse(function (o) { if (o.isMesh) pickables.push(o); });
+bookG.traverse(function (o) { if (o.isMesh && o !== bookGlow) pickables.push(o); });
+
+var dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), ptmp = new THREE.Vector3();
+function setNDC(e) { ndc.x = (e.clientX / window.innerWidth) * 2 - 1; ndc.y = -(e.clientY / window.innerHeight) * 2 + 1; raycaster.setFromCamera(ndc, camera); }
+function planePoint(e, y) { setNDC(e); dragPlane.constant = -y; return raycaster.ray.intersectPlane(dragPlane, ptmp) ? ptmp.clone() : null; }
+function pick(e) {
+  setNDC(e);
+  var h = raycaster.intersectObjects(pickables, false)[0];
+  if (!h) return null;
+  var side = h.object.userData.side || (h.point.x < BOOK_POS.x ? -1 : 1);
+  return { kind: h.object.userData.kind, sw: h.object.userData.sw || null, point: h.point, side: side };
+}
+
+canvas.addEventListener('pointerdown', function (e) {
+  audio(); welcomeVoiceOnce(); stopDemo(); introSkip();
+  var h = pick(e);
+  if (!h) return;
+  P = { kind: h.kind, sw: h.sw, side: h.side, x: e.clientX, y: e.clientY, t: now, mode: 'pending', e: { clientX: e.clientX, clientY: e.clientY } };
+  try { canvas.setPointerCapture(e.pointerId); } catch (er) {}
+});
+
+canvas.addEventListener('pointermove', function (e) {
+  if (P) {
+    var moved = Math.hypot(e.clientX - P.x, e.clientY - P.y);
+    P.e = { clientX: e.clientX, clientY: e.clientY };
+    if (P.mode === 'pending' && moved > 7) {
+      if (P.kind === 'swatch') { P.mode = 'dragSwatch'; P.sw.dragging = true; ghost.off = true; }
+      else if (P.kind === 'bottle') { P.mode = 'dragBottle'; bottle.dragging = true; ghost.off = true; }
+      else if (P.kind === 'page' || P.kind === 'book') {
+        if (P.x - e.clientX > 14) { P.mode = 'done'; ghost.off = true; triggerFlip(1); }
+        else if (e.clientX - P.x > 14) { P.mode = 'done'; ghost.off = true; triggerFlip(-1); }
+      }
+    }
+    return;
+  }
+  var h = pick(e);
+  hoveredObj = h;
+  canvas.style.cursor = h ? 'pointer' : 'default';
+});
+
+function finishPointer() {
+  if (!P) return;
+  if (P.mode === 'dragSwatch') {
+    var sw = P.sw; sw.dragging = false;
+    var dist = Math.hypot(sw.cur.x - BOOK_POS.x, sw.cur.z - BOOK_POS.z);
+    if (dist < 2.2) applyMaterial(sw.mat.id);
+    sw.target.copy(sw.home);
+  } else if (P.mode === 'dragBottle') {
+    bottle.dragging = false;
+    var db = Math.hypot(bottle.cur.x - BOOK_POS.x, bottle.cur.z - BOOK_POS.z);
+    if (db < 2.3) emitSpray();
+    bottle.target.copy(bottle.home);
+  } else if (P.mode === 'lift') {
+    bookLiftGoal = 0;
+  } else if (P.mode === 'pending') {
+    ghost.off = true;
+    if (P.kind === 'swatch') {
+      // 点一下材料块也会飞过去换材，对低年级极友好
+      var s = P.sw;
+      s.flying = { from: s.cur.clone(), to: BOOK_POS.clone().add(new THREE.Vector3(0, 0.7, 0)), t: 0 };
+    } else if (P.kind === 'bottle') {
+      triggerSpray();
+    } else if (P.kind === 'page' || P.kind === 'book') {
+      triggerFlip(P.side < 0 ? -1 : 1);
+    }
+  }
+  P = null;
+}
+canvas.addEventListener('pointerup', finishPointer);
+canvas.addEventListener('pointercancel', finishPointer);
+canvas.addEventListener('pointerleave', function () { if (!P) hoveredObj = null; });
+
+/* ===================== 幽灵手示范 ===================== */
+var ghost = { off: false, t: 0 }, handEl = $('#hand');
+function updateGhost(dt) {
+  if (ghost.off || intro.t < 1.5) { handEl.style.opacity = 0; return; }
+  ghost.t = (ghost.t + dt) % 2.6;
+  var a = toScreen(swatches[2].home.clone().add(new THREE.Vector3(0, 0.2, 0)));
+  var b = toScreen(BOOK_POS.clone().add(new THREE.Vector3(0, 0.4, 0)));
+  var u = Math.min(1, Math.max(0, (ghost.t - 0.5) / 1.3)), e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+  var x = a.x + (b.x - a.x) * e, y = a.y + (b.y - a.y) * e - Math.sin(e * Math.PI) * 55;
+  handEl.style.opacity = ghost.t < 2.2 ? 0.95 : 0;
+  handEl.style.transform = 'translate(' + (x - 20) + 'px,' + (y - 6) + 'px) scale(' + (ghost.t < 0.5 || ghost.t > 1.8 ? 1 : 0.9) + ')';
+}
+
+/* ===================== 老师演示 ===================== */
+var demo = null;
+var DEMO = [
+  ['say', '欢迎来看演示！我们把不同材料换到课本上，翻一翻再喷水比一比！'],
+  ['swap', 2], ['wait', 0.85], ['say', '先试试铁板课本，又硬又沉翻不动！'], ['flip', 1], ['wait', 1.5],
+  ['swap', 4], ['wait', 0.85], ['say', '再试试玻璃课本，一翻就容易碎，但不吸水！'], ['flip', -1], ['wait', 1.3], ['spray'], ['wait', 1.7],
+  ['swap', 0], ['wait', 0.75], ['say', '换回纸课本，又轻又好翻，不过喷水会变湿，要好好爱护！'], ['flip', 1], ['wait', 1.15], ['flip', -1], ['wait', 1.2], ['spray'], ['wait', 1.8], ['end']
+];
+function startDemo() {
+  dismissEntryCues();
+  resetAll(true);
+  demo = { i: 0, t: 0 };
+  ghost.off = true;
+  $('#demoBtn').classList.add('on');
+  $('#demoBtn').textContent = '■ 停止';
+  $('#guideTxt').textContent = '🎬 正在演示玩法，看完就轮到你亲手试一试啦！';
+}
+function stopDemo(finished) {
+  if (!demo) return;
+  demo = null;
+  $('#demoBtn').classList.remove('on');
+  $('#demoBtn').textContent = '▶ 演示';
+  if (finished) {
+    resetAll(false);
+    speak('演示看完啦！现在轮到你亲手把不同材料放到课本上试一试吧！');
+  } else {
+    updateGuide(false);
+  }
+}
+function stepDemo(dt) {
+  if (!demo) return;
+  var s = DEMO[demo.i]; demo.t += dt;
+  if (!s || s[0] === 'end') { stopDemo(true); return; }
+  if (s[0] === 'say') {
+    $('#guideTxt').textContent = '🎬 ' + s[1];
+    speak(s[1]);
+    demo.i++; demo.t = 0; return;
+  }
+  if (s[0] === 'wait') { if (demo.t >= s[1]) { demo.i++; demo.t = 0; } return; }
+  if (s[0] === 'swap') {
+    var sw = swatches[s[1]];
+    if (!demo.started) { demo.started = true; sw.flying = { from: sw.cur.clone(), to: BOOK_POS.clone().add(new THREE.Vector3(0, 0.7, 0)), t: 0 }; }
+    if (!sw.flying) { demo.started = false; demo.i++; demo.t = 0; }
+    return;
+  }
+  if (s[0] === 'flip') { triggerFlip(s[1] || 1); demo.i++; demo.t = 0; return; }
+  if (s[0] === 'spray') { triggerSpray(); demo.i++; demo.t = 0; return; }
+}
+
+/* ===================== 开场与重来 ===================== */
+var intro = { t: 0, done: false };
+function introSkip() { if (intro.t < 1.5) intro.t = 1.5; }
+function backOut(t) { var c = 1.7; t = Math.min(1, Math.max(0, t)); return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); }
+function updateIntro(dt) {
+  if (intro.done) return;
+  if (!intro.t0) intro.t0 = performance.now();
+  intro.t = Math.max(intro.t + dt, (performance.now() - intro.t0) / 1000 * 1.4);
+  var t = intro.t;
+  var lift = Math.min(1, Math.max(0, (t - 0.2) / 0.65));
+  figCard.position.y = 0.012 + lift * 1.6;
+  figCard.material.opacity = 1 - lift;
+  figCard.visible = lift < 1;
+  board.scale.set(1, Math.max(0.01, backOut((t - 0.3) / 0.5)), 1);
+  bookG.scale.setScalar(Math.max(0.01, backOut((t - 0.5) / 0.55)));
+  bottle.pop = Math.max(0.01, backOut((t - 0.6) / 0.5));
+  swatches.forEach(function (sw, i) { sw.pop = Math.max(0.01, backOut((t - 0.68 - i * 0.07) / 0.48)); });
+  if (t >= 3.4) intro.done = true;
+}
+
+function resetQuizUI() {
+  quizSolved = false;
+  var fb = $('#quizFb');
+  if (fb) { fb.textContent = ''; fb.className = 'quiz-fb'; }
+  document.querySelectorAll('#quizOpts .qopt').forEach(function (b) {
+    b.classList.remove('correct', 'wrong');
+    b.disabled = false;
+  });
+}
+
+function resetAll(keepDemo) {
+  if (!keepDemo) stopDemo(false);
+  clearNextHint();
+  resetGen++;
+  celebrated = false;
+  triedMats = {};
+  resetQuizUI();
+  $('#winToast').classList.remove('show');
+  $('#confetti').innerHTML = '';
+  applyMaterial('paper', true);
+  bookLift = bookLiftGoal = bookShake = 0;
+  swatches.forEach(function (sw) { sw.flying = null; sw.dragging = false; sw.target.copy(sw.home); });
+  bottle.anim = null; bottle.dragging = false; bottle.target.copy(bottle.home);
+  droplets.forEach(function (d) { d.life = 0; d.m.visible = false; });
+  found = {}; foundN = 0; kinds = { m: false, f: false, w: false };
+  $('#ntList').innerHTML = ''; $('#ntCount').textContent = '0';
+  document.querySelectorAll('.stamp').forEach(function (s) { s.classList.remove('lit'); });
+  if (!keepDemo) updateGuide(false);
+}
+
+/* ===================== 主循环 ===================== */
+var last = performance.now();
+function frame(t) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (t - last) / 1000)); last = t; now = t / 1000;
+  updateIntro(dt);
+  stepDemo(dt);
+
+  // 长按课本掂掂轻重
+  if (P && P.mode === 'pending' && (P.kind === 'book' || P.kind === 'page') && now - P.t > 0.34) {
+    P.mode = 'lift'; ghost.off = true; triggerLift();
+  }
+
+  // 双向翻页动画（dir=1 右翻左下一页；dir=-1 左翻右上一页）
+  if (flipAnim.active) {
+    flipAnim.t += dt / flipAnim.dur;
+    var u = Math.min(1, flipAnim.t);
+    if (curMatId === 'paper' || curMatId === 'cloth') {
+      updateFlipGeo(u, curMatId, flipAnim.dir);
+    } else {
+      var amp = curMatId === 'wood' ? 0.24 : curMatId === 'iron' ? 0.07 : 0.16;
+      if (flipAnim.dir > 0) {
+        flipSlabR.rotation.z = Math.sin(u * Math.PI) * amp;
+        flipSlabL.rotation.z = 0;
+      } else {
+        flipSlabL.rotation.z = -Math.sin(u * Math.PI) * amp;
+        flipSlabR.rotation.z = 0;
+      }
+    }
+    if (u >= 1) {
+      flipAnim.active = false;
+      flipSlabR.rotation.z = 0;
+      flipSlabL.rotation.z = 0;
+      resetFlipVerts();
+    }
+  }
+
+  // 玻璃裂纹渐显 & 水渍自然干透 & 水珠滚落并自然淡出
+  crackMeshR.material.opacity += ((glassCrackedR ? 0.95 : 0) - crackMeshR.material.opacity) * 0.2;
+  crackMeshL.material.opacity += ((glassCrackedL ? 0.95 : 0) - crackMeshL.material.opacity) * 0.2;
+  if (wetTimer > 0) {
+    wetTimer -= dt;
+    if (wetTimer <= 0) wetGoal = 0;
+  }
+  wetAlpha += (wetGoal - wetAlpha) * 0.1;
+  wetPatch.material.opacity = wetAlpha;
+  if (beadsG.visible) {
+    beadsTimer -= dt;
+    var fade = beadsTimer < 1.0 ? Math.max(0, beadsTimer / 1.0) : 1;
+    beadMat.opacity = 0.9 * fade;
+    beads.forEach(function (b) {
+      if (b.roll > 0) {
+        b.m.position.x += dt * 0.32;
+        b.m.position.z += dt * 0.12;
+        b.roll = Math.max(0, b.roll - dt * 0.65);
+      }
+      var sc = 0.35 + 0.65 * fade;
+      b.m.scale.set(sc, 0.55 * sc, sc);
+    });
+    if (beadsTimer <= 0) { beadsG.visible = false; beadMat.opacity = 0.9; }
+  }
+
+  // 课本弹跳 / 抖动 / 掂重抬起
+  if (bookPop > 0) bookPop = Math.max(0, bookPop - dt * 3.5);
+  if (bookShake > 0) bookShake = Math.max(0, bookShake - dt * 2.8);
+  bookLift += (bookLiftGoal - bookLift) * (1 - Math.exp(-12 * dt));
+  var popS = 1 + Math.sin(bookPop * Math.PI) * 0.08;
+  bookBody.scale.set(popS, popS, popS);
+  bookBody.position.set(Math.sin(now * 55) * bookShake * 0.05, bookLift, 0);
+  var tabY = 0.06 + PH + 0.04 + Math.sin(now * 4) * 0.02;
+  tabM.position.y = tabY;
+  tabL.position.y = tabY;
+
+  // 喷水壶自动动画与拖拽
+  if (bottle.dragging && P && P.e) {
+    var bp = planePoint(P.e, BASE + 0.75);
+    if (bp) bottle.target.set(THREE.MathUtils.clamp(bp.x, BOARD.x0, BOARD.x1), BASE + 0.65, THREE.MathUtils.clamp(bp.z, BOARD.z0, BOARD.z1));
+  } else if (bottle.anim) {
+    bottle.anim.t += dt;
+    var at = bottle.anim.t;
+    if (at < 0.45) {
+      var e1 = at / 0.45;
+      bottle.target.lerpVectors(bottle.home, BOOK_POS.clone().add(new THREE.Vector3(-1.35, 0.75, 0.1)), e1);
+    } else if (at < 0.95) {
+      if (!bottle.anim.sprayed) { bottle.anim.sprayed = true; emitSpray(); }
+      bottle.body.rotation.z = -0.35;
+    } else if (at < 1.35) {
+      bottle.body.rotation.z = 0;
+      bottle.target.copy(bottle.home);
+    } else {
+      bottle.anim = null;
+    }
+  } else {
+    bottle.body.rotation.z *= 0.85;
+  }
+  bottle.cur.lerp(bottle.target, 1 - Math.exp(-16 * dt));
+  bottle.hover += ((hoveredObj && hoveredObj.kind === 'bottle' && !P ? 1 : 0) - bottle.hover) * 0.25;
+  bottle.g.position.set(bottle.cur.x, bottle.cur.y + bottle.hover * 0.06, bottle.cur.z);
+  bottle.body.scale.setScalar(bottle.pop);
+
+  // 水滴粒子
+  droplets.forEach(function (d) {
+    if (d.life <= 0) { d.m.visible = false; return; }
+    d.life -= dt;
+    d.v.y -= 6.5 * dt;
+    d.m.position.addScaledVector(d.v, dt);
+    if (d.m.position.y < BASE + 0.35) { d.life = 0; d.m.visible = false; }
+  });
+
+  // 5 块材料样本 + 引导高亮脉冲
+  if (guidePulse > 0) guidePulse = Math.max(0, guidePulse - dt);
+  var pulseWave = 0.5 + 0.5 * Math.sin(now * (guidePulse > 0 ? 9 : 4.2));
+  var nearBook = false;
+  swatches.forEach(function (sw) {
+    if (sw.dragging && P && P.e) {
+      var sp = planePoint(P.e, BASE + 0.7);
+      if (sp) sw.target.set(THREE.MathUtils.clamp(sp.x, BOARD.x0, BOARD.x1), BASE + 0.7, THREE.MathUtils.clamp(sp.z, BOARD.z0, BOARD.z1));
+      if (Math.hypot(sw.cur.x - BOOK_POS.x, sw.cur.z - BOOK_POS.z) < 2.2) nearBook = true;
+    } else if (sw.flying) {
+      sw.flying.t += dt / 0.55;
+      var u = Math.min(1, sw.flying.t);
+      var e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+      sw.target.lerpVectors(sw.flying.from, sw.flying.to, e);
+      sw.target.y += Math.sin(u * Math.PI) * 0.8;
+      if (u >= 1) { sw.flying = null; applyMaterial(sw.mat.id); sw.target.copy(sw.home); }
+    }
+    sw.cur.lerp(sw.target, 1 - Math.exp(-18 * dt));
+    var hv = (hoveredObj && hoveredObj.sw === sw && !P) ? 1 : 0;
+    sw.hover += (hv - sw.hover) * 0.25;
+    var activeLift = (sw.mat.id === curMatId) ? 0.05 : 0;
+    sw.g.position.set(sw.cur.x, sw.cur.y + sw.hover * 0.07 + activeLift, sw.cur.z);
+    sw.body.scale.setScalar(sw.pop * (sw.mat.id === curMatId ? 1.08 : 1));
+
+    var wantSwRing = !demo && !celebrated && ((guideTarget === 'nonPaper' && sw.mat.id !== 'paper' && !triedMats[sw.mat.id]) || (guideTarget === 'paper' && sw.mat.id === 'paper'));
+    var swOp = wantSwRing ? (0.35 + pulseWave * (guidePulse > 0 ? 0.6 : 0.35)) : 0;
+    sw.ringMat.opacity += (swOp - sw.ringMat.opacity) * 0.2;
+
+    var showL = intro.t > 0.8 && intro.t < 3.4 || sw.hover > 0.4 || sw.dragging;
+    if (showL) {
+      var p2 = toScreen(sw.cur.clone().add(new THREE.Vector3(0, sw.h + 0.16, 0)));
+      sw.lbl.style.transform = 'translate(' + p2.x + 'px,' + p2.y + 'px) translate(-50%,-100%)';
+    }
+    sw.lbl.classList.toggle('show', !!showL);
+  });
+
+  if (bottle.dragging && Math.hypot(bottle.cur.x - BOOK_POS.x, bottle.cur.z - BOOK_POS.z) < 2.3) nearBook = true;
+  var wantBookGuide = !demo && !celebrated && guideTarget === 'book';
+  var bookGlowGoal = nearBook ? 0.85 : (wantBookGuide ? (0.28 + pulseWave * (guidePulse > 0 ? 0.55 : 0.32)) : 0);
+  bookGlow.material.opacity += (bookGlowGoal - bookGlow.material.opacity) * 0.22;
+  var wantBottleGuide = !demo && !celebrated && guideTarget === 'bottle';
+  var bottleGlowGoal = wantBottleGuide ? (0.35 + pulseWave * (guidePulse > 0 ? 0.6 : 0.38)) : 0;
+  bottleGlowMat.opacity += (bottleGlowGoal - bottleGlowMat.opacity) * 0.22;
+
+  // 喷水壶 & 课本标签
+  var showB = (intro.t > 0.8 && intro.t < 3.4) || bottle.hover > 0.4 || bottle.dragging;
+  if (showB) {
+    var pb = toScreen(bottle.cur.clone().add(new THREE.Vector3(0, bottle.h + 0.12, 0)));
+    bottle.lbl.style.transform = 'translate(' + pb.x + 'px,' + pb.y + 'px) translate(-50%,-100%)';
+  }
+  bottle.lbl.classList.toggle('show', !!showB);
+
+  var showBk = (hoveredObj && (hoveredObj.kind === 'book' || hoveredObj.kind === 'page') && !P) || (intro.t > 0.8 && intro.t < 3.4);
+  if (showBk) {
+    var pk = toScreen(BOOK_POS.clone().add(new THREE.Vector3(0, 0.72, 0)));
+    bookLbl.style.transform = 'translate(' + pk.x + 'px,' + pk.y + 'px) translate(-50%,-100%)';
+  }
+  bookLbl.classList.toggle('show', !!showBk);
+
+  updateGhost(dt);
+  $('#verbs').style.opacity = actions > 8 ? 0.35 : 1;
+  renderer.render(scene, camera);
+}
+
+/* ===================== 按钮与自测钩子 ===================== */
+function speakCurrentGuide() {
+  audio();
+  dismissEntryCues();
+  voiceOn = true; voiceWelcomed = true;
+  $('#voiceBtn').classList.add('on');
+  $('#voiceBtn').textContent = '🔊 语音';
+  guidePulse = 2.4;
+  var bar = $('#guideBar');
+  if (bar) { bar.classList.remove('pulse'); void bar.offsetWidth; bar.classList.add('pulse'); }
+  speak(currentGuideSpeech || INTRO_VOICE, true);
+}
+$('#voiceBtn').addEventListener('click', function () {
+  audio();
+  dismissEntryCues();
+  var talking = ('speechSynthesis' in window) && window.speechSynthesis.speaking;
+  if (!voiceOn) {
+    speakCurrentGuide();
+  } else if (talking) {
+    voiceOn = false;
+    this.classList.remove('on'); this.textContent = '🔇 静音';
+    clearNextHint();
+    try { (window.__xkVoice ? window.__xkVoice.stop() : window.speechSynthesis.cancel()); } catch (e) {}
+  } else {
+    speakCurrentGuide();
+  }
+});
+$('#guideBar').addEventListener('click', speakCurrentGuide);
+
+$('#quizOpts').addEventListener('click', function (e) {
+  var btn = e.target.closest('.qopt');
+  if (!btn || btn.disabled) return;
+  audio();
+  var ans = btn.getAttribute('data-ans'), fb = $('#quizFb');
+  if (ans === 'paper') {
+    quizSolved = true;
+    btn.classList.add('correct');
+    document.querySelectorAll('#quizOpts .qopt').forEach(function (b) { b.disabled = true; });
+    fb.className = 'quiz-fb ok';
+    fb.textContent = '🌸 太棒了！获得本课小红花！纸又轻又好翻页，最适合做课本，记得别沾水哦！';
+    SND.win();
+    launchConfetti();
+    saveProgress('k1a-03-book', true);
+    speak('答对啦！太棒了，获得本课小红花！纸又轻又好翻页，最适合做课本，记得别沾水哦！', true);
+  } else {
+    btn.classList.add('wrong');
+    var hints = {
+      wood: '再想想哦～木板又厚又硬，翻起来太费劲啦！',
+      iron: '再想想哦～铁板太沉啦，翻不动也背不动呀！',
+      glass: '再想想哦～玻璃虽然滑滑的，但一翻就容易碎，太危险啦！'
+    };
+    fb.className = 'quiz-fb try';
+    fb.textContent = hints[ans] || '再想想哦，试试选另一种材料吧！';
+    tone(240, 0.14, 'triangle', 0.12, 180);
+    speak(fb.textContent, true);
+  }
+});
+
+$('#ntToggle').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+$('#winKeep').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgain').addEventListener('click', function () { resetAll(false); });
+$('#demoBtn').addEventListener('click', function () { audio(); introSkip(); dismissEntryCues(); if (demo) stopDemo(false); else startDemo(); });
+$('#resetBtn').addEventListener('click', function () { resetAll(false); });
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () { return { triangles: renderer.info.render.triangles, pixelRatio: renderer.getPixelRatio(), found: foundN, curMatId: curMatId, kinds: kinds }; },
+  startDemo: startDemo
+};
+
+applyMaterial('paper', true);
+updateGuide(false);
+fit();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1355 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第3课 认识常见的材料 · 材料实验台（活页）</title>
+<style>
+:root{--ink:#2a3040;--paper:#fffaf0;--line:#e3d6bd;--accent:#e56d17}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#d9c19b;color:var(--ink);
+  font-family:"Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+ruby{ruby-align:center}
+rt{font-size:.5em;font-weight:600;color:#8a6d4a;letter-spacing:0}
+body.no-py rt{display:none}
+
+.chip{position:fixed;left:14px;top:12px;z-index:5;display:flex;align-items:center;gap:10px;
+  padding:6px 14px 6px 6px;border-radius:16px;background:rgba(255,250,240,.92);border:1.5px solid var(--line);
+  box-shadow:0 6px 18px rgba(80,55,20,.12)}
+.home{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:var(--ink);font-size:20px;font-weight:800}
+.home:hover{border-color:var(--accent);color:var(--accent)}
+.chip h1{margin:0;font-size:20px;line-height:1.5;font-weight:800}
+.chip small{display:block;font-size:12px;color:#8a7b62;font-weight:700;margin-top:-2px}
+
+.tools{position:fixed;right:14px;top:12px;z-index:6;display:flex;gap:8px;align-items:flex-start}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:40px;padding:0 14px;border-radius:13px;border:1.5px solid var(--line);background:rgba(255,250,240,.94);
+  font:inherit;font-size:15px;font-weight:800;color:var(--ink);cursor:pointer;box-shadow:0 3px 0 #e2d2b5;transition:transform .15s,box-shadow .15s}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:#bf5409;color:#fff;box-shadow:0 3px 0 #bf5409}
+.tbtn.cue-pulse{animation:cuePulse 1.5s ease-in-out infinite}
+@keyframes cuePulse{0%,100%{box-shadow:0 3px 0 #bf5409,0 0 0 0 rgba(245,158,11,.55)}50%{box-shadow:0 3px 0 #bf5409,0 0 0 8px rgba(245,158,11,0)}}
+.cue-tag{position:absolute;top:calc(100% + 7px);left:50%;transform:translateX(-50%);white-space:nowrap;
+  padding:3px 9px;border-radius:99px;background:#fff7ed;color:#c2560c;border:1.5px solid #f59e0b;
+  font-size:11px;font-weight:900;box-shadow:0 4px 12px rgba(180,90,10,.2);pointer-events:none;
+  animation:cueBob 1.6s ease-in-out infinite;transition:opacity .35s,transform .35s}
+.cue-tag::before{content:"";position:absolute;left:50%;top:-5px;width:8px;height:8px;background:#fff7ed;
+  border-left:1.5px solid #f59e0b;border-top:1.5px solid #f59e0b;transform:translateX(-50%) rotate(45deg)}
+.cue-tag.hide{opacity:0;transform:translateX(-50%) translateY(-4px);animation:none}
+@keyframes cueBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(3px)}}
+
+#guideBar{position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:5;
+  max-width:min(460px,calc(100vw - 540px));min-width:220px;
+  display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:16px;
+  background:rgba(255,250,240,.96);border:2px solid #f59e0b;
+  box-shadow:0 6px 20px rgba(180,95,15,.16);
+  font-size:14px;font-weight:800;color:#9a440a;line-height:1.45;cursor:pointer;
+  transition:border-color .25s,background .25s,box-shadow .25s}
+#guideBar:hover{border-color:#e56d17;box-shadow:0 8px 22px rgba(229,109,23,.24)}
+#guideBar.pulse{animation:guidePop .55s ease}
+#guideBar.done{border-color:#16a34a;color:#15803d;background:#effaf2}
+.gd-ico{flex:none;font-size:18px;line-height:1}
+@keyframes guidePop{0%{transform:translateX(-50%) scale(.95)}45%{transform:translateX(-50%) scale(1.04)}100%{transform:translateX(-50%) scale(1)}}
+
+#notes{position:fixed;right:14px;top:84px;z-index:4;width:220px;max-height:calc(100% - 160px);overflow:hidden;
+  padding:9px 10px 10px;border-radius:16px;background:rgba(255,250,240,.92);border:1.5px solid var(--line);
+  box-shadow:0 8px 22px rgba(80,55,20,.12);transition:opacity .3s,top .3s}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:15px;font-weight:800;margin-bottom:6px}
+.nt-acts{display:flex;align-items:center;gap:6px}
+.nt-tog{height:24px;padding:0 8px;border-radius:8px;border:1px solid var(--line);background:#fff;
+  font:inherit;font-size:12px;font-weight:800;color:#8a7b62;cursor:pointer}
+.nt-tog:hover{border-color:var(--accent);color:var(--accent)}
+.stamps{display:flex;gap:4px;margin-bottom:6px}
+.stamp{flex:1;text-align:center;padding:3px 0 2px;border-radius:9px;border:1.5px dashed #d8c7a6;color:#b3a283;font-size:12px;font-weight:800;line-height:1.45}
+.stamp.lit{border-style:solid;border-color:#e56d17;background:#fff3e2;color:#c2560c;animation:pop .45s cubic-bezier(.2,1.6,.4,1)}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:148px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList{display:none}
+#notes.collapsed .stamps{margin-bottom:0}
+.stk{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:11px;background:#fff;border:1.5px solid #f0dcc0;
+  font-size:14px;font-weight:800;line-height:1.6;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+.stk i{font-style:normal;width:24px;height:24px;flex:none;border-radius:7px;display:grid;place-items:center;color:#fff;font-size:13px}
+.stk b{color:#c2560c}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:18;display:none}
+#celebrate{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.86);z-index:19;
+  width:min(450px,92vw);max-height:85vh;overflow-y:auto;padding:18px 20px;border-radius:22px;text-align:center;
+  display:flex;flex-direction:column;gap:10px;
+  background:rgba(255,250,240,.98);border:2.5px solid #f59e0b;box-shadow:0 18px 46px rgba(80,55,20,.28);
+  opacity:0;pointer-events:none;transition:opacity .32s,transform .38s cubic-bezier(.2,1.5,.4,1)}
+#celebrate.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.cel-medal{font-size:40px;line-height:1.1}
+.cel-txt{font-size:20px;font-weight:900;color:#c2560c;line-height:1.6}
+.cel-concl{background:#fff7ed;border:1.5px solid #fdba74;border-radius:14px;padding:10px 13px;text-align:left}
+.cel-concl-t{font-size:13px;font-weight:900;color:#c2560c;margin-bottom:4px}
+.cel-concl-p{font-size:14px;font-weight:700;color:#4a3723;line-height:1.6;margin:0}
+.cel-quiz{background:#f8fafc;border:1.5px solid #dbe4ee;border-radius:14px;padding:10px 12px;text-align:left}
+.cel-quiz-t{font-size:13px;font-weight:900;color:#0f766e;margin-bottom:5px}
+.cel-quiz-q{font-size:14px;font-weight:800;color:var(--ink);margin:0 0 8px;line-height:1.5}
+.quiz-opts{display:flex;flex-direction:column;gap:7px}
+.qopt{display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 12px;border-radius:12px;
+  border:1.5px solid #d5dbe3;background:#fff;color:var(--ink);font:inherit;font-size:15px;font-weight:800;
+  cursor:pointer;box-shadow:0 2px 0 #dde2e8;transition:all .18s}
+.qopt:hover:not(:disabled){border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+.qopt.correct{background:#dcfce7;border-color:#16a34a;color:#15803d;box-shadow:0 2px 0 #86efac}
+.qopt.wrong{background:#fef3c7;border-color:#f59e0b;color:#b45309}
+.quiz-fb{min-height:20px;margin-top:8px;font-size:13px;font-weight:800;line-height:1.5;color:#64748b}
+.quiz-fb.ok{color:#15803d}
+.quiz-fb.try{color:#c2560c}
+.cel-btns{display:flex;justify-content:center;gap:10px;margin-top:2px}
+.cel-btn{height:38px;padding:0 18px;border-radius:12px;border:1.5px solid var(--line);background:#fff;
+  font:inherit;font-size:14px;font-weight:800;color:var(--ink);cursor:pointer;box-shadow:0 2px 0 #e2d2b5}
+.cel-btn.pri{background:var(--accent);border-color:#bf5409;color:#fff;box-shadow:0 2px 0 #bf5409}
+
+#verbs{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:4;display:flex;gap:10px;transition:opacity .5s}
+.verb{display:flex;align-items:center;gap:7px;padding:6px 14px;border-radius:99px;background:rgba(255,250,240,.94);
+  border:1.5px solid var(--line);font-size:17px;font-weight:800;box-shadow:0 4px 14px rgba(80,55,20,.12)}
+.verb svg{width:22px;height:22px}
+.verb.done{border-color:#16a34a;color:#15803d;background:#effaf2}
+.verb.done::after{content:"✓";font-weight:900;color:#16a34a}
+
+#labels{position:fixed;inset:0;pointer-events:none;z-index:3}
+.lbl{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:2px 10px;border-radius:99px;white-space:nowrap;
+  background:rgba(42,48,64,.88);color:#fff;font-size:15px;font-weight:800;line-height:1.75;opacity:0;transition:opacity .2s}
+.lbl rt{color:#ffe0b8}
+.lbl.show{opacity:1}
+.word{position:absolute;left:0;top:0;transform:translate(-50%,-100%);font-size:28px;font-weight:900;line-height:1.65;white-space:nowrap;
+  color:#c2560c;text-shadow:0 2px 0 #fff,0 0 8px #fff;pointer-events:none;animation:floatUp 1.35s ease-out forwards}
+.word.water{color:#1d6fd6}
+.word.mag{color:#b91c1c}
+.word.ok{color:#15803d}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-55%) scale(.6)}20%{opacity:1;transform:translate(-50%,-100%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-195%) scale(1)}}
+
+#hand{position:fixed;left:0;top:0;width:64px;height:64px;z-index:6;pointer-events:none;opacity:0;transition:opacity .3s;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.25))}
+
+@media (max-width:1120px){
+  #guideBar{top:68px;left:14px;transform:none;max-width:calc(100vw - 266px)}
+  @keyframes guidePop{0%{transform:scale(.95)}45%{transform:scale(1.03)}100%{transform:scale(1)}}
+}
+@media (max-width:760px){
+  .chip{left:8px;top:8px;padding:4px 10px 4px 4px}
+  .chip h1{font-size:16px}.chip small{display:none}
+  .home{width:32px;height:32px}
+  .tools{right:8px;top:8px;gap:6px}.tbtn{height:34px;padding:0 10px;font-size:13px}
+  .cue-tag{font-size:10px;padding:2px 6px}
+  #guideBar{top:54px;left:8px;right:8px;max-width:none;min-width:0;font-size:13px;padding:6px 10px}
+  #notes{top:auto;bottom:64px;right:8px;left:8px;width:auto;max-height:116px;padding:8px 10px}
+  #ntList .stk:nth-child(n+2){display:none}
+  .stk{font-size:14px}
+  #verbs{bottom:10px;gap:6px}.verb{font-size:14px;padding:4px 10px}.verb svg{width:18px;height:18px}
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="labels"></div>
+
+<div class="chip">
+  <a class="home" href="../index.html" title="回到书包">‹</a>
+  <div><h1 id="ttl"></h1><small>活页 · 课本第 11 页「材料实验台」</small></div>
+</div>
+<div id="guideBar" role="button" tabindex="0" title="点我再听一次提示">
+  <span class="gd-ico">🧭</span><span id="guideTxt"></span>
+</div>
+
+<div class="tools">
+  <span class="tbtn-wrap">
+    <button class="tbtn on cue-pulse" id="voiceBtn" type="button" title="语音引导开关">🔊 语音</button>
+    <span class="cue-tag" id="voiceCue">点我听玩法</span>
+  </span>
+  <span class="tbtn-wrap">
+    <button class="tbtn cue-pulse" id="demoBtn" type="button">▶ 演示</button>
+    <span class="cue-tag" id="demoCue">不会玩点演示</span>
+  </span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<aside id="notes">
+  <div class="nt-head"><span id="ntTitle"></span><div class="nt-acts"><span id="ntCount" style="color:#c2560c">0</span><button class="nt-tog" id="ntTog" type="button">收起</button></div></div>
+  <div class="stamps">
+    <span class="stamp" data-k="hammer" id="stH"></span>
+    <span class="stamp" data-k="dropper" id="stD"></span>
+    <span class="stamp" data-k="hand" id="stB"></span>
+    <span class="stamp" data-k="magnet" id="stM"></span>
+  </div>
+  <div id="ntList"></div>
+</aside>
+
+<canvas id="confetti"></canvas>
+<div id="celebrate" role="dialog" aria-live="polite">
+  <div class="cel-medal">🏆</div>
+  <div class="cel-txt" id="celTxt"></div>
+  <div class="cel-concl">
+    <div class="cel-concl-t">✨ 科学小结论</div>
+    <p class="cel-concl-p">不同材料本领不一样：棉布和纸会吸水、塑料和金属防水，只有铁等金属能被磁铁吸住！</p>
+  </div>
+  <div class="cel-quiz">
+    <div class="cel-quiz-t">💡 考考你 · 答对领小红花 🌸</div>
+    <p class="cel-quiz-q">如果想做一把不怕淋湿的小雨伞，选哪种材料更好？</p>
+    <div class="quiz-opts" id="quizOpts">
+      <button class="qopt" type="button" data-ans="plastic">🟦 塑料片（防水）</button>
+      <button class="qopt" type="button" data-ans="paper">📄 纸张</button>
+      <button class="qopt" type="button" data-ans="cloth">🧣 棉布</button>
+    </div>
+    <div class="quiz-fb" id="quizFb"></div>
+  </div>
+  <div class="cel-btns">
+    <button class="cel-btn pri" id="celKeep" type="button">继续玩</button>
+    <button class="cel-btn" id="celAgain" type="button">再玩一次</button>
+  </div>
+</div>
+
+<div id="verbs">
+  <span class="verb" data-v="pick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span id="vb1"></span></span>
+  <span class="verb" data-v="test"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-5 8a2 2 0 0 0 1.7 3h10.6A2 2 0 0 0 19 17l-5-8V3"/></svg><span id="vb2"></span></span>
+  <span class="verb" data-v="observe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/></svg><span id="vb3"></span></span>
+</div>
+
+<svg id="hand" viewBox="0 0 64 64"><path d="M26 6c3 0 5 2 5 5v17l3-1c2-6 9-5 9 0 2-3 8-2 8 3 3-1 7 1 7 5v12c0 9-7 15-16 15h-6c-6 0-10-3-13-8L13 41c-2-3 0-7 4-7 2 0 3 1 4 2V11c0-3 2-5 5-5z" fill="#fff" stroke="#2a3040" stroke-width="3" stroke-linejoin="round"/></svg>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js"></script>
+<script src="../vendor/voice.js"></script>
+<script>
+(function () {
+'use strict';
+
+/* ===================== 拼音 ===================== */
+var HAN = /[\u3400-\u9fff]/, pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function ruby(text, py) {
+  var syl = py ? py.trim().split(/\s+/) : [], i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) { var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; } out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>'; }
+    else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+var $ = function (s) { return document.querySelector(s); };
+$('#ttl').innerHTML = ruby('第3课 认识常见的材料', 'dì kè rèn shi cháng jiàn de cái liào');
+$('#ntTitle').innerHTML = ruby('我的发现', 'wǒ de fā xiàn');
+$('#stH').innerHTML = ruby('敲声', 'qiāo shēng');
+$('#stD').innerHTML = ruby('滴水', 'dī shuǐ');
+$('#stB').innerHTML = ruby('弯折', 'wān zhé');
+$('#stM').innerHTML = ruby('磁铁', 'cí tiě');
+$('#vb1').innerHTML = ruby('拖工具', 'tuō gōng jù');
+$('#vb2').innerHTML = ruby('做实验', 'zuò shí yàn');
+$('#vb3').innerHTML = ruby('看变化', 'kàn biàn huà');
+$('#celTxt').innerHTML = ruby('太棒啦！全部实验完成啦！', 'tài bàng la quán bù shí yàn wán chéng la');
+
+/* ===================== 5 种常见材料 + 4 种实验工具 ===================== */
+var MATS = [
+  { id: 'wood',    name: '木块',   py: 'mù kuài',       x: -2.88, z: -0.78, col: '#c68846',
+    sndWord: '咚咚响', sndPy: 'dōng dōng xiǎng', sndNote: '敲着咚咚响', sndNotePy: 'qiāo zhe dōng dōng xiǎng',
+    waterMode: 'slow', waterWord: '吸水慢', waterPy: 'xī shuǐ màn', waterNote: '吸水很慢', waterNotePy: 'xī shuǐ hěn màn',
+    bendAmt: 0, bendWord: '硬邦邦', bendPy: 'yìng bāng bāng', bendNote: '很坚硬', bendNotePy: 'hěn jiān yìng',
+    mag: false },
+  { id: 'plastic', name: '塑料片', py: 'sù liào piàn',  x: -1.44, z: -0.78, col: '#28b3c7',
+    sndWord: '咔哒响', sndPy: 'kā dā xiǎng', sndNote: '敲着咔哒响', sndNotePy: 'qiāo zhe kā dā xiǎng',
+    waterMode: 'bead', waterWord: '不吸水', waterPy: 'bù xī shuǐ', waterNote: '不吸水·滚水珠', waterNotePy: 'bù xī shuǐ gǔn shuǐ zhū',
+    bendAmt: 0.38, bendWord: '有弹性', bendPy: 'yǒu tán xìng', bendNote: '能弯有弹性', bendNotePy: 'néng wān yǒu tán xìng',
+    mag: false },
+  { id: 'cloth',   name: '棉布',   py: 'mián bù',       x:  0.0,  z: -0.78, col: '#e36464',
+    sndWord: '闷闷的', sndPy: 'mēn mēn de', sndNote: '敲起来闷闷的', sndNotePy: 'qiāo qǐ lái mēn mēn de',
+    waterMode: 'soak', waterWord: '会吸水', waterPy: 'huì xī shuǐ', waterNote: '会吸水', waterNotePy: 'huì xī shuǐ',
+    bendAmt: 0.92, bendWord: '很柔软', bendPy: 'hěn róu ruǎn', bendNote: '很柔软', bendNotePy: 'hěn róu ruǎn',
+    mag: false },
+  { id: 'metal',   name: '金属勺', py: 'jīn shǔ sháo',  x:  1.44, z: -0.78, col: '#697b94',
+    sndWord: '很清脆', sndPy: 'hěn qīng cuì', sndNote: '敲起来很清脆', sndNotePy: 'qiāo qǐ lái hěn qīng cuì',
+    waterMode: 'bead', waterWord: '不吸水', waterPy: 'bù xī shuǐ', waterNote: '不吸水', waterNotePy: 'bù xī shuǐ',
+    bendAmt: 0, bendWord: '很坚硬', bendPy: 'hěn jiān yìng', bendNote: '掰不动很硬', bendNotePy: 'bāi bù dòng hěn yìng',
+    mag: true },
+  { id: 'paper',   name: '纸张',   py: 'zhǐ zhāng',     x:  2.88, z: -0.78, col: '#c7a965',
+    sndWord: '沙沙响', sndPy: 'shā shā xiǎng', sndNote: '敲着沙沙响', sndNotePy: 'qiāo zhe shā shā xiǎng',
+    waterMode: 'soak', waterWord: '会吸水', waterPy: 'huì xī shuǐ', waterNote: '很快会吸水', waterNotePy: 'hěn kuài huì xī shuǐ',
+    bendAmt: 0.88, bendWord: '容易弯', bendPy: 'róng yì wān', bendNote: '很容易弯折', bendNotePy: 'hěn róng yì wān zhé',
+    mag: false }
+];
+var MMAP = {}; MATS.forEach(function (m) { MMAP[m.id] = m; });
+
+var TOOLS = [
+  { id: 'hammer',  name: '小木锤',  py: 'xiǎo mù chuí',  icon: '🔨', col: '#c47b35', x: -2.4, z: 1.45, stId: 'stH' },
+  { id: 'dropper', name: '水滴管',  py: 'shuǐ dī guǎn',  icon: '💧', col: '#2a85e6', x: -0.8, z: 1.45, stId: 'stD' },
+  { id: 'hand',    name: '小手',    py: 'xiǎo shǒu',     icon: '✋', col: '#e56d17', x:  0.8, z: 1.45, stId: 'stB' },
+  { id: 'magnet',  name: 'U形磁铁', py: 'xíng cí tiě',   icon: '🧲', col: '#d94545', x:  2.4, z: 1.45, stId: 'stM' }
+];
+var TMAP = {}; TOOLS.forEach(function (tl) { TMAP[tl.id] = tl; });
+
+/* ===================== Three 基础 ===================== */
+var canvas = $('#c');
+var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera(32, 1, 0.1, 200);
+var raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2();
+
+scene.add(new THREE.HemisphereLight(0xfff8ee, 0xcdb08a, 0.42));
+var sun = new THREE.DirectionalLight(0xfff1dc, 0.66);
+sun.position.set(-4, 12, 7);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+(function (c) { c.left = -7; c.right = 7; c.top = 6; c.bottom = -6; c.near = 1; c.far = 40; })(sun.shadow.camera);
+sun.shadow.bias = -0.0008;
+scene.add(sun);
+
+var ramp = new THREE.DataTexture(new Uint8Array([120, 120, 120, 255, 185, 185, 185, 255, 232, 232, 232, 255, 255, 255, 255, 255]), 4, 1, THREE.RGBAFormat);
+ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+var INK = new THREE.LineBasicMaterial({ color: 0x2a3040, transparent: true, opacity: 0.8 });
+function toon(hex, extra) {
+  var o = { color: new THREE.Color(hex), gradientMap: ramp };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshToonMaterial(o);
+}
+function mesh(geo, mat, ink) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  if (ink !== false) m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), INK));
+  return m;
+}
+function ctex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c);
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+
+/* ===================== 书桌 + 课本 ===================== */
+var deskTex = ctex(512, 512, function (g, w, h) {
+  g.fillStyle = '#c9a36b'; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 70; i++) { g.fillStyle = 'rgba(120,80,35,' + (Math.random() * 0.05).toFixed(3) + ')'; g.fillRect(0, Math.random() * h, w, 1 + Math.random() * 3); }
+});
+deskTex.wrapS = deskTex.wrapT = THREE.RepeatWrapping; deskTex.repeat.set(3, 3);
+var deskM = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshLambertMaterial({ map: deskTex }));
+deskM.rotation.x = -Math.PI / 2; deskM.position.y = -0.2; deskM.receiveShadow = true;
+scene.add(deskM);
+
+function pageTex(right) {
+  return ctex(512, 640, function (g, w, h) {
+    g.fillStyle = '#fbf6ea'; g.fillRect(0, 0, w, h);
+    var gr = g.createLinearGradient(right ? 0 : w, 0, right ? 60 : w - 60, 0);
+    gr.addColorStop(0, 'rgba(120,90,45,.18)'); gr.addColorStop(1, 'rgba(120,90,45,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#e4d8c2';
+    for (var r = 0; r < 15; r++) { var y = 60 + r * 36; if (r === 5 || r === 11) continue; g.fillRect(50, y, w - 100 - (r % 4) * 40, 8); }
+    g.fillStyle = '#b9a98c'; g.font = 'bold 22px sans-serif'; g.textAlign = right ? 'right' : 'left';
+    g.fillText(right ? '11' : '10', right ? w - 40 : 40, h - 26);
+  });
+}
+var book = new THREE.Group(); scene.add(book);
+[-1, 1].forEach(function (sx) {
+  var pg = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.16, 6.6), [
+    new THREE.MeshLambertMaterial({ color: 0xefe6d2 }), new THREE.MeshLambertMaterial({ color: 0xefe6d2 }),
+    new THREE.MeshLambertMaterial({ map: pageTex(sx > 0) }), new THREE.MeshLambertMaterial({ color: 0xe4d8c0 }),
+    new THREE.MeshLambertMaterial({ color: 0xefe6d2 }), new THREE.MeshLambertMaterial({ color: 0xefe6d2 })
+  ]);
+  pg.position.set(sx * 2.62, -0.08, 0); pg.receiveShadow = true; pg.castShadow = true;
+  book.add(pg);
+});
+var cover = new THREE.Mesh(new THREE.BoxGeometry(10.7, 0.06, 6.9), new THREE.MeshLambertMaterial({ color: 0x2a85e6 }));
+cover.position.y = -0.19; book.add(cover);
+
+/* ===================== 活页实验底板 ===================== */
+var BASE = 0.1;
+var BOARD = { x0: -4.1, x1: 4.1, z0: -2.35, z1: 2.35 };
+var live = new THREE.Group(); scene.add(live);
+var boardTex = ctex(512, 300, function (g, w, h) {
+  g.fillStyle = '#fffaf0'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(214,196,160,.55)'; g.lineWidth = 1;
+  for (var x = 0; x < w; x += 16) { g.beginPath(); g.moveTo(x + .5, 0); g.lineTo(x + .5, h); g.stroke(); }
+  for (var y = 0; y < h; y += 16) { g.beginPath(); g.moveTo(0, y + .5); g.lineTo(w, y + .5); g.stroke(); }
+});
+var board = mesh(new THREE.BoxGeometry(8.2, BASE, 4.7), [
+  toon('#ead6b0'), toon('#ead6b0'), new THREE.MeshToonMaterial({ map: boardTex, gradientMap: ramp, color: 0xf6ead2 }), toon('#ead6b0'), toon('#ead6b0'), toon('#ead6b0')
+]);
+board.position.y = BASE / 2; board.castShadow = false;
+live.add(board);
+
+var figTex = ctex(512, 300, function (g, w, h) {
+  g.fillStyle = '#fbf3e2'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = '#2a85e6'; g.lineWidth = 6; g.strokeRect(6, 6, w - 12, h - 12);
+  g.strokeStyle = '#8a7b62'; g.lineWidth = 3;
+  for (var i = 0; i < 5; i++) { g.beginPath(); g.arc(72 + i * 92, 118, 28, 0, Math.PI * 2); g.stroke(); }
+  g.strokeRect(72, 190, 368, 52);
+  g.fillStyle = '#8a7b62'; g.font = 'bold 26px sans-serif'; g.textAlign = 'center'; g.fillText('材料实验台', w / 2, h - 22);
+});
+var figCard = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 4.7), new THREE.MeshBasicMaterial({ map: figTex, transparent: true }));
+figCard.rotation.x = -Math.PI / 2; figCard.position.y = 0.012;
+scene.add(figCard);
+
+/* ===================== 5 种 3D 材料标本 ===================== */
+var woodTex = ctex(256, 256, function (g, w, h) {
+  g.fillStyle = '#c88c4b'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(110,60,18,.28)'; g.lineWidth = 4;
+  for (var y = 12; y < h; y += 22) {
+    g.beginPath(); g.moveTo(0, y); g.bezierCurveTo(80, y - 8, 170, y + 8, w, y); g.stroke();
+  }
+});
+var clothTex = ctex(256, 256, function (g, w, h) {
+  g.fillStyle = '#f28080'; g.fillRect(0, 0, w, h);
+  g.fillStyle = 'rgba(255,244,230,.36)';
+  for (var i = 0; i < w; i += 32) { g.fillRect(i, 0, 12, h); g.fillRect(0, i, w, 12); }
+  g.strokeStyle = 'rgba(170,48,48,.22)'; g.lineWidth = 2;
+  for (var j = 6; j < w; j += 32) { g.beginPath(); g.moveTo(j, 0); g.lineTo(j, h); g.stroke(); g.beginPath(); g.moveTo(0, j); g.lineTo(w, j); g.stroke(); }
+});
+var paperTex = ctex(256, 256, function (g, w, h) {
+  g.fillStyle = '#fffdf5'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(110,165,230,.45)'; g.lineWidth = 3;
+  for (var y = 36; y < h; y += 30) { g.beginPath(); g.moveTo(16, y); g.lineTo(w - 16, y); g.stroke(); }
+  g.strokeStyle = 'rgba(235,120,120,.5)'; g.beginPath(); g.moveTo(36, 0); g.lineTo(36, h); g.stroke();
+});
+
+var matMeshes = [];
+MATS.forEach(function (mt) {
+  var g = new THREE.Group();
+  g.position.set(mt.x, BASE, mt.z);
+  live.add(g);
+
+  // 实验标本圆形垫盘 + 高亮环
+  var pad = mesh(new THREE.CylinderGeometry(0.64, 0.68, 0.05, 28), toon('#efe3cb'));
+  pad.position.y = 0.025; g.add(pad);
+  var ringMat = new THREE.MeshBasicMaterial({ color: 0xffa834, transparent: true, opacity: 0, side: THREE.DoubleSide });
+  var ring = new THREE.Mesh(new THREE.RingGeometry(0.66, 0.78, 32), ringMat);
+  ring.rotation.x = -Math.PI / 2; ring.position.y = 0.055; g.add(ring);
+
+  var body = new THREE.Group();
+  body.position.y = 0.05;
+  g.add(body);
+
+  var leftHinge = null, rightHinge = null, topY = 0.25;
+  if (mt.id === 'wood') {
+    var wb = mesh(new THREE.BoxGeometry(0.86, 0.34, 0.62), new THREE.MeshToonMaterial({ map: woodTex, gradientMap: ramp }));
+    wb.position.y = 0.17; body.add(wb); topY = 0.36;
+  } else if (mt.id === 'plastic') {
+    // 塑料片：两半铰接以便弯曲回弹
+    var pMat = toon('#44c9dc', { transparent: true, opacity: 0.88 });
+    leftHinge = new THREE.Group(); leftHinge.position.set(0, 0.05, 0); body.add(leftHinge);
+    var pl = mesh(new THREE.BoxGeometry(0.48, 0.055, 0.68), pMat); pl.position.x = -0.24; leftHinge.add(pl);
+    rightHinge = new THREE.Group(); rightHinge.position.set(0, 0.05, 0); body.add(rightHinge);
+    var pr = mesh(new THREE.BoxGeometry(0.48, 0.055, 0.68), pMat); pr.position.x = 0.24; rightHinge.add(pr);
+    topY = 0.12;
+  } else if (mt.id === 'cloth') {
+    var cMat = new THREE.MeshToonMaterial({ map: clothTex, gradientMap: ramp });
+    leftHinge = new THREE.Group(); leftHinge.position.set(0, 0.04, 0); body.add(leftHinge);
+    var cl = mesh(new THREE.BoxGeometry(0.48, 0.05, 0.72), cMat); cl.position.x = -0.24; leftHinge.add(cl);
+    rightHinge = new THREE.Group(); rightHinge.position.set(0, 0.04, 0); body.add(rightHinge);
+    var cr = mesh(new THREE.BoxGeometry(0.48, 0.05, 0.72), cMat); cr.position.x = 0.24; rightHinge.add(cr);
+    topY = 0.11;
+  } else if (mt.id === 'metal') {
+    // 金属勺：长手柄 + 圆勺头
+    var mMat = toon('#cfd7e2');
+    var handle = mesh(new THREE.BoxGeometry(0.68, 0.055, 0.14), mMat);
+    handle.position.set(-0.20, 0.08, 0); body.add(handle);
+    var bowl = mesh(new THREE.SphereGeometry(0.24, 18, 12, 0, Math.PI * 2, Math.PI * 0.45, Math.PI * 0.55), toon('#dce3ec', { side: THREE.DoubleSide }));
+    bowl.scale.set(1.22, 0.58, 0.92); bowl.position.set(0.32, 0.17, 0); body.add(bowl);
+    var rim = mesh(new THREE.TorusGeometry(0.23, 0.025, 8, 22), mMat, false);
+    rim.rotation.x = Math.PI / 2; rim.scale.set(1.22, 0.92, 1); rim.position.set(0.32, 0.14, 0); body.add(rim);
+    topY = 0.20;
+  } else {
+    var paMat = new THREE.MeshToonMaterial({ map: paperTex, gradientMap: ramp });
+    leftHinge = new THREE.Group(); leftHinge.position.set(0, 0.03, 0); body.add(leftHinge);
+    var al = mesh(new THREE.BoxGeometry(0.48, 0.025, 0.72), paMat); al.position.x = -0.24; leftHinge.add(al);
+    rightHinge = new THREE.Group(); rightHinge.position.set(0, 0.03, 0); body.add(rightHinge);
+    var ar = mesh(new THREE.BoxGeometry(0.48, 0.025, 0.72), paMat); ar.position.x = 0.24; rightHinge.add(ar);
+    topY = 0.09;
+  }
+
+  // 吸水湿斑（棉布/纸张/木块）
+  var wetSpot = new THREE.Mesh(
+    new THREE.CircleGeometry(0.26, 22),
+    new THREE.MeshBasicMaterial({ color: 0x204a85, transparent: true, opacity: 0, depthWrite: false })
+  );
+  wetSpot.rotation.x = -Math.PI / 2;
+  wetSpot.position.set(0, topY + 0.006, 0);
+  body.add(wetSpot);
+
+  // 滚落水珠（塑料片/金属勺/木块，展示后自然滑落消散，不永久残留）
+  var beads = new THREE.Group();
+  beads.position.set(mt.id === 'metal' ? 0.28 : 0, mt.id === 'metal' ? 0.14 : topY + 0.015, 0);
+  var beadMat = toon('#47b2ff', { transparent: true, opacity: 0.95 });
+  var beadSpecs = mt.id === 'metal'
+    ? [[-0.08, 0.03, 0.055], [0.05, -0.05, 0.068], [0.10, 0.06, 0.048]]
+    : [[-0.14, 0.04, 0.06], [0.06, -0.08, 0.075], [0.16, 0.09, 0.05]];
+  beadSpecs.forEach(function (b, bi) {
+    var drop = mesh(new THREE.SphereGeometry(b[2], 14, 10), beadMat, false);
+    drop.scale.set(1, 0.68, 1); drop.position.set(b[0], b[2] * 0.55, b[1]);
+    drop.userData.bx = b[0]; drop.userData.by = b[2] * 0.55; drop.userData.bz = b[1]; drop.userData.bi = bi;
+    beads.add(drop);
+  });
+  beads.visible = false;
+  body.add(beads);
+
+  // 磁铁吸住时的金色星环
+  var sparkRing = new THREE.Mesh(new THREE.RingGeometry(0.32, 0.48, 24), new THREE.MeshBasicMaterial({ color: 0xffcf40, transparent: true, opacity: 0, side: THREE.DoubleSide }));
+  sparkRing.rotation.x = -Math.PI / 2; sparkRing.position.y = 0.65; g.add(sparkRing);
+
+  g.traverse(function (o) { if (o.isMesh && o !== ring && o !== wetSpot && o !== sparkRing && o.parent !== beads) { o.userData.mat = mt; matMeshes.push(o); } });
+  mt.g = g; mt.body = body; mt.ringMat = ringMat; mt.topY = topY;
+  mt.leftHinge = leftHinge; mt.rightHinge = rightHinge;
+  mt.wetSpot = wetSpot; mt.wetVal = 0; mt.wetTimer = 0;
+  mt.beads = beads; mt.beadMat = beadMat; mt.beadVal = 0; mt.beadTimer = 0; mt.beadMax = 2.6;
+  mt.sparkRing = sparkRing; mt.sparkT = 0;
+  mt.hop = 0; mt.bendCur = 0; mt.bendGoal = 0; mt.magLift = 0; mt.pop = 1;
+});
+
+/* ===================== 前排：木质工具托盘 + 4 种 3D 实验工具 ===================== */
+var toolTray = mesh(new THREE.BoxGeometry(6.8, 0.07, 1.25), toon('#e3c391'));
+toolTray.position.set(0, BASE + 0.035, 1.45); live.add(toolTray);
+
+var toolMeshes = [];
+TOOLS.forEach(function (tl) {
+  var g = new THREE.Group(), body = new THREE.Group(); g.add(body);
+  var selRingMat = new THREE.MeshBasicMaterial({ color: 0xe56d17, transparent: true, opacity: 0, side: THREE.DoubleSide });
+  var selRing = new THREE.Mesh(new THREE.RingGeometry(0.44, 0.54, 28), selRingMat);
+  selRing.rotation.x = -Math.PI / 2; selRing.position.y = 0.02; g.add(selRing);
+
+  var h = 0.45;
+  if (tl.id === 'hammer') {
+    var stick = mesh(new THREE.CylinderGeometry(0.055, 0.062, 0.85, 12), toon('#d9a45f'));
+    stick.rotation.z = Math.PI / 2; stick.position.set(-0.1, 0.14, 0); body.add(stick);
+    var head = mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.42, 16), toon('#9e642d'));
+    head.position.set(0.28, 0.18, 0); body.add(head);
+    h = 0.42;
+  } else if (tl.id === 'dropper') {
+    var bulb = mesh(new THREE.SphereGeometry(0.15, 14, 12), toon('#f28530'));
+    bulb.scale.set(1, 1.35, 1); bulb.position.set(0, 0.62, 0); body.add(bulb);
+    var tube = mesh(new THREE.CylinderGeometry(0.068, 0.04, 0.45, 14), toon('#9cd9ff', { transparent: true, opacity: 0.78 }));
+    tube.position.set(0, 0.30, 0); body.add(tube);
+    var tip = mesh(new THREE.ConeGeometry(0.04, 0.14, 12), toon('#52b4ff'), false);
+    tip.rotation.x = Math.PI; tip.position.set(0, 0.07, 0); body.add(tip);
+    tl.bulb = bulb; h = 0.76;
+  } else if (tl.id === 'hand') {
+    var skin = toon('#ffd0ad');
+    var palm = mesh(new THREE.SphereGeometry(0.21, 16, 12), skin);
+    palm.scale.set(1.1, 0.55, 1.0); palm.position.set(0, 0.16, 0); body.add(palm);
+    for (var fi = -1.5; fi <= 1.5; fi += 1) {
+      var fg = mesh(new THREE.CapsuleGeometry(0.048, 0.22, 5, 10), skin);
+      fg.rotation.x = Math.PI / 2; fg.position.set(fi * 0.105, 0.16, -0.22); body.add(fg);
+    }
+    var th = mesh(new THREE.CapsuleGeometry(0.055, 0.16, 5, 10), skin);
+    th.rotation.z = Math.PI / 2.5; th.position.set(-0.24, 0.16, -0.04); body.add(th);
+    h = 0.35;
+  } else {
+    // U形磁铁（红蓝双极 + 银白磁极头）
+    var arcR = 0.24;
+    var archR = mesh(new THREE.TorusGeometry(arcR, 0.085, 10, 16, Math.PI / 2), toon('#e54b4b'));
+    archR.rotation.z = Math.PI / 2; archR.position.set(0, 0.36, 0); body.add(archR);
+    var archB = mesh(new THREE.TorusGeometry(arcR, 0.085, 10, 16, Math.PI / 2), toon('#3b82e6'));
+    archB.position.set(0, 0.36, 0); body.add(archB);
+    var legL = mesh(new THREE.CylinderGeometry(0.085, 0.085, 0.26, 12), toon('#e54b4b'));
+    legL.position.set(-arcR, 0.23, 0); body.add(legL);
+    var legR = mesh(new THREE.CylinderGeometry(0.085, 0.085, 0.26, 12), toon('#3b82e6'));
+    legR.position.set(arcR, 0.23, 0); body.add(legR);
+    var tipL = mesh(new THREE.CylinderGeometry(0.086, 0.086, 0.10, 12), toon('#dce3ec'));
+    tipL.position.set(-arcR, 0.06, 0); body.add(tipL);
+    var tipR = mesh(new THREE.CylinderGeometry(0.086, 0.086, 0.10, 12), toon('#dce3ec'));
+    tipR.position.set(arcR, 0.06, 0); body.add(tipR);
+    h = 0.62;
+  }
+  g.traverse(function (o) { if (o.isMesh && o !== selRing) { o.userData.tool = tl; toolMeshes.push(o); } });
+  tl.g = g; tl.body = body; tl.h = h; tl.selRingMat = selRingMat;
+  tl.homeVec = new THREE.Vector3(tl.x, BASE + 0.07, tl.z);
+  tl.cur = tl.homeVec.clone(); tl.target = tl.homeVec.clone();
+  tl.hover = 0; tl.pop = 1;
+  g.position.copy(tl.cur);
+  live.add(g);
+});
+
+// 滴落动画用的 3 颗蓝色 3D 水滴
+var fallingDrops = [0, 1, 2].map(function () {
+  var d = mesh(new THREE.SphereGeometry(0.062, 12, 10), toon('#3aa8ff'), false);
+  d.scale.set(0.85, 1.25, 0.85); d.visible = false;
+  live.add(d);
+  return { m: d, active: false, y: 0, targetY: 0, vy: 0 };
+});
+
+/* ===================== 声音（WebAudio 合成） ===================== */
+var AC = null;
+function audio() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } } if (AC && AC.state === 'suspended') AC.resume(); return AC; }
+function tone(f, dur, type, vol, f2, delay) {
+  var a = audio(); if (!a) return;
+  var t = a.currentTime + (delay || 0), o = a.createOscillator(), g = a.createGain();
+  o.type = type || 'sine'; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.14, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + 0.02);
+}
+function noise(dur, freq, vol) {
+  var a = audio(); if (!a) return;
+  var n = Math.floor(a.sampleRate * dur), b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0);
+  for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.5);
+  var s = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+  s.buffer = b; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 1.2; g.gain.value = vol || 0.38;
+  s.connect(f); f.connect(g); g.connect(a.destination); s.start();
+}
+var TAP_SND = {
+  wood:    function () { tone(265, 0.13, 'triangle', 0.22, 185); noise(0.04, 850, 0.3); },
+  plastic: function () { tone(660, 0.07, 'square', 0.07, 450); noise(0.03, 1900, 0.25); },
+  cloth:   function () { tone(125, 0.10, 'sine', 0.18, 75); noise(0.05, 500, 0.15); },
+  metal:   function () { tone(1820, 0.72, 'sine', 0.14); tone(2730, 0.52, 'sine', 0.07); },
+  paper:   function () { noise(0.08, 2600, 0.34); tone(460, 0.05, 'triangle', 0.05); }
+};
+function sDrop() { tone(580, 0.11, 'sine', 0.12, 920); }
+function sBend(soft) { if (soft) noise(0.14, 1500, 0.22); else tone(190, 0.09, 'triangle', 0.15, 140); }
+function sMagnet(ok) { if (ok) { tone(520, 0.08, 'triangle', 0.18, 880); tone(1240, 0.24, 'sine', 0.12, null, 0.05); } else tone(220, 0.12, 'sine', 0.09, 180); }
+function sDing() { tone(880, 0.16, 'sine', 0.12); tone(1320, 0.28, 'sine', 0.1, null, 0.1); }
+function sSelect() { tone(520, 0.08, 'sine', 0.11, 680); }
+function sWin() {
+  var ns = [523.25, 659.25, 783.99, 1046.5, 783.99, 1046.5];
+  var ts = [0, 0.11, 0.22, 0.34, 0.50, 0.62];
+  var ds = [0.14, 0.14, 0.14, 0.22, 0.12, 0.42];
+  for (var i = 0; i < ns.length; i++) tone(ns[i], ds[i], 'triangle', 0.15, null, ts[i]);
+}
+
+/* ===================== 离线儿童语音引导 & 进度持久化 ===================== */
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem('xk_k1a_progress') || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem('xk_k1a_progress', JSON.stringify(d));
+  } catch (e) {}
+}
+
+var voiceOn = true, welcomeSpoken = false, cuesDismissed = false;
+var nextHintTimer = 0, guidePulse = 0, guideTarget = 'hammer', currentGuideSpeech = '';
+var WELCOME_TXT = '小朋友，把下面的小木锤、水滴管、小手和磁铁拖到材料上，或者先点工具再点材料，四件工具都试一试吧！';
+function stopVoice() { clearNextHint(); try { if ('speechSynthesis' in window) (window.__xkVoice ? window.__xkVoice.stop() : window.speechSynthesis.cancel()); } catch (e) {} }
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
+  if (!('speechSynthesis' in window)) return;
+  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+}
+function clearNextHint() {
+  if (nextHintTimer) { clearTimeout(nextHintTimer); nextHintTimer = 0; }
+}
+function scheduleNextHint(text, delayMs) {
+  clearNextHint();
+  if (!text || !voiceOn) return;
+  var gen = resetGen;
+  nextHintTimer = setTimeout(function () {
+    nextHintTimer = 0;
+    if (gen !== resetGen || demo || celebrated) return;
+    speak(text);
+  }, delayMs || 1950);
+}
+function dismissEntryCues() {
+  if (cuesDismissed) return;
+  cuesDismissed = true;
+  var vc = $('#voiceCue'), dc = $('#demoCue');
+  if (vc) vc.classList.add('hide');
+  if (dc) dc.classList.add('hide');
+  $('#voiceBtn').classList.remove('cue-pulse');
+  $('#demoBtn').classList.remove('cue-pulse');
+}
+function speakWelcomeOnce() {
+  dismissEntryCues();
+  if (welcomeSpoken) return;
+  welcomeSpoken = true;
+  speak(currentGuideSpeech || WELCOME_TXT);
+}
+
+/* ===================== 通关彩带与勋章 ===================== */
+var celebrated = false, resetGen = 0, quizSolved = false, confRaf = 0;
+function updateGuide(speakIt) {
+  var bar = $('#guideBar'), txt = $('#guideTxt');
+  if (!bar || !txt) return;
+  if (demo) { bar.classList.remove('done'); return; }
+  var msg = '', speech = '';
+  if (!kinds.hammer) {
+    guideTarget = 'hammer';
+    msg = '① 拖「小木锤」到材料上（或先点工具再点材料），敲一敲听声音！';
+    speech = '第一步，把小木锤拖到材料上，或者先点小木锤再点材料，敲一敲听声音！';
+    bar.classList.remove('done');
+  } else if (!kinds.dropper) {
+    guideTarget = 'dropper';
+    msg = '② 用「水滴管」给材料滴一滴水，看看谁会吸水、谁防水！';
+    speech = '第二步，用水滴管给材料滴一滴水，看看谁会吸水、谁防水！';
+    bar.classList.remove('done');
+  } else if (!kinds.hand) {
+    guideTarget = 'hand';
+    msg = '③ 用「小手」去弯折材料，看看谁很柔软、谁硬邦邦！';
+    speech = '第三步，用小手去弯折材料，看看谁很柔软、谁硬邦邦！';
+    bar.classList.remove('done');
+  } else if (!kinds.magnet) {
+    guideTarget = 'magnet';
+    msg = '④ 用「U形磁铁」靠近材料，看看谁能被磁铁吸住！';
+    speech = '最后一步，用U形磁铁靠近材料，看看谁能被磁铁吸住！';
+    bar.classList.remove('done');
+  } else {
+    guideTarget = 'done';
+    msg = '🎉 四件工具全部试过啦！还可以继续自由比较不同材料哦！';
+    speech = '四件工具全部试过啦！还可以继续自由比较不同材料哦！';
+    bar.classList.add('done');
+  }
+  currentGuideSpeech = speech;
+  txt.textContent = msg;
+  bar.classList.remove('pulse');
+  void bar.offsetWidth;
+  bar.classList.add('pulse');
+  if (speakIt) {
+    guidePulse = 2.0;
+    scheduleNextHint(speech, 1950);
+  }
+}
+function launchConfetti() {
+  var cv = $('#confetti'), ctx = cv.getContext('2d');
+  var w = cv.width = window.innerWidth, h = cv.height = window.innerHeight;
+  cv.style.display = 'block';
+  var cols = ['#f59e0b', '#ef4444', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'];
+  var ps = [];
+  for (var i = 0; i < 95; i++) {
+    var ang = -Math.PI / 2 + (Math.random() - 0.5) * 1.9;
+    var sp = 240 + Math.random() * 440;
+    ps.push({
+      x: w * (0.25 + Math.random() * 0.5), y: h * 0.24,
+      vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 80,
+      w: 7 + Math.random() * 6, h: 4 + Math.random() * 5,
+      r: Math.random() * 6.28, vr: (Math.random() - 0.5) * 12,
+      c: cols[i % cols.length]
+    });
+  }
+  var t0 = performance.now();
+  if (confRaf) cancelAnimationFrame(confRaf);
+  (function step(nowMs) {
+    var el = (nowMs - t0) / 1000;
+    ctx.clearRect(0, 0, w, h);
+    var alpha = el > 2.2 ? Math.max(0, 1 - (el - 2.2) / 0.9) : 1;
+    ctx.globalAlpha = alpha;
+    for (var i = 0; i < ps.length; i++) {
+      var p = ps[i];
+      p.x += p.vx * 0.016; p.y += p.vy * 0.016; p.vy += 680 * 0.016; p.r += p.vr * 0.016;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+      ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    }
+    if (el < 3.1) confRaf = requestAnimationFrame(step);
+    else { cv.style.display = 'none'; confRaf = 0; }
+  })(t0);
+}
+function hideCelebrate() {
+  $('#celebrate').classList.remove('show');
+  if (confRaf) { cancelAnimationFrame(confRaf); confRaf = 0; }
+  $('#confetti').style.display = 'none';
+}
+function checkWin() {
+  if (celebrated || demo) return;
+  if (kinds.hammer && kinds.dropper && kinds.hand && kinds.magnet) {
+    celebrated = true;
+    clearNextHint();
+    saveProgress('k1a-03', true);
+    updateGuide(false);
+    var gen = resetGen;
+    setTimeout(function () {
+      if (gen !== resetGen) return;
+      sWin();
+      launchConfetti();
+      $('#celebrate').classList.add('show');
+      speak('太棒啦！敲声、滴水、弯折和磁铁四个实验全都完成啦！科学小结论：不同材料本领不一样，棉布和纸会吸水，塑料和金属防水，只有铁等金属能被磁铁吸住！快来答对下面的小问题，领取本课小红花吧！');
+    }, 520);
+  }
+}
+
+/* ===================== 相机 ===================== */
+var portrait = false;
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  portrait = w / h < 0.85;
+  var tgt = new THREE.Vector3(portrait ? 0 : 0.95, 0.45, portrait ? 0 : 0.12);
+  var dir = portrait ? new THREE.Vector3(0.62, 0.78, 0).normalize() : new THREE.Vector3(0, 0.71, 0.70).normalize();
+  var needW = portrait ? 5.6 : 10.4, needH = portrait ? 9.2 : 6.4;
+  var vf = THREE.MathUtils.degToRad(camera.fov), hf = 2 * Math.atan(Math.tan(vf / 2) * camera.aspect);
+  var d = Math.max(needW / 2 / Math.tan(hf / 2), needH / 2 / Math.tan(vf / 2) * 0.82);
+  camera.position.copy(tgt).addScaledVector(dir, d);
+  camera.lookAt(tgt);
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', fit);
+
+/* ===================== 标签与飘字 ===================== */
+var labelsEl = $('#labels');
+MATS.forEach(function (mt) {
+  var el = document.createElement('div'); el.className = 'lbl'; el.innerHTML = ruby(mt.name, mt.py);
+  labelsEl.appendChild(el); mt.lbl = el;
+});
+TOOLS.forEach(function (tl) {
+  var el = document.createElement('div'); el.className = 'lbl'; el.innerHTML = ruby(tl.name, tl.py);
+  labelsEl.appendChild(el); tl.lbl = el;
+});
+var vtmp = new THREE.Vector3();
+function toScreen(v) { vtmp.copy(v).project(camera); return { x: (vtmp.x + 1) / 2 * window.innerWidth, y: (1 - vtmp.y) / 2 * window.innerHeight }; }
+function floatWord(text, py, worldPos, cls) {
+  var p = toScreen(worldPos), el = document.createElement('div');
+  el.className = 'word' + (cls ? ' ' + cls : ''); el.innerHTML = ruby(text, py);
+  el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
+  labelsEl.appendChild(el); setTimeout(function () { el.remove(); }, 1350);
+}
+
+/* ===================== 我的发现 ===================== */
+var found = {}, foundN = 0, kinds = { hammer: false, dropper: false, hand: false, magnet: false };
+function discover(key, toolId, html, spoken) {
+  var tl = TMAP[toolId];
+  var phaseJustDone = false;
+  if (!demo && !kinds[toolId]) {
+    kinds[toolId] = true;
+    $('#' + tl.stId).classList.add('lit');
+    phaseJustDone = true;
+  }
+  var isNew = !found[key];
+  if (isNew) {
+    found[key] = true; foundN++;
+    var el = document.createElement('div'); el.className = 'stk';
+    el.innerHTML = '<i style="background:' + tl.col + '">' + tl.icon + '</i><span>' + html + '</span>';
+    var list = $('#ntList'); list.insertBefore(el, list.firstChild);
+    while (list.children.length > 6) list.removeChild(list.lastChild);
+    $('#ntCount').textContent = foundN;
+    sDing();
+  }
+  if (!demo && spoken) speak(spoken);
+  checkWin();
+  if (!celebrated && !demo) updateGuide(phaseJustDone);
+}
+
+/* ===================== 物理实验动作系统 ===================== */
+var acted = { pick: false, test: false, observe: false }, actions = 0;
+function markAct(v) {
+  if (!acted[v]) { acted[v] = true; var el = document.querySelector('.verb[data-v="' + v + '"]'); if (el) el.classList.add('done'); }
+  actions++;
+}
+
+var activeTest = null; // { tool, mat, t, dur, step1, step2, startPos }
+var selectedTool = null;
+
+function runTest(tl, mt) {
+  if (activeTest) finishTestNow();
+  selectedTool = null;
+  markAct('pick'); markAct('test');
+  activeTest = {
+    tool: tl, mat: mt, t: 0,
+    dur: tl.id === 'dropper' ? 1.55 : tl.id === 'magnet' ? 1.5 : 1.35,
+    startPos: tl.cur.clone(), step1: false, step2: false, dropIdx: 0
+  };
+}
+
+function finishTestNow() {
+  if (!activeTest) return;
+  var mt = activeTest.mat, tl = activeTest.tool;
+  mt.bendGoal = 0;
+  mt.magLift = 0;
+  tl.body.rotation.set(0, 0, 0);
+  if (tl.bulb) tl.bulb.scale.set(1, 1.35, 1);
+  tl.target.copy(tl.homeVec);
+  activeTest = null;
+}
+
+function stepActiveTest(dt) {
+  if (!activeTest) return;
+  var a = activeTest, tl = a.tool, mt = a.mat;
+  a.t += dt;
+  var u = Math.min(1, a.t / 0.28);
+  var e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+
+  if (tl.id === 'hammer') {
+    var goal = new THREE.Vector3(mt.x - 0.38, BASE + mt.topY + 0.42, mt.z + 0.15);
+    tl.cur.lerpVectors(a.startPos, goal, e);
+    if (a.t > 0.28 && a.t < 1.05) {
+      var phase = (a.t - 0.28) * 10.5;
+      tl.body.rotation.z = -Math.abs(Math.sin(phase)) * 0.78 + 0.22;
+      if (!a.step1 && a.t > 0.40) {
+        a.step1 = true; mt.hop = 0.7; TAP_SND[mt.id]();
+        floatWord(mt.sndWord, mt.sndPy, new THREE.Vector3(mt.x, BASE + 1.0, mt.z), mt.id === 'metal' ? 'ok' : '');
+      }
+      if (!a.step2 && a.t > 0.72) {
+        a.step2 = true; mt.hop = 0.55; TAP_SND[mt.id]();
+        markAct('observe');
+        discover('h:' + mt.id, 'hammer', ruby(mt.name, mt.py) + '<b>' + ruby(mt.sndNote, mt.sndNotePy) + '</b>', mt.name + mt.sndNote);
+      }
+    }
+  } else if (tl.id === 'dropper') {
+    var dGoal = new THREE.Vector3(mt.x + (mt.id === 'metal' ? 0.26 : 0), BASE + mt.topY + 0.78, mt.z);
+    tl.cur.lerpVectors(a.startPos, dGoal, e);
+    if (a.t > 0.28 && a.t < 1.15) {
+      var sq = Math.sin((a.t - 0.28) * 11) * 0.18;
+      if (tl.bulb) tl.bulb.scale.set(1 + sq, 1.35 - sq * 1.4, 1 + sq);
+      var wantDrop = Math.floor((a.t - 0.32) / 0.24);
+      if (wantDrop >= a.dropIdx && a.dropIdx < 3) {
+        var fd = fallingDrops[a.dropIdx++];
+        fd.active = true; fd.m.visible = true;
+        var dxOff = mt.id === 'metal' ? 0.26 : 0;
+        fd.m.position.set(mt.x + dxOff + (a.dropIdx - 2) * 0.07, BASE + mt.topY + 0.72, mt.z + (a.dropIdx % 2 ? 0.05 : -0.05));
+        fd.targetY = BASE + mt.topY + 0.06; fd.vy = -1.6;
+        sDrop();
+      }
+      if (!a.step1 && a.t > 0.78) {
+        a.step1 = true;
+        if (mt.waterMode === 'soak') { mt.wetVal = 1; mt.wetTimer = 5.5; }
+        else if (mt.waterMode === 'bead') { mt.beadVal = 1; mt.beadMax = 2.6; mt.beadTimer = 2.6; }
+        else { mt.wetVal = 0.45; mt.wetTimer = 5.0; mt.beadVal = 0.72; mt.beadMax = 2.2; mt.beadTimer = 2.2; }
+        floatWord(mt.waterWord, mt.waterPy, new THREE.Vector3(mt.x, BASE + 1.05, mt.z), 'water');
+        markAct('observe');
+        discover('d:' + mt.id, 'dropper', ruby(mt.name, mt.py) + '<b>' + ruby(mt.waterNote, mt.waterNotePy) + '</b>', mt.name + mt.waterWord);
+      }
+    }
+  } else if (tl.id === 'hand') {
+    var hGoal = new THREE.Vector3(mt.x, BASE + mt.topY + 0.32, mt.z + 0.16);
+    tl.cur.lerpVectors(a.startPos, hGoal, e);
+    if (a.t > 0.28 && a.t < 1.05) {
+      mt.bendGoal = mt.bendAmt;
+      if (mt.bendAmt === 0) tl.body.rotation.z = Math.sin(a.t * 36) * 0.12;
+      else tl.body.rotation.x = 0.28;
+      if (!a.step1 && a.t > 0.45) {
+        a.step1 = true;
+        sBend(mt.bendAmt > 0.2);
+        floatWord(mt.bendWord, mt.bendPy, new THREE.Vector3(mt.x, BASE + 1.0, mt.z), mt.bendAmt > 0.5 ? 'ok' : '');
+        markAct('observe');
+        discover('b:' + mt.id, 'hand', ruby(mt.name, mt.py) + '<b>' + ruby(mt.bendNote, mt.bendNotePy) + '</b>', mt.name + mt.bendNote);
+      }
+    } else if (a.t >= 1.05) {
+      mt.bendGoal = 0;
+    }
+  } else if (tl.id === 'magnet') {
+    var mGoal = new THREE.Vector3(mt.x, BASE + mt.topY + 0.56, mt.z);
+    tl.cur.lerpVectors(a.startPos, mGoal, e);
+    if (a.t > 0.30 && a.t < 1.18) {
+      if (mt.mag) {
+        mt.magLift = 1;
+        if (!a.step1) {
+          a.step1 = true; mt.sparkT = 1; sMagnet(true);
+          floatWord('吸住啦！', 'xī zhù la', new THREE.Vector3(mt.x, BASE + 1.25, mt.z), 'mag');
+          markAct('observe');
+          discover('m:' + mt.id, 'magnet', ruby(mt.name, mt.py) + '<b>' + ruby('能被磁铁吸住', 'néng bèi cí tiě xī zhù') + '</b>', mt.name + '能被磁铁吸住');
+        }
+      } else {
+        tl.body.rotation.z = Math.sin((a.t - 0.3) * 14) * 0.22;
+        if (!a.step1 && a.t > 0.52) {
+          a.step1 = true; sMagnet(false);
+          floatWord('吸不住', 'xī bù zhù', new THREE.Vector3(mt.x, BASE + 1.05, mt.z), '');
+          markAct('observe');
+          discover('m:' + mt.id, 'magnet', ruby(mt.name, mt.py) + '<b>' + ruby('不能被磁铁吸住', 'bù néng bèi cí tiě xī zhù') + '</b>', mt.name + '不能被磁铁吸住');
+        }
+      }
+    } else if (a.t >= 1.18) {
+      mt.magLift = 0;
+    }
+  }
+
+  if (a.t >= a.dur) finishTestNow();
+}
+
+/* ===================== 指针交互：拖工具到材料 OR 点工具再点材料 ===================== */
+var P = null, hoveredTool = null, hoveredMat = null, now = 0;
+function setNDC(e) { ndc.x = (e.clientX / window.innerWidth) * 2 - 1; ndc.y = -(e.clientY / window.innerHeight) * 2 + 1; raycaster.setFromCamera(ndc, camera); }
+var plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), ptmp = new THREE.Vector3();
+function planePoint(e, y) { setNDC(e); plane.constant = -y; return raycaster.ray.intersectPlane(plane, ptmp) ? ptmp.clone() : null; }
+
+function pickTool(e) {
+  setNDC(e);
+  var h = raycaster.intersectObjects(toolMeshes, false)[0];
+  if (h) return h.object.userData.tool;
+  var best = null, bd = 36;
+  TOOLS.forEach(function (tl) {
+    var c = toScreen(tl.cur.clone().setY(tl.cur.y + tl.h / 2));
+    var d = Math.hypot(e.clientX - c.x, e.clientY - c.y);
+    if (d < bd) { bd = d; best = tl; }
+  });
+  return best;
+}
+function pickMat(e) {
+  setNDC(e);
+  var h = raycaster.intersectObjects(matMeshes, false)[0];
+  if (h) return h.object.userData.mat;
+  var best = null, bd = 38;
+  MATS.forEach(function (mt) {
+    var c = toScreen(new THREE.Vector3(mt.x, BASE + mt.topY, mt.z));
+    var d = Math.hypot(e.clientX - c.x, e.clientY - c.y);
+    if (d < bd) { bd = d; best = mt; }
+  });
+  return best;
+}
+
+canvas.addEventListener('pointerdown', function (e) {
+  audio(); stopDemo(); introSkip(); speakWelcomeOnce();
+  var tl = pickTool(e);
+  if (tl) {
+    if (activeTest && activeTest.tool === tl) finishTestNow();
+    P = { tool: tl, x: e.clientX, y: e.clientY, dragging: false };
+    ghost.off = true;
+  } else {
+    var mt = pickMat(e);
+    if (mt) {
+      ghost.off = true;
+      if (selectedTool) runTest(selectedTool, mt);
+      else { mt.hop = 0.65; TAP_SND[mt.id](); }
+    }
+  }
+  try { canvas.setPointerCapture(e.pointerId); } catch (er) {}
+});
+
+canvas.addEventListener('pointermove', function (e) {
+  if (P) {
+    if (!P.dragging && Math.hypot(e.clientX - P.x, e.clientY - P.y) > 7) {
+      P.dragging = true;
+      selectedTool = null;
+    }
+    if (P.dragging) P.e = { clientX: e.clientX, clientY: e.clientY };
+    return;
+  }
+  hoveredTool = pickTool(e);
+  hoveredMat = hoveredTool ? null : pickMat(e);
+  canvas.style.cursor = (hoveredTool || hoveredMat) ? 'pointer' : 'default';
+});
+
+function finishPointer() {
+  if (!P) return;
+  var tl = P.tool;
+  if (P.dragging) {
+    var hitMat = null, bestD = 1.05;
+    MATS.forEach(function (mt) {
+      var d = Math.hypot(tl.cur.x - mt.x, tl.cur.z - mt.z);
+      if (d < bestD) { bestD = d; hitMat = mt; }
+    });
+    if (hitMat) runTest(tl, hitMat);
+    else tl.target.copy(tl.homeVec);
+  } else {
+    selectedTool = (selectedTool === tl) ? null : tl;
+    sSelect();
+    if (selectedTool) markAct('pick');
+  }
+  P = null;
+}
+canvas.addEventListener('pointerup', finishPointer);
+canvas.addEventListener('pointercancel', finishPointer);
+canvas.addEventListener('pointerleave', function () { if (!P) { hoveredTool = null; hoveredMat = null; } });
+
+/* ===================== 幽灵手示范 ===================== */
+var ghost = { off: false, t: 0 }, handEl = $('#hand');
+function updateGhost(dt) {
+  if (ghost.off || intro.t < 1.5) { handEl.style.opacity = 0; return; }
+  ghost.t = (ghost.t + dt) % 2.6;
+  var a = toScreen(TMAP.dropper.homeVec.clone().setY(BASE + 0.35));
+  var b = toScreen(new THREE.Vector3(MMAP.cloth.x, BASE + 0.25, MMAP.cloth.z));
+  var u = Math.min(1, Math.max(0, (ghost.t - 0.5) / 1.35));
+  var e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+  var x = a.x + (b.x - a.x) * e, y = a.y + (b.y - a.y) * e - Math.sin(e * Math.PI) * 55;
+  handEl.style.opacity = ghost.t < 2.2 ? 0.95 : 0;
+  handEl.style.transform = 'translate(' + (x - 20) + 'px,' + (y - 6) + 'px) scale(' + (ghost.t < 0.5 || ghost.t > 1.85 ? 1 : 0.9) + ')';
+}
+
+/* ===================== 老师演示 ===================== */
+var demo = null;
+var DEMO = [
+  ['say', '欢迎来看演示！我们用四件小工具挨个测一测不同材料的本领吧！'], ['wait', 1.1],
+  ['say', '先用水滴管测吸水：棉布会吸水！'], ['test', 'dropper', 'cloth'], ['wait', 0.6],
+  ['say', '塑料片不吸水，还会滚水珠！'], ['test', 'dropper', 'plastic'], ['wait', 0.6],
+  ['say', '再用小木锤敲一敲金属勺，声音很清脆！'], ['test', 'hammer', 'metal'], ['wait', 0.6],
+  ['say', '用小手弯折纸张，纸很容易弯折！'], ['test', 'hand', 'paper'], ['wait', 0.6],
+  ['say', '最后用磁铁吸金属勺，吸住啦！'], ['test', 'magnet', 'metal'], ['wait', 0.8], ['end']
+];
+function startDemo() {
+  dismissEntryCues();
+  resetAll(true);
+  demo = { i: 0, t: 0 };
+  ghost.off = true;
+  $('#demoBtn').classList.add('on');
+  $('#demoBtn').textContent = '■ 停止';
+  $('#guideTxt').textContent = '🎬 正在演示四件实验工具的玩法，看完就轮到你试一试啦！';
+}
+function stopDemo(finished) {
+  if (!demo) return;
+  demo = null;
+  $('#demoBtn').classList.remove('on');
+  $('#demoBtn').textContent = '▶ 演示';
+  if (finished) {
+    resetAll(false);
+    speak('演示看完啦！现在轮到你亲手把四件小工具都试一试吧！');
+  } else {
+    updateGuide(false);
+  }
+}
+function stepDemo(dt) {
+  if (!demo) return;
+  var s = DEMO[demo.i]; demo.t += dt;
+  if (!s || s[0] === 'end') { stopDemo(true); return; }
+  if (s[0] === 'say') {
+    $('#guideTxt').textContent = '🎬 ' + s[1];
+    speak(s[1]);
+    demo.i++; demo.t = 0; return;
+  }
+  if (s[0] === 'wait') { if (demo.t >= s[1]) { demo.i++; demo.t = 0; } return; }
+  if (s[0] === 'test') {
+    if (!demo.started) { demo.started = true; runTest(TMAP[s[1]], MMAP[s[2]]); }
+    if (!activeTest) { demo.started = false; demo.i++; demo.t = 0; }
+  }
+}
+
+/* ===================== 开场 ===================== */
+var intro = { t: 0, done: false };
+function introSkip() {
+  if (intro.t < 1.5) intro.t = 1.5;
+  board.scale.set(1, 1, 1); toolTray.scale.setScalar(1);
+  MATS.forEach(function (m) { m.pop = 1; }); TOOLS.forEach(function (tl) { tl.pop = 1; });
+}
+function backOut(t) { var c = 1.7; t = Math.min(1, Math.max(0, t)); return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); }
+function updateIntro(dt) {
+  if (intro.done) return;
+  if (!intro.t0) intro.t0 = performance.now();
+  intro.t = Math.max(intro.t + dt, (performance.now() - intro.t0) / 1000 * 1.4);
+  var t = intro.t;
+  var lift = Math.min(1, Math.max(0, (t - 0.2) / 0.65));
+  figCard.position.y = 0.012 + lift * 1.6;
+  figCard.material.opacity = 1 - lift;
+  figCard.visible = lift < 1;
+  board.scale.set(1, Math.max(0.01, backOut((t - 0.3) / 0.5)), 1);
+  toolTray.scale.setScalar(Math.max(0.001, backOut((t - 0.45) / 0.5)));
+  MATS.forEach(function (m, i) { m.pop = Math.max(0.001, backOut((t - 0.5 - i * 0.05) / 0.45)); });
+  TOOLS.forEach(function (tl, i) { tl.pop = Math.max(0.001, backOut((t - 0.68 - i * 0.05) / 0.45)); });
+  if (t > 0.9 && t < 3.4) { MATS.forEach(function (m) { m.introLbl = true; }); TOOLS.forEach(function (tl) { tl.introLbl = true; }); }
+  if (t >= 3.4) {
+    MATS.forEach(function (m) { m.introLbl = false; m.pop = 1; });
+    TOOLS.forEach(function (tl) { tl.introLbl = false; tl.pop = 1; });
+    board.scale.set(1, 1, 1); toolTray.scale.setScalar(1);
+    intro.done = true;
+  }
+}
+
+/* ===================== 重来 ===================== */
+function resetQuizUI() {
+  quizSolved = false;
+  var fb = $('#quizFb');
+  if (fb) { fb.textContent = ''; fb.className = 'quiz-fb'; }
+  document.querySelectorAll('#quizOpts .qopt').forEach(function (b) {
+    b.classList.remove('correct', 'wrong');
+    b.disabled = false;
+  });
+}
+
+function resetAll(keepDemo) {
+  if (!keepDemo) stopDemo(false);
+  clearNextHint();
+  resetGen++;
+  finishTestNow(); stopVoice(); hideCelebrate(); celebrated = false;
+  resetQuizUI();
+  selectedTool = null;
+  MATS.forEach(function (mt) {
+    mt.wetVal = 0; mt.wetTimer = 0; mt.beadVal = 0; mt.beadTimer = 0;
+    mt.wetSpot.material.opacity = 0; mt.beads.visible = false; mt.beadMat.opacity = 0.95;
+    mt.bendCur = mt.bendGoal = 0; mt.magLift = 0; mt.hop = 0; mt.sparkT = 0;
+  });
+  TOOLS.forEach(function (tl) { tl.cur.copy(tl.homeVec); tl.target.copy(tl.homeVec); tl.body.rotation.set(0, 0, 0); });
+  fallingDrops.forEach(function (fd) { fd.active = false; fd.m.visible = false; });
+  found = {}; foundN = 0; kinds = { hammer: false, dropper: false, hand: false, magnet: false };
+  $('#ntList').innerHTML = ''; $('#ntCount').textContent = '0';
+  document.querySelectorAll('.stamp').forEach(function (s) { s.classList.remove('lit'); });
+  if (!keepDemo) updateGuide(false);
+}
+
+/* ===================== 主循环 ===================== */
+var last = performance.now();
+function frame(t) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (t - last) / 1000)); last = t; now = t / 1000;
+  updateIntro(dt);
+  stepDemo(dt);
+  stepActiveTest(dt);
+
+  // 拖拽中的工具目标与悬停材料
+  var dragOverMat = null;
+  if (P && P.dragging && P.e) {
+    var pp = planePoint(P.e, BASE + 0.72);
+    if (pp) P.tool.target.set(THREE.MathUtils.clamp(pp.x, BOARD.x0 + 0.25, BOARD.x1 - 0.25), BASE + 0.72, THREE.MathUtils.clamp(pp.z, BOARD.z0 + 0.25, BOARD.z1 - 0.25));
+    var bestD = 1.05;
+    MATS.forEach(function (mt) {
+      var d = Math.hypot(P.tool.cur.x - mt.x, P.tool.cur.z - mt.z);
+      if (d < bestD) { bestD = d; dragOverMat = mt; }
+    });
+  }
+
+  // 下落的水滴物理
+  fallingDrops.forEach(function (fd) {
+    if (!fd.active) return;
+    fd.vy -= 14 * dt;
+    fd.m.position.y += fd.vy * dt;
+    if (fd.m.position.y <= fd.targetY) { fd.active = false; fd.m.visible = false; }
+  });
+
+  // 5 种材料状态更新（弯曲、湿斑、水珠、磁吸浮起）
+  MATS.forEach(function (mt) {
+    if (mt.hop > 0) mt.hop = Math.max(0, mt.hop - dt * 3.5);
+    mt.bendCur += (mt.bendGoal - mt.bendCur) * (1 - Math.exp(-12 * dt));
+    if (mt.leftHinge && mt.rightHinge) {
+      mt.leftHinge.rotation.z = -mt.bendCur * 0.92;
+      mt.rightHinge.rotation.z = mt.bendCur * 0.92;
+    }
+    // 湿斑与水珠（展示清楚后自然滚落/变干消散，不永久残留）
+    if (mt.wetTimer > 0) {
+      mt.wetTimer = Math.max(0, mt.wetTimer - dt);
+      if (mt.wetTimer === 0) mt.wetVal = 0;
+    }
+    var wetFade = mt.wetTimer > 0 && mt.wetTimer < 1.3 ? mt.wetTimer / 1.3 : 1;
+    var wOp = mt.wetVal * wetFade * (mt.id === 'paper' ? 0.42 : mt.id === 'cloth' ? 0.50 : 0.25);
+    mt.wetSpot.material.opacity += (wOp - mt.wetSpot.material.opacity) * (1 - Math.exp(-6 * dt));
+    mt.wetSpot.scale.setScalar(0.55 + mt.wetSpot.material.opacity * 1.4);
+
+    if (mt.beadTimer > 0) {
+      mt.beadTimer = Math.max(0, mt.beadTimer - dt);
+      var elapsed = mt.beadMax - mt.beadTimer;
+      var fade = mt.beadTimer < 0.8 ? mt.beadTimer / 0.8 : 1;
+      mt.beads.visible = fade > 0.02;
+      mt.beadMat.opacity = 0.95 * fade;
+      mt.beads.scale.setScalar(Math.max(0.01, mt.beadVal * (0.25 + 0.75 * fade)));
+      mt.beads.children.forEach(function (dr) {
+        var u = dr.userData;
+        var roll = Math.min(1, elapsed / mt.beadMax);
+        var spread = mt.waterMode === 'bead' ? roll * 0.09 : roll * 0.02;
+        dr.position.set(
+          u.bx + (u.bx >= 0 ? spread : -spread) + Math.sin(now * 9 + u.bi * 2.1) * 0.008 * fade,
+          u.by * (0.65 + 0.35 * fade),
+          u.bz + (u.bz >= 0 ? spread : -spread)
+        );
+      });
+      if (mt.beadTimer === 0) { mt.beadVal = 0; mt.beads.visible = false; }
+    } else {
+      mt.beads.visible = false;
+    }
+
+    // 磁铁吸住抬升
+    var liftY = mt.magLift * 0.40;
+    mt.body.position.y += ((0.05 + liftY + Math.sin(mt.hop * Math.PI) * 0.22) - mt.body.position.y) * (1 - Math.exp(-18 * dt));
+    mt.g.scale.setScalar(mt.pop);
+
+    if (mt.sparkT > 0) {
+      mt.sparkT = Math.max(0, mt.sparkT - dt * 1.5);
+      mt.sparkRing.material.opacity = mt.sparkT * 0.9;
+      mt.sparkRing.scale.setScalar(1 + (1 - mt.sparkT) * 0.9);
+    } else mt.sparkRing.material.opacity = 0;
+
+    var hi = (dragOverMat === mt) || (selectedTool && hoveredMat === mt);
+    mt.ringMat.opacity += ((hi ? 0.85 : 0) - mt.ringMat.opacity) * 0.25;
+
+    var showL = mt.introLbl || hoveredMat === mt || dragOverMat === mt || (activeTest && activeTest.mat === mt);
+    if (showL) {
+      var sp = toScreen(new THREE.Vector3(mt.x, BASE + mt.topY + 0.32, mt.z));
+      mt.lbl.style.transform = 'translate(' + sp.x + 'px,' + sp.y + 'px) translate(-50%,-100%)';
+    }
+    mt.lbl.classList.toggle('show', !!showL);
+  });
+
+  // 4 种工具更新 + 引导高亮脉冲
+  if (guidePulse > 0) guidePulse = Math.max(0, guidePulse - dt);
+  var pulseWave = 0.5 + 0.5 * Math.sin(now * (guidePulse > 0 ? 9 : 4.2));
+  var kk = 1 - Math.exp(-15 * dt);
+  TOOLS.forEach(function (tl) {
+    var busy = activeTest && activeTest.tool === tl;
+    if (!busy) {
+      if (!(P && P.tool === tl && P.dragging)) {
+        tl.target.copy(tl.homeVec);
+        if (selectedTool === tl) tl.target.y += 0.28;
+      }
+      tl.cur.lerp(tl.target, P && P.tool === tl && P.dragging ? 1 - Math.exp(-22 * dt) : kk);
+    }
+    var hv = (hoveredTool === tl && !P) ? 1 : 0; tl.hover += (hv - tl.hover) * 0.25;
+    tl.g.position.set(tl.cur.x, tl.cur.y + (busy ? 0 : tl.hover * 0.08), tl.cur.z);
+    tl.body.scale.setScalar(tl.pop);
+    var wantGuideRing = !demo && !celebrated && !selectedTool && guideTarget === tl.id;
+    var ringGoal = selectedTool === tl ? 0.92 : (wantGuideRing ? (0.32 + pulseWave * (guidePulse > 0 ? 0.6 : 0.38)) : 0);
+    tl.selRingMat.opacity += (ringGoal - tl.selRingMat.opacity) * 0.22;
+
+    var showL = tl.introLbl || tl.hover > 0.45 || selectedTool === tl || (P && P.tool === tl);
+    if (showL) {
+      var sp = toScreen(tl.cur.clone().setY(tl.cur.y + tl.h + 0.22));
+      tl.lbl.style.transform = 'translate(' + sp.x + 'px,' + sp.y + 'px) translate(-50%,-100%)';
+    }
+    tl.lbl.classList.toggle('show', !!showL);
+  });
+
+  updateGhost(dt);
+  $('#verbs').style.opacity = actions > 8 ? 0.35 : 1;
+  renderer.render(scene, camera);
+}
+
+/* ===================== 按钮 ===================== */
+function speakCurrentGuide() {
+  audio(); introSkip(); dismissEntryCues();
+  welcomeSpoken = true; voiceOn = true;
+  $('#voiceBtn').classList.add('on');
+  $('#voiceBtn').textContent = '🔊 语音';
+  guidePulse = 2.4;
+  var bar = $('#guideBar');
+  if (bar) { bar.classList.remove('pulse'); void bar.offsetWidth; bar.classList.add('pulse'); }
+  speak(currentGuideSpeech || WELCOME_TXT, true);
+}
+$('#voiceBtn').addEventListener('click', function () {
+  audio(); introSkip(); dismissEntryCues();
+  var talking = ('speechSynthesis' in window) && window.speechSynthesis.speaking;
+  if (!voiceOn) {
+    speakCurrentGuide();
+  } else if (talking) {
+    voiceOn = false;
+    $('#voiceBtn').classList.remove('on');
+    $('#voiceBtn').textContent = '🔇 静音';
+    stopVoice();
+  } else {
+    speakCurrentGuide();
+  }
+});
+$('#guideBar').addEventListener('click', speakCurrentGuide);
+
+$('#quizOpts').addEventListener('click', function (e) {
+  var btn = e.target.closest('.qopt');
+  if (!btn || btn.disabled) return;
+  audio();
+  var ans = btn.getAttribute('data-ans'), fb = $('#quizFb');
+  if (ans === 'plastic') {
+    quizSolved = true;
+    btn.classList.add('correct');
+    document.querySelectorAll('#quizOpts .qopt').forEach(function (b) { b.disabled = true; });
+    fb.className = 'quiz-fb ok';
+    fb.textContent = '🌸 太棒了！获得本课小红花！塑料片不吸水、能防水，最适合做小雨伞！';
+    sWin();
+    launchConfetti();
+    saveProgress('k1a-03', true);
+    speak('答对啦！太棒了，获得本课小红花！塑料片不吸水、能防水，最适合做小雨伞！', true);
+  } else {
+    btn.classList.add('wrong');
+    var hints = {
+      paper: '再想想哦～纸张遇到雨水会很快吸水湿透破掉哦！',
+      cloth: '再想想哦～棉布也会吸水，雨水会渗进来把我们淋湿哦！'
+    };
+    fb.className = 'quiz-fb try';
+    fb.textContent = hints[ans] || '再想想哦，试试选另一种材料吧！';
+    tone(240, 0.14, 'triangle', 0.12, 180);
+    speak(fb.textContent, true);
+  }
+});
+
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  $('#ntTog').textContent = c ? '展开' : '收起';
+});
+$('#celKeep').addEventListener('click', hideCelebrate);
+$('#celAgain').addEventListener('click', function () { resetAll(false); });
+$('#demoBtn').addEventListener('click', function () { audio(); introSkip(); dismissEntryCues(); if (demo) stopDemo(false); else startDemo(); });
+$('#resetBtn').addEventListener('click', function () { resetAll(false); });
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () { return { triangles: renderer.info.render.triangles, pixelRatio: renderer.getPixelRatio(), found: foundN, kinds: kinds }; },
+  startDemo: startDemo
+};
+
+updateGuide(false);
+fit();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

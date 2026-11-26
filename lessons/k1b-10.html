@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第10课 月亮的形状 · 3D月相变化观测站</title>
+<style>
+:root{--accent:#f59e0b;--ink:#1f2433;--line:#d5d9e6;--card:rgba(255,253,248,.95)}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0c142c;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.46em;color:#6d7285;font-weight:600}
+body.no-py rt{display:none}
+
+/* 相机快门闪烁层 */
+#flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:25;transition:opacity .18s}
+#flash.on{opacity:.55;transition:none}
+
+/* 左上标题卡片 */
+#hudTL{position:fixed;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:10px;
+  padding:7px 14px 7px 9px;border-radius:16px;background:var(--card);border:1.5px solid var(--line);
+  box-shadow:0 4px 16px rgba(5,10,28,.35)}
+#backBtn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:#3a4259;font-size:19px;font-weight:900}
+#backBtn:hover{border-color:var(--accent);color:#b45309}
+.hd-t{font-size:16px;font-weight:900;line-height:1.5}
+.hd-sub{font-size:11.5px;color:#626b82;font-weight:700}
+
+/* 顶部中央动态分步小助手 */
+#guideBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:6;
+  max-width:min(450px,calc(100vw - 640px));display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:15px;background:rgba(255,251,238,.96);
+  border:2px solid #f59e0b;box-shadow:0 6px 18px rgba(0,0,0,.32);
+  font-size:13.5px;font-weight:800;color:#78350f;cursor:pointer;line-height:1.38;transition:all .2s}
+#guideBar:active{transform:translateX(-50%) scale(.98)}
+#guideBar.done{border-color:#16a34a;background:#f0fdf4;color:#166534}
+@media (max-width:1180px){
+  #guideBar{top:62px;left:12px;transform:none;max-width:min(450px,calc(100vw - 260px))}
+  #guideBar:active{transform:scale(.98)}
+}
+
+/* 右上工具条 + top:-11px 入口微标签 */
+#hudTR{position:fixed;top:12px;right:12px;z-index:7;display:flex;align-items:center;gap:6px}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:38px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);
+  background:var(--card);font-family:inherit;font-size:13.5px;font-weight:800;color:#2c344a;cursor:pointer;
+  box-shadow:0 3px 0 #b8bfd4;transition:all .14s;white-space:nowrap}
+.tbtn:hover{border-color:var(--accent);color:#b45309}
+.tbtn.on{background:#d97706;border-color:#92400e;color:#fff;box-shadow:0 3px 0 #92400e}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#fef3c7;border:1.5px solid #d97706;color:#92400e;font-size:10.5px;font-weight:900;
+  white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.3);
+  animation:cuePop 1.6s ease-in-out infinite;transition:opacity .25s}
+body.interacted .entry-cue{opacity:0;animation:none}
+@keyframes cuePop{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+
+/* 右上可收起窄版发现栏（D3） */
+#notes{position:fixed;top:60px;right:12px;z-index:6;width:224px;padding:9px 11px;border-radius:15px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+.nt-title{font-size:13.5px;font-weight:900}
+.nt-cnt{font-size:12.5px;font-weight:900;color:#b45309}
+.nt-tog{padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:11px;font-weight:800;color:#525b73;cursor:pointer}
+.stamps{display:flex;gap:4px;margin-bottom:6px}
+.st{flex:1;text-align:center;padding:3px 2px;border-radius:8px;font-size:11px;font-weight:800;
+  border:1.5px dashed #c8cedf;color:#7e87a1;background:#f4f6fb;transition:all .2s;line-height:1.45}
+.st.lit{border-style:solid;border-color:#d97706;background:#fef3c7;color:#92400e;animation:pop .4s cubic-bezier(.2,1.6,.4,1)}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList,#notes.collapsed .stamps{display:none}
+#notes.collapsed .nt-head{margin-bottom:0}
+.stk{padding:5px 8px;border-radius:10px;background:#fff;border:1px solid #e2e6f0;font-size:12px;font-weight:700;line-height:1.42;animation:pop .4s cubic-bezier(.2,1.5,.4,1)}
+@keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* 左下方黑色月相记录卡纸展板（呼应 P44–P45，严格避让右上 #notes） */
+#blackBoard{position:fixed;left:14px;bottom:82px;z-index:5;width:270px;padding:8px 10px 9px;border-radius:16px;
+  background:#141926;border:2px solid #fbbf24;box-shadow:0 8px 24px rgba(0,0,0,.45);color:#f8fafc}
+.bb-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-size:12px;font-weight:900;color:#fde68a}
+.bb-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.bb-slot{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 2px;border-radius:10px;
+  background:#1f273b;border:1.5px dashed #475569;transition:all .2s;cursor:pointer}
+.bb-slot:hover{border-color:#fbbf24;background:#27324d}
+.bb-slot.next{border-style:solid;border-color:#f59e0b;box-shadow:0 0 0 2px rgba(245,158,11,.45);animation:slotPulse 1.5s ease-in-out infinite}
+@keyframes slotPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.bb-slot.filled{border-style:solid;border-color:#fbbf24;background:#0e1320;animation:none;box-shadow:none}
+.bb-slot canvas{width:38px;height:38px;display:block}
+.bb-slot span{font-size:10px;font-weight:800;color:#cbd5e1;white-space:nowrap}
+.bb-slot.filled span{color:#fde68a}
+
+/* 夜晚观月安全贴士胶囊（非 button，呼应 P44 警示框，确保 extraBtns === 0） */
+#safetyTip{position:fixed;left:14px;top:76px;z-index:5;padding:5px 12px;border-radius:99px;
+  background:rgba(254,243,199,.94);border:1.5px solid #d97706;color:#92400e;
+  font-size:12px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.28)}
+#safetyTip:hover{background:#fde68a}
+@media (max-width:1180px){#safetyTip{top:114px}}
+
+/* 单焦点 3D 跳动指引气泡（pointer-events:none 绝不遮挡点击） */
+#targetCue{position:fixed;left:0;top:0;transform:translate(-50%,-100%);z-index:5;pointer-events:none;
+  padding:5px 13px;border-radius:99px;background:#fef3c7;border:2px solid #f59e0b;color:#92400e;
+  font-size:13px;font-weight:900;white-space:nowrap;box-shadow:0 4px 16px rgba(245,158,11,.36);
+  display:none;animation:cueBob 1.3s ease-in-out infinite}
+#targetCue.show{display:block}
+@keyframes cueBob{0%,100%{transform:translate(-50%,-100%) translateY(0)}50%{transform:translate(-50%,-100%) translateY(-6px)}}
+
+/* 飘浮反馈词 */
+#floatLayer{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden}
+.fword{position:absolute;transform:translate(-50%,-100%);padding:5px 13px;border-radius:99px;
+  background:rgba(255,251,235,.96);border:2px solid #f59e0b;color:#92400e;
+  font-size:14.5px;font-weight:900;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.3);
+  animation:floatUp 1.6s ease-out forwards}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-60%) scale(.7)}18%{opacity:1;transform:translate(-50%,-100%) scale(1.05)}100%{opacity:0;transform:translate(-50%,-185%) scale(1)}}
+
+/* 底部极简农历初一→三十月相滑杆（U7：0 个底部按钮，extraBtns === 0） */
+#bottomDock{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:6;
+  width:min(580px,calc(100vw - 24px));padding:9px 15px;border-radius:20px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 8px 26px rgba(0,0,0,.42);
+  display:flex;align-items:center;gap:10px}
+.lunar-pill{min-width:142px;padding:5px 11px;border-radius:11px;background:#1e293b;border:1.5px solid #f59e0b;
+  color:#fde68a;font-size:12.5px;font-weight:900;text-align:center;white-space:nowrap;flex:none}
+.end-tag{font-size:12px;font-weight:900;color:#475569;white-space:nowrap;flex:none}
+#daySlider{flex:1;min-width:130px;height:10px;-webkit-appearance:none;appearance:none;border-radius:99px;outline:none;cursor:pointer;
+  background:linear-gradient(90deg,#1e293b 0%,#475569 25%,#fde68a 50%,#475569 75%,#1e293b 100%);border:1.5px solid #94a3b8}
+#daySlider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:23px;height:23px;border-radius:50%;
+  background:#fff;border:3px solid #d97706;box-shadow:0 2px 8px rgba(0,0,0,.28);cursor:pointer}
+
+/* 通关弹窗 */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+#winToast{position:fixed;inset:0;z-index:35;display:none;place-items:center;background:rgba(10,16,36,.52);padding:16px}
+#winToast.show{display:grid}
+.win-card{width:min(460px,100%);max-height:86vh;overflow-y:auto;background:#fffdf8;
+  border:2.5px solid #d97706;border-radius:22px;padding:18px 20px;text-align:center;
+  box-shadow:0 20px 50px rgba(0,0,0,.45);animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+.win-concl{margin:10px 0;padding:10px 12px;border-radius:13px;background:#fffbeb;border:1.5px solid #fcd34d;
+  text-align:left;font-size:13.5px;line-height:1.6;color:#78350f}
+.win-quiz{margin:10px 0;padding:10px 12px;border-radius:13px;background:#f8fafc;border:1.5px solid #cbd5e1;text-align:left}
+.win-quiz h4{margin:0 0 7px;font-size:13.5px;color:#1e293b}
+.qopts{display:flex;flex-direction:column;gap:7px}
+.qopt{padding:8px 11px;border-radius:11px;border:1.5px solid #d9d0be;background:#fff;
+  font-family:inherit;font-size:13.5px;font-weight:800;text-align:left;cursor:pointer;transition:all .14s;color:var(--ink)}
+.qopt:hover{border-color:#d97706;background:#fffbeb}
+.qopt.ok{border-color:#2b8a3e;background:#ebfbee;color:#2b8a3e}
+.qopt.bad{border-color:#e03131;background:#fff5f5;color:#c92a2a}
+.qfb{margin-top:7px;font-size:12.5px;font-weight:800;min-height:18px;color:#b45309}
+.qfb.ok{color:#2b8a3e}
+.win-acts{display:flex;justify-content:center;gap:10px;margin-top:12px}
+
+@media (max-width:760px){
+  #hudTL{top:8px;left:8px;padding:5px 10px 5px 6px}
+  .hd-t{font-size:14px}.hd-sub{display:none}
+  #hudTR{top:8px;right:8px;gap:4px}.tbtn{height:32px;padding:0 8px;font-size:12px}
+  .entry-cue{display:none}
+  #guideBar{top:48px;left:8px;right:8px;max-width:none;font-size:12px;padding:5px 10px}
+  #safetyTip{top:94px;left:8px;font-size:11px}
+  #blackBoard{left:8px;bottom:86px;width:215px;padding:6px 7px}
+  .bb-slot canvas{width:28px;height:28px}
+  #notes{top:auto;bottom:86px;right:8px;width:170px}
+  #ntList{max-height:60px}
+  #bottomDock{bottom:8px;padding:6px 10px;gap:6px}
+  .lunar-pill{min-width:112px;font-size:11.5px;padding:4px 7px}
+  .end-tag{font-size:11px}
+}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="flash"></div>
+<div id="targetCue">👆 点望远镜拍【蛾眉月】 📸</div>
+<div id="safetyTip" title="点击听夜晚观月安全贴士">👨‍👩‍👧 夜晚观月要有大人陪同</div>
+<div id="floatLayer"></div>
+<canvas id="confetti"></canvas>
+
+<div id="hudTL">
+  <a id="backBtn" href="../index.html" title="返回书包">‹</a>
+  <div>
+    <div class="hd-t" data-py="dì kè yuè liang de xíng zhuàng">第10课 月亮的形状</div>
+    <div class="hd-sub">活页 · 课本第 44 页「3D 月相变化观测站」</div>
+  </div>
+</div>
+
+<div id="guideBar" title="点我重听当前步骤">
+  <span id="guideIco">📸</span>
+  <span id="guideTxt">第1步：现在是初三蛾眉月，点右下角望远镜拍照，或左右拖动3D月亮变月相吧！</span>
+</div>
+
+<div id="hudTR">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<aside id="notes">
+  <div class="nt-head">
+    <span class="nt-title" data-py="wǒ de fā xiàn">我的发现</span>
+    <span class="nt-cnt" id="ntCnt">0/5</span>
+    <button class="nt-tog" id="ntTog" type="button">收起</button>
+  </div>
+  <div class="stamps">
+    <span class="st" id="st1" data-py="chū yuè wān gōu">初月弯钩</span>
+    <span class="st" id="st2" data-py="mǎn yuè yù pán">满月玉盘</span>
+    <span class="st" id="st3" data-py="yuè xiàng guī lǜ">月相规律</span>
+  </div>
+  <div id="ntList"></div>
+</aside>
+
+<!-- 左下黑卡纸月相展板（P45 黑卡纸贴月相） -->
+<div id="blackBoard">
+  <div class="bb-head">
+    <span>🖤 <span data-py="hēi kǎ zhǐ yuè xiàng zhǎn bǎn">黑卡纸月相展板</span></span>
+    <span id="bbCnt">0/5</span>
+  </div>
+  <div class="bb-grid">
+    <div class="bb-slot" id="slot_p3" data-d="3"><canvas width="64" height="64"></canvas><span>蛾眉月</span></div>
+    <div class="bb-slot" id="slot_p8" data-d="8"><canvas width="64" height="64"></canvas><span>上弦月</span></div>
+    <div class="bb-slot" id="slot_p15" data-d="15"><canvas width="64" height="64"></canvas><span>满月</span></div>
+    <div class="bb-slot" id="slot_p22" data-d="22"><canvas width="64" height="64"></canvas><span>下弦月</span></div>
+    <div class="bb-slot" id="slot_p27" data-d="27"><canvas width="64" height="64"></canvas><span>残月</span></div>
+  </div>
+</div>
+
+<div id="bottomDock">
+  <span class="lunar-pill" id="lunarLabel">农历初三 · 蛾眉月</span>
+  <span class="end-tag">🌒 初一</span>
+  <input id="daySlider" type="range" min="1" max="30" step="1" value="3" aria-label="农历初一到三十月相滑杆">
+  <span class="end-tag">🌘 三十</span>
+</div>
+
+<div id="winToast">
+  <div class="win-card">
+    <div style="font-size:40px">🏆</div>
+    <h3 style="margin:4px 0" data-py="tài bàng la wǔ zhǒng yuè xiàng quán jí qí">太棒啦！五种月相全集齐！</h3>
+    <div class="win-concl">
+      <b>✨ 科学小结论：</b>在一个农历月中，月亮的形状会不断变化，从弯弯的蛾眉月变成半圆的上弦月、圆圆的满月，再变成下弦月和残月，大约一个月循环一次。
+    </div>
+    <div class="win-quiz">
+      <h4>💡 考考你 · 答对领小红花 🌸</h4>
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:8px">古诗说“小时不识月，呼作白玉盘”，农历哪一天最容易看到圆圆的满月？</div>
+      <div class="qopts" id="qOpts">
+        <button class="qopt" type="button" data-ok="1">🌕 农历十五（满月）</button>
+        <button class="qopt" type="button" data-hint="再想想哦！农历初三是细细弯弯的蛾眉月，像小弯钩。">🌒 农历初三（蛾眉月）</button>
+        <button class="qopt" type="button" data-hint="再想想哦！农历初八是右半边亮的上弦月，像半个圆。">🌓 农历初八（上弦月）</button>
+      </div>
+      <div class="qfb" id="qFb"></div>
+    </div>
+    <div class="win-acts">
+      <button class="tbtn" id="winKeepBtn" type="button">继续玩</button>
+      <button class="tbtn on" id="winAgainBtn" type="button">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js"></script>
+<script src="../vendor/voice.js"></script>
+<script>
+(function () {
+'use strict';
+
+try { sessionStorage.setItem('xk_last_vol', 'k1b'); } catch (e) {}
+
+var LESSON_ID = 'k1b-10';
+var BOOK_PROGRESS_KEY = 'xk_k1b_progress';
+
+var $ = function (s) { return document.querySelector(s); };
+var HAN = /[\u3400-\u9fff]/;
+var pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function ruby(text, py) {
+  if (!py) return esc(text);
+  var syl = py.trim().split(/\s+/), i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) {
+      var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; }
+      out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>';
+    } else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+document.querySelectorAll('[data-py]').forEach(function (el) { el.innerHTML = ruby(el.textContent, el.dataset.py); });
+
+$('#backBtn').addEventListener('click', function () {
+  try { sessionStorage.setItem('xk_last_vol', 'k1b'); } catch (e) {}
+});
+
+/* ===== 语音与音效 ===== */
+var voiceOn = true;
+function stopVoice() {
+  if (window.__xkVoice) window.__xkVoice.stop();
+  else if (window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
+}
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
+  if (!('speechSynthesis' in window)) return;
+  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+}
+var audioCtx = null;
+function playChime(freqs) {
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!audioCtx) audioCtx = new AC();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    var now = audioCtx.currentTime;
+    freqs.forEach(function (f, idx) {
+      var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(f, now + idx * 0.08);
+      g.gain.setValueAtTime(0.001, now + idx * 0.08);
+      g.gain.exponentialRampToValueAtTime(0.11, now + idx * 0.08 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.24);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(now + idx * 0.08); o.stop(now + idx * 0.08 + 0.26);
+    });
+  } catch (e) {}
+}
+
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem(BOOK_PROGRESS_KEY) || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem(BOOK_PROGRESS_KEY, JSON.stringify(d));
+  } catch (e) {}
+}
+
+/* ===== 彩带 ===== */
+var cCv = $('#confetti'), cCtx = cCv.getContext('2d'), confettiParts = [];
+function resizeConfetti() { cCv.width = window.innerWidth; cCv.height = window.innerHeight; }
+function burstConfetti() {
+  confettiParts = [];
+  var cols = ['#fbbf24', '#38bdf8', '#a855f7', '#34d399', '#f472b6', '#ffffff'];
+  for (var i = 0; i < 85; i++) {
+    confettiParts.push({
+      x: cCv.width * (0.2 + Math.random() * 0.6), y: cCv.height * 0.3,
+      vx: (Math.random() - 0.5) * 9, vy: -4 - Math.random() * 7,
+      s: 6 + Math.random() * 6, r: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.25,
+      col: cols[i % cols.length], life: 1
+    });
+  }
+}
+function tickConfetti() {
+  if (!confettiParts.length) return;
+  cCtx.clearRect(0, 0, cCv.width, cCv.height);
+  for (var i = confettiParts.length - 1; i >= 0; i--) {
+    var p = confettiParts[i];
+    p.x += p.vx; p.y += p.vy; p.vy += 0.22; p.r += p.vr; p.life -= 0.008;
+    if (p.life <= 0 || p.y > cCv.height + 20) { confettiParts.splice(i, 1); continue; }
+    cCtx.save(); cCtx.globalAlpha = Math.max(0, p.life);
+    cCtx.translate(p.x, p.y); cCtx.rotate(p.r);
+    cCtx.fillStyle = p.col; cCtx.fillRect(-p.s * 0.5, -p.s * 0.3, p.s, p.s * 0.6);
+    cCtx.restore();
+  }
+}
+
+/* ===== Three.js r147 真实 3D 球体月球 + 星空阳台望远镜 ===== */
+var cv = $('#cv');
+var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = false; // 保证 3D 月球明暗交界线丝滑纯净
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color('#0c142c');
+
+var camera = new THREE.PerspectiveCamera(38, 16 / 9, 0.1, 100);
+camera.position.set(0.35, 1.9, 10.8);
+camera.lookAt(0.35, 1.45, -1.2);
+
+// 低强度地球反照环境光（让月球暗面保留微妙立体球体感，同时明暗交界线锐利清晰！）
+var earthShine = new THREE.AmbientLight('#273763', 0.24);
+scene.add(earthShine);
+
+// 随农历日期绕月球旋转的平行太阳光（驱动真实 3D 月相！）
+var moonSunL = new THREE.DirectionalLight('#fffef0', 1.55);
+moonSunL.position.set(8, 1, -6);
+scene.add(moonSunL);
+
+var live = new THREE.Group();
+scene.add(live);
+
+/* 1. 璀璨星空背景 */
+var stars = [];
+for (var i = 0; i < 95; i++) {
+  var st = new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.035 + (i % 4) * 0.016, 0),
+    new THREE.MeshBasicMaterial({ color: i % 5 === 0 ? '#fde68a' : (i % 7 === 0 ? '#bfdbfe' : '#ffffff'), transparent: true, opacity: 0.8 })
+  );
+  st.position.set(-12 + ((i * 53) % 240) / 10, -0.5 + ((i * 31) % 92) / 10, -10.5 - (i % 5));
+  st.userData.phase = i * 0.85;
+  live.add(st);
+  stars.push(st);
+}
+
+/* 2. 真实 3D 球体月球 + 柔和环形山 CanvasTexture */
+function buildMoonTexture() {
+  var c = document.createElement('canvas'); c.width = 512; c.height = 256;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#e7e2d1';
+  ctx.fillRect(0, 0, 512, 256);
+
+  // 月海暗斑（柔和自然灰褐）
+  var maria = [
+    [160, 95, 58, 42], [235, 118, 66, 48], [300, 92, 46, 36],
+    [195, 165, 52, 34], [355, 145, 54, 40], [110, 140, 40, 28], [410, 105, 42, 30]
+  ];
+  maria.forEach(function (m) {
+    var grad = ctx.createRadialGradient(m[0], m[1], 4, m[0], m[1], m[2]);
+    grad.addColorStop(0, 'rgba(138,136,128,0.44)');
+    grad.addColorStop(1, 'rgba(138,136,128,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.ellipse(m[0], m[1], m[2], m[3], 0.25, 0, Math.PI * 2); ctx.fill();
+  });
+
+  // 柔和环形山（亮边 + 内影）
+  for (var k = 0; k < 58; k++) {
+    var x = ((k * 97 + 41) % 480) + 16;
+    var y = ((k * 59 + 29) % 210) + 22;
+    var r = 4 + (k % 5) * 3.2;
+    ctx.fillStyle = 'rgba(115,112,104,0.32)';
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,252,240,0.45)';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.arc(x + 1.2, y - 1.0, r * 0.92, -0.8, 2.2); ctx.stroke();
+  }
+  var tex = new THREE.CanvasTexture(c);
+  return tex;
+}
+
+var moonGroup = new THREE.Group();
+moonGroup.position.set(-0.15, 2.45, -1.6);
+live.add(moonGroup);
+
+var moonMat = new THREE.MeshLambertMaterial({ map: buildMoonTexture(), color: '#fffcf0' });
+var moonMesh = new THREE.Mesh(new THREE.SphereGeometry(1.75, 48, 36), moonMat);
+moonMesh.rotation.y = -Math.PI * 0.5;
+moonMesh.userData.hit = 'moon';
+moonGroup.add(moonMesh);
+
+// 柔和外圈月晕 + 拖拽感应光环
+var moonHaloMat = new THREE.MeshBasicMaterial({ color: '#fef3c7', transparent: true, opacity: 0.12 });
+var moonHalo = new THREE.Mesh(new THREE.SphereGeometry(2.05, 28, 20), moonHaloMat);
+moonHalo.userData.hit = 'moon';
+moonGroup.add(moonHalo);
+
+var moonDragRingMat = new THREE.MeshBasicMaterial({ color: '#fde68a', transparent: true, opacity: 0.28, side: THREE.DoubleSide });
+var moonDragRing = new THREE.Mesh(new THREE.RingGeometry(2.08, 2.24, 40), moonDragRingMat);
+moonDragRing.userData.hit = 'moon';
+moonGroup.add(moonDragRing);
+
+// 月球超大优先透明拾取球（绝不点空）
+var moonHit = new THREE.Mesh(
+  new THREE.SphereGeometry(2.38, 16, 12),
+  new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false })
+);
+moonHit.userData.hit = 'moon';
+moonGroup.add(moonHit);
+
+/* 3. 温馨夜晚观月阳台 + 木栏杆 + 暖灯 + 3D 天文望远镜（带柔和自发光避免被暗环境吃掉） */
+function warmMat(col, em) {
+  return new THREE.MeshLambertMaterial({ color: col, emissive: em || '#1b2236' });
+}
+
+var balcony = new THREE.Group();
+balcony.position.set(0, -1.15, 2.8);
+live.add(balcony);
+
+// 阳台地台与木质护栏
+var floor = new THREE.Mesh(new THREE.BoxGeometry(11.5, 0.35, 3.2), warmMat('#6b5545', '#2a201a'));
+floor.position.set(0, -0.15, 0.8); balcony.add(floor);
+
+var topRail = new THREE.Mesh(new THREE.BoxGeometry(10.8, 0.14, 0.18), warmMat('#9e744f', '#3d2a1b'));
+topRail.position.set(0, 1.05, -0.55); topRail.userData.hit = 'balcony'; balcony.add(topRail);
+var botRail = new THREE.Mesh(new THREE.BoxGeometry(10.8, 0.1, 0.14), warmMat('#8a6341', '#352417'));
+botRail.position.set(0, 0.25, -0.55); balcony.add(botRail);
+for (var b = -5; b <= 5; b++) {
+  var bar = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, 1.05, 8), warmMat('#8f6745', '#362518'));
+  bar.position.set(b * 1.02, 0.52, -0.55); balcony.add(bar);
+}
+
+// 左侧栏杆柱上的暖黄小夜灯
+var lantern = new THREE.Group();
+lantern.position.set(-4.1, 1.28, -0.55);
+var lBase = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.12, 10), warmMat('#475569', '#1e293b'));
+lantern.add(lBase);
+var lGlass = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.34, 12), new THREE.MeshBasicMaterial({ color: '#fde68a' }));
+lGlass.position.y = 0.22; lGlass.userData.hit = 'lantern'; lantern.add(lGlass);
+var lGlow = new THREE.Mesh(new THREE.SphereGeometry(0.45, 12, 10), new THREE.MeshBasicMaterial({ color: '#fbbf24', transparent: true, opacity: 0.24 }));
+lGlow.position.y = 0.22; lantern.add(lGlow);
+var lCap = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.16, 10), warmMat('#334155', '#1e293b'));
+lCap.position.y = 0.44; lantern.add(lCap);
+balcony.add(lantern);
+
+// 右下方 3D 天文望远镜（三脚架 + 白色主镜筒 + 寻星镜，正对天空中的 3D 月球，完全避让右上 #notes！）
+var scopeGroup = new THREE.Group();
+scopeGroup.position.set(2.85, 0.05, 0.35);
+balcony.add(scopeGroup);
+
+// 三脚架
+for (var leg = 0; leg < 3; leg++) {
+  var ang = (leg / 3) * Math.PI * 2 + 0.4;
+  var trip = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, 1.45, 8), warmMat('#475569', '#232c3d'));
+  trip.position.set(Math.cos(ang) * 0.32, 0.65, Math.sin(ang) * 0.32);
+  trip.rotation.z = Math.cos(ang) * 0.26;
+  trip.rotation.x = -Math.sin(ang) * 0.26;
+  trip.userData.hit = 'scope';
+  scopeGroup.add(trip);
+}
+var mount = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.26, 12), warmMat('#334155', '#1e293b'));
+mount.position.set(0, 1.38, 0); scopeGroup.add(mount);
+
+// 望远镜镜筒（斜指左上方月球）
+var tubeGroup = new THREE.Group();
+tubeGroup.position.set(0, 1.54, 0);
+tubeGroup.rotation.y = 0.52;
+tubeGroup.rotation.x = 0.56;
+var mainTube = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.11, 1.42, 16), warmMat('#f8fafc', '#525b70'));
+mainTube.rotation.x = Math.PI / 2; mainTube.userData.hit = 'scope'; tubeGroup.add(mainTube);
+var goldBand = new THREE.Mesh(new THREE.CylinderGeometry(0.148, 0.148, 0.14, 16), warmMat('#f59e0b', '#784208'));
+goldBand.rotation.x = Math.PI / 2; goldBand.position.z = -0.52; tubeGroup.add(goldBand);
+var lens = new THREE.Mesh(new THREE.CircleGeometry(0.125, 16), new THREE.MeshBasicMaterial({ color: '#60a5fa' }));
+lens.position.z = -0.72; lens.rotation.y = Math.PI; tubeGroup.add(lens);
+var eyepiece = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.24, 10), warmMat('#1e293b', '#121826'));
+eyepiece.position.set(0, 0.1, 0.62); eyepiece.rotation.x = 0.6; tubeGroup.add(eyepiece);
+var scopeHit = new THREE.Mesh(
+  new THREE.SphereGeometry(1.58, 14, 12),
+  new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false })
+);
+scopeHit.userData.hit = 'scope'; tubeGroup.add(scopeHit);
+scopeGroup.add(tubeGroup);
+
+// 望远镜底部呼吸光环（引导孩子直接点击望远镜拍照！）
+var scopeHaloMat = new THREE.MeshBasicMaterial({ color: '#fbbf24', transparent: true, opacity: 0.72, side: THREE.DoubleSide });
+var scopeHalo = new THREE.Mesh(new THREE.RingGeometry(0.62, 0.84, 32), scopeHaloMat);
+scopeHalo.rotation.x = -Math.PI / 2;
+scopeHalo.position.set(0, 0.08, 0);
+scopeHalo.userData.hit = 'scope';
+scopeGroup.add(scopeHalo);
+
+/* ===== 农历月相核心数据与真实 3D 光照计算 ===== */
+var PHASES = [
+  { id: 'p3',  day: 3,  minD: 2,  maxD: 5,  name: '蛾眉月', lunar: '初三', slot: '#slot_p3',  desc: '弯弯细细亮在右边，像小弯钩一样！', spoken: '拍下初三蛾眉月啦！弯弯细细的亮在右边，像一把小弯钩！' },
+  { id: 'p8',  day: 8,  minD: 7,  maxD: 10, name: '上弦月', lunar: '初八', slot: '#slot_p8',  desc: '右半边明亮的半圆形，越来越圆啦！', spoken: '拍下初八上弦月啦！右半边亮晶晶的，变成半圆形啦！' },
+  { id: 'p15', day: 15, minD: 14, maxD: 17, name: '满月',   lunar: '十五', slot: '#slot_p15', desc: '又圆又亮像白玉盘一样挂在夜空！',   spoken: '拍下十五满月啦！又大又圆像白玉盘一样挂在夜空中！' },
+  { id: 'p22', day: 22, minD: 21, maxD: 24, name: '下弦月', lunar: '廿二', slot: '#slot_p22', desc: '左半边明亮的半圆形，开始慢慢变瘦！', spoken: '拍下廿二下弦月啦！这次换作左半边明亮，开始慢慢变瘦啦！' },
+  { id: 'p27', day: 27, minD: 26, maxD: 29, name: '残月',   lunar: '廿七', slot: '#slot_p27', desc: '只剩左边细细弯弯的一道月牙！',     spoken: '拍下廿七残月啦！只剩左边细细弯弯的一道亮边啦！' }
+];
+
+var LUNAR_DAYS = ['', '初一','初二','初三','初四','初五','初六','初七','初八','初九','初十',
+  '十一','十二','十三','十四','十五','十六','十七','十八','十九','二十',
+  '廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
+
+// 平滑分段映射农历 1..30 到真实相位角 phi（弧度 0..2π），让五个典型日期呈现教科书级标准 3D 明暗交界线！
+var PHI_KNOTS = [
+  [1, 0.0],
+  [3, 0.285 * Math.PI],  // 初三蛾眉月（右侧清晰弯钩）
+  [8, 0.50 * Math.PI],   // 初八上弦月（精确右半圆）
+  [15, 1.00 * Math.PI],  // 十五满月（正圆白玉盘）
+  [22, 1.50 * Math.PI],  // 廿二下弦月（精确左半圆）
+  [27, 1.715 * Math.PI], // 廿七残月（左侧清晰弯钩）
+  [30, 1.98 * Math.PI]   // 三十近新月
+];
+function dayToPhi(d) {
+  d = Math.max(1, Math.min(30, d));
+  for (var i = 0; i < PHI_KNOTS.length - 1; i++) {
+    var a = PHI_KNOTS[i], b = PHI_KNOTS[i + 1];
+    if (d >= a[0] && d <= b[0]) {
+      var t = (d - a[0]) / Math.max(0.001, b[0] - a[0]);
+      return a[1] + (b[1] - a[1]) * t;
+    }
+  }
+  return 0;
+}
+
+function getPhaseNameByDay(d) {
+  var rd = Math.round(d);
+  if (rd === 1 || rd === 30) return '新月（几乎看不见）';
+  if (rd <= 5) return '蛾眉月';
+  if (rd === 6) return '蛾眉月→上弦月';
+  if (rd <= 10) return '上弦月';
+  if (rd <= 13) return '渐盈凸月';
+  if (rd <= 17) return '满月';
+  if (rd <= 20) return '渐亏凸月';
+  if (rd <= 24) return '下弦月';
+  if (rd === 25) return '下弦月→残月';
+  return '残月';
+}
+
+function getNearestCanonicalPhase(d) {
+  if (d <= 5.5) return PHASES[0];
+  if (d <= 11.5) return PHASES[1];
+  if (d <= 18.5) return PHASES[2];
+  if (d <= 24.5) return PHASES[3];
+  return PHASES[4];
+}
+
+function matchCanonicalPhase(d) {
+  return getNearestCanonicalPhase(d);
+}
+
+// 在黑卡纸槽位上绘制真实白色黏土月相图标（呼应 P45）
+function drawCardMoon(canvas, phaseId, filled) {
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width, h = canvas.height, cx = w / 2, cy = h / 2, r = w * 0.39;
+  ctx.clearRect(0, 0, w, h);
+  // 暗背景圆轮廓
+  ctx.fillStyle = filled ? '#1e293b' : '#25304a';
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+  if (!filled) {
+    ctx.strokeStyle = 'rgba(148,163,184,0.35)';
+    ctx.setLineDash([3, 3]); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+    return;
+  }
+  ctx.save();
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.clip();
+  ctx.fillStyle = '#fff9d6';
+  if (phaseId === 'p15') {
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+  } else if (phaseId === 'p8') {
+    ctx.fillRect(cx, cy - r, r, r * 2);
+  } else if (phaseId === 'p22') {
+    ctx.fillRect(cx - r, cy - r, r, r * 2);
+  } else if (phaseId === 'p3') {
+    // 右侧弯弯蛾眉月
+    ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, Math.PI / 2); ctx.fill();
+    ctx.fillStyle = '#1e293b';
+    ctx.beginPath(); ctx.ellipse(cx, cy, r * 0.56, r, 0, -Math.PI / 2, Math.PI / 2); ctx.fill();
+  } else if (phaseId === 'p27') {
+    // 左侧弯弯残月
+    ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI / 2, -Math.PI / 2); ctx.fill();
+    ctx.fillStyle = '#1e293b';
+    ctx.beginPath(); ctx.ellipse(cx, cy, r * 0.56, r, 0, Math.PI / 2, -Math.PI / 2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function initBlackBoard() {
+  PHASES.forEach(function (ph) {
+    var slot = $(ph.slot);
+    slot.classList.remove('filled', 'next');
+    drawCardMoon(slot.querySelector('canvas'), ph.id, false);
+  });
+  $('#bbCnt').textContent = '0/5';
+}
+initBlackBoard();
+
+/* ===== 状态与 5/5 黑卡纸集齐逻辑（D7, U1, U2） ===== */
+var curDay = 3, targetDay = 3;
+var collected = {}, stamps = { s1: false, s2: false, s3: false }, celebrated = false, demo = false;
+var resetGen = 0;
+var draggingMoon = false, dragStartX = 0, dragStartY = 0, dragStartDay = 3, dragMoved = false;
+var scopeKick = 0;
+var curGuideSpeech = '';
+
+var cueVec = new THREE.Vector3();
+function placeTargetCue(worldVec, text, show) {
+  var el = $('#targetCue');
+  if (!show || !worldVec) { el.classList.remove('show'); return; }
+  el.textContent = text;
+  cueVec.copy(worldVec).project(camera);
+  var w = window.innerWidth, h = window.innerHeight;
+  var x = (cueVec.x * 0.5 + 0.5) * w;
+  var y = (-cueVec.y * 0.5 + 0.5) * h;
+  x = Math.max(115, Math.min(w - 115, x));
+  y = Math.max(98, Math.min(h - 112, y));
+  var notesEl = $('#notes');
+  if (notesEl) {
+    var nr = notesEl.getBoundingClientRect();
+    var halfW = Math.max(95, (el.offsetWidth || 200) * 0.5) + 14;
+    if (x + halfW > nr.left && y < nr.bottom + 42) {
+      x = Math.min(x, nr.left - halfW);
+    }
+  }
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  el.classList.add('show');
+}
+
+function updateMoonVisuals(d, t) {
+  var phi = dayToPhi(d);
+  // 太阳方向向量：phi=0(后-Z新月) → PI/2(右+X上弦月) → PI(前+Z满月) → 3PI/2(左-X下弦月)
+  var lx = Math.sin(phi) * 10;
+  var lz = -Math.cos(phi) * 10;
+  moonSunL.position.set(lx, 0.9, lz);
+
+  // 月晕随满月程度柔和增亮 + 拖动光环反馈
+  var fullness = (1 - Math.cos(phi)) * 0.5;
+  moonHaloMat.opacity = 0.05 + fullness * 0.16;
+  moonDragRing.scale.setScalar(draggingMoon ? 1.07 : (1 + Math.sin(t * 3.4) * 0.025));
+  moonDragRingMat.opacity = draggingMoon ? 0.72 : (0.18 + 0.14 * Math.sin(t * 3.4));
+
+  var rd = Math.max(1, Math.min(30, Math.round(d)));
+  var mp = getNearestCanonicalPhase(d);
+  $('#lunarLabel').textContent = '农历' + (LUNAR_DAYS[rd] || '初一') + ' · ' + mp.name;
+
+  // 望远镜光环 + 单焦点 #targetCue + 黑卡纸下一槽位脉冲
+  var nextPh = PHASES.find(function (p) { return !collected[p.id]; });
+  var readySnap = !!(mp && !collected[mp.id]);
+  scopeHalo.scale.setScalar(readySnap ? (1.06 + Math.sin(t * 5.2) * 0.15) : (0.96 + Math.sin(t * 2.6) * 0.06));
+  scopeHaloMat.opacity = readySnap ? (0.58 + 0.36 * Math.sin(t * 5.2)) : 0.32;
+
+  PHASES.forEach(function (ph) {
+    var sEl = $(ph.slot);
+    if (sEl) sEl.classList.toggle('next', !!(nextPh && ph.id === nextPh.id && !readySnap));
+  });
+
+  if (demo || celebrated || !nextPh) {
+    placeTargetCue(null, '', false);
+  } else if (draggingMoon) {
+    placeTargetCue(new THREE.Vector3(-0.15, 4.75, -1.6), '🌙 农历' + mp.lunar + ' · ' + mp.name, true);
+  } else if (readySnap) {
+    placeTargetCue(new THREE.Vector3(2.85, 1.05, 3.15), '👆 点望远镜拍【' + mp.name + '】 📸', true);
+  } else {
+    placeTargetCue(new THREE.Vector3(-0.15, 4.75, -1.6), '👆 左右拖月亮换【' + nextPh.name + '】 ↔', true);
+  }
+}
+
+function spawnFloat(text, xPct, yPct) {
+  var el = document.createElement('div');
+  el.className = 'fword';
+  el.textContent = text;
+  el.style.left = (xPct || 46) + '%';
+  el.style.top = (yPct || 36) + '%';
+  $('#floatLayer').appendChild(el);
+  setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1650);
+}
+
+function triggerFlash() {
+  var fl = $('#flash');
+  fl.classList.add('on');
+  scopeKick = 1.0;
+  setTimeout(function () { fl.classList.remove('on'); }, 95);
+}
+
+function snapPhase() {
+  document.body.classList.add('moon-clicked');
+  var ph = getNearestCanonicalPhase(targetDay);
+  // 轻柔吸附到最接近的典型月相日，确保任何时候点望远镜都能清脆拍下！
+  targetDay = ph.day;
+  $('#daySlider').value = ph.day;
+
+  triggerFlash();
+  var isNew = !collected[ph.id];
+  if (isNew) {
+    collected[ph.id] = true;
+    var slot = $(ph.slot);
+    slot.classList.remove('next');
+    slot.classList.add('filled');
+    drawCardMoon(slot.querySelector('canvas'), ph.id, true);
+
+    var el = document.createElement('div');
+    el.className = 'stk';
+    el.textContent = '🌙 农历' + ph.lunar + ' ' + ph.name + '：' + ph.desc;
+    $('#ntList').prepend(el);
+    var cnt = Object.keys(collected).length;
+    $('#ntCnt').textContent = cnt + '/5';
+    $('#bbCnt').textContent = cnt + '/5';
+    playChime([523, 659, 784]);
+  } else {
+    playChime([659, 784]);
+  }
+
+  if (collected.p3 && collected.p8 && !stamps.s1) { stamps.s1 = true; $('#st1').classList.add('lit'); }
+  if (collected.p15 && !stamps.s2) { stamps.s2 = true; $('#st2').classList.add('lit'); }
+  var allFive = collected.p3 && collected.p8 && collected.p15 && collected.p22 && collected.p27;
+  if (allFive && !stamps.s3) { stamps.s3 = true; $('#st3').classList.add('lit'); }
+
+  var nextPh = PHASES.find(function (p) { return !collected[p.id]; });
+  if (isNew) {
+    spawnFloat('📸 咔嚓！已贴黑卡纸：' + ph.lunar + ' ' + ph.name, 46, 36);
+  } else if (nextPh) {
+    spawnFloat('🌙 【' + ph.name + '】已拍过，拖月亮换【' + nextPh.name + '】吧！', 46, 36);
+  } else {
+    spawnFloat('📸 咔嚓！' + ph.lunar + ' ' + ph.name, 46, 36);
+  }
+  updateGuide(false);
+
+  if (!demo && !celebrated && allFive) {
+    celebrated = true;
+    saveProgress(LESSON_ID, true);
+    burstConfetti();
+    playChime([523, 659, 784, 1046]);
+    var g = resetGen;
+    setTimeout(function () {
+      if (g !== resetGen) return;
+      $('#winToast').classList.add('show');
+      speak('太棒啦！黑卡纸上的五种典型月相全部贴满啦！快来看看科学小结论并答对一题领小红花吧！', true);
+    }, 650);
+    return;
+  }
+  if (!demo) {
+    if (isNew) {
+      speak(ph.spoken + (nextPh ? ' 接下来左右拖月亮，换下一个新形状吧！' : ''));
+    } else if (nextPh) {
+      speak(ph.name + '已经拍进黑卡纸啦！左右拖动天上的月亮，或者点左下角黑卡纸空槽位，换下一个' + nextPh.name + '再拍吧！');
+    } else {
+      speak(ph.spoken);
+    }
+  }
+}
+
+function updateGuide(speakIt) {
+  var nextPh = PHASES.find(function (p) { return !collected[p.id]; });
+  var ico = '🌙';
+  if (!nextPh) {
+    ico = '🏆';
+    curGuideSpeech = '太棒啦！五种典型月相全都贴满黑卡纸啦，左右拖动3D月亮自由欣赏整月月相变化吧！';
+  } else {
+    var curMatch = getNearestCanonicalPhase(targetDay);
+    if (curMatch && !collected[curMatch.id]) {
+      ico = '📸';
+      curGuideSpeech = '现在正好是【' + curMatch.lunar + ' ' + curMatch.name + '】！点右下角3D望远镜（或轻点月亮）咔嚓拍下来吧！';
+    } else {
+      curGuideSpeech = '左右拖天上的3D月亮（或点左下黑卡纸空槽），换到【' + nextPh.lunar + ' ' + nextPh.name + '】再点望远镜拍照！';
+    }
+  }
+  $('#guideIco').textContent = ico;
+  $('#guideTxt').textContent = curGuideSpeech;
+  $('#guideBar').classList.toggle('done', !nextPh);
+  if (speakIt) speak(curGuideSpeech, true);
+}
+
+/* ===== 演示模式（不触发通关） ===== */
+function stopDemo() {
+  if (!demo) return;
+  demo = false;
+  $('#demoBtn').classList.remove('on');
+  $('#demoBtn').textContent = '▶ 演示';
+}
+function startDemo() {
+  markInteracted();
+  if (demo) { stopDemo(); stopVoice(); return; }
+  demo = true;
+  resetGen++;
+  var g = resetGen;
+  $('#demoBtn').classList.add('on');
+  $('#demoBtn').textContent = '⏸ 停止';
+  var steps = [
+    { d: 3,  msg: '农历初三是蛾眉月，弯弯细细的亮在右边，像一把小弯钩！' },
+    { d: 8,  msg: '农历初八是上弦月，右半边明亮，变成了半圆形！' },
+    { d: 15, msg: '农历十五是满月，又圆又亮，就像古诗里写的白玉盘！' },
+    { d: 22, msg: '农历廿二是下弦月，换作左半边明亮，月亮开始变瘦啦！' },
+    { d: 27, msg: '农历廿七是残月，只剩左边弯弯细细的一道月牙，大约一个月循环一次！' }
+  ];
+  steps.forEach(function (st, idx) {
+    setTimeout(function () {
+      if (g !== resetGen || !demo) return;
+      targetDay = st.d; $('#daySlider').value = st.d;
+      triggerFlash();
+      speak(st.msg, true);
+      spawnFloat('🌙 ' + LUNAR_DAYS[st.d] + ' · ' + getPhaseNameByDay(st.d), 46, 36);
+    }, idx * 3100);
+  });
+  setTimeout(function () {
+    if (g !== resetGen) return;
+    stopDemo();
+    speak('演示结束！现在请你左右拖动3D月亮变月相，再点击右下角望远镜把五种典型月相拍进黑卡纸吧！', true);
+  }, steps.length * 3100 + 300);
+}
+
+function resetAll() {
+  resetGen++;
+  stopDemo();
+  stopVoice();
+  draggingMoon = false; scopeKick = 0;
+  collected = {}; stamps = { s1: false, s2: false, s3: false }; celebrated = false;
+  curDay = 3; targetDay = 3; $('#daySlider').value = 3;
+  initBlackBoard();
+  $('#ntList').innerHTML = ''; $('#ntCnt').textContent = '0/5';
+  document.querySelectorAll('.st').forEach(function (s) { s.classList.remove('lit'); });
+  $('#winToast').classList.remove('show');
+  $('#qFb').textContent = ''; $('#qFb').className = 'qfb';
+  document.querySelectorAll('.qopt').forEach(function (b) { b.classList.remove('ok', 'bad'); });
+  document.body.classList.remove('moon-clicked');
+  updateGuide(false);
+}
+
+/* ===== 交互与优先拾取 3D 拖拽月球 + 点望远镜拍照（U7 铁律） ===== */
+function markInteracted() { document.body.classList.add('interacted'); }
+var ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+function pickHit(e) {
+  var r = cv.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  // 1) 绝对优先检测 3D 望远镜与 3D 月球超大透明拾取球
+  var hPri = ray.intersectObjects([scopeHit, moonHit], false);
+  if (hPri.length) return hPri[0].object.userData.hit;
+  // 2) 其次检测阳台与小夜灯
+  var hits = ray.intersectObjects([lantern, topRail], true);
+  for (var i = 0; i < hits.length; i++) {
+    if (hits[i].object.userData && hits[i].object.userData.hit) return hits[i].object.userData.hit;
+  }
+  return null;
+}
+
+cv.addEventListener('pointerdown', function (e) {
+  markInteracted();
+  if (demo) stopDemo();
+  var tag = pickHit(e);
+  if (tag === 'moon') {
+    draggingMoon = true;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    dragStartDay = curDay;
+    dragMoved = false;
+    cv.style.cursor = 'grabbing';
+    if (cv.setPointerCapture) try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+    return;
+  }
+  if (tag === 'scope') {
+    snapPhase();
+  } else if (tag === 'lantern' || tag === 'balcony') {
+    spawnFloat('👨‍👩‍👧 夜晚外出观月要有大人陪同哦！', 34, 60);
+    speak('温馨提醒：夜晚外出观察月亮时，一定要有大人陪同，注意安全哦！');
+  }
+});
+
+cv.addEventListener('pointermove', function (e) {
+  if (!draggingMoon) {
+    var hover = pickHit(e);
+    cv.style.cursor = hover === 'moon' ? 'grab' : (hover ? 'pointer' : 'default');
+    return;
+  }
+  var dx = e.clientX - dragStartX;
+  if (!dragMoved && Math.hypot(dx, e.clientY - dragStartY) > 7) {
+    dragMoved = true;
+    document.body.classList.add('moon-clicked');
+  }
+  if (dragMoved) {
+    var r = cv.getBoundingClientRect();
+    var span = Math.max(180, r.width * 0.34);
+    var d = Math.max(1, Math.min(30, dragStartDay + (dx / span) * 29));
+    targetDay = d;
+    curDay = d;
+    $('#daySlider').value = Math.round(d);
+    updateGuide(false);
+  }
+});
+
+function finishMoonDrag(e) {
+  if (!draggingMoon) return;
+  draggingMoon = false;
+  cv.style.cursor = 'pointer';
+  if (cv.releasePointerCapture && e && e.pointerId !== undefined) try { cv.releasePointerCapture(e.pointerId); } catch (err) {}
+  if (!dragMoved) {
+    snapPhase();
+  } else {
+    // 松手自动轻柔吸附到最接近的典型月相日，绝不卡死在过渡日！
+    var mp = getNearestCanonicalPhase(targetDay);
+    targetDay = mp.day;
+    $('#daySlider').value = mp.day;
+    updateGuide(false);
+    if (!collected[mp.id] && !demo) {
+      spawnFloat('🌙 ' + mp.lunar + ' ' + mp.name + ' · 点望远镜拍照！', 46, 36);
+      speak('滑到农历' + mp.lunar + mp.name + '啦！点右下角望远镜咔嚓拍下来吧！');
+    }
+  }
+}
+cv.addEventListener('pointerup', finishMoonDrag);
+cv.addEventListener('pointercancel', finishMoonDrag);
+
+$('#daySlider').addEventListener('input', function () {
+  markInteracted(); if (demo) stopDemo();
+  document.body.classList.add('moon-clicked');
+  targetDay = parseInt(this.value, 10);
+  curDay = targetDay;
+  updateGuide(false);
+});
+$('#daySlider').addEventListener('change', function () {
+  var mp = getNearestCanonicalPhase(parseInt(this.value, 10));
+  targetDay = mp.day;
+  this.value = mp.day;
+  updateGuide(false);
+});
+
+$('#safetyTip').addEventListener('click', function () {
+  markInteracted();
+  spawnFloat('👨‍👩‍👧 夜晚外出观察月亮时要有大人陪同！', 30, 26);
+  speak('安全小贴士：夜晚外出观察月亮时，一定要有大人陪同，不要独自去光线暗的地方哦！', true);
+});
+
+// 点击黑卡纸槽位也可快速跳到该月相位置方便观察（非 button 元素）
+document.querySelectorAll('.bb-slot').forEach(function (sl) {
+  sl.style.cursor = 'pointer';
+  sl.addEventListener('click', function () {
+    markInteracted(); if (demo) stopDemo();
+    var d = parseInt(sl.dataset.d, 10);
+    if (!isNaN(d)) {
+      targetDay = d;
+      $('#daySlider').value = d;
+      updateGuide(false);
+      var ph = matchCanonicalPhase(d);
+      if (ph && !collected[ph.id]) speak('转到农历' + ph.lunar + ph.name + '啦，点右下角望远镜咔嚓拍下来贴进黑卡纸吧！');
+    }
+  });
+});
+
+$('#voiceBtn').addEventListener('click', function () {
+  markInteracted();
+  voiceOn = !voiceOn;
+  this.classList.toggle('on', voiceOn);
+  if (voiceOn) updateGuide(true); else stopVoice();
+});
+$('#demoBtn').addEventListener('click', startDemo);
+$('#guideBar').addEventListener('click', function () { markInteracted(); updateGuide(true); });
+$('#resetBtn').addEventListener('click', resetAll);
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+$('#winKeepBtn').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgainBtn').addEventListener('click', resetAll);
+$('#qOpts').addEventListener('click', function (e) {
+  var b = e.target.closest('.qopt');
+  if (!b) return;
+  if (b.dataset.ok === '1') {
+    b.classList.add('ok');
+    $('#qFb').textContent = '🌸 答对啦！农历十五的满月又圆又亮像白玉盘！获得小红花！';
+    $('#qFb').className = 'qfb ok';
+    saveProgress(LESSON_ID, true);
+    playChime([659, 784, 1046]);
+    speak('答对啦！获得本课小红花！', true);
+  } else {
+    b.classList.add('bad');
+    var h = b.dataset.hint || '再想想哦！';
+    $('#qFb').textContent = h;
+    $('#qFb').className = 'qfb';
+    speak(h, true);
+  }
+});
+
+/* ===== 帧循环 ===== */
+var introT0 = performance.now(), lastT = performance.now();
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  camera.updateProjectionMatrix();
+  resizeConfetti();
+}
+window.addEventListener('resize', fit);
+fit();
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (now - lastT) / 1000));
+  lastT = now;
+  var t = now * 0.001;
+  var pop = Math.min(1, (performance.now() - introT0) / 680);
+  live.scale.setScalar(0.01 + 0.99 * (1 - Math.pow(1 - pop, 3)));
+
+  curDay += (targetDay - curDay) * Math.min(1, dt * 6.5);
+  updateMoonVisuals(curDay, t);
+  moonMesh.rotation.y = -Math.PI * 0.5 + Math.sin(t * 0.35) * 0.08;
+
+  // 望远镜拍照轻微后坐回弹
+  if (scopeKick > 0) {
+    scopeKick = Math.max(0, scopeKick - dt * 4.5);
+    tubeGroup.position.z = Math.sin(scopeKick * Math.PI) * 0.16;
+  } else {
+    tubeGroup.position.z = 0;
+  }
+
+  stars.forEach(function (st) {
+    st.material.opacity = 0.4 + 0.6 * Math.abs(Math.sin(t * 1.8 + st.userData.phase));
+  });
+
+  tickConfetti();
+  renderer.render(scene, camera);
+}
+
+function projObj(obj) {
+  var v = new THREE.Vector3();
+  obj.getWorldPosition(v);
+  v.project(camera);
+  return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight };
+}
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () { return { triangles: renderer.info.render.triangles, celebrated: celebrated, collected: Object.keys(collected).length, curDay: Math.round(targetDay) }; },
+  targets: function () {
+    return {
+      moon: projObj(moonGroup),
+      scope: projObj(tubeGroup)
+    };
+  },
+  startDemo: startDemo,
+  resetAll: resetAll
+};
+updateGuide(false);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

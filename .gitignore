@@ -1,0 +1,21 @@
+# 教材原文件与扫描页（版权归出版社，严禁入库）
+*.pdf
+pages/
+
+# 内部过程稿与验收临时文件
+review/
+lessons/_v1/
+
+# 本地造书工作台密钥与临时上传（严禁入库）
+studio/.env
+studio/uploads/
+studio/jobs/
+studio/generated-books.json
+
+# 依赖与本机缓存
+node_modules/
+.mimosa/
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db

@@ -1,0 +1,1422 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第12课 制作会旋转的纸蜻蜓 · 剪折并放飞纸蜻蜓（活页）</title>
+<style>
+:root{--ink:#2a3040;--paper:#fffaf0;--line:#e3d6bd;--accent:#e56d17}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#d9c19b;color:var(--ink);
+  font-family:"Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+ruby{ruby-align:center}
+rt{font-size:.5em;font-weight:600;color:#8a6d4a;letter-spacing:0}
+body.no-py rt{display:none}
+
+.chip{position:fixed;left:14px;top:12px;z-index:5;display:flex;align-items:center;gap:10px;
+  padding:6px 14px 6px 6px;border-radius:16px;background:rgba(255,250,240,.92);border:1.5px solid var(--line);
+  box-shadow:0 6px 18px rgba(80,55,20,.12)}
+.home{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:var(--ink);font-size:20px;font-weight:800}
+.home:hover{border-color:var(--accent);color:var(--accent)}
+.chip h1{margin:0;font-size:20px;line-height:1.5;font-weight:800}
+.chip small{display:block;font-size:12px;color:#8a7b62;font-weight:700;margin-top:-2px}
+
+.tools{position:fixed;right:14px;top:12px;z-index:5;display:flex;gap:8px}
+.tbtn{position:relative;height:40px;padding:0 14px;border-radius:13px;border:1.5px solid var(--line);background:rgba(255,250,240,.94);
+  font:inherit;font-size:15px;font-weight:800;color:var(--ink);cursor:pointer;box-shadow:0 3px 0 #e2d2b5}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:#bf5409;color:#fff;box-shadow:0 3px 0 #bf5409}
+.tbtn.cue-pulse{animation:cueGlow 1.5s ease-in-out infinite}
+.cue-tag{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#e56d17;color:#fff;font-size:10px;font-weight:800;line-height:1.45;white-space:nowrap;
+  box-shadow:0 2px 6px rgba(185,78,8,.35);pointer-events:none;transition:opacity .35s,transform .35s}
+#demoBtn .cue-tag{background:#2578e5;box-shadow:0 2px 6px rgba(37,120,229,.35)}
+.cue-tag.hide{opacity:0;transform:translateX(-50%) translateY(-4px)}
+@keyframes cueGlow{0%,100%{box-shadow:0 3px 0 #bf5409,0 0 0 0 rgba(229,109,23,.5)}50%{box-shadow:0 3px 0 #bf5409,0 0 0 7px rgba(229,109,23,0)}}
+
+#guideBar{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:5;
+  display:flex;align-items:center;gap:8px;max-width:min(460px,calc(100vw - 680px));
+  padding:7px 14px;border-radius:16px;background:rgba(255,250,240,.96);
+  border:2px solid #f08a24;box-shadow:0 6px 18px rgba(130,68,12,.16);
+  font-size:14px;font-weight:800;line-height:1.45;color:#7a3e08;cursor:pointer;transition:transform .2s,border-color .25s}
+#guideBar:hover{border-color:#d65b0a}
+#guideBar:active{transform:translateX(-50%) scale(.98)}
+#guideBar.pulse{animation:guidePop .45s ease}
+.gb-ico{flex:none;font-size:18px;line-height:1}
+.gb-txt{flex:1}
+@keyframes guidePop{0%{transform:translateX(-50%) scale(.94)}50%{transform:translateX(-50%) scale(1.03)}100%{transform:translateX(-50%) scale(1)}}
+@media (max-width:1160px){
+  #guideBar{left:14px;top:66px;transform:none;max-width:calc(100vw - 266px)}
+  #guideBar:active{transform:scale(.98)}
+  @keyframes guidePop{0%{transform:scale(.95)}50%{transform:scale(1.02)}100%{transform:scale(1)}}
+}
+
+#notes{position:fixed;right:14px;top:64px;z-index:4;width:234px;overflow:hidden;
+  padding:9px 11px 10px;border-radius:16px;background:rgba(255,250,240,.92);border:1.5px solid var(--line);
+  box-shadow:0 8px 22px rgba(80,55,20,.12)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:15px;font-weight:800;margin-bottom:6px}
+.nt-head-r{display:flex;align-items:center;gap:6px}
+.nt-tog{border:1px solid var(--line);background:#fff;color:#7a6544;border-radius:8px;padding:1px 7px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+.nt-tog:hover{border-color:var(--accent);color:var(--accent)}
+#notes.collapsed #ntList{display:none}
+#notes.collapsed .stamps{margin-bottom:0}
+.stamps{display:flex;gap:6px;margin-bottom:7px}
+.stamp{flex:1;text-align:center;padding:3px 0 2px;border-radius:10px;border:1.5px dashed #d8c7a6;color:#b3a283;font-size:13px;font-weight:800;line-height:1.5}
+.stamp.lit{border-style:solid;border-color:#e56d17;background:#fff3e2;color:#c2560c;animation:pop .45s cubic-bezier(.2,1.6,.4,1)}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:158px;overflow-y:auto;padding-right:2px}
+.stk{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:11px;background:#fff;border:1.5px solid #f0dcc0;
+  font-size:14px;font-weight:800;line-height:1.6;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+.stk i{font-style:normal;width:24px;height:24px;flex:none;border-radius:7px;display:grid;place-items:center;color:#fff;font-size:13px}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+
+#confettiCanvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:18}
+#winToast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.84);z-index:20;
+  width:min(450px,92vw);max-height:85vh;overflow-y:auto;
+  display:flex;flex-direction:column;gap:10px;padding:16px 18px;border-radius:22px;
+  background:linear-gradient(155deg,#fffaf0 0%,#fff1d6 100%);border:2.5px solid #f08a24;
+  box-shadow:0 18px 44px rgba(100,52,10,.32);opacity:0;pointer-events:none;
+  transition:opacity .32s,transform .38s cubic-bezier(.2,1.5,.4,1)}
+#winToast.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.win-head{display:flex;align-items:center;gap:12px}
+.win-medal{width:48px;height:48px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:26px;
+  background:radial-gradient(circle at 35% 30%,#fff3a6,#f59e0b);box-shadow:0 3px 10px rgba(229,109,23,.35)}
+.win-txt{display:flex;flex-direction:column;gap:2px}
+.win-ttl{font-size:18px;font-weight:900;color:#b84906;line-height:1.5}
+.win-sub{font-size:13px;font-weight:800;color:#7a6544;line-height:1.45}
+.win-concl{padding:10px 12px;border-radius:14px;background:#fff;border:1.5px solid #f2c98a;font-size:13.5px;line-height:1.6;color:#3d3224;font-weight:700}
+.win-concl-h{font-size:13px;font-weight:900;color:#c2560c;margin-bottom:3px}
+.win-quiz{padding:10px 12px;border-radius:14px;background:#fffdf7;border:1.5px dashed #e58e26;display:flex;flex-direction:column;gap:7px}
+.win-quiz-h{font-size:13px;font-weight:900;color:#b84906}
+.win-quiz-q{font-size:14px;font-weight:800;color:#2a3040;line-height:1.5}
+.win-opts{display:flex;flex-direction:column;gap:6px}
+.qopt{width:100%;text-align:left;padding:8px 11px;border-radius:11px;border:1.5px solid #e3d6bd;background:#fff;
+  font:inherit;font-size:13.5px;font-weight:800;color:#2a3040;cursor:pointer;transition:all .16s}
+.qopt:hover{border-color:#e56d17;background:#fff7eb}
+.qopt.ok{border-color:#16a34a;background:#ecfdf3;color:#15803d}
+.qopt.wrong{border-color:#dc2626;background:#fef2f2;color:#b91c1c}
+.quiz-fb{font-size:13px;font-weight:800;line-height:1.5;min-height:18px;display:none}
+.quiz-fb.show{display:block}
+.quiz-fb.ok{color:#15803d}
+.quiz-fb.err{color:#c2560c}
+.win-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:2px}
+.wact{height:36px;padding:0 14px;border-radius:11px;border:1.5px solid var(--line);background:#fff;
+  font:inherit;font-size:13.5px;font-weight:800;color:var(--ink);cursor:pointer;white-space:nowrap}
+.wact.pri{background:var(--accent);border-color:#bf5409;color:#fff}
+.wact.pri rt{color:#ffe4c4}
+
+/* 底部操作条：桌面剪折 <-> 去试飞，随时自由切换 */
+#actBar{position:fixed;left:50%;bottom:66px;transform:translateX(-50%);z-index:5;display:flex;align-items:center;gap:8px;
+  padding:6px 8px;border-radius:18px;background:rgba(255,250,240,.95);border:1.5px solid var(--line);
+  box-shadow:0 6px 18px rgba(80,55,20,.14);white-space:nowrap}
+.abtn{position:relative;display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:12px;border:1.5px solid #e6d7bd;
+  background:#fff;font:inherit;font-size:15px;font-weight:800;line-height:1.5;color:var(--ink);cursor:pointer;
+  box-shadow:0 2px 0 #e6d7bd;transition:transform .1s,background .18s}
+.abtn:active{transform:translateY(1px)}
+.abtn.on{background:#fff1df;border-color:#e56d17;color:#c2560c;box-shadow:0 2px 0 #e56d17}
+.abtn.pri{background:#e56d17;border-color:#bf5409;color:#fff;box-shadow:0 2px 0 #bf5409}
+.abtn.pri rt{color:#ffe4c4}
+.abtn.wind.on{background:#e2f3ff;border-color:#2680d9;color:#185da3;box-shadow:0 2px 0 #2680d9}
+.abtn.glow-next{border-color:#e56d17;background:#fff4e2;color:#b84906;animation:nextBtnPulse 1.15s ease-in-out infinite}
+.abtn.pri.glow-next{background:#e56d17;color:#fff}
+.abtn .fly-badge{display:none;position:absolute;top:-22px;left:50%;transform:translateX(-50%);padding:1px 8px;border-radius:99px;
+  background:#e56d17;color:#fff;font-size:11px;font-weight:900;white-space:nowrap;box-shadow:0 3px 8px rgba(229,109,23,.4)}
+.abtn.glow-next .fly-badge{display:block;animation:badgeBob .9s ease-in-out infinite}
+@keyframes nextBtnPulse{0%,100%{box-shadow:0 2px 0 #e56d17,0 0 0 0 rgba(229,109,23,.6)}50%{box-shadow:0 2px 0 #e56d17,0 0 0 10px rgba(229,109,23,0)}}
+@keyframes badgeBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-4px)}}
+.sep{width:1.5px;height:24px;background:#e3d6bd}
+.stepTag{padding:3px 10px;border-radius:10px;background:#f4ead6;color:#7a6544;font-size:14px;font-weight:800;line-height:1.5}
+
+#verbs{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:4;display:flex;gap:10px;transition:opacity .5s}
+.verb{display:flex;align-items:center;gap:7px;padding:5px 13px;border-radius:99px;background:rgba(255,250,240,.94);
+  border:1.5px solid var(--line);font-size:16px;font-weight:800;line-height:1.5;box-shadow:0 4px 14px rgba(80,55,20,.12)}
+.verb svg{width:20px;height:20px}
+.verb.done{border-color:#16a34a;color:#15803d;background:#effaf2}
+.verb.done::after{content:"✓";font-weight:900;color:#16a34a}
+
+#labels{position:fixed;inset:0;pointer-events:none;z-index:3}
+.lbl{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:3px 11px;border-radius:99px;white-space:nowrap;
+  background:rgba(42,48,64,.88);color:#fff;font-size:15px;font-weight:800;line-height:1.7;opacity:0;transition:opacity .2s}
+.lbl rt{color:#ffe0b8}
+.lbl.show{opacity:1}
+.lbl.tmr{background:rgba(255,250,240,.95);color:var(--ink);border:2px solid #e56d17;box-shadow:0 4px 12px rgba(80,55,20,.16)}
+.lbl.tmr.blue{border-color:#2b8cf0}
+.lbl.tmr rt{color:#8a6d4a}
+.word{position:absolute;left:0;top:0;transform:translate(-50%,-100%);font-size:24px;font-weight:900;line-height:1.65;white-space:nowrap;
+  color:#c2560c;text-shadow:0 2px 0 #fff,0 0 8px #fff;pointer-events:none;animation:floatUp 1.5s ease-out forwards}
+.word.ok{color:#15803d}
+.word.cool{color:#1d62b5}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-50%) scale(.65)}18%{opacity:1;transform:translate(-50%,-100%) scale(1.06)}100%{opacity:0;transform:translate(-50%,-185%) scale(1)}}
+
+#hand{position:fixed;left:0;top:0;width:60px;height:60px;z-index:6;pointer-events:none;opacity:0;transition:opacity .3s;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.25))}
+
+@media (max-width:760px){
+  .chip{left:8px;top:8px;padding:4px 10px 4px 4px}
+  .chip h1{font-size:15px}.chip small{display:none}
+  .home{width:32px;height:32px}
+  .tools{right:8px;top:8px;gap:5px}.tbtn{height:34px;padding:0 9px;font-size:13px}
+  .cue-tag{font-size:9px;top:-9px;padding:0 5px}
+  #guideBar{left:8px;top:52px;right:204px;max-width:none;padding:5px 9px;font-size:12px}
+  .gb-ico{font-size:15px}
+  #notes{top:54px;right:8px;width:190px;padding:7px 9px}
+  #ntList{max-height:112px}
+  .stk{font-size:13px;padding:4px 7px}
+  #winToast{padding:12px 14px;gap:8px}
+  .win-medal{width:38px;height:38px;font-size:22px}.win-ttl{font-size:15px}.win-sub{font-size:12px}
+  .win-concl,.win-quiz-q,.qopt{font-size:12.5px}
+  #actBar{bottom:54px;gap:5px;padding:5px 6px;max-width:96vw;flex-wrap:wrap;justify-content:center}
+  .abtn{padding:4px 9px;font-size:13px}.stepTag{display:none}
+  #verbs{bottom:10px;gap:5px}.verb{font-size:13px;padding:4px 9px}.verb svg{width:16px;height:16px}
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="labels"></div>
+<canvas id="confettiCanvas"></canvas>
+
+<div id="winToast" aria-live="polite">
+  <div class="win-head">
+    <div class="win-medal">🏆</div>
+    <div class="win-txt">
+      <div class="win-ttl" id="winTtl"></div>
+      <div class="win-sub" id="winSub"></div>
+    </div>
+  </div>
+  <div class="win-concl">
+    <div class="win-concl-h">✨ 科学小结论</div>
+    <div id="winConclTxt">把纸条剪开后，两片翅膀一前一后相反折弯、尾巴折起来配重，松手后空气托起翅膀，纸蜻蜓就会稳稳地旋转着慢慢下落，比平纸条落得慢多了！</div>
+  </div>
+  <div class="win-quiz">
+    <div class="win-quiz-h">💡 考考你 · 答对领小红花 🌸</div>
+    <div class="win-quiz-q">为了让纸蜻蜓下落时能旋转起来，两片纸翼应该怎么折？</div>
+    <div class="win-opts" id="quizOpts">
+      <button class="qopt" data-ok="1" type="button">🔄 一片向前、一片向后相反折弯</button>
+      <button class="qopt" data-ok="0" type="button">📄 平平的完全不折</button>
+      <button class="qopt" data-ok="0" type="button">✂️ 把翅膀全剪掉</button>
+    </div>
+    <div class="quiz-fb" id="quizFb"></div>
+  </div>
+  <div class="win-btns">
+    <button class="wact" id="winCloseBtn" type="button"></button>
+    <button class="wact pri" id="winReplayBtn" type="button"></button>
+  </div>
+</div>
+
+<div class="chip">
+  <a class="home" href="../index.html" title="回到书包">‹</a>
+  <div><h1 id="ttl"></h1><small>活页 · 课本第 47 页「剪折并放飞纸蜻蜓」</small></div>
+</div>
+<div id="guideBar" title="点我再听一遍玩法提示" aria-live="polite"><span class="gb-ico" id="gbIco">✂️</span><span class="gb-txt" id="gbTxt"></span></div>
+<div class="tools">
+  <button class="tbtn on cue-pulse" id="voiceBtn" type="button">🔊 语音<span class="cue-tag" id="voiceCue">点我听玩法</span></button>
+  <button class="tbtn cue-pulse" id="demoBtn" type="button">▶ 演示<span class="cue-tag" id="demoCue">不会玩点演示</span></button>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<aside id="notes">
+  <div class="nt-head"><span id="ntTitle"></span><span class="nt-head-r"><span id="ntCount" style="color:#c2560c">0</span><button class="nt-tog" id="ntTog" type="button">收起</button></span></div>
+  <div class="stamps"><span class="stamp" data-k="c" id="stC"></span><span class="stamp" data-k="s" id="stS"></span><span class="stamp" data-k="d" id="stD"></span></div>
+  <div id="ntList"></div>
+</aside>
+
+<div id="actBar">
+  <button class="abtn on" id="modeCraftBtn" type="button"></button>
+  <button class="abtn" id="modeFlyBtn" type="button"><span id="modeFlyTxt"></span><span class="fly-badge">点我去试飞!</span></button>
+  <span class="sep"></span>
+  <span class="stepTag" id="stepTag"></span>
+  <button class="abtn pri" id="quickFoldBtn" type="button"></button>
+  <button class="abtn pri" id="dropBtn" type="button" style="display:none"></button>
+  <button class="abtn wind" id="windBtn" type="button" style="display:none"></button>
+</div>
+
+<div id="verbs">
+  <span class="verb" data-v="cut"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="6" cy="6" r="2.8"/><circle cx="6" cy="18" r="2.8"/><path d="M8.5 8.5L20 18M8.5 15.5L20 6"/></svg><span id="vb1"></span></span>
+  <span class="verb" data-v="fold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l8-11 8 11H4z"/><path d="M12 6v11"/></svg><span id="vb2"></span></span>
+  <span class="verb" data-v="fly"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 4v16M7 9l5-5 5 5"/><path d="M5 14c3 2 11 2 14 0"/></svg><span id="vb3"></span></span>
+</div>
+
+<svg id="hand" viewBox="0 0 64 64"><path d="M26 6c3 0 5 2 5 5v17l3-1c2-6 9-5 9 0 2-3 8-2 8 3 3-1 7 1 7 5v12c0 9-7 15-16 15h-6c-6 0-10-3-13-8L13 41c-2-3 0-7 4-7 2 0 3 1 4 2V11c0-3 2-5 5-5z" fill="#fff" stroke="#2a3040" stroke-width="3" stroke-linejoin="round"/></svg>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js"></script>
+<script src="../vendor/voice.js"></script>
+<script>
+(function () {
+'use strict';
+
+/* ===================== 拼音 ===================== */
+var HAN = /[\u3400-\u9fff]/, pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function ruby(text, py) {
+  var syl = py ? py.trim().split(/\s+/) : [], i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) { var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; } out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>'; }
+    else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+var $ = function (s) { return document.querySelector(s); };
+$('#ttl').innerHTML = ruby('第12课 制作会旋转的纸蜻蜓', 'dì kè zhì zuò huì xuán zhuǎn de zhǐ qīng tíng');
+$('#ntTitle').innerHTML = ruby('我的发现', 'wǒ de fā xiàn');
+$('#stC').innerHTML = ruby('剪折', 'jiǎn zhé');
+$('#stS').innerHTML = ruby('旋转', 'xuán zhuǎn');
+$('#stD').innerHTML = ruby('对比', 'duì bǐ');
+$('#vb1').innerHTML = ruby('剪一剪', 'jiǎn yi jiǎn');
+$('#vb2').innerHTML = ruby('折一折', 'zhé yi zhé');
+$('#vb3').innerHTML = ruby('放飞比', 'fàng fēi bǐ');
+$('#modeCraftBtn').innerHTML = ruby('桌面剪折', 'zhuō miàn jiǎn zhé');
+$('#modeFlyTxt').innerHTML = ruby('去试飞', 'qù shì fēi');
+$('#quickFoldBtn').innerHTML = ruby('一键折好', 'yī jiàn zhé hǎo');
+$('#dropBtn').innerHTML = ruby('松手试飞', 'sōng shǒu shì fēi');
+$('#windBtn').innerHTML = ruby('微风', 'wēi fēng');
+$('#winTtl').innerHTML = ruby('太棒啦！全部发现集齐啦！', 'tài bàng la quán bù fā xiàn jí qí la');
+$('#winSub').innerHTML = ruby('你真是个小小科学家！', 'nǐ zhēn shì gè xiǎo xiǎo kē xué jiā');
+$('#winCloseBtn').innerHTML = ruby('继续玩', 'jì xù wán');
+$('#winReplayBtn').innerHTML = ruby('再玩一次', 'zài wán yī cì');
+
+/* ===================== 进度记录与入口提示 ===================== */
+var LESSON_ID = 'k1a-12';
+var CONCLUSION_TEXT = '把纸条剪开后，两片翅膀一前一后相反折弯、尾巴折起来配重，松手后空气托起翅膀，纸蜻蜓就会稳稳地旋转着慢慢下落，比平纸条落得慢多了！';
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem('xk_k1a_progress') || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem('xk_k1a_progress', JSON.stringify(d));
+  } catch (e) {}
+}
+var entryCueDone = false;
+function dismissEntryCues() {
+  if (entryCueDone) return;
+  entryCueDone = true;
+  $('#voiceBtn').classList.remove('cue-pulse');
+  $('#demoBtn').classList.remove('cue-pulse');
+  var vc = $('#voiceCue'), dc = $('#demoCue');
+  if (vc) vc.classList.add('hide');
+  if (dc) dc.classList.add('hide');
+}
+
+/* ===================== 离线儿童语音引导 ===================== */
+var voiceOn = true, voiceWelcomed = false;
+var currentGuideSpeech = '第1步：点一下红剪刀或红色虚线，把纸条上端沿中线剪开！';
+var guidePulseT = 0;
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
+  if (!('speechSynthesis' in window)) return;
+  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+}
+function welcomeVoiceOnce() {
+  dismissEntryCues();
+  if (voiceWelcomed) return;
+  voiceWelcomed = true;
+  speak(currentGuideSpeech);
+}
+
+var STEP_LABELS = [
+  ['1. 剪开中心线', 'jiǎn kāi zhōng xīn xiàn'],
+  ['2. 左右翼反向折', 'zuǒ yòu yì fǎn xiàng zhé'],
+  ['3. 底部折弯配重', 'dǐ bù zhé wān pèi zhòng'],
+  ['4. 纸蜻蜓成型啦', 'zhǐ qīng tíng chéng xíng la']
+];
+function updateStepTag() {
+  var s = STEP_LABELS[Math.min(3, craftStep)];
+  $('#stepTag').innerHTML = ruby(s[0], s[1]);
+  $('#quickFoldBtn').innerHTML = craftStep >= 3
+    ? ruby('再剪一个', 'zài jiǎn yī gè')
+    : ruby('一键折好', 'yī jiàn zhé hǎo');
+}
+
+function updateGuide(speakIt) {
+  var ico = '✂️', txt = '', sp = '';
+  $('#modeFlyBtn').classList.remove('glow-next');
+  $('#modeCraftBtn').classList.remove('glow-next');
+  $('#dropBtn').classList.remove('glow-next');
+  $('#windBtn').classList.remove('glow-next');
+
+  if (mode === 'craft') {
+    if (craftStep === 0) {
+      ico = '✂️';
+      txt = '第 1 步：点一下红剪刀（或点红色虚线），把纸条上端沿中线剪开！';
+      sp = '第1步：点一下红剪刀，或者点红色虚线，把纸条上端沿中线剪开！';
+    } else if (craftStep === 1) {
+      ico = '📐';
+      txt = '第 2 步：点一下左、右两片纸翼，把它们一前一后往相反方向折弯！';
+      sp = '第2步：点一下左右两片纸翼，把它们一前一后往相反方向折弯！';
+    } else if (craftStep === 2) {
+      ico = '📎';
+      txt = '第 3 步：点一下底端小纸尾，往上折一折给尾巴加点配重！';
+      sp = '第3步：点一下底端小纸尾，往上折一折给尾巴加点配重！';
+    } else if (!kinds.s || !kinds.d) {
+      ico = '🚀';
+      txt = '纸蜻蜓折好啦！现在点「去试飞」（或点立起来的纸蜻蜓），拎高松手看它旋转下落！';
+      sp = '纸蜻蜓折好啦！现在点去试飞，拎高松手看看它怎么旋转下落！';
+      $('#modeFlyBtn').classList.add('glow-next');
+    } else {
+      ico = '🌟';
+      txt = '太棒啦！你已经完成了剪折和试飞，随时可以点「去试飞」继续玩！';
+      sp = '太棒啦！你已经完成了剪折和试飞，随时可以继续探索！';
+    }
+  } else {
+    if (!kinds.s || !kinds.d) {
+      ico = '🚀';
+      txt = '向上拖动黄色放飞杆松手（或点「松手试飞」），比比纸蜻蜓和平纸条谁落得慢！';
+      sp = '现在向上拖动黄色放飞杆再松手，或者点松手试飞，看看纸蜻蜓和平纸条谁落得慢！';
+      $('#dropBtn').classList.add('glow-next');
+    } else if (!kinds.c) {
+      ico = '✂️';
+      txt = '试飞真有趣！再点「桌面剪折」亲手把纸蜻蜓剪折出来，集齐全部印章吧！';
+      sp = '试飞真有趣！再点桌面剪折，亲手把纸蜻蜓剪折出来吧！';
+      $('#modeCraftBtn').classList.add('glow-next');
+    } else if (!found['wind-fly']) {
+      if (!windOn) {
+        ico = '🌬️';
+        txt = '再点一下「微风」打开小风扇，看看微风吹来纸蜻蜓会怎么飞！';
+        sp = '再点一下微风打开小风扇，看看微风吹来纸蜻蜓会怎么飞！';
+        $('#windBtn').classList.add('glow-next');
+      } else {
+        ico = '🚀';
+        txt = '小风扇吹起来啦！再点「松手试飞」，看看纸蜻蜓在微风里飞得有多稳！';
+        sp = '小风扇吹起来啦！再点松手试飞，看看纸蜻蜓在微风里飞得有多稳！';
+        $('#dropBtn').classList.add('glow-next');
+      }
+    } else {
+      ico = '🌟';
+      txt = '太棒啦！剪折、旋转和对比都完成啦，还可以继续拖动放飞杆玩！';
+      sp = '太棒啦！剪折、旋转和对比都完成啦，还可以继续玩！';
+    }
+  }
+  currentGuideSpeech = sp;
+  $('#gbIco').textContent = ico;
+  $('#gbTxt').textContent = txt;
+  var gb = $('#guideBar');
+  gb.classList.remove('pulse');
+  void gb.offsetWidth;
+  gb.classList.add('pulse');
+  if (speakIt) {
+    guidePulseT = 1.6;
+    speak(sp);
+  }
+}
+
+/* ===================== Three 基础 ===================== */
+var canvas = $('#c');
+var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera(32, 1, 0.1, 200);
+var raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2();
+
+scene.add(new THREE.HemisphereLight(0xfff8ee, 0xcdb08a, 0.42));
+var sun = new THREE.DirectionalLight(0xfff1dc, 0.66);
+sun.position.set(-4, 12, 7);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+(function (c) { c.left = -7; c.right = 7; c.top = 7; c.bottom = -6; c.near = 1; c.far = 40; })(sun.shadow.camera);
+sun.shadow.bias = -0.0008;
+scene.add(sun);
+
+var ramp = new THREE.DataTexture(new Uint8Array([120, 120, 120, 255, 185, 185, 185, 255, 232, 232, 232, 255, 255, 255, 255, 255]), 4, 1, THREE.RGBAFormat);
+ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+var INK = new THREE.LineBasicMaterial({ color: 0x2a3040, transparent: true, opacity: 0.78 });
+function toon(hex, extra) {
+  var o = { color: new THREE.Color(hex), gradientMap: ramp };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshToonMaterial(o);
+}
+function mesh(geo, mat, ink) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  if (ink !== false) m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), INK));
+  return m;
+}
+function ctex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c);
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+
+/* ===================== 书桌 + 摊开的课本 ===================== */
+var deskTex = ctex(512, 512, function (g, w, h) {
+  g.fillStyle = '#c9a36b'; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 70; i++) { g.fillStyle = 'rgba(120,80,35,' + (Math.random() * 0.05).toFixed(3) + ')'; g.fillRect(0, Math.random() * h, w, 1 + Math.random() * 3); }
+});
+deskTex.wrapS = deskTex.wrapT = THREE.RepeatWrapping; deskTex.repeat.set(3, 3);
+var deskM = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshLambertMaterial({ map: deskTex }));
+deskM.rotation.x = -Math.PI / 2; deskM.position.y = -0.2; deskM.receiveShadow = true;
+scene.add(deskM);
+
+function pageTex(right) {
+  return ctex(512, 640, function (g, w, h) {
+    g.fillStyle = '#fbf6ea'; g.fillRect(0, 0, w, h);
+    var gr = g.createLinearGradient(right ? 0 : w, 0, right ? 60 : w - 60, 0);
+    gr.addColorStop(0, 'rgba(120,90,45,.18)'); gr.addColorStop(1, 'rgba(120,90,45,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#e4d8c2';
+    for (var r = 0; r < 15; r++) { var y = 60 + r * 36; if (r === 5 || r === 11) continue; g.fillRect(50, y, w - 100 - (r % 4) * 40, 8); }
+    g.fillStyle = '#b9a98c'; g.font = 'bold 22px sans-serif'; g.textAlign = right ? 'right' : 'left';
+    g.fillText(right ? '47' : '46', right ? w - 40 : 40, h - 26);
+  });
+}
+var book = new THREE.Group(); scene.add(book);
+[-1, 1].forEach(function (sx) {
+  var pg = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.16, 6.6), [
+    new THREE.MeshLambertMaterial({ color: 0xefe6d2 }), new THREE.MeshLambertMaterial({ color: 0xefe6d2 }),
+    new THREE.MeshLambertMaterial({ map: pageTex(sx > 0) }), new THREE.MeshLambertMaterial({ color: 0xe4d8c0 }),
+    new THREE.MeshLambertMaterial({ color: 0xefe6d2 }), new THREE.MeshLambertMaterial({ color: 0xefe6d2 })
+  ]);
+  pg.position.set(sx * 2.62, -0.08, 0); pg.receiveShadow = true; pg.castShadow = true;
+  book.add(pg);
+});
+var cover = new THREE.Mesh(new THREE.BoxGeometry(10.7, 0.06, 6.9), new THREE.MeshLambertMaterial({ color: 0xe56d17 }));
+cover.position.y = -0.19; book.add(cover);
+
+/* ===================== 活页底板 + 插图卡 ===================== */
+var BASE = 0.1;
+var live = new THREE.Group(); scene.add(live);
+var boardTex = ctex(512, 300, function (g, w, h) {
+  g.fillStyle = '#fffaf0'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(214,196,160,.52)'; g.lineWidth = 1;
+  for (var x = 0; x < w; x += 16) { g.beginPath(); g.moveTo(x + .5, 0); g.lineTo(x + .5, h); g.stroke(); }
+  for (var y = 0; y < h; y += 16) { g.beginPath(); g.moveTo(0, y + .5); g.lineTo(w, y + .5); g.stroke(); }
+});
+var board = mesh(new THREE.BoxGeometry(8.2, BASE, 4.7), [
+  toon('#ead6b0'), toon('#ead6b0'), new THREE.MeshToonMaterial({ map: boardTex, gradientMap: ramp, color: 0xf6ead2 }),
+  toon('#ead6b0'), toon('#ead6b0'), toon('#ead6b0')
+]);
+board.position.y = BASE / 2; board.castShadow = false;
+live.add(board);
+
+var figTex = ctex(512, 300, function (g, w, h) {
+  g.fillStyle = '#fbf3e2'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = '#e56d17'; g.lineWidth = 6; g.strokeRect(6, 6, w - 12, h - 12);
+  g.fillStyle = '#f07428'; g.fillRect(190, 62, 60, 120); g.fillRect(262, 62, 60, 120);
+  g.fillStyle = '#e55414'; g.fillRect(236, 178, 40, 65);
+  g.fillStyle = '#8a7b62'; g.font = 'bold 26px sans-serif'; g.textAlign = 'center'; g.fillText('制作会旋转的纸蜻蜓', w / 2, h - 20);
+});
+var figCard = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 4.7), new THREE.MeshBasicMaterial({ map: figTex, transparent: true }));
+figCard.rotation.x = -Math.PI / 2; figCard.position.y = 0.012;
+scene.add(figCard);
+
+/* ===================== PART A: 桌面真剪真折 ===================== */
+var craftGrp = new THREE.Group();
+live.add(craftGrp);
+
+// 绿色切割手工垫
+var matTex = ctex(512, 320, function (g, w, h) {
+  g.fillStyle = '#2d8a68'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(255,255,255,.26)'; g.lineWidth = 1.5;
+  for (var x = 24; x < w; x += 24) { g.beginPath(); g.moveTo(x, 12); g.lineTo(x, h - 12); g.stroke(); }
+  for (var y = 24; y < h; y += 24) { g.beginPath(); g.moveTo(12, y); g.lineTo(w - 12, y); g.stroke(); }
+  g.strokeStyle = 'rgba(255,255,255,.65)'; g.lineWidth = 3; g.strokeRect(12, 12, w - 24, h - 24);
+});
+var craftMat = mesh(new THREE.BoxGeometry(5.6, 0.04, 3.6), [
+  toon('#216c50'), toon('#216c50'), new THREE.MeshToonMaterial({ map: matTex, gradientMap: ramp }),
+  toon('#216c50'), toon('#216c50'), toon('#216c50')
+]);
+craftMat.position.set(-0.75, BASE + 0.02, 0.05);
+craftGrp.add(craftMat);
+
+// 铰接 3D 折纸片（躺平在手工垫上，高对比度亮橘红 + 奶油背面）
+var paperPivot = new THREE.Group();
+paperPivot.position.set(-0.75, BASE + 0.065, 0.15);
+craftGrp.add(paperPivot);
+
+var pOrange = toon('#f47425', { side: THREE.DoubleSide });
+var pDarkOr = toon('#d95a14', { side: THREE.DoubleSide });
+var pClipMat = toon('#38a3f1');
+
+// 中部主干（不动基准块）
+var spine = mesh(new THREE.BoxGeometry(0.42, 0.026, 1.35), pOrange);
+spine.position.set(0, 0, 0.35); spine.userData.craft = 'paper';
+paperPivot.add(spine);
+
+// 上部左翼与右翼（初始合在一起沿 X 紧挨，剪开后分开，再反向折起！）
+var wingLPiv = new THREE.Group(); wingLPiv.position.set(0, 0.013, -0.32); paperPivot.add(wingLPiv);
+var wingL = mesh(new THREE.BoxGeometry(0.56, 0.024, 1.48), pOrange);
+wingL.position.set(-0.285, 0, -0.74); wingL.userData.craft = 'wing';
+wingLPiv.add(wingL);
+
+var wingRPiv = new THREE.Group(); wingRPiv.position.set(0, 0.013, -0.32); paperPivot.add(wingRPiv);
+var wingR = mesh(new THREE.BoxGeometry(0.56, 0.024, 1.48), pOrange);
+wingR.position.set(0.285, 0, -0.74); wingR.userData.craft = 'wing';
+wingRPiv.add(wingR);
+
+// 中下部左右侧翼（折向中间加固机身）
+var flapLPiv = new THREE.Group(); flapLPiv.position.set(-0.21, 0.013, 0.35); paperPivot.add(flapLPiv);
+var flapL = mesh(new THREE.BoxGeometry(0.36, 0.022, 1.35), pDarkOr);
+flapL.position.set(-0.18, 0, 0); flapL.userData.craft = 'tail';
+flapLPiv.add(flapL);
+
+var flapRPiv = new THREE.Group(); flapRPiv.position.set(0.21, 0.013, 0.35); paperPivot.add(flapRPiv);
+var flapR = mesh(new THREE.BoxGeometry(0.36, 0.022, 1.35), pDarkOr);
+flapR.position.set(0.18, 0, 0); flapR.userData.craft = 'tail';
+flapRPiv.add(flapR);
+
+// 底部折弯配重小尾 + 蓝色回形针
+var tailPiv = new THREE.Group(); tailPiv.position.set(0, 0.014, 1.02); paperPivot.add(tailPiv);
+var tailTip = mesh(new THREE.BoxGeometry(0.42, 0.026, 0.42), pDarkOr);
+tailTip.position.set(0, 0, 0.21); tailTip.userData.craft = 'tail';
+tailPiv.add(tailTip);
+var clipRing = mesh(new THREE.TorusGeometry(0.11, 0.024, 8, 18), pClipMat);
+clipRing.scale.set(0.75, 1.45, 1); clipRing.rotation.x = Math.PI / 2;
+clipRing.position.set(0, 0.035, 0.24); clipRing.visible = false;
+clipRing.userData.craft = 'paper';
+tailPiv.add(clipRing);
+
+// 发光红色虚线剪裁引导 & 蓝色虚线折痕引导
+var cutLineGrp = new THREE.Group();
+paperPivot.add(cutLineGrp);
+var cutMat = new THREE.MeshBasicMaterial({ color: 0xe62e2e });
+for (var ci = 0; ci < 7; ci++) {
+  var dash = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.012, 0.13), cutMat);
+  dash.position.set(0, 0.03, -1.7 + ci * 0.21);
+  dash.userData.craft = 'cut';
+  cutLineGrp.add(dash);
+}
+// 发光点击区
+var cutHit = new THREE.Mesh(new THREE.PlaneGeometry(0.65, 1.65), new THREE.MeshBasicMaterial({ color: 0xff4444, transparent: true, opacity: 0.16, side: THREE.DoubleSide }));
+cutHit.rotation.x = -Math.PI / 2; cutHit.position.set(0, 0.032, -1.06); cutHit.userData.craft = 'cut';
+cutLineGrp.add(cutHit);
+
+var foldWingGuide = new THREE.Mesh(new THREE.BoxGeometry(1.18, 0.015, 0.055), new THREE.MeshBasicMaterial({ color: 0x2578e5 }));
+foldWingGuide.position.set(0, 0.032, -0.32); foldWingGuide.userData.craft = 'wing';
+foldWingGuide.visible = false; paperPivot.add(foldWingGuide);
+
+var foldTailGuide = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.015, 0.055), new THREE.MeshBasicMaterial({ color: 0x2578e5 }));
+foldTailGuide.position.set(0, 0.032, 1.02); foldTailGuide.userData.craft = 'tail';
+foldTailGuide.visible = false; paperPivot.add(foldTailGuide);
+
+// 3D 儿童安全剪刀（放在手工垫右下侧，避开右上发现面板）
+var scisGrp = new THREE.Group();
+var SCIS_HOME = new THREE.Vector3(1.85, BASE + 0.14, 0.95);
+scisGrp.position.copy(SCIS_HOME);
+craftGrp.add(scisGrp);
+var scisBladeA = new THREE.Group(), scisBladeB = new THREE.Group();
+scisGrp.add(scisBladeA); scisGrp.add(scisBladeB);
+var steelMat = toon('#cfd7e0'), scisRed = toon('#e84545');
+function makeHalfScis(grp, side) {
+  var b = mesh(new THREE.BoxGeometry(0.11, 0.025, 0.95), steelMat);
+  b.position.set(side * 0.02, 0.01 * side, -0.45); b.userData.craft = 'scissors'; grp.add(b);
+  var h = mesh(new THREE.TorusGeometry(0.22, 0.05, 8, 18), scisRed);
+  h.rotation.x = Math.PI / 2; h.position.set(side * 0.22, 0, 0.34); h.userData.craft = 'scissors'; grp.add(h);
+}
+makeHalfScis(scisBladeA, -1); makeHalfScis(scisBladeB, 1);
+var scisPin = mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.06, 12), toon('#5a6475'), false);
+scisGrp.add(scisPin);
+var scisCueRing = new THREE.Mesh(
+  new THREE.RingGeometry(0.56, 0.68, 28),
+  new THREE.MeshBasicMaterial({ color: 0xe62e2e, transparent: true, opacity: 0.7, side: THREE.DoubleSide })
+);
+scisCueRing.rotation.x = -Math.PI / 2; scisCueRing.position.set(0, -0.05, -0.06);
+scisGrp.add(scisCueRing);
+
+var craftStep = 0; // 0待剪 1已剪待折翼 2已折翼待折尾 3成型
+var cutProg = 0, cutGoal = 0, wingFold = 0, wingFoldGoal = 0, tailFold = 0, tailFoldGoal = 0, standUp = 0;
+var scisSnipT = 0, quickFolding = false;
+
+/* ===================== PART B: 拖高放飞对比场 ===================== */
+var flyGrp = new THREE.Group();
+flyGrp.visible = false;
+live.add(flyGrp);
+
+// 标尺对比柱与底座
+var woodM = toon('#d7a25a'), woodD = toon('#b67d39');
+var padTex = ctex(512, 240, function (g, w, h) {
+  g.fillStyle = '#e7f5ee'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = '#f06818'; g.lineWidth = 6; g.beginPath(); g.arc(w * 0.3, h * 0.5, 64, 0, Math.PI * 2); g.stroke();
+  g.strokeStyle = '#2b8cf0'; g.lineWidth = 6; g.beginPath(); g.arc(w * 0.7, h * 0.5, 64, 0, Math.PI * 2); g.stroke();
+  g.fillStyle = '#c2560c'; g.font = 'bold 26px sans-serif'; g.textAlign = 'center'; g.fillText('纸蜻蜓', w * 0.3, h - 18);
+  g.fillStyle = '#1b5da3'; g.fillText('平纸条', w * 0.7, h - 18);
+});
+var flyPad = mesh(new THREE.BoxGeometry(5.6, 0.04, 2.8), [
+  toon('#c9e6d8'), toon('#c9e6d8'), new THREE.MeshToonMaterial({ map: padTex, gradientMap: ramp }),
+  toon('#c9e6d8'), toon('#c9e6d8'), toon('#c9e6d8')
+]);
+flyPad.position.set(0, BASE + 0.02, 0.15);
+flyGrp.add(flyPad);
+
+// 中央立柱标尺（0m ~ 2m）
+var rulerTex = ctex(96, 512, function (g, w, h) {
+  g.fillStyle = '#fffaf0'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#2a3040';
+  for (var i = 0; i <= 20; i++) {
+    var y = h - 20 - i * ((h - 40) / 20);
+    g.fillRect(0, y, i % 5 === 0 ? 44 : 22, 3);
+    if (i % 5 === 0) { g.font = 'bold 20px sans-serif'; g.fillText((i * 10) + '', 48, y + 7); }
+  }
+});
+var post = mesh(new THREE.BoxGeometry(0.28, 4.35, 0.14), [
+  woodM, woodM, woodM, woodM, new THREE.MeshToonMaterial({ map: rulerTex, gradientMap: ramp }), woodM
+]);
+post.position.set(0, BASE + 2.18, -0.55);
+flyGrp.add(post);
+
+// 可上下拖动的放飞托杆
+var liftBar = new THREE.Group();
+liftBar.position.set(0, BASE + 3.55, 0.15);
+flyGrp.add(liftBar);
+var barBeam = mesh(new THREE.BoxGeometry(3.6, 0.12, 0.18), toon('#f2b441'));
+barBeam.userData.fly = 'bar'; liftBar.add(barBeam);
+var barKnob = mesh(new THREE.SphereGeometry(0.18, 16, 12), toon('#e56d17'));
+barKnob.position.set(0, 0, 0.14); barKnob.userData.fly = 'bar'; liftBar.add(barKnob);
+
+// 放飞用 3D 纸蜻蜓（左侧 x = -1.25）
+function buildFlyDragonfly() {
+  var g = new THREE.Group();
+  var stem = mesh(new THREE.BoxGeometry(0.14, 0.62, 0.07), toon('#d95a14'));
+  stem.position.y = 0.34; stem.userData.fly = 'dragonfly'; g.add(stem);
+  var clip = mesh(new THREE.TorusGeometry(0.08, 0.022, 8, 16), pClipMat, false);
+  clip.scale.set(0.7, 1.35, 1); clip.position.set(0, 0.09, 0); g.add(clip);
+  // 反向折翼（V 形倾角）
+  var wL = mesh(new THREE.BoxGeometry(0.86, 0.022, 0.28), pOrange);
+  wL.position.set(-0.42, 0.68, 0.03); wL.rotation.z = -0.18; wL.rotation.x = 0.28; wL.userData.fly = 'dragonfly'; g.add(wL);
+  var wR = mesh(new THREE.BoxGeometry(0.86, 0.022, 0.28), pOrange);
+  wR.position.set(0.42, 0.68, -0.03); wR.rotation.z = 0.18; wR.rotation.x = -0.28; wR.userData.fly = 'dragonfly'; g.add(wR);
+  return g;
+}
+var flyDF = buildFlyDragonfly();
+flyGrp.add(flyDF);
+
+// 旋转空气光环
+var swirlGrp = new THREE.Group();
+flyGrp.add(swirlGrp);
+var swirlRings = [];
+for (var si = 0; si < 3; si++) {
+  var sr = new THREE.Mesh(new THREE.TorusGeometry(0.62 + si * 0.14, 0.018, 6, 28, Math.PI * 1.35),
+    new THREE.MeshBasicMaterial({ color: 0x38a3f1, transparent: true, opacity: 0.55 }));
+  sr.rotation.x = Math.PI / 2;
+  sr.position.y = si * 0.18;
+  swirlGrp.add(sr);
+  swirlRings.push(sr);
+}
+swirlGrp.visible = false;
+
+// 放飞用 3D 平纸条（右侧 x = +1.25，亮天蓝）
+var flyStrip = new THREE.Group();
+var stripM = mesh(new THREE.BoxGeometry(0.42, 1.12, 0.025), toon('#3895f5'));
+stripM.position.y = 0.56; stripM.userData.fly = 'strip';
+flyStrip.add(stripM);
+flyGrp.add(flyStrip);
+
+// 左侧微风小风扇 + 飘动风带
+var fanGrp = new THREE.Group();
+fanGrp.position.set(-3.25, BASE + 1.45, 0.15);
+flyGrp.add(fanGrp);
+var fanStand = mesh(new THREE.CylinderGeometry(0.08, 0.24, 1.45, 14), toon('#dce5ef'));
+fanStand.position.y = -0.72; fanStand.userData.fly = 'fan'; fanGrp.add(fanStand);
+var fanRim = mesh(new THREE.TorusGeometry(0.48, 0.055, 8, 22), toon('#4fa0eb'));
+fanRim.rotation.y = Math.PI / 2; fanRim.userData.fly = 'fan'; fanGrp.add(fanRim);
+var fanBlades = new THREE.Group(); fanGrp.add(fanBlades);
+for (var bi = 0; bi < 4; bi++) {
+  var bl = mesh(new THREE.BoxGeometry(0.03, 0.36, 0.14), toon('#ffd04d'), false);
+  bl.position.set(0.04, Math.cos(bi * Math.PI / 2) * 0.2, Math.sin(bi * Math.PI / 2) * 0.2);
+  bl.rotation.x = bi * Math.PI / 2;
+  bl.userData.fly = 'fan';
+  fanBlades.add(bl);
+}
+var windStreams = [];
+for (var wi = 0; wi < 6; wi++) {
+  var wm = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.028, 0.028), new THREE.MeshBasicMaterial({ color: 0x7bc8ff, transparent: true, opacity: 0.6 }));
+  fanGrp.add(wm);
+  windStreams.push({ m: wm, t: wi / 6, y: -0.35 + (wi % 3) * 0.45, z: (wi % 2 - 0.5) * 0.5 });
+}
+fanGrp.visible = false;
+
+/* ===================== 状态：剪折 / 放飞物理 ===================== */
+var mode = 'craft'; // 'craft' | 'fly'
+var windOn = false;
+var flyState = 'ready'; // 'ready' | 'dropping' | 'landed'
+var launchY = 3.55;
+var dfPhys = { x: -1.25, y: 3.55, vy: 0, spin: 0, yaw: 0, t: 0, done: false };
+var stPhys = { x: 1.25,  y: 3.55, vy: 0, rx: 0, rz: 0, t: 0, done: false };
+
+var quickFoldTimers = [];
+function clearQuickFold() {
+  quickFolding = false;
+  while (quickFoldTimers.length) clearTimeout(quickFoldTimers.pop());
+}
+
+function setMode(m, silent) {
+  clearQuickFold();
+  mode = m;
+  craftGrp.visible = m === 'craft';
+  flyGrp.visible = m === 'fly';
+  $('#modeCraftBtn').classList.toggle('on', m === 'craft');
+  $('#modeFlyBtn').classList.toggle('on', m === 'fly');
+  $('#quickFoldBtn').style.display = m === 'craft' ? '' : 'none';
+  $('#stepTag').style.display = m === 'craft' ? '' : 'none';
+  $('#dropBtn').style.display = m === 'fly' ? '' : 'none';
+  $('#windBtn').style.display = m === 'fly' ? '' : 'none';
+  if (m === 'fly') resetFly(true);
+  if (!silent) ghost.off = true;
+  updateGuide(!silent && !demo);
+}
+
+function resetFly(keepY) {
+  flyState = 'ready';
+  if (!keepY) launchY = 3.55;
+  dfPhys = { x: -1.25, y: launchY, vy: 0, spin: 0, yaw: 0, t: 0, done: false };
+  stPhys = { x: 1.25,  y: launchY, vy: 0, rx: 0, rz: 0, t: 0, done: false };
+  swirlGrp.visible = false;
+}
+
+function launchDrop() {
+  if (mode !== 'fly') setMode('fly', true);
+  resetFly(true);
+  flyState = 'dropping';
+  markAct('fly'); ghost.off = true;
+  tone(520, 0.14, 'sine', 0.1, 760);
+  floatWord('松手放飞!', 'sōng shǒu fàng fēi', new THREE.Vector3(0, launchY + 0.55, 0.2), 'cool');
+}
+
+/* ===================== 相机平滑取景 ===================== */
+var camPos = new THREE.Vector3(), camTgt = new THREE.Vector3();
+var camGoalPos = new THREE.Vector3(), camGoalTgt = new THREE.Vector3();
+var portrait = false;
+function computeCamGoals() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  portrait = w / h < 0.85;
+  var isFly = mode === 'fly';
+  var tgt = isFly
+    ? new THREE.Vector3(portrait ? 0 : 0.45, portrait ? 1.95 : 2.15, 0)
+    : new THREE.Vector3(portrait ? -0.25 : 0.15, 0.45, 0.15);
+  var dir = isFly
+    ? new THREE.Vector3(0, 0.32, 0.947).normalize()
+    : (portrait ? new THREE.Vector3(0.18, 0.82, 0.54).normalize() : new THREE.Vector3(0, 0.78, 0.625).normalize());
+  var needW = isFly ? (portrait ? 6.6 : 9.0) : (portrait ? 7.2 : 9.0);
+  var needH = isFly ? (portrait ? 7.8 : 6.2) : (portrait ? 7.4 : 5.8);
+  var vf = THREE.MathUtils.degToRad(camera.fov), hf = 2 * Math.atan(Math.tan(vf / 2) * camera.aspect);
+  var d = Math.max(needW / 2 / Math.tan(hf / 2), needH / 2 / Math.tan(vf / 2) * 0.9);
+  camGoalTgt.copy(tgt);
+  camGoalPos.copy(tgt).addScaledVector(dir, d);
+  camera.updateProjectionMatrix();
+}
+function fit() {
+  computeCamGoals();
+  if (camPos.lengthSq() < 0.01) { camPos.copy(camGoalPos); camTgt.copy(camGoalTgt); }
+  camera.position.copy(camPos); camera.lookAt(camTgt);
+}
+window.addEventListener('resize', fit);
+
+/* ===================== 音效 ===================== */
+var AC = null;
+function audio() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } } if (AC && AC.state === 'suspended') AC.resume(); return AC; }
+function tone(f, dur, type, vol, f2, delay) {
+  var a = audio(); if (!a) return;
+  var t = a.currentTime + (delay || 0), o = a.createOscillator(), g = a.createGain();
+  o.type = type || 'sine'; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.12, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + 0.03);
+}
+function noise(dur, freq, vol) {
+  var a = audio(); if (!a) return;
+  var n = Math.floor(a.sampleRate * dur), b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0);
+  for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.2);
+  var s = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+  s.buffer = b; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 1.4; g.gain.value = vol || 0.25;
+  s.connect(f); f.connect(g); g.connect(a.destination); s.start();
+}
+function sSnip() { noise(0.07, 3400, 0.32); tone(1500, 0.05, 'triangle', 0.07, 920); }
+function sFold() { noise(0.11, 1800, 0.22); tone(380, 0.1, 'sine', 0.07, 520); }
+function sDing() { tone(880, 0.16, 'sine', 0.11); tone(1320, 0.28, 'sine', 0.09, null, 0.1); }
+function sLand() { tone(240, 0.09, 'triangle', 0.11, 150); }
+function sWhir() { noise(0.12, 700, 0.09); }
+function sTriumph() {
+  [523, 659, 784, 1046, 1318].forEach(function (f, i) {
+    tone(f, i === 4 ? 0.42 : 0.16, i === 4 ? 'sine' : 'triangle', 0.11, null, i * 0.1);
+  });
+}
+
+/* ===================== 通关礼花与勋章 ===================== */
+var confC = $('#confettiCanvas'), confCtx = confC.getContext('2d'), confParts = [], celebrated = false, quizAnswered = false;
+function launchConfetti() {
+  confC.width = window.innerWidth; confC.height = window.innerHeight;
+  var cols = ['#f59e0b', '#e56d17', '#2b8cf0', '#16a34a', '#ec4899', '#a855f7'];
+  confParts = [];
+  for (var i = 0; i < 90; i++) {
+    var ang = -Math.PI / 2 + (Math.random() - 0.5) * 1.5;
+    var spd = 280 + Math.random() * 440;
+    confParts.push({
+      x: confC.width * (0.3 + Math.random() * 0.4), y: confC.height * 0.28,
+      vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd - 80,
+      w: 7 + Math.random() * 7, h: 5 + Math.random() * 6,
+      rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 11,
+      col: cols[i % cols.length], life: 2.2 + Math.random() * 1.1
+    });
+  }
+}
+function stepConfetti(dt) {
+  if (!confParts.length) return;
+  if (confC.width !== window.innerWidth || confC.height !== window.innerHeight) {
+    confC.width = window.innerWidth; confC.height = window.innerHeight;
+  }
+  confCtx.clearRect(0, 0, confC.width, confC.height);
+  for (var i = confParts.length - 1; i >= 0; i--) {
+    var p = confParts[i];
+    p.life -= dt;
+    if (p.life <= 0) { confParts.splice(i, 1); continue; }
+    p.vy += 620 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
+    confCtx.save(); confCtx.translate(p.x, p.y); confCtx.rotate(p.rot);
+    confCtx.globalAlpha = Math.min(1, p.life);
+    confCtx.fillStyle = p.col; confCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+    confCtx.restore();
+  }
+  if (!confParts.length) confCtx.clearRect(0, 0, confC.width, confC.height);
+}
+function resetQuizUI() {
+  quizAnswered = false;
+  document.querySelectorAll('#quizOpts .qopt').forEach(function (b) { b.classList.remove('ok', 'wrong'); });
+  var fb = $('#quizFb');
+  fb.textContent = ''; fb.className = 'quiz-fb';
+}
+document.querySelectorAll('#quizOpts .qopt').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    audio();
+    var ok = btn.getAttribute('data-ok') === '1';
+    var fb = $('#quizFb');
+    if (ok) {
+      document.querySelectorAll('#quizOpts .qopt').forEach(function (b) { b.classList.remove('wrong'); });
+      btn.classList.add('ok');
+      quizAnswered = true;
+      sTriumph(); launchConfetti();
+      fb.textContent = '🌸 太棒了！获得本课小红花！两片纸翼一前一后相反折弯，空气才能推动纸蜻蜓旋转起来！';
+      fb.className = 'quiz-fb show ok';
+      speak('太棒了！获得本课小红花！两片纸翼一前一后相反折弯，空气才能推动纸蜻蜓旋转起来！');
+      saveProgress(LESSON_ID, true);
+    } else {
+      btn.classList.add('wrong');
+      tone(240, 0.14, 'triangle', 0.09, 190);
+      fb.textContent = '再想想哦～如果翅膀平平的或不折，空气推不动它旋转，试试反向折弯那个选项吧！';
+      fb.className = 'quiz-fb show err';
+      speak('再想想哦，如果翅膀平平的或不折，空气推不动它旋转，再试一次吧！');
+    }
+  });
+});
+function checkWin() {
+  if (celebrated) return;
+  if (kinds.c && kinds.s && kinds.d) {
+    celebrated = true;
+    saveProgress(LESSON_ID, true);
+    setTimeout(function () {
+      sTriumph(); launchConfetti();
+      $('#winToast').classList.add('show');
+      speak('太棒啦！全部发现集齐啦！科学小结论：' + CONCLUSION_TEXT + ' 来答一道小问题领小红花吧！');
+    }, 450);
+  }
+}
+function hideWinToast() {
+  $('#winToast').classList.remove('show');
+  confParts = []; confCtx.clearRect(0, 0, confC.width, confC.height);
+}
+
+/* ===================== 飘字 & 计时器标签 ===================== */
+var labelsEl = $('#labels');
+var dfLbl = document.createElement('div'); dfLbl.className = 'lbl tmr'; labelsEl.appendChild(dfLbl);
+var stLbl = document.createElement('div'); stLbl.className = 'lbl tmr blue'; labelsEl.appendChild(stLbl);
+var vtmp = new THREE.Vector3();
+function toScreen(v) { vtmp.copy(v).project(camera); return { x: (vtmp.x + 1) / 2 * window.innerWidth, y: (1 - vtmp.y) / 2 * window.innerHeight }; }
+function floatWord(text, py, worldPos, cls) {
+  var p = toScreen(worldPos), el = document.createElement('div');
+  el.className = 'word' + (cls ? ' ' + cls : ''); el.innerHTML = ruby(text, py);
+  el.style.left = Math.max(90, Math.min(window.innerWidth - 90, p.x)) + 'px';
+  el.style.top = Math.max(70, Math.min(window.innerHeight - 120, p.y)) + 'px';
+  labelsEl.appendChild(el); setTimeout(function () { el.remove(); }, 1500);
+}
+
+/* ===================== 我的发现 ===================== */
+var found = {}, foundN = 0, kinds = { c: false, s: false, d: false };
+var acted = { cut: false, fold: false, fly: false }, actions = 0;
+function markAct(v) {
+  if (!acted[v]) { acted[v] = true; var el = document.querySelector('.verb[data-v="' + v + '"]'); if (el) el.classList.add('done'); }
+  actions++;
+}
+function discover(key, kind, text, py, color, ico, silentVoice) {
+  if (found[key]) return;
+  found[key] = true; foundN++;
+  var el = document.createElement('div'); el.className = 'stk';
+  el.innerHTML = '<i style="background:' + color + '">' + ico + '</i><span>' + ruby(text, py) + '</span>';
+  var list = $('#ntList'); list.insertBefore(el, list.firstChild);
+  while (list.children.length > 6) list.removeChild(list.lastChild);
+  $('#ntCount').textContent = foundN;
+  if (!kinds[kind]) { kinds[kind] = true; $('#st' + kind.toUpperCase()).classList.add('lit'); }
+  sDing();
+  if (!silentVoice) speak(text);
+  checkWin();
+}
+
+/* ===================== 剪折步骤推进 ===================== */
+function resetCraftOnly() {
+  clearQuickFold();
+  craftStep = 0; cutProg = cutGoal = 0; wingFold = wingFoldGoal = 0; tailFold = tailFoldGoal = 0; standUp = 0;
+  scisSnipT = 0; scisGrp.position.copy(SCIS_HOME);
+  cutLineGrp.visible = true; foldWingGuide.visible = false; foldTailGuide.visible = false; clipRing.visible = false;
+  updateStepTag();
+  updateGuide(false);
+}
+function advanceCraftStep() {
+  if (craftStep === 0) {
+    craftStep = 1; cutGoal = 1; scisSnipT = 0.85;
+    sSnip(); setTimeout(sSnip, 220); setTimeout(sSnip, 440);
+    markAct('cut'); ghost.off = true;
+    cutLineGrp.visible = false; foldWingGuide.visible = true;
+    floatWord('剪开两片飞翼!', 'jiǎn kāi liǎng piàn fēi yì', new THREE.Vector3(-0.75, BASE + 0.55, -0.7));
+    updateStepTag();
+    updateGuide(!quickFolding && !demo);
+  } else if (craftStep === 1) {
+    craftStep = 2; wingFoldGoal = 1;
+    sFold(); markAct('fold'); ghost.off = true;
+    foldWingGuide.visible = false; foldTailGuide.visible = true;
+    floatWord('左右翼反向折起!', 'zuǒ yòu yì fǎn xiàng zhé qǐ', new THREE.Vector3(-0.75, BASE + 0.75, -0.3), 'ok');
+    updateStepTag();
+    updateGuide(!quickFolding && !demo);
+  } else if (craftStep === 2) {
+    craftStep = 3; tailFoldGoal = 1; clipRing.visible = true;
+    sFold(); setTimeout(sDing, 280); markAct('fold');
+    foldTailGuide.visible = false;
+    floatWord('纸蜻蜓做好啦!', 'zhǐ qīng tíng zuò hǎo la', new THREE.Vector3(-0.75, BASE + 0.95, 0.2), 'ok');
+    discover('craft-ok', 'c', '反向折翼加底部配重', 'fǎn xiàng zhé yì jiā dǐ bù pèi zhòng', '#e56d17', '✂', true);
+    updateStepTag();
+    updateGuide(!demo && !celebrated);
+  } else {
+    setMode('fly');
+  }
+}
+
+function quickFoldAll() {
+  if (mode !== 'craft') setMode('craft', true);
+  if (craftStep >= 3) { resetCraftOnly(); return; }
+  clearQuickFold();
+  quickFolding = true; ghost.off = true;
+  if (craftStep === 0) advanceCraftStep();
+  quickFoldTimers.push(setTimeout(function () { if (quickFolding && mode === 'craft' && craftStep === 1) advanceCraftStep(); }, 450));
+  quickFoldTimers.push(setTimeout(function () { if (quickFolding && mode === 'craft' && craftStep === 2) advanceCraftStep(); quickFolding = false; }, 920));
+}
+
+/* ===================== 指针交互（真剪真折 + 拖高放飞） ===================== */
+var craftPick = [], flyPick = [];
+craftGrp.traverse(function (o) { if (o.isMesh && o.userData.craft) craftPick.push(o); });
+flyGrp.traverse(function (o) { if (o.isMesh && o.userData.fly) flyPick.push(o); });
+
+function setNDC(e) { ndc.x = (e.clientX / window.innerWidth) * 2 - 1; ndc.y = -(e.clientY / window.innerHeight) * 2 + 1; raycaster.setFromCamera(ndc, camera); }
+var pPlaneH = new THREE.Plane(new THREE.Vector3(0, 1, 0), -(BASE + 0.08));
+var pPlaneV = new THREE.Plane(new THREE.Vector3(0, 0, 1), -0.15);
+var ptmp = new THREE.Vector3();
+
+var dragState = null; // { kind: 'cut' | 'lift', startY }
+canvas.addEventListener('pointerdown', function (e) {
+  audio(); welcomeVoiceOnce(); stopDemo(); introSkip();
+  setNDC(e);
+  if (mode === 'craft') {
+    var h = raycaster.intersectObjects(craftPick, false)[0];
+    if (h) {
+      ghost.off = true;
+      if (craftStep === 0 && (h.object.userData.craft === 'cut' || h.object.userData.craft === 'wing' || h.object.userData.craft === 'scissors')) {
+        dragState = { kind: 'cut', moved: false };
+        try { canvas.setPointerCapture(e.pointerId); } catch (er) {}
+      } else if (craftStep >= 1 && h.object.userData.craft === 'scissors') {
+        sSnip();
+        floatWord('剪好啦,折一折纸片!', 'jiǎn hǎo la zhé yi zhé zhǐ piàn', SCIS_HOME.clone().add(new THREE.Vector3(0, 0.45, 0)), 'cool');
+      } else {
+        advanceCraftStep();
+      }
+    }
+  } else {
+    var hf = raycaster.intersectObjects(flyPick, false).find(function (hit) { return hit.object.userData.fly !== 'fan' || fanGrp.visible; });
+    if (hf) {
+      ghost.off = true;
+      if (hf.object.userData.fly === 'fan') {
+        toggleWind();
+        floatWord(windOn ? '微风吹起来啦!' : '微风停啦!', windOn ? 'wēi fēng chuī qǐ lái la' : 'wēi fēng tíng la', fanGrp.position.clone().add(new THREE.Vector3(0.4, 0.6, 0)), 'cool');
+        return;
+      }
+      resetFly(true);
+      dragState = { kind: 'lift', moved: false };
+      canvas.style.cursor = 'grabbing';
+      try { canvas.setPointerCapture(e.pointerId); } catch (er) {}
+    }
+  }
+});
+
+canvas.addEventListener('pointermove', function (e) {
+  setNDC(e);
+  if (dragState && dragState.kind === 'cut') {
+    if (raycaster.ray.intersectPlane(pPlaneH, ptmp)) {
+      var prog = THREE.MathUtils.clamp((ptmp.z - (-1.65)) / 1.35, 0, 1);
+      if (prog > cutGoal + 0.04) {
+        dragState.moved = true;
+        cutGoal = Math.max(cutGoal, prog);
+        if (Math.random() < 0.25) sSnip();
+        if (cutGoal > 0.85 && craftStep === 0) {
+          dragState = null;
+          advanceCraftStep();
+        }
+      }
+    }
+    return;
+  }
+  if (dragState && dragState.kind === 'lift') {
+    if (raycaster.ray.intersectPlane(pPlaneV, ptmp)) {
+      dragState.moved = true;
+      launchY = THREE.MathUtils.clamp(ptmp.y, BASE + 1.2, 4.15);
+      dfPhys.y = stPhys.y = launchY;
+    }
+    return;
+  }
+  var list = mode === 'craft' ? craftPick : flyPick;
+  var hover = raycaster.intersectObjects(list, false).find(function (hit) { return mode === 'craft' || hit.object.userData.fly !== 'fan' || fanGrp.visible; });
+  canvas.style.cursor = hover ? (mode === 'fly' && hover.object.userData.fly !== 'fan' ? 'ns-resize' : 'pointer') : 'default';
+});
+
+function finishDrag() {
+  if (!dragState) return;
+  if (dragState.kind === 'cut' && !dragState.moved && craftStep === 0) {
+    advanceCraftStep();
+  } else if (dragState.kind === 'lift') {
+    launchDrop();
+  }
+  dragState = null;
+  canvas.style.cursor = 'default';
+}
+canvas.addEventListener('pointerup', finishDrag);
+canvas.addEventListener('pointercancel', finishDrag);
+
+/* ===================== 幽灵手示范 ===================== */
+var ghost = { off: false, t: 0 }, handEl = $('#hand');
+function updateGhost(dt) {
+  if (ghost.off || intro.t < 1.6) { handEl.style.opacity = 0; return; }
+  ghost.t = (ghost.t + dt) % 2.4;
+  var a, b;
+  if (mode === 'craft') {
+    if (craftStep === 0) {
+      a = toScreen(new THREE.Vector3(-0.75, BASE + 0.15, -1.55));
+      b = toScreen(new THREE.Vector3(-0.75, BASE + 0.15, -0.22));
+    } else if (craftStep === 1) {
+      a = toScreen(new THREE.Vector3(-1.05, BASE + 0.15, -0.9));
+      b = toScreen(new THREE.Vector3(-0.45, BASE + 0.15, -0.9));
+    } else if (craftStep === 2) {
+      a = toScreen(new THREE.Vector3(-0.75, BASE + 0.15, 1.3));
+      b = toScreen(new THREE.Vector3(-0.75, BASE + 0.35, 1.0));
+    } else {
+      var r = $('#modeFlyBtn').getBoundingClientRect();
+      a = { x: r.left + r.width / 2, y: r.top + r.height / 2 + 12 };
+      b = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    }
+  } else {
+    a = toScreen(new THREE.Vector3(0, BASE + 2.2, 0.15));
+    b = toScreen(new THREE.Vector3(0, BASE + 3.8, 0.15));
+  }
+  var u = Math.min(1, Math.max(0, (ghost.t - 0.35) / 1.35));
+  var x = a.x + (b.x - a.x) * u, y = a.y + (b.y - a.y) * u;
+  handEl.style.opacity = ghost.t < 2.0 ? 0.92 : 0;
+  handEl.style.transform = 'translate(' + (x - 18) + 'px,' + (y - 6) + 'px)';
+}
+
+/* ===================== 老师演示 ===================== */
+var demo = null;
+var DEMO = [
+  ['say', '第一步，用剪刀沿红线剪开两片纸翼！'], ['wait', 0.45], ['step'], ['wait', 1.45],
+  ['say', '第二步，把左右两片纸翼一前一后反向折弯！'], ['wait', 0.45], ['step'], ['wait', 1.45],
+  ['say', '第三步，折起底部小尾巴加上配重，纸蜻蜓做好啦！'], ['wait', 0.45], ['step'], ['wait', 1.55],
+  ['say', '现在点去试飞，看看纸蜻蜓和平纸条谁落得慢！'], ['toFly'], ['wait', 1.2],
+  ['drop'], ['wait', 4.3],
+  ['say', '再打开微风小风扇，看看微风吹来纸蜻蜓怎么飞！'], ['wind'], ['wait', 0.6], ['drop'], ['wait', 4.4],
+  ['end']
+];
+function startDemo() {
+  dismissEntryCues();
+  resetAll(true); demo = { i: 0, t: 0 }; ghost.off = true;
+  $('#demoBtn').classList.add('on'); $('#demoBtn').textContent = '■ 停止';
+}
+function stopDemo() {
+  if (!demo) return; demo = null; clearQuickFold();
+  $('#demoBtn').classList.remove('on'); $('#demoBtn').textContent = '▶ 演示';
+}
+function stepDemo(dt) {
+  if (!demo) return;
+  var s = DEMO[demo.i]; demo.t += dt;
+  if (!s || s[0] === 'end') { stopDemo(); return; }
+  if (s[0] === 'wait') { if (demo.t >= s[1]) { demo.i++; demo.t = 0; } return; }
+  if (s[0] === 'say') { speak(s[1]); demo.i++; demo.t = 0; return; }
+  if (s[0] === 'step') { advanceCraftStep(); demo.i++; demo.t = 0; return; }
+  if (s[0] === 'toFly') { setMode('fly', true); demo.i++; demo.t = 0; return; }
+  if (s[0] === 'wind') { toggleWind(true); demo.i++; demo.t = 0; return; }
+  if (s[0] === 'drop') { launchDrop(); demo.i++; demo.t = 0; return; }
+}
+
+/* ===================== 开场动画 ===================== */
+var intro = { t: 0, done: false };
+function introSkip() {
+  if (intro.done) return;
+  intro.t = 3.5; intro.done = true;
+  figCard.visible = false;
+  board.scale.set(1, 1, 1); craftGrp.scale.setScalar(1);
+}
+function backOut(t) { var c = 1.65; t = Math.min(1, Math.max(0, t)); return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); }
+function updateIntro(dt) {
+  if (intro.done) return;
+  if (!intro.t0) intro.t0 = performance.now();
+  intro.t = Math.max(intro.t + dt, (performance.now() - intro.t0) / 1000 * 1.4); var t = intro.t;
+  var lift = Math.min(1, Math.max(0, (t - 0.2) / 0.65));
+  figCard.position.y = 0.012 + lift * 1.6;
+  figCard.material.opacity = 1 - lift; figCard.visible = lift < 1;
+  board.scale.set(1, Math.max(0.02, backOut((t - 0.3) / 0.5)), 1);
+  craftGrp.scale.setScalar(Math.max(0.01, backOut((t - 0.52) / 0.55)));
+  if (t >= 2.2) introSkip();
+}
+
+/* ===================== 重来 ===================== */
+function toggleWind(forceOn) {
+  windOn = forceOn !== undefined ? forceOn : !windOn;
+  $('#windBtn').classList.toggle('on', windOn);
+  fanGrp.visible = windOn;
+  if (windOn) tone(360, 0.14, 'sine', 0.08, 520);
+  updateGuide(!demo && windOn && !found['wind-fly'] && !celebrated);
+}
+function resetAll(keepDemo) {
+  if (!keepDemo) stopDemo();
+  found = {}; foundN = 0; kinds = { c: false, s: false, d: false };
+  acted = { cut: false, fold: false, fly: false }; actions = 0;
+  celebrated = false; hideWinToast(); resetQuizUI();
+  resetCraftOnly();
+  toggleWind(false);
+  setMode('craft', true);
+  resetFly(false);
+  $('#ntList').innerHTML = ''; $('#ntCount').textContent = '0';
+  document.querySelectorAll('.stamp').forEach(function (s) { s.classList.remove('lit'); });
+  document.querySelectorAll('.verb').forEach(function (v) { v.classList.remove('done'); });
+  $('#verbs').style.opacity = 1;
+  updateGuide(false);
+}
+
+/* ===================== 主循环 ===================== */
+var last = performance.now(), now = 0, whirCD = 0;
+function frame(t) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (t - last) / 1000)); last = t; now = t / 1000;
+  updateIntro(dt);
+  stepDemo(dt);
+  if (guidePulseT > 0) guidePulseT = Math.max(0, guidePulseT - dt);
+
+  // 平滑相机过渡
+  computeCamGoals();
+  camPos.lerp(camGoalPos, 1 - Math.exp(-6.5 * dt));
+  camTgt.lerp(camGoalTgt, 1 - Math.exp(-6.5 * dt));
+  camera.position.copy(camPos);
+  camera.lookAt(camTgt);
+
+  // ---- PART A: 剪折动画 ----
+  if (mode === 'craft') {
+    cutProg += (cutGoal - cutProg) * (1 - Math.exp(-10 * dt));
+    wingFold += (wingFoldGoal - wingFold) * (1 - Math.exp(-7 * dt));
+    tailFold += (tailFoldGoal - tailFold) * (1 - Math.exp(-7 * dt));
+    standUp += ((craftStep >= 3 ? 1 : 0) - standUp) * (1 - Math.exp(-4.5 * dt));
+
+    // 两片飞翼剪开略分离 + 反向折起（左翼前倾，右翼后倾）
+    wingLPiv.position.x = -cutProg * 0.04;
+    wingRPiv.position.x = cutProg * 0.04;
+    wingLPiv.rotation.x = wingFold * 0.88;
+    wingLPiv.rotation.z = -wingFold * 0.36;
+    wingRPiv.rotation.x = -wingFold * 0.88;
+    wingRPiv.rotation.z = wingFold * 0.36;
+
+    // 侧片折向中间 + 底部尾尖上折配重
+    flapLPiv.rotation.z = -tailFold * 2.85;
+    flapRPiv.rotation.z = tailFold * 2.85;
+    tailPiv.rotation.x = -tailFold * 2.75;
+
+    // 成型后优雅立起并轻柔自转展示
+    paperPivot.rotation.x = -standUp * (Math.PI / 2);
+    paperPivot.position.y = BASE + 0.065 + standUp * 1.18;
+    paperPivot.rotation.y = standUp > 0.7 ? (now * 2.6) % (Math.PI * 2) : 0;
+
+    // 剪刀跟随剪裁进度咔嚓动画
+    if (scisSnipT > 0 || (dragState && dragState.kind === 'cut')) {
+      if (scisSnipT > 0) scisSnipT = Math.max(0, scisSnipT - dt);
+      var targetZ = -1.65 + cutProg * 1.45;
+      scisGrp.position.lerp(new THREE.Vector3(-0.75, BASE + 0.16, targetZ + 0.65), 1 - Math.exp(-14 * dt));
+      scisGrp.rotation.y += (0 - scisGrp.rotation.y) * 0.2;
+      var snipAng = Math.abs(Math.sin(now * 22)) * 0.42;
+      scisBladeA.rotation.y = snipAng;
+      scisBladeB.rotation.y = -snipAng;
+    } else {
+      scisGrp.position.lerp(SCIS_HOME, 1 - Math.exp(-8 * dt));
+      scisGrp.rotation.y += (0.45 - scisGrp.rotation.y) * 0.12;
+      scisBladeA.rotation.y *= 0.85; scisBladeB.rotation.y *= 0.85;
+    }
+
+    // 引导线与剪刀光圈呼吸闪烁（语音提示时更醒目）
+    var boost = guidePulseT > 0 ? 1.55 : 1.0;
+    scisCueRing.visible = craftStep === 0 && scisSnipT <= 0;
+    if (scisCueRing.visible) {
+      var sr = 1 + Math.sin(now * 6) * 0.12 * boost;
+      scisCueRing.scale.set(sr, sr, 1);
+      scisCueRing.material.opacity = 0.45 + Math.sin(now * 6) * 0.3;
+    }
+    if (cutLineGrp.visible) cutHit.material.opacity = 0.18 + Math.sin(now * 6) * 0.11 * boost;
+    if (foldWingGuide.visible) {
+      foldWingGuide.scale.set(1 + Math.sin(now * 6) * 0.08 * boost, 1 + Math.sin(now * 6) * 0.4 * boost, 1 + Math.sin(now * 6) * 0.4 * boost);
+    }
+    if (foldTailGuide.visible) {
+      foldTailGuide.scale.set(1 + Math.sin(now * 6) * 0.08 * boost, 1 + Math.sin(now * 6) * 0.4 * boost, 1 + Math.sin(now * 6) * 0.4 * boost);
+    }
+  }
+
+  // ---- PART B: 放飞对比物理 ----
+  if (mode === 'fly') {
+    liftBar.position.y = BASE + launchY + 0.72;
+    if (windOn) {
+      fanBlades.rotation.x += dt * 16;
+      windStreams.forEach(function (ws) {
+        ws.t = (ws.t + dt * 1.65) % 1;
+        ws.m.position.set(0.35 + ws.t * 5.2, ws.y + Math.sin(now * 6 + ws.t * 5) * 0.08, ws.z);
+        ws.m.material.opacity = Math.sin(ws.t * Math.PI) * 0.55;
+      });
+    }
+
+    if (flyState === 'ready') {
+      flyDF.position.set(dfPhys.x, BASE + dfPhys.y, 0.15);
+      flyDF.rotation.set(0, now * 0.4, 0);
+      flyStrip.position.set(stPhys.x, BASE + stPhys.y - 0.15, 0.15);
+      flyStrip.rotation.set(0, 0, 0);
+      swirlGrp.visible = false;
+    } else if (flyState === 'dropping') {
+      // 纸蜻蜓：迅速进入稳态自转，慢速垂直下降，微风里滑翔更久
+      if (!dfPhys.done) {
+        dfPhys.t += dt;
+        var termVy = windOn ? -0.92 : -1.12;
+        dfPhys.vy += (termVy - dfPhys.vy) * (1 - Math.exp(-5.5 * dt));
+        dfPhys.y += dfPhys.vy * dt;
+        dfPhys.spin += (18.5 - dfPhys.spin) * (1 - Math.exp(-5 * dt));
+        dfPhys.yaw += dfPhys.spin * dt;
+        if (windOn) dfPhys.x = Math.min(0.45, dfPhys.x + dt * 0.38);
+        whirCD -= dt;
+        if (whirCD <= 0) { sWhir(); whirCD = 0.24; }
+        if (dfPhys.y <= 0.06) {
+          dfPhys.y = 0.06; dfPhys.done = true; sLand();
+          discover('spin-slow', 's', '纸蜻蜓旋转下降又稳又慢', 'zhǐ qīng tíng xuán zhuǎn xià jiàng yòu wěn yòu màn', '#16a34a', '🌀');
+          if (windOn) {
+            discover('wind-fly', 'd', '微风让纸蜻蜓留空更久', 'wēi fēng ràng zhǐ qīng tíng liú kōng gèng jiǔ', '#2b8cf0', '🌬');
+          }
+        }
+      }
+      // 平纸条：快速乱翻飘偏，先落地
+      if (!stPhys.done) {
+        stPhys.t += dt;
+        stPhys.vy = Math.max(-3.6, stPhys.vy - 6.8 * dt);
+        stPhys.y += stPhys.vy * dt;
+        stPhys.rx += dt * 7.8;
+        stPhys.rz += dt * 5.2;
+        stPhys.x += (Math.sin(stPhys.t * 8) * 0.9 + (windOn ? 1.15 : 0.3)) * dt;
+        stPhys.x = THREE.MathUtils.clamp(stPhys.x, 0.35, 2.35);
+        if (stPhys.y <= 0.05) {
+          stPhys.y = 0.05; stPhys.done = true; sLand();
+          floatWord('平纸条乱翻先落地!', 'píng zhǐ tiáo luàn fān xiān luò dì', new THREE.Vector3(stPhys.x, BASE + 0.65, 0.2));
+          discover('cmp-strip', 'd', '纸蜻蜓比平纸条落得慢', 'zhǐ qīng tíng bǐ píng zhǐ tiáo luò de màn', '#7c4dcc', '⚖');
+        }
+      }
+      flyDF.position.set(dfPhys.x, BASE + dfPhys.y, 0.15);
+      flyDF.rotation.set(0, dfPhys.yaw, windOn ? -0.08 : 0);
+      flyStrip.position.set(stPhys.x, BASE + stPhys.y, 0.15);
+      flyStrip.rotation.set(stPhys.done ? Math.PI / 2 : stPhys.rx, 0, stPhys.done ? 0.3 : stPhys.rz);
+
+      swirlGrp.visible = !dfPhys.done;
+      swirlGrp.position.set(dfPhys.x, BASE + dfPhys.y + 0.55, 0.15);
+      swirlRings.forEach(function (sr, i) { sr.rotation.z += dt * (7 + i * 2.5); });
+
+      if (dfPhys.done && stPhys.done) {
+        flyState = 'landed';
+        updateGuide(false);
+      }
+    }
+  }
+
+  // ---- 放飞实时计时器标签 ----
+  var showTmr = mode === 'fly' && (flyState === 'dropping' || flyState === 'landed');
+  dfLbl.classList.toggle('show', showTmr);
+  stLbl.classList.toggle('show', showTmr);
+  if (showTmr) {
+    dfLbl.innerHTML = ruby('纸蜻蜓', 'zhǐ qīng tíng') + ' ' + dfPhys.t.toFixed(1) + 's';
+    stLbl.innerHTML = ruby('平纸条', 'píng zhǐ tiáo') + ' ' + stPhys.t.toFixed(1) + 's';
+    var sp1 = toScreen(new THREE.Vector3(dfPhys.x, BASE + dfPhys.y + 1.05, 0.15));
+    var sp2 = toScreen(new THREE.Vector3(stPhys.x, BASE + stPhys.y + 1.05, 0.15));
+    dfLbl.style.transform = 'translate(' + sp1.x + 'px,' + sp1.y + 'px) translate(-50%,-100%)';
+    stLbl.style.transform = 'translate(' + sp2.x + 'px,' + sp2.y + 'px) translate(-50%,-100%)';
+  }
+
+  updateGhost(dt);
+  stepConfetti(dt);
+  $('#verbs').style.opacity = actions > 8 ? 0.4 : 1;
+
+  renderer.render(scene, camera);
+}
+
+/* ===================== 按钮与测试钩子 ===================== */
+$('#voiceBtn').addEventListener('click', function () {
+  audio();
+  if (!entryCueDone) {
+    dismissEntryCues();
+    voiceOn = true; voiceWelcomed = true;
+    $('#voiceBtn').classList.add('on');
+    $('#voiceBtn').textContent = '🔊 语音';
+    updateGuide(true);
+    return;
+  }
+  voiceOn = !voiceOn;
+  $('#voiceBtn').classList.toggle('on', voiceOn);
+  $('#voiceBtn').textContent = voiceOn ? '🔊 语音' : '🔇 静音';
+  if (voiceOn) { voiceWelcomed = true; updateGuide(true); }
+  else if ('speechSynthesis' in window) { try { (window.__xkVoice ? window.__xkVoice.stop() : window.speechSynthesis.cancel()); } catch (e) {} }
+});
+$('#guideBar').addEventListener('click', function () {
+  audio(); dismissEntryCues();
+  if (!voiceOn) {
+    voiceOn = true;
+    $('#voiceBtn').classList.add('on');
+    $('#voiceBtn').textContent = '🔊 语音';
+  }
+  voiceWelcomed = true;
+  updateGuide(true);
+});
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  $('#ntTog').textContent = c ? '展开' : '收起';
+});
+$('#winCloseBtn').addEventListener('click', hideWinToast);
+$('#winReplayBtn').addEventListener('click', function () { resetAll(false); });
+$('#modeCraftBtn').addEventListener('click', function () { audio(); welcomeVoiceOnce(); stopDemo(); introSkip(); setMode('craft'); });
+$('#modeFlyBtn').addEventListener('click', function () { audio(); welcomeVoiceOnce(); stopDemo(); introSkip(); setMode('fly'); });
+$('#quickFoldBtn').addEventListener('click', function () { audio(); welcomeVoiceOnce(); stopDemo(); introSkip(); quickFoldAll(); });
+$('#dropBtn').addEventListener('click', function () { audio(); welcomeVoiceOnce(); stopDemo(); introSkip(); launchDrop(); });
+$('#windBtn').addEventListener('click', function () { audio(); welcomeVoiceOnce(); stopDemo(); introSkip(); toggleWind(); });
+$('#demoBtn').addEventListener('click', function () { audio(); dismissEntryCues(); introSkip(); if (demo) stopDemo(); else startDemo(); });
+$('#resetBtn').addEventListener('click', function () { resetAll(false); });
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () { return { triangles: renderer.info.render.triangles, pixelRatio: renderer.getPixelRatio(), found: foundN, kinds: kinds, mode: mode, craftStep: craftStep, celebrated: celebrated }; },
+  setMode: setMode,
+  quickFoldAll: quickFoldAll,
+  launchDrop: launchDrop,
+  startDemo: startDemo
+};
+
+updateStepTag();
+updateGuide(false);
+fit();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

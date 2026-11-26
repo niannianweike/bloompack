@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>小学科学 3D 活页 · 开源造书工作台（Studio）</title>
+<style>
+:root{
+  --bg:#f6efe0; --card:#fffdf8; --ink:#241e16; --muted:#7a6e5b; --line:#e4d7be;
+  --accent:#e56d17; --accent-hi:#f2822e; --accent-lo:#bf5409; --ok:#2b8a3e; --err:#c92a2a;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  background:linear-gradient(180deg,#faf4e6 0%,#efe2c8 100%);color:var(--ink);padding:18px 22px 42px;
+}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  background:rgba(255,253,248,.94);border:1.5px solid var(--line);border-radius:20px;padding:14px 20px;
+  box-shadow:0 8px 24px rgba(68,48,18,.08);
+}
+.head h1{margin:0;font-size:21px;display:flex;align-items:center;gap:8px}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:800;background:#ebfbee;border:1px solid #8ce99a;color:#2b8a3e}
+.head-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border-radius:12px;
+  border:1.5px solid var(--line);background:#fff;font-size:14px;font-weight:800;color:#4a3f2f;
+  cursor:pointer;text-decoration:none;transition:all .14s;
+}
+.btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+.btn.pri{background:linear-gradient(180deg,var(--accent-hi),var(--accent));border-color:var(--accent-lo);color:#fff;box-shadow:0 3px 0 var(--accent-lo)}
+.btn.pri:hover:not(:disabled){color:#fff;filter:brightness(1.05)}
+.btn.ok{background:#ebfbee;border-color:#40c057;color:#2b8a3e}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.card{
+  background:var(--card);border:1.5px solid var(--line);border-radius:20px;padding:16px 20px;
+  box-shadow:0 6px 20px rgba(68,48,18,.06);display:flex;flex-direction:column;gap:12px;
+}
+.card-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.card-hd h2{margin:0;font-size:17px;display:flex;align-items:center;gap:8px}
+.step-num{
+  width:24px;height:24px;border-radius:8px;display:grid;place-items:center;
+  background:var(--accent);color:#fff;font-size:13px;font-weight:900;
+}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:12.5px;font-weight:800;color:#6c5e49}
+.field input,.field select{
+  height:38px;padding:0 11px;border-radius:10px;border:1.5px solid var(--line);
+  background:#fff;font-size:13.5px;font-weight:600;color:var(--ink);outline:none;
+}
+.field input:focus{border-color:var(--accent)}
+.presets{display:flex;gap:6px;flex-wrap:wrap}
+.pill{
+  padding:4px 10px;border-radius:99px;border:1.5px solid var(--line);background:#faf4e6;
+  font-size:12px;font-weight:800;color:#5c4d38;cursor:pointer;
+}
+.pill:hover{border-color:var(--accent);color:var(--accent)}
+
+.dropzone{
+  border:2px dashed #dfb882;border-radius:16px;padding:24px;text-align:center;
+  background:#fffaf0;cursor:pointer;transition:all .15s;
+}
+.dropzone:hover,.dropzone.drag{border-color:var(--accent);background:#fff3dd}
+.dropzone b{display:block;font-size:16px;color:#b8500a;margin-bottom:4px}
+.dropzone span{font-size:13px;color:var(--muted)}
+
+.status-bar{
+  padding:10px 14px;border-radius:12px;background:#f7efe0;border:1px solid #e7d8bc;
+  font-size:13px;font-weight:700;color:#5a4b34;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+}
+.status-bar.err{background:#fff5f5;border-color:#ffc9c9;color:#c92a2a}
+.status-bar.ok{background:#ebfbee;border-color:#b2f2bb;color:#2b8a3e}
+
+.plan-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}
+.pitem{
+  border:1.5px solid var(--line);border-radius:14px;padding:11px 13px;background:#fff;
+  display:flex;flex-direction:column;gap:6px;transition:border-color .14s;
+}
+.pitem.sel{border-color:var(--accent);background:#fffcf6}
+.pitem.skip{opacity:.62;background:#f8f5ef}
+.pitem-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pitem-top label{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:800;cursor:pointer}
+.ptag{font-size:11px;font-weight:800;padding:2px 7px;border-radius:99px;background:#fef3e2;color:#b8550b}
+.pdesc{font-size:12.5px;color:#6c5e49;line-height:1.45}
+.pfoot{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:4px;font-size:12px}
+.log{
+  font-family:Consolas,monospace;font-size:12px;line-height:1.5;
+  background:#241e16;color:#f7efe0;border-radius:12px;padding:12px 14px;
+  max-height:220px;overflow-y:auto;white-space:pre-wrap;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="head">
+    <div>
+      <h1>🧪 小学科学 3D 活页 · 开源造书工作台</h1>
+      <div style="margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span class="badge" id="skillBadge">正在检查 Skill…</span>
+        <span style="font-size:12.5px;color:var(--muted)">上传任意教材 PDF → 调用 science-livebook-builder（14条质量红线）自动生成离线 3D 活页</span>
+      </div>
+    </div>
+    <div class="head-r">
+      <a class="btn" href="/app/index.html" target="_blank">🎒 打开 3D 互动书包</a>
+    </div>
+  </header>
+
+  <!-- 配置区 -->
+  <section class="card">
+    <div class="card-hd">
+      <h2><span class="step-num">0</span> 大模型与豆包配音接口配置（支持一键切换任意 OpenAI 兼容 API）</h2>
+      <div class="presets">
+        <button class="pill" type="button" data-preset="deepseek">DeepSeek（默认）</button>
+        <button class="pill" type="button" data-preset="doubao">豆包方舟</button>
+        <button class="pill" type="button" data-preset="qwen">通义千问</button>
+        <button class="pill" type="button" data-preset="openai">OpenAI / 兼容中转</button>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="field">
+        <label>大模型接口地址（Base URL）</label>
+        <input id="baseUrl" value="https://api.deepseek.com/v1/chat/completions">
+      </div>
+      <div class="field">
+        <label>模型名称（Model）</label>
+        <input id="modelName" value="deepseek-chat">
+      </div>
+      <div class="field">
+        <label>大模型 API Key（留空则读取 studio/.env）</label>
+        <input id="apiKey" type="password" placeholder="sk-...">
+      </div>
+      <div class="field">
+        <label>豆包语音 API Key（可选，留空跳过或读 .env）</label>
+        <input id="doubaoKey" type="password" placeholder="可选：填入即自动生成甜美配音 MP3">
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 1: 上传 PDF -->
+  <section class="card">
+    <div class="card-hd">
+      <h2><span class="step-num">1</span> 上传任意新教材 PDF 并自动拆书</h2>
+    </div>
+    <div class="grid">
+      <div class="field">
+        <label>教材简称 / 书名</label>
+        <input id="bookTitle" value="科学一年级下册" placeholder="例如：科学一年级下册">
+      </div>
+      <div class="field">
+        <label>册次文件前缀（英文小写，如 k1b / k2a）</label>
+        <input id="bookId" value="k1b" placeholder="k1b">
+      </div>
+    </div>
+    <div class="dropzone" id="dropzone">
+      <b>📄 点击选择或把新教材 PDF 拖到这里</b>
+      <span>PDF 仅保存在你本机 studio/uploads/（已被 .gitignore 忽略），自动用 PyMuPDF 提取目录与逐页文本</span>
+      <input type="file" id="pdfInput" accept=".pdf,application/pdf" hidden>
+    </div>
+    <div class="status-bar" id="uploadStat">尚未上传教材 PDF</div>
+  </section>
+
+  <!-- Step 2: AI 规划清单 -->
+  <section class="card">
+    <div class="card-hd">
+      <h2><span class="step-num">2</span> AI 按 Skill 规范拆解《1 对 1 活页规划清单》</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn pri" id="planBtn" type="button" disabled>🤖 开始 AI 拆书规划</button>
+        <button class="btn" id="selFirstBtn" type="button" disabled>仅勾第 1 课试跑</button>
+        <button class="btn" id="selAllBtn" type="button" disabled>全选推荐活页</button>
+      </div>
+    </div>
+    <div class="status-bar" id="planStat">上传 PDF 后即可点击「开始 AI 拆书规划」</div>
+    <div class="plan-list" id="planList"></div>
+  </section>
+
+  <!-- Step 3: 生成与质检 -->
+  <section class="card">
+    <div class="card-hd">
+      <h2><span class="step-num">3</span> 按 14 条质检红线生成 3D 活页（含自动语法/拼音自检与豆包配音）</h2>
+      <button class="btn pri" id="genBtn" type="button" disabled>✨ 生成选中活页</button>
+    </div>
+    <div class="log" id="genLog">等待任务开始…</div>
+  </section>
+</div>
+
+<script>
+(function () {
+  var $ = function (s) { return document.querySelector(s); };
+  var state = { uploaded: false, plan: null, selected: new Set() };
+
+  var PRESETS = {
+    deepseek: { url: 'https://api.deepseek.com/v1/chat/completions', model: 'deepseek-chat' },
+    doubao:   { url: 'https://ark.cn-beijing.volces.com/api/v3/chat/completions', model: 'doubao-1-5-pro-32k-250115' },
+    qwen:     { url: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', model: 'qwen-plus' },
+    openai:   { url: 'https://api.openai.com/v1/chat/completions', model: 'gpt-4o' }
+  };
+
+  function log(msg) {
+    var el = $('#genLog');
+    var ts = new Date().toLocaleTimeString();
+    el.textContent += '\n[' + ts + '] ' + msg;
+    el.scrollTop = el.scrollHeight;
+  }
+
+  document.querySelectorAll('[data-preset]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var p = PRESETS[b.dataset.preset];
+      if (!p) return;
+      $('#baseUrl').value = p.url;
+      $('#modelName').value = p.model;
+    });
+  });
+
+  fetch('/api/config').then(function (r) { return r.json(); }).then(function (cfg) {
+    $('#skillBadge').textContent = cfg.skillLoaded
+      ? '✅ 已加载 science-livebook-builder（14 条红线）'
+      : '⚠️ 未检测到 Skill 文件';
+    $('#baseUrl').value = cfg.defaultBaseUrl || $('#baseUrl').value;
+    $('#modelName').value = cfg.defaultModel || $('#modelName').value;
+    if (cfg.hasEnvLlmKey) $('#apiKey').placeholder = '已在 studio/.env 中配置（留空直接用）';
+    if (cfg.hasEnvDoubaoKey) $('#doubaoKey').placeholder = '已在 studio/.env 中配置（留空直接用）';
+    if (cfg.generatedBooks && cfg.generatedBooks.length) {
+      log('已记录的自生成新书：' + cfg.generatedBooks.map(function (b) { return b.bookTitle + '(' + b.lessons.length + '课)'; }).join('、'));
+    }
+  });
+
+  var dz = $('#dropzone'), inp = $('#pdfInput');
+  dz.addEventListener('click', function () { inp.click(); });
+  dz.addEventListener('dragover', function (e) { e.preventDefault(); dz.classList.add('drag'); });
+  dz.addEventListener('dragleave', function () { dz.classList.remove('drag'); });
+  dz.addEventListener('drop', function (e) {
+    e.preventDefault(); dz.classList.remove('drag');
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) uploadPdf(e.dataTransfer.files[0]);
+  });
+  inp.addEventListener('change', function () {
+    if (inp.files && inp.files[0]) uploadPdf(inp.files[0]);
+    inp.value = '';
+  });
+
+  async function uploadPdf(file) {
+    var st = $('#uploadStat');
+    st.className = 'status-bar';
+    st.textContent = '正在上传并拆解 PDF（' + file.name + '，' + (file.size / 1024 / 1024).toFixed(1) + ' MB）…';
+    if (!$('#bookTitle').value.trim()) $('#bookTitle').value = file.name.replace(/\.pdf$/i, '');
+    try {
+      var res = await fetch('/api/upload-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/pdf',
+          'X-File-Name': encodeURIComponent(file.name),
+          'X-Book-Id': $('#bookId').value.trim() || 'custom',
+          'X-Book-Title': encodeURIComponent($('#bookTitle').value.trim() || file.name)
+        },
+        body: file
+      });
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.error || '上传失败');
+      state.uploaded = true;
+      st.className = 'status-bar ok';
+      st.textContent = '✅ 拆书成功：' + data.fileName + '（共 ' + data.totalPages + ' 页，推断正文偏移 +' + data.inferredOffset + '，识别目录项 ' + data.tocCount + ' / 目录页 ' + data.tocPagesCount + '）';
+      $('#planBtn').disabled = false;
+      log('PDF 解析完成：' + data.bookTitle + ' (' + data.bookId + ')，共 ' + data.totalPages + ' 页。');
+    } catch (e) {
+      st.className = 'status-bar err';
+      st.textContent = '❌ 拆书失败：' + e.message;
+    }
+  }
+
+  function renderPlan() {
+    var wrap = $('#planList');
+    if (!state.plan || !state.plan.lessons) { wrap.innerHTML = ''; return; }
+    wrap.innerHTML = state.plan.lessons.map(function (l, i) {
+      var checked = state.selected.has(l.id);
+      return '<div class="pitem' + (checked ? ' sel' : '') + (l.skip ? ' skip' : '') + '" data-lid="' + l.id + '">' +
+        '<div class="pitem-top">' +
+          '<label><input type="checkbox" data-chk="' + l.id + '"' + (checked ? ' checked' : '') + '> 第' + l.no + '课 · ' + l.actTitle + '</label>' +
+          '<span class="ptag">P' + l.page + (l.skip ? ' · 建议跳过' : '') + '</span>' +
+        '</div>' +
+        '<div class="pdesc">' + (l.skip ? ('跳过原因：' + (l.skipReason || '不适合隔屏模拟')) : l.desc) + '</div>' +
+        '<div class="pfoot"><span>' + l.lessonName + ' · 印章：' + (l.stamps || []).join('/') + '</span><span data-res="' + l.id + '">待生成</span></div>' +
+      '</div>';
+    }).join('');
+    wrap.querySelectorAll('input[data-chk]').forEach(function (chk) {
+      chk.addEventListener('change', function () {
+        var id = chk.dataset.chk;
+        if (chk.checked) state.selected.add(id); else state.selected.delete(id);
+        chk.closest('.pitem').classList.toggle('sel', chk.checked);
+        $('#genBtn').disabled = state.selected.size === 0;
+        $('#genBtn').textContent = '✨ 生成选中活页（' + state.selected.size + '）';
+      });
+    });
+    $('#genBtn').disabled = state.selected.size === 0;
+    $('#genBtn').textContent = '✨ 生成选中活页（' + state.selected.size + '）';
+  }
+
+  $('#planBtn').addEventListener('click', async function () {
+    var st = $('#planStat');
+    st.className = 'status-bar';
+    st.textContent = '🤖 正在调用 ' + $('#modelName').value + ' 按 Skill 规范规划活页清单（约 10–25 秒）…';
+    $('#planBtn').disabled = true;
+    try {
+      var res = await fetch('/api/plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookId: $('#bookId').value.trim() || 'custom',
+          bookTitle: $('#bookTitle').value.trim(),
+          baseUrl: $('#baseUrl').value.trim(),
+          model: $('#modelName').value.trim(),
+          apiKey: $('#apiKey').value.trim()
+        })
+      });
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.error || '规划失败');
+      state.plan = data.plan;
+      state.selected.clear();
+      var firstValid = (data.plan.lessons || []).find(function (x) { return !x.skip; });
+      if (firstValid) state.selected.add(firstValid.id);
+      renderPlan();
+      st.className = 'status-bar ok';
+      st.textContent = '✅ 规划完成：共 ' + data.plan.lessons.length + ' 项（已默认勾选第 1 张推荐活页供快速试跑）';
+      $('#selFirstBtn').disabled = false;
+      $('#selAllBtn').disabled = false;
+      log('AI 规划完成：共 ' + data.plan.lessons.length + ' 张活动规划。');
+    } catch (e) {
+      st.className = 'status-bar err';
+      st.textContent = '❌ 规划失败：' + e.message;
+      log('规划失败：' + e.message);
+    } finally {
+      $('#planBtn').disabled = false;
+    }
+  });
+
+  $('#selFirstBtn').addEventListener('click', function () {
+    state.selected.clear();
+    var first = (state.plan.lessons || []).find(function (x) { return !x.skip; });
+    if (first) state.selected.add(first.id);
+    renderPlan();
+  });
+  $('#selAllBtn').addEventListener('click', function () {
+    state.selected.clear();
+    (state.plan.lessons || []).forEach(function (x) { if (!x.skip) state.selected.add(x.id); });
+    renderPlan();
+  });
+
+  $('#genBtn').addEventListener('click', async function () {
+    if (!state.plan || state.selected.size === 0) return;
+    $('#genBtn').disabled = true;
+    var targets = state.plan.lessons.filter(function (l) { return state.selected.has(l.id); });
+    for (var i = 0; i < targets.length; i++) {
+      var l = targets[i];
+      var tag = document.querySelector('[data-res="' + l.id + '"]');
+      if (tag) tag.textContent = '⏳ 生成中…';
+      log('[' + (i + 1) + '/' + targets.length + '] 开始按 Skill 14 条红线生成：' + l.id + '（' + l.actTitle + '）…');
+      try {
+        var res = await fetch('/api/generate-lesson', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bookMeta: {
+              bookId: state.plan.bookId || $('#bookId').value.trim(),
+              bookTitle: state.plan.bookTitle || $('#bookTitle').value.trim(),
+              gradeLabel: state.plan.gradeLabel
+            },
+            lesson: l,
+            baseUrl: $('#baseUrl').value.trim(),
+            model: $('#modelName').value.trim(),
+            apiKey: $('#apiKey').value.trim(),
+            doubaoApiKey: $('#doubaoKey').value.trim()
+          })
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || '生成失败');
+        var warn = data.issues && data.issues.length ? ('（仍有 ' + data.issues.length + ' 项提醒）') : '（14项红线全通过）';
+        if (tag) {
+          tag.innerHTML = '<a class="btn ok" style="padding:3px 9px;font-size:12px" href="' + data.previewUrl + '" target="_blank">▶ 立即试玩</a>';
+        }
+        log('✅ 完成 ' + data.file + ' ' + warn + (data.repaired ? ' [自动自修复1次]' : '') + ' | ' + data.ttsNote);
+        if (data.issues && data.issues.length) log('   提醒：' + data.issues.join('；'));
+      } catch (e) {
+        if (tag) tag.textContent = '❌ 失败';
+        log('❌ 生成失败 ' + l.id + '：' + e.message);
+      }
+    }
+    $('#genBtn').disabled = false;
+  });
+})();
+</script>
+</body>
+</html>

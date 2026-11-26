@@ -1,0 +1,1158 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第2课 物体的分类 · 分一分（活页）</title>
+<style>
+:root{--ink:#2a3040;--paper:#fffaf0;--line:#e3d6bd;--accent:#e56d17}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#d9c19b;color:var(--ink);
+  font-family:"Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+ruby{ruby-align:center}
+rt{font-size:.5em;font-weight:600;color:#8a6d4a;letter-spacing:0}
+body.no-py rt{display:none}
+
+.chip{position:fixed;left:14px;top:12px;z-index:5;display:flex;align-items:center;gap:10px;
+  padding:6px 14px 6px 6px;border-radius:16px;background:rgba(255,250,240,.92);border:1.5px solid var(--line);
+  box-shadow:0 6px 18px rgba(80,55,20,.12)}
+.home{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:var(--ink);font-size:20px;font-weight:800}
+.home:hover{border-color:var(--accent);color:var(--accent)}
+.chip h1{margin:0;font-size:20px;line-height:1.5;font-weight:800}
+.chip small{display:block;font-size:12px;color:#8a7b62;font-weight:700;margin-top:-2px}
+
+.tools{position:fixed;right:14px;top:12px;z-index:7;display:flex;gap:8px}
+.tbtn{position:relative;height:40px;padding:0 14px;border-radius:13px;border:1.5px solid var(--line);background:rgba(255,250,240,.94);
+  font:inherit;font-size:15px;font-weight:800;color:var(--ink);cursor:pointer;box-shadow:0 3px 0 #e2d2b5}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:#bf5409;color:#fff;box-shadow:0 3px 0 #bf5409}
+.tbtn.cue-pulse{animation:cueRing 1.8s ease-in-out infinite}
+@keyframes cueRing{0%,100%{box-shadow:0 3px 0 #e2d2b5,0 0 0 0 rgba(229,109,23,.48)}50%{box-shadow:0 3px 0 #e2d2b5,0 0 0 8px rgba(229,109,23,0)}}
+.tbtn.on.cue-pulse{animation:cueRingOn 1.8s ease-in-out infinite}
+@keyframes cueRingOn{0%,100%{box-shadow:0 3px 0 #bf5409,0 0 0 0 rgba(229,109,23,.55)}50%{box-shadow:0 3px 0 #bf5409,0 0 0 9px rgba(229,109,23,0)}}
+.cue-tag{position:absolute;left:50%;top:calc(100% + 6px);transform:translateX(-50%);white-space:nowrap;pointer-events:none;
+  padding:2px 8px;border-radius:99px;background:#e56d17;color:#fff;font-size:11px;font-weight:800;line-height:1.4;
+  box-shadow:0 3px 10px rgba(191,84,9,.32);transition:opacity .35s,transform .35s}
+.cue-tag::before{content:"";position:absolute;left:50%;top:-4px;transform:translateX(-50%) rotate(45deg);width:8px;height:8px;background:#e56d17}
+body.cues-off .cue-tag{opacity:0;transform:translateX(-50%) translateY(-4px)}
+body.cues-off .tbtn.cue-pulse{animation:none}
+
+/* 物理路牌切换条：按颜色 | 按大小 | 按形状 */
+#modes{position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:5;display:flex;gap:8px;
+  padding:5px;border-radius:18px;background:rgba(255,250,240,.94);border:1.5px solid var(--line);
+  box-shadow:0 6px 18px rgba(80,55,20,.14)}
+.mbtn{display:flex;align-items:center;gap:6px;padding:5px 14px;border-radius:13px;border:1.5px solid transparent;
+  background:transparent;font:inherit;font-size:16px;font-weight:800;line-height:1.65;color:var(--ink);cursor:pointer;transition:all .2s}
+.mbtn svg{width:20px;height:20px;flex:none}
+.mbtn:hover{background:#fff3e0}
+.mbtn.on{background:var(--accent);color:#fff;border-color:#bf5409;box-shadow:0 3px 0 #bf5409}
+.mbtn.on rt{color:#ffe4c4}
+.mbtn.guide-pulse{border-color:#e56d17;background:#fff3e0;animation:modePulse 1.15s ease-in-out infinite}
+@keyframes modePulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(229,109,23,.5)}50%{transform:scale(1.05);box-shadow:0 0 0 8px rgba(229,109,23,0)}}
+
+/* 步骤小助手提示条（位于模式切换条正下方，不遮挡其它控件） */
+#guideBar{position:fixed;left:50%;top:68px;transform:translateX(-50%);z-index:5;
+  max-width:min(460px,calc(100vw - 500px));padding:6px 14px;border-radius:99px;
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+  background:rgba(255,250,240,.95);border:2px solid #f59e0b;box-shadow:0 6px 18px rgba(80,55,20,.14);
+  font-size:14px;font-weight:800;color:var(--ink);line-height:1.35;transition:transform .25s,border-color .25s}
+#guideBar:hover{border-color:var(--accent)}
+#guideBar.bump{animation:gbBump .45s cubic-bezier(.2,1.5,.4,1)}
+@keyframes gbBump{0%{transform:translateX(-50%) scale(.92)}50%{transform:translateX(-50%) scale(1.05)}100%{transform:translateX(-50%) scale(1)}}
+.gb-ico{font-size:16px;flex:none}
+#guideTxt{flex:1;min-width:0}
+.gb-prog{flex:none;padding:2px 8px;border-radius:99px;background:#fff3e0;border:1px solid #f3c489;color:#c2560c;font-size:12px;font-weight:900}
+
+#notes{position:fixed;right:14px;top:82px;z-index:4;width:220px;max-height:calc(100% - 156px);overflow:hidden;
+  padding:9px 10px 10px;border-radius:16px;background:rgba(255,250,240,.92);border:1.5px solid var(--line);
+  box-shadow:0 8px 22px rgba(80,55,20,.12);transition:top .3s,opacity .3s}
+body.cues-off #notes{top:64px;max-height:calc(100% - 140px)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:15px;font-weight:800;margin-bottom:6px}
+.nt-acts{display:flex;align-items:center;gap:6px}
+.nt-tog{height:24px;padding:0 8px;border-radius:8px;border:1px solid var(--line);background:#fff;
+  font:inherit;font-size:12px;font-weight:800;color:#8a7b62;cursor:pointer}
+.nt-tog:hover{border-color:var(--accent);color:var(--accent)}
+.stamps{display:flex;gap:5px;margin-bottom:6px}
+.stamp{flex:1;text-align:center;padding:3px 0 2px;border-radius:10px;border:1.5px dashed #d8c7a6;color:#b3a283;font-size:13px;font-weight:800;line-height:1.45}
+.stamp.lit{border-style:solid;border-color:#e56d17;background:#fff3e2;color:#c2560c;animation:pop .45s cubic-bezier(.2,1.6,.4,1)}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:152px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList{display:none}
+#notes.collapsed .stamps{margin-bottom:0}
+.stk{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:11px;background:#fff;border:1.5px solid #f0dcc0;
+  font-size:15px;font-weight:800;line-height:1.55;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+.stk i{font-style:normal;width:24px;height:24px;flex:none;border-radius:7px;display:grid;place-items:center;color:#fff;font-size:13px}
+.stk b{color:#c2560c}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:18;display:none}
+#celebrate{position:fixed;left:50%;top:50%;transform:translate(-50%,-46%) scale(.86);z-index:19;
+  width:min(450px,92vw);max-height:85vh;overflow-y:auto;padding:18px 20px 16px;border-radius:22px;text-align:center;
+  background:rgba(255,250,240,.98);border:2.5px solid #f59e0b;box-shadow:0 16px 40px rgba(80,55,20,.28);
+  opacity:0;pointer-events:none;transition:opacity .32s,transform .38s cubic-bezier(.2,1.5,.4,1)}
+#celebrate.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.cel-medal{font-size:44px;line-height:1.1;margin-bottom:2px}
+.cel-txt{font-size:20px;font-weight:900;color:#c2560c;line-height:1.55}
+.cel-sub{font-size:13px;font-weight:700;color:#6e604b;margin:2px 0 10px}
+.cel-concl{text-align:left;padding:10px 12px;border-radius:14px;background:#fff5e3;border:1.5px solid #f4c88c;margin:0 0 12px}
+.cel-concl-t{font-size:13px;font-weight:900;color:#c2560c;margin-bottom:4px}
+.cel-concl p{margin:0;font-size:14px;font-weight:800;color:#3d3428;line-height:1.55}
+.cel-quiz{text-align:left;padding:10px 12px;border-radius:14px;background:#fff;border:1.5px solid var(--line);margin:0 0 14px}
+.quiz-t{font-size:13px;font-weight:900;color:#d94886;margin-bottom:5px}
+.quiz-q{font-size:14px;font-weight:800;color:var(--ink);line-height:1.5;margin-bottom:9px}
+.quiz-opts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.qopt{padding:9px 6px;border-radius:12px;border:2px solid var(--line);background:#fffaf0;cursor:pointer;
+  font:inherit;font-size:14px;font-weight:800;color:var(--ink);display:flex;flex-direction:column;align-items:center;gap:4px;
+  box-shadow:0 2px 0 #e2d2b5;transition:all .18s}
+.qopt span.qi{font-size:22px;line-height:1}
+.qopt:hover{border-color:var(--accent);background:#fff3e0}
+.qopt.ok{border-color:#16a34a;background:#eafaf0;color:#15803d;box-shadow:0 2px 0 #86efac}
+.qopt.wrong{border-color:#f59e0b;background:#fff7ed;animation:qShake .36s}
+@keyframes qShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.quiz-fb{min-height:20px;margin-top:8px;font-size:13px;font-weight:800;line-height:1.45;color:#c2560c}
+.quiz-fb.ok{color:#15803d}
+.cel-btns{display:flex;justify-content:center;gap:10px}
+.cel-btn{height:38px;padding:0 16px;border-radius:12px;border:1.5px solid var(--line);background:#fff;
+  font:inherit;font-size:15px;font-weight:800;color:var(--ink);cursor:pointer;box-shadow:0 3px 0 #e2d2b5}
+.cel-btn.pri{background:var(--accent);border-color:#bf5409;color:#fff;box-shadow:0 3px 0 #bf5409}
+
+#verbs{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:4;display:flex;gap:10px;transition:opacity .5s}
+.verb{display:flex;align-items:center;gap:7px;padding:6px 14px;border-radius:99px;background:rgba(255,250,240,.94);
+  border:1.5px solid var(--line);font-size:17px;font-weight:800;box-shadow:0 4px 14px rgba(80,55,20,.12)}
+.verb svg{width:22px;height:22px}
+.verb.done{border-color:#16a34a;color:#15803d;background:#effaf2}
+.verb.done::after{content:"✓";font-weight:900;color:#16a34a}
+
+#labels{position:fixed;inset:0;pointer-events:none;z-index:3}
+.lbl{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:2px 10px;border-radius:99px;white-space:nowrap;
+  background:rgba(42,48,64,.88);color:#fff;font-size:15px;font-weight:800;line-height:1.75;opacity:0;transition:opacity .2s}
+.lbl rt{color:#ffe0b8}
+.lbl.show{opacity:1}
+.word{position:absolute;left:0;top:0;transform:translate(-50%,-100%);font-size:28px;font-weight:900;line-height:1.65;white-space:nowrap;
+  color:#15803d;text-shadow:0 2px 0 #fff,0 0 8px #fff;pointer-events:none;animation:floatUp 1.2s ease-out forwards}
+.word.hint{color:#c2560c}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-55%) scale(.6)}20%{opacity:1;transform:translate(-50%,-100%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-190%) scale(1)}}
+
+#hand{position:fixed;left:0;top:0;width:64px;height:64px;z-index:6;pointer-events:none;opacity:0;transition:opacity .3s;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.25))}
+
+@media (max-width:760px){
+  .chip{left:8px;top:8px;padding:4px 10px 4px 4px}
+  .chip h1{font-size:16px}.chip small{display:none}
+  .home{width:32px;height:32px}
+  .tools{right:8px;top:8px;gap:6px}.tbtn{height:34px;padding:0 10px;font-size:13px}
+  .cue-tag{display:none}
+  #modes{top:52px;gap:4px;padding:4px}
+  .mbtn{padding:4px 9px;font-size:14px}.mbtn svg{width:16px;height:16px}
+  #guideBar{top:96px;max-width:calc(100vw - 20px);padding:5px 11px;font-size:13px}
+  #notes,body.cues-off #notes{top:auto;bottom:60px;right:8px;left:8px;width:auto;max-height:112px;padding:8px 10px}
+  #ntList .stk:nth-child(n+2){display:none}
+  .stk{font-size:14px}
+  #verbs{bottom:10px;gap:6px}.verb{font-size:14px;padding:4px 10px}.verb svg{width:18px;height:18px}
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="labels"></div>
+
+<div class="chip">
+  <a class="home" href="../index.html" title="回到书包">‹</a>
+  <div><h1 id="ttl"></h1><small>活页 · 课本第 7 页「分一分」</small></div>
+</div>
+
+<div id="modes" role="group">
+  <button class="mbtn on" data-m="color" type="button"><svg viewBox="0 0 24 24" fill="none"><circle cx="8" cy="14" r="4.5" fill="#e85252" stroke="currentColor" stroke-width="1.6"/><circle cx="16" cy="14" r="4.5" fill="#4589e6" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="8" r="4.5" fill="#f5c23b" stroke="currentColor" stroke-width="1.6"/></svg><span id="mdC"></span></button>
+  <button class="mbtn" data-m="size" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5.5" cy="15.5" r="2.5"/><circle cx="11.5" cy="13.5" r="4"/><circle cx="18.5" cy="11" r="5.5"/></svg><span id="mdZ"></span></button>
+  <button class="mbtn" data-m="shape" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="12" width="7" height="7"/><circle cx="17" cy="15.5" r="3.8"/><ellipse cx="12" cy="6.5" rx="4.5" ry="2.5"/></svg><span id="mdS"></span></button>
+</div>
+
+<div id="guideBar" role="status" aria-live="polite" title="点我再听一次提示">
+  <span class="gb-ico">👉</span>
+  <span id="guideTxt">把 9 个积木按颜色拖进红、黄、蓝托盘吧！</span>
+  <span class="gb-prog" id="guideProg">0/9</span>
+</div>
+
+<div class="tools">
+  <button class="tbtn on cue-pulse" id="voiceBtn" type="button" title="语音引导开关"><span class="tbtn-lbl">🔊 语音</span><span class="cue-tag">点我听玩法</span></button>
+  <button class="tbtn cue-pulse" id="demoBtn" type="button"><span class="tbtn-lbl">▶ 演示</span><span class="cue-tag">不会玩点演示</span></button>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<aside id="notes">
+  <div class="nt-head"><span id="ntTitle"></span><div class="nt-acts"><span id="ntCount" style="color:#c2560c">0</span><button class="nt-tog" id="ntTog" type="button">收起</button></div></div>
+  <div class="stamps"><span class="stamp" data-k="color" id="stColor"></span><span class="stamp" data-k="size" id="stSize"></span><span class="stamp" data-k="shape" id="stShape"></span></div>
+  <div id="ntList"></div>
+</aside>
+
+<canvas id="confetti"></canvas>
+<div id="celebrate" role="status" aria-live="polite">
+  <div class="cel-medal">🏆</div>
+  <div class="cel-txt" id="celTxt"></div>
+  <div class="cel-sub" id="celSub"></div>
+  <div class="cel-concl">
+    <div class="cel-concl-t">✨ 科学小结论</div>
+    <p>同样的物体，按颜色、大小或形状不同标准来分，分法就不一样！</p>
+  </div>
+  <div class="cel-quiz">
+    <div class="quiz-t">💡 考考你 · 答对领小红花 🌸</div>
+    <div class="quiz-q">如果想把长方体、圆柱和圆球分开，应该选哪个标准？</div>
+    <div class="quiz-opts" id="quizOpts">
+      <button class="qopt" type="button" data-ok="0"><span class="qi">🎨</span><span>按颜色</span></button>
+      <button class="qopt" type="button" data-ok="0"><span class="qi">📏</span><span>按大小</span></button>
+      <button class="qopt" type="button" data-ok="1"><span class="qi">🧊</span><span>按形状</span></button>
+    </div>
+    <div class="quiz-fb" id="quizFb"></div>
+  </div>
+  <div class="cel-btns">
+    <button class="cel-btn" id="celKeep" type="button">继续玩</button>
+    <button class="cel-btn pri" id="celAgain" type="button">再玩一次</button>
+  </div>
+</div>
+
+<div id="verbs">
+  <span class="verb" data-v="drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span id="vb1"></span></span>
+  <span class="verb" data-v="switch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13l-3-3M20 17H7l3 3"/></svg><span id="vb2"></span></span>
+  <span class="verb" data-v="sort"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="6" height="6" rx="1"/><rect x="15" y="4" width="6" height="6" rx="1"/><rect x="9" y="14" width="6" height="6" rx="1"/></svg><span id="vb3"></span></span>
+</div>
+
+<svg id="hand" viewBox="0 0 64 64"><path d="M26 6c3 0 5 2 5 5v17l3-1c2-6 9-5 9 0 2-3 8-2 8 3 3-1 7 1 7 5v12c0 9-7 15-16 15h-6c-6 0-10-3-13-8L13 41c-2-3 0-7 4-7 2 0 3 1 4 2V11c0-3 2-5 5-5z" fill="#fff" stroke="#2a3040" stroke-width="3" stroke-linejoin="round"/></svg>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js"></script>
+<script src="../vendor/voice.js"></script>
+<script>
+(function () {
+'use strict';
+
+/* ===================== 拼音 ===================== */
+var HAN = /[\u3400-\u9fff]/, pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function ruby(text, py) {
+  var syl = py ? py.trim().split(/\s+/) : [], i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) { var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; } out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>'; }
+    else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+var $ = function (s) { return document.querySelector(s); };
+$('#ttl').innerHTML = ruby('第2课 物体的分类', 'dì kè wù tǐ de fēn lèi');
+$('#ntTitle').innerHTML = ruby('我的发现', 'wǒ de fā xiàn');
+$('#mdC').innerHTML = ruby('按颜色', 'àn yán sè');
+$('#mdZ').innerHTML = ruby('按大小', 'àn dà xiǎo');
+$('#mdS').innerHTML = ruby('按形状', 'àn xíng zhuàng');
+$('#stColor').innerHTML = ruby('颜色', 'yán sè');
+$('#stSize').innerHTML = ruby('大小', 'dà xiǎo');
+$('#stShape').innerHTML = ruby('形状', 'xíng zhuàng');
+$('#vb1').innerHTML = ruby('拖进盘', 'tuō jìn pán');
+$('#vb2').innerHTML = ruby('换标准', 'huàn biāo zhǔn');
+$('#vb3').innerHTML = ruby('分一分', 'fēn yi fēn');
+$('#celTxt').innerHTML = ruby('太棒啦！全部发现集齐啦！', 'tài bàng la quán bù fā xiàn jí qí la');
+$('#celSub').innerHTML = ruby('颜色、大小、形状三种标准都会分啦', 'yán sè dà xiǎo xíng zhuàng sān zhǒng biāo zhǔn dōu huì fēn la');
+
+/* ===================== 分类标准与 9 件 3D 积木物品 ===================== */
+var MODES = {
+  color: {
+    name: '颜色', py: 'yán sè', icon: '🎨', accent: '#e85252',
+    bins: [
+      { key: 'red',    label: '红', py: 'hóng', bg: '#fde8e8', fg: '#e85252' },
+      { key: 'yellow', label: '黄', py: 'huáng', bg: '#fef6d8', fg: '#e0a518' },
+      { key: 'blue',   label: '蓝', py: 'lán',  bg: '#e5f0fd', fg: '#3b82e6' }
+    ]
+  },
+  size: {
+    name: '大小', py: 'dà xiǎo', icon: '📐', accent: '#e56d17',
+    bins: [
+      { key: 'L', label: '大', py: 'dà',   bg: '#fff0dd', fg: '#d96314' },
+      { key: 'M', label: '中', py: 'zhōng', bg: '#eef7e6', fg: '#3d9949' },
+      { key: 'S', label: '小', py: 'xiǎo', bg: '#e9f2fc', fg: '#3b7bd9' }
+    ]
+  },
+  shape: {
+    name: '形状', py: 'xíng zhuàng', icon: '🔷', accent: '#7c4dcc',
+    bins: [
+      { key: 'box', label: '长方', py: 'cháng fāng', bg: '#f2ebfd', fg: '#7c4dcc' },
+      { key: 'cyl', label: '圆柱', py: 'yuán zhù',   bg: '#e6f6f2', fg: '#1e9378' },
+      { key: 'sph', label: '圆球', py: 'yuán qiú',   bg: '#fdebf3', fg: '#d94886' }
+    ]
+  }
+};
+
+var COLORS = { red: '#ee5b5b', yellow: '#f5c542', blue: '#4c90ee' };
+var SIZES  = { L: 1.24, M: 0.90, S: 0.60 };
+var ITEMS = [
+  { id: 'r_box_L', color: 'red',    shape: 'box', size: 'L', name: '大红长方', py: 'dà hóng cháng fāng', home: [-3.10, 0.72] },
+  { id: 'y_cyl_S', color: 'yellow', shape: 'cyl', size: 'S', name: '小黄圆柱', py: 'xiǎo huáng yuán zhù', home: [-1.75, 0.68] },
+  { id: 'b_sph_M', color: 'blue',   shape: 'sph', size: 'M', name: '中蓝圆球', py: 'zhōng lán yuán qiú', home: [-0.35, 0.72] },
+  { id: 'r_cyl_M', color: 'red',    shape: 'cyl', size: 'M', name: '中红圆柱', py: 'zhōng hóng yuán zhù', home: [1.00, 0.70] },
+  { id: 'y_sph_L', color: 'yellow', shape: 'sph', size: 'L', name: '大黄圆球', py: 'dà huáng yuán qiú', home: [2.45, 0.75] },
+  { id: 'b_box_S', color: 'blue',   shape: 'box', size: 'S', name: '小蓝长方', py: 'xiǎo lán cháng fāng', home: [-2.55, 1.62] },
+  { id: 'y_box_M', color: 'yellow', shape: 'box', size: 'M', name: '中黄长方', py: 'zhōng huáng cháng fāng', home: [-1.00, 1.62] },
+  { id: 'r_sph_S', color: 'red',    shape: 'sph', size: 'S', name: '小红圆球', py: 'xiǎo hóng yuán qiú', home: [0.55, 1.62] },
+  { id: 'b_cyl_L', color: 'blue',   shape: 'cyl', size: 'L', name: '大蓝圆柱', py: 'dà lán yuán zhù', home: [2.05, 1.62] }
+];
+var IMAP = {}; ITEMS.forEach(function (it) { IMAP[it.id] = it; });
+
+/* ===================== Three 基础 ===================== */
+var canvas = $('#c');
+var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera(32, 1, 0.1, 200);
+var raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2();
+
+scene.add(new THREE.HemisphereLight(0xfff8ee, 0xcdb08a, 0.42));
+var sun = new THREE.DirectionalLight(0xfff1dc, 0.66);
+sun.position.set(-4, 12, 7);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+(function (c) { c.left = -7; c.right = 7; c.top = 6; c.bottom = -6; c.near = 1; c.far = 40; })(sun.shadow.camera);
+sun.shadow.bias = -0.0008;
+scene.add(sun);
+
+var ramp = new THREE.DataTexture(new Uint8Array([120, 120, 120, 255, 185, 185, 185, 255, 232, 232, 232, 255, 255, 255, 255, 255]), 4, 1, THREE.RGBAFormat);
+ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+var INK = new THREE.LineBasicMaterial({ color: 0x2a3040, transparent: true, opacity: 0.8 });
+function toon(hex, extra) {
+  var o = { color: new THREE.Color(hex), gradientMap: ramp };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshToonMaterial(o);
+}
+function mesh(geo, mat, ink) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  if (ink !== false) m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), INK));
+  return m;
+}
+function ctex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c);
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+
+/* ===================== 书桌 + 课本 ===================== */
+var deskTex = ctex(512, 512, function (g, w, h) {
+  g.fillStyle = '#c9a36b'; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 70; i++) { g.fillStyle = 'rgba(120,80,35,' + (Math.random() * 0.05).toFixed(3) + ')'; g.fillRect(0, Math.random() * h, w, 1 + Math.random() * 3); }
+});
+deskTex.wrapS = deskTex.wrapT = THREE.RepeatWrapping; deskTex.repeat.set(3, 3);
+var deskM = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshLambertMaterial({ map: deskTex }));
+deskM.rotation.x = -Math.PI / 2; deskM.position.y = -0.2; deskM.receiveShadow = true;
+scene.add(deskM);
+
+function pageTex(right) {
+  return ctex(512, 640, function (g, w, h) {
+    g.fillStyle = '#fbf6ea'; g.fillRect(0, 0, w, h);
+    var gr = g.createLinearGradient(right ? 0 : w, 0, right ? 60 : w - 60, 0);
+    gr.addColorStop(0, 'rgba(120,90,45,.18)'); gr.addColorStop(1, 'rgba(120,90,45,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#e4d8c2';
+    for (var r = 0; r < 15; r++) { var y = 60 + r * 36; if (r === 5 || r === 11) continue; g.fillRect(50, y, w - 100 - (r % 4) * 40, 8); }
+    g.fillStyle = '#b9a98c'; g.font = 'bold 22px sans-serif'; g.textAlign = right ? 'right' : 'left';
+    g.fillText(right ? '7' : '6', right ? w - 40 : 40, h - 26);
+  });
+}
+var book = new THREE.Group(); scene.add(book);
+[-1, 1].forEach(function (sx) {
+  var pg = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.16, 6.6), [
+    new THREE.MeshLambertMaterial({ color: 0xefe6d2 }), new THREE.MeshLambertMaterial({ color: 0xefe6d2 }),
+    new THREE.MeshLambertMaterial({ map: pageTex(sx > 0) }), new THREE.MeshLambertMaterial({ color: 0xe4d8c0 }),
+    new THREE.MeshLambertMaterial({ color: 0xefe6d2 }), new THREE.MeshLambertMaterial({ color: 0xefe6d2 })
+  ]);
+  pg.position.set(sx * 2.62, -0.08, 0); pg.receiveShadow = true; pg.castShadow = true;
+  book.add(pg);
+});
+var cover = new THREE.Mesh(new THREE.BoxGeometry(10.7, 0.06, 6.9), new THREE.MeshLambertMaterial({ color: 0x3b82e6 }));
+cover.position.y = -0.19; book.add(cover);
+
+/* ===================== 活页底板 ===================== */
+var BASE = 0.1;
+var BOARD = { x0: -4.1, x1: 4.1, z0: -2.35, z1: 2.35 };
+var live = new THREE.Group(); scene.add(live);
+var boardTex = ctex(512, 300, function (g, w, h) {
+  g.fillStyle = '#fffaf0'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(214,196,160,.55)'; g.lineWidth = 1;
+  for (var x = 0; x < w; x += 16) { g.beginPath(); g.moveTo(x + .5, 0); g.lineTo(x + .5, h); g.stroke(); }
+  for (var y = 0; y < h; y += 16) { g.beginPath(); g.moveTo(0, y + .5); g.lineTo(w, y + .5); g.stroke(); }
+});
+var board = mesh(new THREE.BoxGeometry(8.2, BASE, 4.7), [
+  toon('#ead6b0'), toon('#ead6b0'), new THREE.MeshToonMaterial({ map: boardTex, gradientMap: ramp, color: 0xf6ead2 }), toon('#ead6b0'), toon('#ead6b0'), toon('#ead6b0')
+]);
+board.position.y = BASE / 2; board.castShadow = false;
+live.add(board);
+
+var figTex = ctex(512, 300, function (g, w, h) {
+  g.fillStyle = '#fbf3e2'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = '#3b82e6'; g.lineWidth = 6; g.strokeRect(6, 6, w - 12, h - 12);
+  g.strokeStyle = '#8a7b62'; g.lineWidth = 3;
+  g.strokeRect(52, 65, 115, 76); g.strokeRect(198, 65, 115, 76); g.strokeRect(344, 65, 115, 76);
+  g.fillStyle = '#8a7b62'; g.font = 'bold 26px sans-serif'; g.textAlign = 'center'; g.fillText('分一分', w / 2, h - 22);
+});
+var figCard = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 4.7), new THREE.MeshBasicMaterial({ map: figTex, transparent: true }));
+figCard.rotation.x = -Math.PI / 2; figCard.position.y = 0.012;
+scene.add(figCard);
+
+/* ===================== 3 个木制分类托盘 + 3D 翻转路牌 ===================== */
+function makeSignTex(modeKey, bin) {
+  return ctex(256, 144, function (g, w, h) {
+    g.fillStyle = bin.bg; g.fillRect(0, 0, w, h);
+    g.strokeStyle = bin.fg; g.lineWidth = 10; g.strokeRect(5, 5, w - 10, h - 10);
+    g.fillStyle = bin.fg; g.strokeStyle = '#2a3040'; g.lineWidth = 4;
+    if (modeKey === 'color') {
+      g.beginPath(); g.arc(76, 72, 38, 0, Math.PI * 2); g.fill(); g.stroke();
+    } else if (modeKey === 'size') {
+      var r = bin.key === 'L' ? 40 : bin.key === 'M' ? 27 : 16;
+      g.beginPath(); g.arc(76, 72, r, 0, Math.PI * 2); g.fill(); g.stroke();
+    } else {
+      if (bin.key === 'box') { g.fillRect(42, 40, 64, 64); g.strokeRect(42, 40, 64, 64); }
+      else if (bin.key === 'cyl') {
+        g.fillRect(48, 36, 52, 72); g.strokeRect(48, 36, 52, 72);
+        g.beginPath(); g.ellipse(74, 36, 26, 10, 0, 0, Math.PI * 2); g.fill(); g.stroke();
+      } else {
+        g.beginPath(); g.arc(74, 72, 36, 0, Math.PI * 2); g.fill(); g.stroke();
+        g.fillStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.arc(62, 58, 10, 0, Math.PI * 2); g.fill();
+      }
+    }
+    g.fillStyle = '#2a3040'; g.font = '900 48px "Noto Sans SC","Microsoft YaHei",sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(bin.label, 178, 76);
+  });
+}
+
+var signTexCache = {};
+Object.keys(MODES).forEach(function (mk) {
+  signTexCache[mk] = MODES[mk].bins.map(function (b) { return makeSignTex(mk, b); });
+});
+
+var TRAY_X = [-2.55, -0.15, 2.25], TRAY_Z = -1.05;
+var woodMat = toon('#d7a665'), woodDark = toon('#b98241');
+var signMeshes = [];
+var trays = TRAY_X.map(function (tx, i) {
+  var g = new THREE.Group();
+  g.position.set(tx, BASE, TRAY_Z);
+  live.add(g);
+
+  var padMat = toon('#f4e7ce');
+  var base = mesh(new THREE.BoxGeometry(2.12, 0.08, 1.56), padMat);
+  base.position.y = 0.04; g.add(base);
+  // 木边框
+  var rf = mesh(new THREE.BoxGeometry(2.20, 0.17, 0.1), woodMat); rf.position.set(0, 0.085, 0.78); g.add(rf);
+  var rb = mesh(new THREE.BoxGeometry(2.20, 0.17, 0.1), woodMat); rb.position.set(0, 0.085, -0.78); g.add(rb);
+  var rl = mesh(new THREE.BoxGeometry(0.1, 0.17, 1.56), woodMat); rl.position.set(-1.05, 0.085, 0); g.add(rl);
+  var rr = mesh(new THREE.BoxGeometry(0.1, 0.17, 1.56), woodMat); rr.position.set(1.05, 0.085, 0); g.add(rr);
+
+  // 高亮光框（绿色放对 / 琥珀色提示）
+  var glowMat = new THREE.MeshBasicMaterial({ color: 0x22c55e, transparent: true, opacity: 0, side: THREE.DoubleSide });
+  var glow = new THREE.Mesh(new THREE.RingGeometry(1.02, 1.18, 4), glowMat);
+  glow.rotation.x = -Math.PI / 2; glow.rotation.z = Math.PI / 4; glow.scale.set(1.38, 1.0, 1); glow.position.y = 0.095;
+  g.add(glow);
+
+  // 立牌立柱 + 3D 翻转路牌（可点击听读托盘名称）
+  var post = mesh(new THREE.CylinderGeometry(0.05, 0.055, 0.85, 10), woodDark);
+  post.position.set(0, 0.48, -0.82); g.add(post);
+
+  var signPivot = new THREE.Group();
+  signPivot.position.set(0, 1.08, -0.82);
+  g.add(signPivot);
+  var signFaceMat = new THREE.MeshBasicMaterial({ map: signTexCache.color[i] });
+  var signBoard = mesh(new THREE.BoxGeometry(1.52, 0.86, 0.09), [
+    woodDark, woodDark, woodDark, woodDark, signFaceMat, signFaceMat
+  ]);
+  signBoard.userData.trayIdx = i;
+  signMeshes.push(signBoard);
+  signPivot.add(signBoard);
+
+  return {
+    idx: i, x: tx, z: TRAY_Z, g: g, padMat: padMat, glowMat: glowMat,
+    signPivot: signPivot, signFaceMat: signFaceMat,
+    items: [], shakeT: 0, okFlash: 0, hintFlash: 0, flipT: 1, signPop: 0
+  };
+});
+
+/* ===================== 构建 9 个 3D 积木物品 ===================== */
+var itemMeshes = [];
+ITEMS.forEach(function (it) {
+  var g = new THREE.Group(), body = new THREE.Group(); g.add(body);
+  var s = SIZES[it.size], col = COLORS[it.color], mat = toon(col), h = 0.4;
+  if (it.shape === 'box') {
+    var bw = 0.56 * s, bh = 0.42 * s, bd = 0.46 * s;
+    var m = mesh(new THREE.BoxGeometry(bw, bh, bd), mat);
+    m.position.y = bh / 2; body.add(m);
+    var stripe = mesh(new THREE.BoxGeometry(bw + 0.01, bh * 0.16, bd + 0.01), toon('#ffffff', { transparent: true, opacity: 0.45 }), false);
+    stripe.position.y = bh * 0.68; body.add(stripe);
+    h = bh;
+  } else if (it.shape === 'cyl') {
+    var cr = 0.25 * s, ch = 0.52 * s;
+    var c = mesh(new THREE.CylinderGeometry(cr, cr, ch, 24), mat);
+    c.position.y = ch / 2; body.add(c);
+    var band = mesh(new THREE.CylinderGeometry(cr + 0.008, cr + 0.008, ch * 0.18, 24), toon('#ffffff', { transparent: true, opacity: 0.42 }), false);
+    band.position.y = ch * 0.62; body.add(band);
+    h = ch;
+  } else {
+    var sr = 0.28 * s;
+    var sp = mesh(new THREE.SphereGeometry(sr, 22, 16), mat);
+    sp.position.y = sr; body.add(sp);
+    var dot = mesh(new THREE.SphereGeometry(sr * 0.28, 12, 10), toon('#ffffff', { transparent: true, opacity: 0.55 }), false);
+    dot.position.set(-sr * 0.35, sr * 1.38, sr * 0.35); body.add(dot);
+    h = sr * 2;
+  }
+  g.traverse(function (o) { if (o.isMesh) { o.userData.item = it; itemMeshes.push(o); } });
+  it.g = g; it.body = body; it.h = h;
+  it.homeVec = new THREE.Vector3(it.home[0], BASE, it.home[1]);
+  it.cur = it.homeVec.clone(); it.target = it.homeVec.clone();
+  it.tray = -1; it.pop = 1; it.hop = 0; it.hover = 0; it.flying = null;
+  g.position.copy(it.cur);
+  live.add(g);
+});
+
+/* ===================== 声音 ===================== */
+var AC = null;
+function audio() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } } if (AC && AC.state === 'suspended') AC.resume(); return AC; }
+function tone(f, dur, type, vol, f2, delay) {
+  var a = audio(); if (!a) return;
+  var t = a.currentTime + (delay || 0), o = a.createOscillator(), g = a.createGain();
+  o.type = type || 'sine'; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.14, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + 0.02);
+}
+function sFlip() { tone(360, 0.07, 'triangle', 0.16, 520); tone(540, 0.09, 'triangle', 0.12, 420, 0.07); }
+function sSnap() { tone(523, 0.1, 'sine', 0.13); tone(784, 0.18, 'sine', 0.12, null, 0.07); }
+function sNudge() { tone(240, 0.12, 'sine', 0.13, 185); }
+function sDing() { tone(880, 0.16, 'sine', 0.13); tone(1320, 0.28, 'sine', 0.11, null, 0.1); }
+function sTap() { tone(420, 0.07, 'triangle', 0.12, 320); }
+function sWin() {
+  var ns = [523.25, 659.25, 783.99, 1046.5, 783.99, 1046.5];
+  var ts = [0, 0.11, 0.22, 0.34, 0.50, 0.62];
+  var ds = [0.14, 0.14, 0.14, 0.22, 0.12, 0.42];
+  for (var i = 0; i < ns.length; i++) tone(ns[i], ds[i], 'triangle', 0.15, null, ts[i]);
+}
+
+/* ===================== 离线儿童语音引导 ===================== */
+var voiceOn = true, welcomeSpoken = false;
+var WELCOME_TXT = '小朋友，把积木拖进对应的托盘里分一分，还可以点上面的按钮换分类标准哦！';
+function stopVoice() { try { if ('speechSynthesis' in window) (window.__xkVoice ? window.__xkVoice.stop() : window.speechSynthesis.cancel()); } catch (e) {} }
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
+  if (!('speechSynthesis' in window)) return;
+  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+}
+function speakWelcomeOnce() {
+  if (welcomeSpoken) return;
+  welcomeSpoken = true;
+  speak(WELCOME_TXT);
+}
+
+/* ===================== 进度存储（小红花） ===================== */
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem('xk_k1a_progress') || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem('xk_k1a_progress', JSON.stringify(d));
+  } catch (e) {}
+}
+function dismissCues() { document.body.classList.add('cues-off'); }
+
+/* ===================== 通关彩带与勋章 ===================== */
+var celebrated = false, quizSolved = false, confRaf = 0;
+function launchConfetti() {
+  var cv = $('#confetti'), ctx = cv.getContext('2d');
+  var w = cv.width = window.innerWidth, h = cv.height = window.innerHeight;
+  cv.style.display = 'block';
+  var cols = ['#f59e0b', '#ef4444', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'];
+  var ps = [];
+  for (var i = 0; i < 90; i++) {
+    var ang = -Math.PI / 2 + (Math.random() - 0.5) * 1.9;
+    var sp = 240 + Math.random() * 440;
+    ps.push({
+      x: w * (0.25 + Math.random() * 0.5), y: h * 0.24,
+      vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 80,
+      w: 7 + Math.random() * 6, h: 4 + Math.random() * 5,
+      r: Math.random() * 6.28, vr: (Math.random() - 0.5) * 12,
+      c: cols[i % cols.length]
+    });
+  }
+  var t0 = performance.now();
+  if (confRaf) cancelAnimationFrame(confRaf);
+  (function step(nowMs) {
+    var el = (nowMs - t0) / 1000;
+    ctx.clearRect(0, 0, w, h);
+    var alpha = el > 2.2 ? Math.max(0, 1 - (el - 2.2) / 0.9) : 1;
+    ctx.globalAlpha = alpha;
+    for (var i = 0; i < ps.length; i++) {
+      var p = ps[i];
+      p.x += p.vx * 0.016; p.y += p.vy * 0.016; p.vy += 680 * 0.016; p.r += p.vr * 0.016;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+      ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    }
+    if (el < 3.1) confRaf = requestAnimationFrame(step);
+    else { cv.style.display = 'none'; confRaf = 0; }
+  })(t0);
+}
+function hideCelebrate() {
+  $('#celebrate').classList.remove('show');
+  if (confRaf) { cancelAnimationFrame(confRaf); confRaf = 0; }
+  $('#confetti').style.display = 'none';
+}
+function resetQuiz() {
+  quizSolved = false;
+  document.querySelectorAll('#quizOpts .qopt').forEach(function (b) { b.classList.remove('ok', 'wrong'); });
+  var fb = $('#quizFb'); fb.textContent = ''; fb.classList.remove('ok');
+}
+function checkWin() {
+  if (celebrated || demo) return;
+  if (kinds.color && kinds.size && kinds.shape) {
+    celebrated = true;
+    saveProgress('k1a-02', true);
+    sWin();
+    launchConfetti();
+    $('#celebrate').classList.add('show');
+    updateGuide(false);
+    speak('太棒啦！颜色、大小、形状三种标准全都分对啦！科学小结论：同样的物体，按颜色、大小或形状不同标准来分，分法就不一样！快答一道小问题领小红花吧！');
+  }
+}
+
+/* ===================== 分步小助手 ===================== */
+var curGuideSpeech = WELCOME_TXT, curGuideKey = '', lastVoiceGuideKey = '';
+function getSortedCount() {
+  return trays.reduce(function (s, t) { return s + t.items.length; }, 0);
+}
+function nextUnfinishedMode() {
+  var order = ['color', 'size', 'shape'];
+  for (var i = 0; i < order.length; i++) if (!kinds[order[i]]) return order[i];
+  return null;
+}
+function updateGuide(speakIt) {
+  var sortedCount = getSortedCount();
+  var nextM = nextUnfinishedMode();
+  var doneModes = (kinds.color ? 1 : 0) + (kinds.size ? 1 : 0) + (kinds.shape ? 1 : 0);
+  var txtEl = $('#guideTxt'), progEl = $('#guideProg'), barEl = $('#guideBar');
+  document.querySelectorAll('.mbtn').forEach(function (b) { b.classList.remove('guide-pulse'); });
+
+  if (!nextM) {
+    txtEl.textContent = '太棒啦！颜色、大小、形状 3 种分类全都完成！';
+    progEl.textContent = '3/3 ✓';
+    curGuideSpeech = '太棒啦！颜色、大小、形状三种分类全都完成啦！你可以继续自由探索哦！';
+    curGuideKey = 'all_done';
+  } else if (kinds[curMode] || sortedCount === ITEMS.length) {
+    var nextBtn = document.querySelector('.mbtn[data-m="' + nextM + '"]');
+    if (nextBtn) nextBtn.classList.add('guide-pulse');
+    var curName = MODES[curMode].name, nextName = MODES[nextM].name;
+    txtEl.textContent = '按' + curName + '全分对啦！点上方「按' + nextName + '」换个标准吧';
+    progEl.textContent = doneModes + '/3';
+    curGuideSpeech = '按' + curName + '全部分对啦！现在点上面的按' + nextName + '，换个标准分一分吧！';
+    curGuideKey = 'switch:' + nextM;
+  } else {
+    var m = MODES[curMode];
+    var binNames = m.bins.map(function (b) { return b.label; }).join('、');
+    var rem = ITEMS.length - sortedCount;
+    txtEl.textContent = '按' + m.name + '分类：已放好 ' + sortedCount + '/9 个积木（分进' + binNames + '盘）';
+    progEl.textContent = sortedCount + '/9';
+    curGuideSpeech = sortedCount === 0
+      ? '现在按' + m.name + '分类，把 9 个积木拖进' + binNames + '三个托盘里吧！'
+      : '按' + m.name + '分类已经放好 ' + sortedCount + ' 个啦，还有 ' + rem + ' 个积木，全部放进对应的托盘吧！';
+    curGuideKey = 'sort:' + curMode + ':' + sortedCount;
+  }
+  barEl.classList.remove('bump');
+  void barEl.offsetWidth;
+  barEl.classList.add('bump');
+  if (speakIt && !demo) speak(curGuideSpeech);
+}
+function pulseGuideTarget() {
+  var nextM = nextUnfinishedMode();
+  if (!nextM) return;
+  if (kinds[curMode] || getSortedCount() === ITEMS.length) {
+    var nextBtn = document.querySelector('.mbtn[data-m="' + nextM + '"]');
+    if (nextBtn) nextBtn.classList.add('guide-pulse');
+    return;
+  }
+  for (var i = 0; i < ITEMS.length; i++) {
+    if (ITEMS[i].tray < 0) {
+      ITEMS[i].hop = 1.0;
+      var ti = expectedTrayIndex(ITEMS[i], curMode);
+      trays[ti].hintFlash = 1.6;
+      break;
+    }
+  }
+}
+
+/* ===================== 相机 ===================== */
+var portrait = false;
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  portrait = w / h < 0.85;
+  var tgt = new THREE.Vector3(portrait ? 0 : 0.92, 0.56, portrait ? 0 : 0.08);
+  var dir = portrait ? new THREE.Vector3(0.62, 0.78, 0).normalize() : new THREE.Vector3(0, 0.70, 0.71).normalize();
+  var needW = portrait ? 5.6 : 10.3, needH = portrait ? 9.2 : 6.4;
+  var vf = THREE.MathUtils.degToRad(camera.fov), hf = 2 * Math.atan(Math.tan(vf / 2) * camera.aspect);
+  var d = Math.max(needW / 2 / Math.tan(hf / 2), needH / 2 / Math.tan(vf / 2) * 0.82);
+  camera.position.copy(tgt).addScaledVector(dir, d);
+  camera.lookAt(tgt);
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', fit);
+
+/* ===================== 标签与飘字 ===================== */
+var labelsEl = $('#labels');
+ITEMS.forEach(function (it) {
+  var el = document.createElement('div'); el.className = 'lbl'; el.innerHTML = ruby(it.name, it.py);
+  labelsEl.appendChild(el); it.lbl = el;
+});
+var vtmp = new THREE.Vector3();
+function toScreen(v) { vtmp.copy(v).project(camera); return { x: (vtmp.x + 1) / 2 * window.innerWidth, y: (1 - vtmp.y) / 2 * window.innerHeight }; }
+function floatWord(text, py, worldPos, cls) {
+  var p = toScreen(worldPos), el = document.createElement('div');
+  el.className = 'word' + (cls ? ' ' + cls : ''); el.innerHTML = ruby(text, py);
+  el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
+  labelsEl.appendChild(el); setTimeout(function () { el.remove(); }, 1250);
+}
+
+/* ===================== 我的发现 ===================== */
+var found = {}, foundN = 0, kinds = { color: false, size: false, shape: false };
+function discover(key, modeKey, html, spoken, lightStamp) {
+  if (!found[key]) {
+    found[key] = true; foundN++;
+    var m = MODES[modeKey];
+    var el = document.createElement('div'); el.className = 'stk';
+    el.innerHTML = '<i style="background:' + m.accent + '">' + m.icon + '</i><span>' + html + '</span>';
+    var list = $('#ntList'); list.insertBefore(el, list.firstChild);
+    while (list.children.length > 6) list.removeChild(list.lastChild);
+    $('#ntCount').textContent = foundN;
+    sDing();
+  }
+  if (lightStamp && !kinds[modeKey]) {
+    kinds[modeKey] = true;
+    $('#st' + modeKey[0].toUpperCase() + modeKey.slice(1)).classList.add('lit');
+    sDing();
+  }
+  if (!demo && spoken) speak(spoken);
+  checkWin();
+}
+
+/* ===================== 分类逻辑 ===================== */
+var curMode = 'color';
+var acted = { drag: false, switch: false, sort: false }, actions = 0;
+function markAct(v) {
+  if (!acted[v]) { acted[v] = true; var el = document.querySelector('.verb[data-v="' + v + '"]'); if (el) el.classList.add('done'); }
+  actions++;
+}
+
+function expectedTrayIndex(it, modeKey) {
+  var bins = MODES[modeKey].bins;
+  var val = it[modeKey];
+  for (var i = 0; i < bins.length; i++) if (bins[i].key === val) return i;
+  return 0;
+}
+
+function layoutTrayItems(ti) {
+  var tr = trays[ti];
+  var offsets = [[-0.64, -0.14], [0.0, 0.22], [0.64, -0.14]];
+  tr.items.forEach(function (it, idx) {
+    var off = offsets[idx % 3];
+    it.target.set(tr.x + off[0], BASE + 0.08, tr.z + off[1]);
+  });
+}
+
+function removeFromTray(it) {
+  if (it.tray >= 0) {
+    var tr = trays[it.tray], idx = tr.items.indexOf(it);
+    if (idx >= 0) tr.items.splice(idx, 1);
+    layoutTrayItems(it.tray);
+    it.tray = -1;
+    updateGuide(false);
+  }
+}
+
+function switchMode(newMode, silent) {
+  curMode = newMode;
+  document.querySelectorAll('.mbtn').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-m') === newMode); });
+  trays.forEach(function (tr, i) {
+    tr.items.length = 0;
+    tr.shakeT = 0; tr.okFlash = 0; tr.hintFlash = 0; tr.signPop = 0;
+    tr.flipT = 0;
+    tr.nextTex = signTexCache[newMode][i];
+    tr.padMat.color.set(MODES[newMode].bins[i].bg);
+  });
+  ITEMS.forEach(function (it) {
+    it.tray = -1;
+    it.flying = null;
+    it.target.copy(it.homeVec);
+    it.hop = 0.65;
+  });
+  updateGuide(false);
+  if (!silent) {
+    sFlip(); markAct('switch');
+    if (!demo) { welcomeSpoken = true; speak(curGuideSpeech); }
+  }
+}
+
+function dropItem(it, x, z) {
+  // 查找是否落在某个托盘内
+  var hitIdx = -1;
+  for (var i = 0; i < trays.length; i++) {
+    if (Math.abs(x - trays[i].x) < 1.15 && Math.abs(z - trays[i].z) < 1.0) { hitIdx = i; break; }
+  }
+  if (hitIdx < 0) {
+    it.target.copy(it.homeVec);
+    sTap();
+    updateGuide(false);
+    return;
+  }
+  var rightIdx = expectedTrayIndex(it, curMode);
+  if (hitIdx === rightIdx) {
+    var tr = trays[hitIdx];
+    if (tr.items.indexOf(it) < 0) tr.items.push(it);
+    it.tray = hitIdx;
+    layoutTrayItems(hitIdx);
+    tr.okFlash = 1;
+    it.hop = 0.85;
+    sSnap();
+    markAct('drag'); markAct('sort');
+    var bin = MODES[curMode].bins[hitIdx];
+    floatWord(bin.label + '！', bin.py, new THREE.Vector3(tr.x, BASE + 1.0, tr.z), '');
+    var totalSorted = getSortedCount();
+    var allTraysFull = totalSorted === ITEMS.length && trays.every(function (t) { return t.items.length === 3; });
+    if (allTraysFull) {
+      // 严格规则：必须当前标准下全部 9 个积木（3 个托盘）都分完，才点亮该标准印章！
+      var wasDone = kinds[curMode];
+      discover(curMode + ':all', curMode, ruby('按', 'àn') + '<b>' + ruby(MODES[curMode].name, MODES[curMode].py) + '</b>' + ruby('全分好啦', 'quán fēn hǎo la'), '', true);
+      floatWord('全部分好啦！', 'quán bù fēn hǎo la', new THREE.Vector3(-0.15, BASE + 1.6, TRAY_Z), '');
+      if (!celebrated && !(kinds.color && kinds.size && kinds.shape)) {
+        updateGuide(!wasDone);
+      } else {
+        updateGuide(false);
+      }
+    } else {
+      // 单盘装满 3 个时只记发现贴纸，绝不提前点亮模式印章或通关！
+      if (tr.items.length === 3) {
+        discover(curMode + ':' + bin.key, curMode, ruby('按', 'àn') + '<b>' + ruby(MODES[curMode].name, MODES[curMode].py) + '</b>' + ruby('分出', 'fēn chū') + '<b>' + ruby(bin.label, bin.py) + '</b>', '按' + MODES[curMode].name + '分出' + bin.label + '啦，继续把剩下的积木分完吧', false);
+      }
+      updateGuide(false);
+    }
+  } else {
+    // 温和弹回 + 高亮正确的托盘（不斥责）
+    trays[hitIdx].shakeT = 1;
+    trays[rightIdx].hintFlash = 1.4;
+    it.target.copy(it.homeVec);
+    it.hop = 0.7;
+    sNudge();
+    var rBin = MODES[curMode].bins[rightIdx];
+    floatWord('放进' + rBin.label + '盘试试', 'fàng jìn ' + rBin.py + ' pán shì shi', new THREE.Vector3(trays[rightIdx].x, BASE + 1.25, TRAY_Z), 'hint');
+    if (!demo) speak('放进' + rBin.label + '盘试试吧');
+    updateGuide(false);
+  }
+}
+
+/* ===================== 指针拖拽 ===================== */
+var P = null, hovered = null, now = 0;
+function setNDC(e) { ndc.x = (e.clientX / window.innerWidth) * 2 - 1; ndc.y = -(e.clientY / window.innerHeight) * 2 + 1; raycaster.setFromCamera(ndc, camera); }
+var plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), ptmp = new THREE.Vector3();
+function planePoint(e, y) { setNDC(e); plane.constant = -y; return raycaster.ray.intersectPlane(plane, ptmp) ? ptmp.clone() : null; }
+
+function pickItem(e) {
+  setNDC(e);
+  var h = raycaster.intersectObjects(itemMeshes, false)[0];
+  if (h) return h.object.userData.item;
+  var best = null, bd = 32;
+  ITEMS.forEach(function (it) {
+    var c = toScreen(it.cur.clone().setY(it.cur.y + it.h / 2));
+    var d = Math.hypot(e.clientX - c.x, e.clientY - c.y);
+    if (d < bd) { bd = d; best = it; }
+  });
+  return best;
+}
+
+function pickSign(e) {
+  setNDC(e);
+  var h = raycaster.intersectObjects(signMeshes, false)[0];
+  return h ? h.object.userData.trayIdx : -1;
+}
+
+canvas.addEventListener('pointerdown', function (e) {
+  audio(); stopDemo(); introSkip(); dismissCues();
+  var it = pickItem(e);
+  if (it) {
+    speakWelcomeOnce();
+    P = { it: it, x: e.clientX, y: e.clientY, dragging: false };
+    ghost.off = true;
+  } else {
+    var si = pickSign(e);
+    if (si >= 0) {
+      welcomeSpoken = true;
+      var tr = trays[si], bin = MODES[curMode].bins[si];
+      tr.signPop = 1; tr.okFlash = 0.65;
+      sTap();
+      floatWord(bin.label + '盘', bin.py + ' pán', new THREE.Vector3(tr.x, BASE + 1.55, TRAY_Z - 0.65), '');
+      speak('这是' + bin.label + '盘');
+    } else {
+      speakWelcomeOnce();
+    }
+  }
+  try { canvas.setPointerCapture(e.pointerId); } catch (er) {}
+});
+
+canvas.addEventListener('pointermove', function (e) {
+  if (P) {
+    if (!P.dragging && Math.hypot(e.clientX - P.x, e.clientY - P.y) > 7) {
+      P.dragging = true;
+      removeFromTray(P.it);
+    }
+    if (P.dragging) P.e = { clientX: e.clientX, clientY: e.clientY };
+    return;
+  }
+  hovered = pickItem(e);
+  canvas.style.cursor = hovered ? 'grab' : (pickSign(e) >= 0 ? 'pointer' : 'default');
+});
+
+function finishPointer() {
+  if (!P) return;
+  if (P.dragging) dropItem(P.it, P.it.cur.x, P.it.cur.z);
+  else { P.it.hop = 0.85; sTap(); }
+  P = null;
+}
+canvas.addEventListener('pointerup', finishPointer);
+canvas.addEventListener('pointercancel', finishPointer);
+canvas.addEventListener('pointerleave', function () { if (!P) hovered = null; });
+
+/* ===================== 幽灵手示范 ===================== */
+var ghost = { off: false, t: 0 }, handEl = $('#hand');
+function updateGhost(dt) {
+  if (ghost.off || intro.t < 1.5) { handEl.style.opacity = 0; return; }
+  ghost.t = (ghost.t + dt) % 2.5;
+  var a = toScreen(IMAP.r_box_L.cur.clone().setY(BASE + 0.25));
+  var b = toScreen(new THREE.Vector3(TRAY_X[0], BASE + 0.2, TRAY_Z));
+  var u = Math.min(1, Math.max(0, (ghost.t - 0.45) / 1.35));
+  var e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+  var x = a.x + (b.x - a.x) * e, y = a.y + (b.y - a.y) * e - Math.sin(e * Math.PI) * 55;
+  handEl.style.opacity = ghost.t < 2.15 ? 0.95 : 0;
+  handEl.style.transform = 'translate(' + (x - 20) + 'px,' + (y - 6) + 'px) scale(' + (ghost.t < 0.45 || ghost.t > 1.8 ? 1 : 0.9) + ')';
+}
+
+/* ===================== 老师演示 ===================== */
+var demo = null;
+var DEMO = [
+  ['mode', 'color'], ['wait', 0.4],
+  ['fly', 'r_box_L'], ['fly', 'y_sph_L'], ['fly', 'b_cyl_L'], ['wait', 1.2],
+  ['mode', 'shape'], ['wait', 0.8],
+  ['fly', 'r_box_L'], ['fly', 'b_cyl_L'], ['fly', 'y_sph_L'], ['wait', 1.5], ['end']
+];
+function setBtnLbl(sel, txt) { var el = document.querySelector(sel + ' .tbtn-lbl'); if (el) el.textContent = txt; else $(sel).textContent = txt; }
+function startDemo() { dismissCues(); resetAll(true); demo = { i: 0, t: 0 }; ghost.off = true; $('#demoBtn').classList.add('on'); setBtnLbl('#demoBtn', '■ 停止'); }
+function stopDemo() { if (!demo) return; demo = null; ITEMS.forEach(function (it) { it.flying = null; }); $('#demoBtn').classList.remove('on'); setBtnLbl('#demoBtn', '▶ 演示'); }
+function stepDemo(dt) {
+  if (!demo) return;
+  var s = DEMO[demo.i]; demo.t += dt;
+  if (!s || s[0] === 'end') { stopDemo(); return; }
+  if (s[0] === 'wait') { if (demo.t >= s[1]) { demo.i++; demo.t = 0; } return; }
+  if (s[0] === 'mode') { switchMode(s[1], false); demo.i++; demo.t = 0; return; }
+  if (s[0] === 'fly') {
+    var it = IMAP[s[1]];
+    if (!demo.started) {
+      demo.started = true;
+      removeFromTray(it);
+      var ti = expectedTrayIndex(it, curMode);
+      it.flying = { from: it.cur.clone(), to: new THREE.Vector3(TRAY_X[ti], BASE + 0.15, TRAY_Z), t: 0, ti: ti };
+    }
+    if (!it.flying) { demo.started = false; demo.i++; demo.t = 0; }
+  }
+}
+
+/* ===================== 开场 ===================== */
+var intro = { t: 0, done: false };
+function introSkip() {
+  if (intro.t < 1.5) intro.t = 1.5;
+  board.scale.set(1, 1, 1); trays.forEach(function (tr) { tr.g.scale.setScalar(1); });
+  ITEMS.forEach(function (it) { it.pop = 1; });
+}
+function backOut(t) { var c = 1.7; t = Math.min(1, Math.max(0, t)); return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); }
+function updateIntro(dt) {
+  if (intro.done) return;
+  if (!intro.t0) intro.t0 = performance.now();
+  intro.t = Math.max(intro.t + dt, (performance.now() - intro.t0) / 1000 * 1.4);
+  var t = intro.t;
+  var lift = Math.min(1, Math.max(0, (t - 0.2) / 0.65));
+  figCard.position.y = 0.012 + lift * 1.6;
+  figCard.material.opacity = 1 - lift;
+  figCard.visible = lift < 1;
+  board.scale.set(1, Math.max(0.01, backOut((t - 0.3) / 0.5)), 1);
+  trays.forEach(function (tr, i) { tr.g.scale.setScalar(Math.max(0.001, backOut((t - 0.45 - i * 0.06) / 0.5))); });
+  ITEMS.forEach(function (it, i) { it.pop = Math.max(0.001, backOut((t - 0.62 - i * 0.04) / 0.45)); });
+  if (t >= 3.0) {
+    board.scale.set(1, 1, 1); trays.forEach(function (tr) { tr.g.scale.setScalar(1); });
+    ITEMS.forEach(function (it) { it.pop = 1; });
+    intro.done = true;
+  }
+}
+
+/* ===================== 重来 ===================== */
+function resetAll(keepDemo) {
+  if (!keepDemo) stopDemo();
+  stopVoice(); hideCelebrate(); celebrated = false; resetQuiz();
+  found = {}; foundN = 0; kinds = { color: false, size: false, shape: false };
+  $('#ntList').innerHTML = ''; $('#ntCount').textContent = '0';
+  document.querySelectorAll('.stamp').forEach(function (s) { s.classList.remove('lit'); });
+  switchMode('color', true);
+}
+
+/* ===================== 主循环 ===================== */
+var last = performance.now();
+function frame(t) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (t - last) / 1000)); last = t; now = t / 1000;
+  updateIntro(dt);
+  stepDemo(dt);
+
+  // 托盘翻转路牌 & 高亮 & 轻晃
+  var hoverTray = -1;
+  if (P && P.dragging && P.e) {
+    var pp = planePoint(P.e, BASE + 0.72);
+    if (pp) P.it.target.set(THREE.MathUtils.clamp(pp.x, BOARD.x0 + 0.25, BOARD.x1 - 0.25), BASE + 0.72, THREE.MathUtils.clamp(pp.z, BOARD.z0 + 0.25, BOARD.z1 - 0.25));
+    for (var ti = 0; ti < trays.length; ti++) {
+      if (Math.abs(P.it.cur.x - trays[ti].x) < 1.15 && Math.abs(P.it.cur.z - trays[ti].z) < 1.0) hoverTray = ti;
+    }
+  }
+
+  trays.forEach(function (tr, i) {
+    if (tr.signPop > 0) tr.signPop = Math.max(0, tr.signPop - dt * 3.5);
+    if (tr.flipT < 1) {
+      var prev = tr.flipT;
+      tr.flipT = Math.min(1, tr.flipT + dt * 3.2);
+      if (prev < 0.5 && tr.flipT >= 0.5 && tr.nextTex) {
+        tr.signFaceMat.map = tr.nextTex; tr.signFaceMat.needsUpdate = true; tr.nextTex = null;
+      }
+      tr.signPivot.rotation.y = tr.flipT * Math.PI * 2;
+      var sc = 1 + Math.sin(tr.flipT * Math.PI) * 0.22;
+      tr.signPivot.scale.setScalar(sc);
+    } else {
+      tr.signPivot.rotation.y = 0;
+      tr.signPivot.scale.setScalar(1 + Math.sin(tr.signPop * Math.PI) * 0.16);
+    }
+    if (tr.shakeT > 0) {
+      tr.shakeT = Math.max(0, tr.shakeT - dt * 3.2);
+      tr.g.position.x = tr.x + Math.sin(tr.shakeT * Math.PI * 6) * 0.14 * tr.shakeT;
+    } else tr.g.position.x = tr.x;
+
+    if (tr.okFlash > 0) tr.okFlash = Math.max(0, tr.okFlash - dt * 1.8);
+    if (tr.hintFlash > 0) tr.hintFlash = Math.max(0, tr.hintFlash - dt * 1.1);
+
+    var op = 0;
+    if (tr.okFlash > 0) { tr.glowMat.color.setHex(0x22c55e); op = tr.okFlash * 0.85; }
+    else if (tr.hintFlash > 0) { tr.glowMat.color.setHex(0xffa826); op = (0.45 + 0.45 * Math.sin(now * 14)) * Math.min(1, tr.hintFlash); }
+    else if (hoverTray === i) { tr.glowMat.color.setHex(0xffb23c); op = 0.72; }
+    tr.glowMat.opacity += (op - tr.glowMat.opacity) * 0.25;
+  });
+
+  // 物品运动
+  var kk = 1 - Math.exp(-15 * dt);
+  ITEMS.forEach(function (it) {
+    if (it.flying) {
+      var f = it.flying; f.t += dt / 0.65;
+      var u = Math.min(1, f.t), e = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+      it.cur.lerpVectors(f.from, f.to, e);
+      it.cur.y += Math.sin(u * Math.PI) * 1.05;
+      if (u >= 1) { var ti = f.ti; it.flying = null; dropItem(it, TRAY_X[ti], TRAY_Z); }
+    } else {
+      it.cur.lerp(it.target, P && P.it === it && P.dragging ? 1 - Math.exp(-22 * dt) : kk);
+    }
+    if (it.hop > 0) it.hop = Math.max(0, it.hop - dt * 3.2);
+    var hv = (hovered === it && !P) ? 1 : 0; it.hover += (hv - it.hover) * 0.25;
+    it.g.position.set(it.cur.x, it.cur.y + Math.sin(it.hop * Math.PI) * 0.35 + it.hover * 0.08, it.cur.z);
+    it.body.scale.setScalar(it.pop);
+
+    var showL = it.hover > 0.45 || (P && P.it === it);
+    if (showL) {
+      var sp = toScreen(it.cur.clone().setY(it.cur.y + it.h + 0.22));
+      it.lbl.style.transform = 'translate(' + sp.x + 'px,' + sp.y + 'px) translate(-50%,-100%)';
+    }
+    it.lbl.classList.toggle('show', !!showL);
+  });
+
+  updateGhost(dt);
+  $('#verbs').style.opacity = actions > 8 ? 0.35 : 1;
+  renderer.render(scene, camera);
+}
+
+/* ===================== 按钮与小问答 ===================== */
+$('#voiceBtn').addEventListener('click', function () {
+  audio(); introSkip(); dismissCues();
+  if (!voiceOn || lastVoiceGuideKey !== curGuideKey) {
+    welcomeSpoken = true; voiceOn = true; lastVoiceGuideKey = curGuideKey;
+    $('#voiceBtn').classList.add('on'); setBtnLbl('#voiceBtn', '🔊 语音');
+    pulseGuideTarget();
+    speak(curGuideSpeech, true);
+    return;
+  }
+  voiceOn = false;
+  $('#voiceBtn').classList.remove('on');
+  setBtnLbl('#voiceBtn', '🔇 静音');
+  stopVoice();
+});
+$('#guideBar').addEventListener('click', function () {
+  audio(); introSkip(); dismissCues();
+  welcomeSpoken = true; voiceOn = true; lastVoiceGuideKey = curGuideKey;
+  $('#voiceBtn').classList.add('on'); setBtnLbl('#voiceBtn', '🔊 语音');
+  pulseGuideTarget();
+  speak(curGuideSpeech, true);
+});
+document.querySelectorAll('#quizOpts .qopt').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    audio();
+    var fb = $('#quizFb');
+    if (btn.getAttribute('data-ok') === '1') {
+      quizSolved = true;
+      document.querySelectorAll('#quizOpts .qopt').forEach(function (b) { b.classList.remove('wrong'); });
+      btn.classList.add('ok');
+      fb.classList.add('ok');
+      fb.textContent = '🌸 太棒了！获得本课小红花！长方体、圆柱和圆球都是不同的形状哦！';
+      sWin();
+      saveProgress('k1a-02', true);
+      speak('太棒了！获得本课小红花！长方体、圆柱和圆球都是不同的形状，所以要按形状来分！', true);
+    } else if (!quizSolved) {
+      btn.classList.remove('wrong'); void btn.offsetWidth; btn.classList.add('wrong');
+      fb.classList.remove('ok');
+      fb.textContent = '再想想哦～长方体、圆柱和圆球长得不一样，是不同的什么呢？';
+      sNudge();
+      speak('再想想哦，长方体、圆柱和圆球长得不一样，应该按什么标准来分呢？', true);
+    }
+  });
+});
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  $('#ntTog').textContent = c ? '展开' : '收起';
+});
+$('#celKeep').addEventListener('click', hideCelebrate);
+$('#celAgain').addEventListener('click', function () { resetAll(false); });
+document.querySelectorAll('.mbtn').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    audio(); stopDemo(); introSkip(); dismissCues();
+    switchMode(btn.getAttribute('data-m'), false);
+  });
+});
+$('#demoBtn').addEventListener('click', function () { audio(); introSkip(); dismissCues(); if (demo) stopDemo(); else startDemo(); });
+$('#resetBtn').addEventListener('click', function () { resetAll(false); });
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () { return { triangles: renderer.info.render.triangles, pixelRatio: renderer.getPixelRatio(), found: foundN, mode: curMode, kinds: kinds, sorted: getSortedCount(), celebrated: celebrated }; },
+  startDemo: startDemo
+};
+
+updateGuide(false);
+fit();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第12课 纸桥制作与改进 · 真剪真折拖硬币台</title>
+<style>
+:root{--accent:#e56d17;--ink:#2a2218;--line:#e4d5ba;--card:rgba(255,253,248,.94);--ok:#16a34a}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#8f643e;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.46em;color:#7a6a52;font-weight:500}
+body.no-py rt{display:none}
+
+#hudTL{position:fixed;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:10px;
+  padding:7px 14px 7px 9px;border-radius:16px;background:var(--card);border:1.5px solid var(--line);
+  box-shadow:0 4px 16px rgba(60,36,12,.14)}
+#backBtn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:#5c4b34;font-size:18px;font-weight:900}
+#backBtn:hover{border-color:var(--accent);color:var(--accent)}
+.hd-t{font-size:16px;font-weight:900;line-height:1.5}
+.hd-sub{font-size:11.5px;color:#7b6c56;font-weight:700}
+
+#guideBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:6;
+  max-width:min(450px,calc(100vw - 640px));display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:15px;background:rgba(255,250,240,.96);
+  border:2px solid #f08a24;box-shadow:0 6px 18px rgba(130,68,12,.16);
+  font-size:13.5px;font-weight:800;color:#753a07;cursor:pointer;line-height:1.4}
+#guideBar:active{transform:translateX(-50%) scale(.98)}
+#guideBar.pulse{animation:guidePop .45s ease}
+@keyframes guidePop{0%{transform:translateX(-50%) scale(.94)}50%{transform:translateX(-50%) scale(1.03)}100%{transform:translateX(-50%) scale(1)}}
+
+#hudTR{position:fixed;top:12px;right:12px;z-index:7;display:flex;align-items:center;gap:6px}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:38px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);
+  background:var(--card);font-size:13.5px;font-weight:800;color:#4a3c28;cursor:pointer;
+  box-shadow:0 3px 0 #d9c8ab;transition:all .14s}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:#b8500a;color:#fff;box-shadow:0 3px 0 #b8500a}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#ffedd5;border:1.5px solid var(--accent);color:#b44908;font-size:10.5px;font-weight:900;
+  white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(229,109,23,.24);
+  animation:cuePop 1.6s ease-in-out infinite;transition:opacity .25s}
+body.interacted .entry-cue{opacity:0;animation:none}
+@keyframes cuePop{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+
+#notes{position:fixed;top:60px;right:12px;z-index:6;width:224px;padding:9px 11px;border-radius:15px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 6px 18px rgba(60,36,12,.12)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+.nt-title{font-size:13.5px;font-weight:900}
+.nt-cnt{font-size:12.5px;font-weight:900;color:var(--accent)}
+.nt-tog{padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:11px;font-weight:800;color:#6c5c45;cursor:pointer}
+.stamps{display:flex;gap:4px;margin-bottom:6px}
+.st{flex:1;text-align:center;padding:3px 2px;border-radius:8px;font-size:11px;font-weight:800;
+  border:1.5px dashed #d7c5a4;color:#9b8a70;background:#faf4e8;transition:all .2s;line-height:1.4}
+.st.lit{border-style:solid;border-color:var(--accent);background:#fff2df;color:#b8500a;animation:stPop .4s ease}
+@keyframes stPop{0%{transform:scale(.75)}60%{transform:scale(1.1)}100%{transform:scale(1)}}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList{display:none}
+.stk{padding:5px 8px;border-radius:10px;background:#fff;border:1px solid #ece0c9;font-size:12px;font-weight:700;line-height:1.4}
+
+/* 左中承重仪表卡 */
+#loadCard{position:fixed;left:12px;top:82px;z-index:5;width:194px;padding:9px 11px;border-radius:15px;
+  background:rgba(255,252,244,.94);border:1.5px solid var(--line);box-shadow:0 6px 16px rgba(60,36,12,.12)}
+.lc-h{font-size:12.5px;font-weight:900;color:#6f4518;display:flex;justify-content:space-between;align-items:center}
+.lc-num{font-size:22px;font-weight:900;color:var(--accent);margin:3px 0}
+.lc-sub{font-size:11.5px;font-weight:800;color:#5c5040;line-height:1.45}
+.lc-bar-bg{height:9px;border-radius:99px;background:#efe6d4;overflow:hidden;margin:6px 0 4px}
+.lc-bar{height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#22c55e,#eab308,#ef4444);transition:width .25s}
+.lc-stat{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:900;background:#ecfdf3;color:#15803d;border:1px solid #86efac}
+.lc-stat.warn{background:#fef9c3;color:#a16207;border-color:#fde047}
+.lc-stat.fail{background:#fef2f2;color:#b91c1c;border-color:#fca5a5}
+
+/* 工程诊断对比横幅 */
+#diagBanner{position:fixed;left:50%;bottom:84px;transform:translateX(-50%) scale(.9);z-index:7;
+  display:none;align-items:center;gap:10px;padding:8px 14px;border-radius:15px;
+  background:linear-gradient(135deg,#ecfdf5,#fffbeb);border:2px solid #16a34a;
+  box-shadow:0 10px 26px rgba(22,101,52,.2);font-size:12.5px;font-weight:800;color:#14532d;white-space:nowrap}
+#diagBanner.show{display:flex;animation:diagIn .35s ease forwards}
+@keyframes diagIn{from{opacity:0;transform:translateX(-50%) translateY(10px) scale(.94)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+.diag-chip{padding:3px 8px;border-radius:8px;background:#fff;border:1px solid #bbf7d0}
+.diag-chip.hi{background:#dcfce7;border-color:#16a34a;color:#15803d;font-weight:900}
+
+#labels{position:fixed;inset:0;pointer-events:none;z-index:8}
+.cue3d{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:6px 14px;border-radius:99px;
+  background:#fff7ed;border:2.5px solid #ea580c;color:#9a3412;font-size:13.5px;font-weight:900;white-space:nowrap;
+  box-shadow:0 6px 18px rgba(234,88,12,.34);animation:cueBob 1.15s ease-in-out infinite;display:none;pointer-events:none}
+.cue3d.show{display:block}
+.cue3d.urgent{background:#fef2f2;border-color:#dc2626;color:#991b1b;box-shadow:0 6px 20px rgba(220,38,38,.36)}
+@keyframes cueBob{0%,100%{transform:translate(-50%,-100%) translateY(0)}50%{transform:translate(-50%,-100%) translateY(-6px)}}
+.float-msg{position:absolute;left:0;top:0;transform:translate(-50%,-100%);font-size:18px;font-weight:900;
+  color:#c2560c;text-shadow:0 2px 0 #fff,0 0 8px #fff;white-space:nowrap;animation:fUp 1.5s ease-out forwards}
+.float-msg.ok{color:#15803d}
+.float-msg.bad{color:#dc2626}
+@keyframes fUp{0%{opacity:0;transform:translate(-50%,-40%) scale(.7)}18%{opacity:1;transform:translate(-50%,-100%) scale(1.05)}100%{opacity:0;transform:translate(-50%,-190%) scale(1)}}
+
+/* 底部极简 3 桥面结构图标切换坞（严格仅 3 个按钮！） */
+#dock{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:6;
+  display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:18px;
+  background:rgba(255,252,246,.96);border:1.5px solid var(--line);box-shadow:0 8px 22px rgba(60,36,12,.16)}
+.cmp-card{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:12px;
+  border:1.5px solid #dfd1b8;background:#fff;font:inherit;font-size:14px;font-weight:900;
+  color:#3d3022;cursor:pointer;transition:all .14s}
+.cmp-card:hover{border-color:#2563eb}
+.cmp-card.on{background:#e8f1ff;border-color:#2563eb;color:#1d4ed8;box-shadow:0 3px 0 #93c5fd}
+.cmp-card.best.on{background:#ecfdf5;border-color:#16a34a;color:#15803d;box-shadow:0 3px 0 #86efac}
+.cmp-card.glow{animation:btnPulse 1.2s ease-in-out infinite;border-color:#e56d17}
+@keyframes btnPulse{0%,100%{box-shadow:0 0 0 0 rgba(229,109,23,.55)}50%{box-shadow:0 0 0 9px rgba(229,109,23,0)}}
+
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+#winToast{position:fixed;inset:0;z-index:35;display:none;place-items:center;background:rgba(36,24,10,.34);padding:16px}
+#winToast.show{display:grid}
+.win-card{width:min(458px,100%);max-height:86vh;overflow-y:auto;background:#fffdf8;
+  border:2.5px solid var(--accent);border-radius:22px;padding:18px 20px;text-align:center;
+  box-shadow:0 20px 50px rgba(40,22,4,.28)}
+.win-concl{margin:10px 0;padding:10px 12px;border-radius:13px;background:#fff8eb;border:1.5px solid #f2cf9b;
+  text-align:left;font-size:13.5px;line-height:1.6;color:#5a3309;font-weight:700}
+.win-quiz{margin:10px 0;padding:10px 12px;border-radius:13px;background:#f8fafc;border:1.5px solid #d9e2ec;text-align:left}
+.win-quiz h4{margin:0 0 8px;font-size:13.5px;color:#2b3a4a}
+.qopts{display:flex;flex-direction:column;gap:7px}
+.qopt{padding:8px 11px;border-radius:11px;border:1.5px solid #d9d0be;background:#fff;
+  font:inherit;font-size:13px;font-weight:800;text-align:left;cursor:pointer;transition:all .14s;color:#2a2218}
+.qopt:hover{border-color:var(--accent);background:#fff9f0}
+.qopt.ok{border-color:#2b8a3e;background:#ebfbee;color:#2b8a3e}
+.qopt.bad{border-color:#e03131;background:#fff5f5;color:#c92a2a}
+.qfb{margin-top:7px;font-size:12.5px;font-weight:800;min-height:18px}
+.win-acts{display:flex;justify-content:center;gap:10px;margin-top:12px}
+
+@media (max-width:1120px){
+  #guideBar{top:62px;left:12px;transform:none;max-width:calc(100vw - 260px)}
+  #loadCard{top:114px;width:176px}
+}
+@media (max-width:760px){
+  #loadCard{display:none}
+  #diagBanner{bottom:86px;font-size:11px;flex-wrap:wrap;justify-content:center;max-width:94vw;white-space:normal}
+  #notes{width:190px;top:56px}
+  .cmp-card{font-size:12.5px;padding:6px 11px}
+}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="labels">
+  <div class="cue3d" id="targetCue">✂️ 拖或点剪刀剪红线</div>
+</div>
+<canvas id="confetti"></canvas>
+
+<div id="hudTL">
+  <a id="backBtn" href="../index.html" title="返回书包">‹</a>
+  <div>
+    <div class="hd-t" data-py="dì kè zhǐ qiáo zhì zuò yǔ gǎi jìn">第12课 纸桥制作与改进</div>
+    <div class="hd-sub">活页 · 课本第 54 页「真剪真折拖硬币台」</div>
+  </div>
+</div>
+
+<div id="guideBar" title="点我重听当前步骤">
+  <span id="guideIco">✂️</span>
+  <span id="guideTxt">第1步：拖动桌左的3D橙柄剪刀，剪开绿垫上两张A4纸的红虚线！</span>
+</div>
+
+<div id="hudTR">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<aside id="loadCard">
+  <div class="lc-h"><span>🟡 硬币承重仪</span><span id="bridgeTag">造桥中</span></div>
+  <div class="lc-num" id="coinCountTxt">0 枚</div>
+  <div class="lc-bar-bg"><div class="lc-bar" id="loadBar"></div></div>
+  <div class="lc-sub">拖左盘1角硬币上桥 · 目标 ≥ 2 枚</div>
+  <div style="margin-top:5px"><span class="lc-stat" id="loadStatus">亲手剪折 0 / 4 步</span></div>
+</aside>
+
+<aside id="notes">
+  <div class="nt-head">
+    <span class="nt-title" data-py="wǒ de fā xiàn">我的发现</span>
+    <span class="nt-cnt" id="ntCnt">0</span>
+    <button class="nt-tog" id="ntTog" type="button">收起</button>
+  </div>
+  <div class="stamps">
+    <span class="st" id="st1" data-py="qīn shǒu zào qiáo">亲手造桥</span>
+    <span class="st" id="st2" data-py="yìng bì shí cè">硬币实测</span>
+    <span class="st" id="st3" data-py="jiā gù gǎi jìn">加固改进</span>
+  </div>
+  <div id="ntList"></div>
+</aside>
+
+<div id="diagBanner">
+  <span>📊 三桥承重对比：</span>
+  <span class="diag-chip">📄 平纸：0枚塌</span>
+  <span>vs</span>
+  <span class="diag-chip">📐 凹槽：稳托4枚</span>
+  <span>vs</span>
+  <span class="diag-chip hi">🌊 瓦楞拱：稳托8枚！</span>
+</div>
+
+<div id="dock">
+  <button class="cmp-card" data-struct="flat" type="button">📄 <span data-py="píng zhǐ">平纸</span></button>
+  <button class="cmp-card on" data-struct="u" type="button">📐 <span data-py="āo cáo">凹槽</span></button>
+  <button class="cmp-card best" data-struct="reinforced" type="button">🌊 <span data-py="wǎ léng gǒng">瓦楞拱</span></button>
+</div>
+
+<div id="winToast">
+  <div class="win-card">
+    <div style="font-size:38px">🏆</div>
+    <h3 style="margin:4px 0" data-py="tài bàng la zhǐ qiáo chéng zhòng dà shī">太棒啦！纸桥承重大师！</h3>
+    <div class="win-concl">
+      <b>✨ 科学小结论：</b>平纸 0 枚即塌 vs 凹槽桥稳托 4 枚 vs 瓦楞拱稳托 8 枚！改变纸的形状（折起立边做凹槽、加波浪瓦楞和拱形内撑）能大大增强纸桥的抗弯曲和承重能力，测试后继续改进是工程师的好方法。
+    </div>
+    <div class="win-quiz">
+      <h4>💡 考考你 · 答对领小红花 🌸</h4>
+      <div style="font-size:13px;font-weight:800;margin-bottom:8px">如果只多给你一张A4纸，怎样最能增强纸桥的承重能力？</div>
+      <div class="qopts" id="qOpts">
+        <button class="qopt" type="button" data-ok="1">🌊 把这张纸折成波浪瓦楞或纸拱，垫在桥面下面支撑</button>
+        <button class="qopt" type="button" data-hint="平铺的纸很容易弯曲，折成波浪或拱形抗弯能力强得多哦！">📄 把这张纸平平地铺在桥面上，一点也不折</button>
+        <button class="qopt" type="button" data-hint="把桥墩剪短不能增强桥面的抗弯曲能力哦，再想想！">✂️ 不用这张纸，只把桥墩剪得更短</button>
+      </div>
+      <div class="qfb" id="qFb"></div>
+    </div>
+    <div class="win-acts">
+      <button class="tbtn" id="winKeepBtn" type="button">继续测试</button>
+      <button class="tbtn on" id="winAgainBtn" type="button">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js"></script>
+<script src="../vendor/voice.js"></script>
+<script>
+(function () {
+'use strict';
+
+try { sessionStorage.setItem('xk_last_vol', 'k1b'); } catch (e) {}
+
+var LESSON_ID = 'k1b-12';
+var BOOK_PROGRESS_KEY = 'xk_k1b_progress';
+
+var $ = function (s) { return document.querySelector(s); };
+var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
+var HAN = /[\u3400-\u9fff]/;
+var pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function ruby(text, py) {
+  if (!py) return esc(text);
+  var syl = py.trim().split(/\s+/), i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) {
+      var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; }
+      out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>';
+    } else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+$$('[data-py]').forEach(function (el) { el.innerHTML = ruby(el.textContent, el.dataset.py); });
+
+$('#backBtn').addEventListener('click', function () {
+  try { sessionStorage.setItem('xk_last_vol', 'k1b'); } catch (e) {}
+});
+
+/* ===== 语音与合成音效 ===== */
+var voiceOn = true;
+function stopVoice() {
+  if (window.__xkVoice) window.__xkVoice.stop();
+  else if (window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
+}
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
+  if (!('speechSynthesis' in window)) return;
+  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+}
+
+var audioCtx = null;
+function playTone(freq, dur, type, vol, delay) {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    var t0 = audioCtx.currentTime + (delay || 0);
+    var osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0.001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.12, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + (dur || 0.18));
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(t0); osc.stop(t0 + (dur || 0.18) + 0.02);
+  } catch (e) {}
+}
+function sfxSnip() { playTone(920, 0.06, 'square', 0.06); playTone(720, 0.07, 'square', 0.05, 0.08); playTone(950, 0.06, 'square', 0.05, 0.18); }
+function sfxFold() { playTone(460, 0.1, 'triangle', 0.1); playTone(620, 0.12, 'triangle', 0.09, 0.05); }
+function sfxCoin() { playTone(1760, 0.1, 'sine', 0.11); playTone(2480, 0.14, 'sine', 0.08, 0.035); }
+function sfxCollapse() { playTone(240, 0.18, 'sawtooth', 0.08); playTone(165, 0.3, 'sawtooth', 0.08, 0.1); }
+function sfxWin() { [523, 659, 784, 1046].forEach(function (f, i) { playTone(f, 0.24, 'triangle', 0.13, i * 0.09); }); }
+
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem(BOOK_PROGRESS_KEY) || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem(BOOK_PROGRESS_KEY, JSON.stringify(d));
+  } catch (e) {}
+}
+
+var cfCv = $('#confetti'), cfCtx = cfCv.getContext('2d'), cfList = [];
+function launchConfetti() {
+  cfCv.width = window.innerWidth; cfCv.height = window.innerHeight;
+  cfList = [];
+  var cols = ['#f97316', '#facc15', '#22c55e', '#3b82f6', '#ec4899', '#a855f7'];
+  for (var i = 0; i < 95; i++) {
+    cfList.push({
+      x: cfCv.width * (0.15 + Math.random() * 0.7), y: -20 - Math.random() * 140,
+      vx: (Math.random() - 0.5) * 210, vy: 110 + Math.random() * 210,
+      w: 7 + Math.random() * 6, h: 5 + Math.random() * 5,
+      r: Math.random() * 6.28, vr: (Math.random() - 0.5) * 9,
+      c: cols[i % cols.length], life: 3.4
+    });
+  }
+}
+
+/* ===== Three.js 场景（离线暖色手工台） ===== */
+var cv = $('#cv');
+var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color('#8f643e');
+var camera = new THREE.PerspectiveCamera(36, 16 / 9, 0.1, 80);
+camera.position.set(0.0, 5.95, 9.85);
+camera.lookAt(0.0, 0.32, 0.22);
+
+scene.add(new THREE.HemisphereLight('#fff5e4', '#6a4829', 0.72));
+var sunL = new THREE.DirectionalLight('#fff2da', 0.64);
+sunL.position.set(5, 10, 7);
+sunL.castShadow = true;
+sunL.shadow.mapSize.set(1024, 1024);
+sunL.shadow.camera.left = -7; sunL.shadow.camera.right = 7;
+sunL.shadow.camera.top = 6; sunL.shadow.camera.bottom = -6;
+scene.add(sunL);
+
+function toon(col, opts) { return new THREE.MeshToonMaterial(Object.assign({ color: col }, opts || {})); }
+
+var live = new THREE.Group();
+scene.add(live);
+
+function makeDeskTex() {
+  var c = document.createElement('canvas'); c.width = 512; c.height = 256;
+  var g = c.getContext('2d');
+  g.fillStyle = '#a87447'; g.fillRect(0, 0, 512, 256);
+  for (var y = 0; y < 256; y += 32) {
+    g.fillStyle = (y % 64 === 0) ? 'rgba(92,52,20,0.12)' : 'rgba(255,232,195,0.06)';
+    g.fillRect(0, y, 512, 30);
+    g.fillStyle = 'rgba(72,40,14,0.22)';
+    g.fillRect(0, y + 30, 512, 2);
+  }
+  return new THREE.CanvasTexture(c);
+}
+
+function makeCutMatTex() {
+  var c = document.createElement('canvas'); c.width = 512; c.height = 320;
+  var g = c.getContext('2d');
+  g.fillStyle = '#266145'; g.fillRect(0, 0, 512, 320);
+  g.strokeStyle = 'rgba(220,250,235,0.20)'; g.lineWidth = 1;
+  for (var x = 0; x <= 512; x += 24) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, 320); g.stroke(); }
+  for (var y = 0; y <= 320; y += 24) { g.beginPath(); g.moveTo(0, y); g.lineTo(512, y); g.stroke(); }
+  g.strokeStyle = 'rgba(232,255,242,0.72)'; g.lineWidth = 3;
+  g.strokeRect(12, 12, 488, 296);
+  g.fillStyle = 'rgba(232,255,242,0.88)'; g.font = 'bold 17px sans-serif';
+  g.fillText('3D 纸桥制作与硬币承重工作垫', 26, 38);
+  return new THREE.CanvasTexture(c);
+}
+
+function makeCoinTex() {
+  var c = document.createElement('canvas'); c.width = 128; c.height = 128;
+  var g = c.getContext('2d');
+  var gr = g.createRadialGradient(48, 42, 8, 64, 64, 62);
+  gr.addColorStop(0, '#f1f5f9'); gr.addColorStop(0.65, '#a8b5c6'); gr.addColorStop(1, '#64748b');
+  g.fillStyle = gr; g.beginPath(); g.arc(64, 64, 62, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = '#334155'; g.lineWidth = 6; g.beginPath(); g.arc(64, 64, 53, 0, Math.PI * 2); g.stroke();
+  g.fillStyle = '#1e293b'; g.font = 'bold 48px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText('1角', 64, 66);
+  return new THREE.CanvasTexture(c);
+}
+var coinTex = makeCoinTex();
+
+/* 温润深原木桌面 + 深绿切割工作垫（居中偏右一点，左侧3大可拖工具内收进1280×800安全区，绝不切边！） */
+var HIT_MAT = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false });
+var deskTex = makeDeskTex();
+var desk = new THREE.Mesh(new THREE.BoxGeometry(13.2, 0.28, 7.2), [
+  toon('#875832'), toon('#875832'), new THREE.MeshToonMaterial({ map: deskTex }),
+  toon('#734826'), toon('#875832'), toon('#875832')
+]);
+desk.position.set(0, -0.14, 0.22); desk.receiveShadow = true;
+live.add(desk);
+
+var MAT_CX = 0.58, MAT_CZ = 0.20;
+var cutMat = new THREE.Mesh(new THREE.BoxGeometry(5.85, 0.05, 3.88), [
+  toon('#1b4732'), toon('#1b4732'), new THREE.MeshToonMaterial({ map: makeCutMatTex() }),
+  toon('#1b4732'), toon('#1b4732'), toon('#1b4732')
+]);
+cutMat.position.set(MAT_CX, 0.025, MAT_CZ); cutMat.receiveShadow = true;
+live.add(cutMat);
+
+/* ===== 桌面左侧三大可拖拽 3D 工具：橙柄剪刀、黄色胶带卷、一角硬币盘（宽松透明优先碰撞体！） ===== */
+var propHits = [];
+
+// 1) 3D 橙柄剪刀（可真实拖拽到红虚线上剪开，也可轻点触发！）
+var toolScis = new THREE.Group();
+var scisHome = new THREE.Vector3(-3.32, 0.12, -1.14);
+toolScis.position.copy(scisHome);
+toolScis.rotation.y = 0.24;
+var scisBladeA = new THREE.Mesh(new THREE.BoxGeometry(1.16, 0.048, 0.15), toon('#cbd5e1'));
+scisBladeA.position.set(0.36, 0.02, 0); scisBladeA.rotation.y = 0.14; scisBladeA.userData = { prop: 'scissors' };
+var scisBladeB = new THREE.Mesh(new THREE.BoxGeometry(1.16, 0.048, 0.15), toon('#94a3b8'));
+scisBladeB.position.set(0.36, 0.052, 0); scisBladeB.rotation.y = -0.14; scisBladeB.userData = { prop: 'scissors' };
+var scisHandA = new THREE.Mesh(new THREE.TorusGeometry(0.19, 0.054, 8, 18), toon('#f97316'));
+scisHandA.rotation.x = Math.PI / 2; scisHandA.position.set(-0.30, 0.04, 0.20); scisHandA.userData = { prop: 'scissors' };
+var scisHandB = new THREE.Mesh(new THREE.TorusGeometry(0.19, 0.054, 8, 18), toon('#f97316'));
+scisHandB.rotation.x = Math.PI / 2; scisHandB.position.set(-0.30, 0.04, -0.20); scisHandB.userData = { prop: 'scissors' };
+var scisHitBox = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.26, 0.82), HIT_MAT);
+scisHitBox.position.set(0.06, 0.12, 0);
+scisHitBox.userData = { prop: 'scissors' };
+toolScis.add(scisBladeA, scisBladeB, scisHandA, scisHandB, scisHitBox);
+live.add(toolScis);
+propHits.push(scisHitBox, scisBladeA, scisBladeB, scisHandA, scisHandB);
+
+// 2) 3D 黄色胶带卷（可真实拖拽到纸桥接口固定，也可轻点触发！）
+var toolTape = new THREE.Group();
+var tapeHome = new THREE.Vector3(-3.32, 0.20, 0.18);
+toolTape.position.copy(tapeHome);
+var tpRing = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.26, 24), toon('#fef08a'));
+tpRing.castShadow = true; tpRing.userData = { prop: 'tape' };
+var tpIn = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.21, 0.28, 18), toon('#b45309'));
+tpIn.userData = { prop: 'tape' };
+var tapeHitBox = new THREE.Mesh(new THREE.CylinderGeometry(0.58, 0.58, 0.30, 16), HIT_MAT);
+tapeHitBox.position.y = 0.10;
+tapeHitBox.userData = { prop: 'tape' };
+toolTape.add(tpRing, tpIn, tapeHitBox);
+live.add(toolTape);
+propHits.push(tapeHitBox, tpRing, tpIn);
+
+// 3) 3D 银色「1角」硬币盘（内收清晰可见，可一枚枚拖上桥或轻点飞上桥！）
+var dishGrp = new THREE.Group();
+var dishPos = new THREE.Vector3(-3.26, 0.08, 1.56);
+dishGrp.position.copy(dishPos);
+var dishBase = new THREE.Mesh(new THREE.CylinderGeometry(0.76, 0.62, 0.12, 28), toon('#d6a86c'));
+dishBase.castShadow = true; dishBase.receiveShadow = true; dishBase.userData = { prop: 'dish' };
+var dishRim = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.045, 8, 28), toon('#8c5828'));
+dishRim.rotation.x = Math.PI / 2; dishRim.position.y = 0.06; dishRim.userData = { prop: 'dish' };
+var dishHitBox = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 0.95, 0.32, 20), HIT_MAT);
+dishHitBox.position.y = 0.14;
+dishHitBox.userData = { prop: 'dish' };
+dishGrp.add(dishBase, dishRim, dishHitBox); propHits.push(dishHitBox, dishBase, dishRim);
+
+var dishCoins = [];
+for (var di = 0; di < 9; di++) {
+  var dc = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.23, 0.23, 0.048, 22),
+    [toon('#64748b'), new THREE.MeshToonMaterial({ map: coinTex }), toon('#64748b')]
+  );
+  var ang = di * 1.25;
+  var rad = di === 0 ? 0.0 : 0.26;
+  dc.position.set(Math.cos(ang) * rad, 0.08 + Math.floor(di / 4) * 0.052, Math.sin(ang) * rad);
+  dc.castShadow = true;
+  dc.userData = { prop: 'dish' };
+  dishGrp.add(dc); propHits.push(dc);
+  dishCoins.push(dc);
+}
+live.add(dishGrp);
+
+// 正在拖拽中的 3D 硬币（跟随手指/鼠标在空中滑行！）
+var dragCoinMesh = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.26, 0.26, 0.056, 24),
+  [toon('#64748b'), new THREE.MeshToonMaterial({ map: coinTex }), toon('#64748b')]
+);
+dragCoinMesh.castShadow = true;
+dragCoinMesh.visible = false;
+live.add(dragCoinMesh);
+
+// 金色呼吸引导光环（自动指向当前最需要操作的 3D 道具或纸张！）
+var guideHalo = new THREE.Mesh(
+  new THREE.RingGeometry(0.68, 0.86, 32),
+  new THREE.MeshBasicMaterial({ color: '#fbbf24', side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
+);
+guideHalo.rotation.x = -Math.PI / 2;
+guideHalo.position.set(scisHome.x, 0.03, scisHome.z);
+live.add(guideHalo);
+
+// 拖拽时的桥面目标高亮圈
+var dropRing = new THREE.Mesh(
+  new THREE.RingGeometry(0.28, 0.38, 28),
+  new THREE.MeshBasicMaterial({ color: '#4ade80', side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
+);
+dropRing.rotation.x = -Math.PI / 2;
+dropRing.visible = false;
+live.add(dropRing);
+
+/* ===== 绿垫工作区容器 ===== */
+var workGrp = new THREE.Group();
+workGrp.position.set(MAT_CX, 0.06, MAT_CZ);
+live.add(workGrp);
+
+var craftGrp = new THREE.Group();
+workGrp.add(craftGrp);
+var craftClickMeshes = [];
+
+/* 高对比卡纸材质与深色折痕线条（绝不惨白刺眼！） */
+var kraftPaperMat = toon('#e6cfa8');
+var kraftShadeMat = toon('#c9a673');
+var flatPaperMat = toon('#c5beb0');
+var flatEdgeMat = toon('#475569');
+var blueDeckMat = toon('#b8dcf8');
+var blueFlangeMat = toon('#5b9ee0');
+var blueCreaseMat = toon('#1d4ed8');
+var beamCardMat = toon('#93c5ec');
+var coralWaveMat = toon('#fb923c');
+var coralArchMat = toon('#ea580c');
+var coralCreaseMat = toon('#9a3412');
+var tapeMat = new THREE.MeshToonMaterial({ color: '#facc15', transparent: true, opacity: 0.86 });
+
+// 步0：待剪的 2 张带红虚线牛皮卡纸
+var rawSheets = new THREE.Group();
+for (var ri = 0; ri < 2; ri++) {
+  var rx = ri === 0 ? -0.92 : 0.92;
+  var rs = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.034, 1.15), kraftPaperMat);
+  rs.position.set(rx, 0.03, -0.35); rs.castShadow = true; rs.userData = { craftTarget: 1 };
+  rawSheets.add(rs); craftClickMeshes.push(rs);
+  for (var di2 = -0.45; di2 <= 0.46; di2 += 0.22) {
+    var dash = new THREE.Mesh(new THREE.BoxGeometry(0.048, 0.042, 0.14), toon('#dc2626'));
+    dash.position.set(rx, 0.036, -0.35 + di2); dash.userData = { craftTarget: 1 };
+    rawSheets.add(dash); craftClickMeshes.push(dash);
+  }
+}
+var rawHit1 = new THREE.Mesh(new THREE.BoxGeometry(3.85, 0.46, 1.50), HIT_MAT);
+rawHit1.position.set(0, 0.18, -0.35); rawHit1.userData = { craftTarget: 1 };
+rawSheets.add(rawHit1); craftClickMeshes.push(rawHit1);
+craftGrp.add(rawSheets);
+
+// 步1完成：4 根 V 形对折牛皮纸桥墩（排列在绿垫后排）
+var step1Piers = new THREE.Group();
+craftGrp.add(step1Piers);
+[[-1.35, -0.95], [-0.45, -0.95], [0.45, -0.95], [1.35, -0.95]].forEach(function (pos) {
+  var vStrip = new THREE.Group();
+  vStrip.position.set(pos[0], 0.14, pos[1]);
+  var a = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.055, 0.14), kraftPaperMat);
+  a.position.set(-0.14, 0, -0.14); a.rotation.y = 0.55; a.castShadow = true; a.userData = { craftTarget: 4 };
+  var b = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.055, 0.14), kraftShadeMat);
+  b.position.set(-0.14, 0, 0.14); b.rotation.y = -0.55; b.castShadow = true; b.userData = { craftTarget: 4 };
+  vStrip.add(a, b);
+  step1Piers.add(vStrip);
+  craftClickMeshes.push(a, b);
+});
+step1Piers.visible = false;
+
+// 步1→步2 待折的 2 张浅蓝长卡纸（点它们啪啪折成长条主梁！）
+var rawBeamsSheets = new THREE.Group();
+[-0.08, 0.56].forEach(function (z) {
+  var sh = new THREE.Mesh(new THREE.BoxGeometry(3.15, 0.034, 0.52), blueDeckMat);
+  sh.position.set(0, 0.035, z); sh.castShadow = true; sh.userData = { craftTarget: 2 };
+  var fl = new THREE.Mesh(new THREE.BoxGeometry(3.12, 0.042, 0.038), blueCreaseMat);
+  fl.position.set(0, 0.038, z); fl.userData = { craftTarget: 2 };
+  rawBeamsSheets.add(sh, fl);
+  craftClickMeshes.push(sh, fl);
+});
+var rawHit2 = new THREE.Mesh(new THREE.BoxGeometry(3.48, 0.46, 1.45), HIT_MAT);
+rawHit2.position.set(0, 0.18, 0.24); rawHit2.userData = { craftTarget: 2 };
+rawBeamsSheets.add(rawHit2); craftClickMeshes.push(rawHit2);
+rawBeamsSheets.visible = false;
+craftGrp.add(rawBeamsSheets);
+
+// 步2完成：2 根紧实长条主梁
+var step2Beams = new THREE.Group();
+craftGrp.add(step2Beams);
+[0.0, 0.42].forEach(function (z) {
+  var bm = new THREE.Mesh(new THREE.BoxGeometry(3.3, 0.11, 0.15), beamCardMat);
+  bm.position.set(0, 0.07, z); bm.castShadow = true; bm.userData = { craftTarget: 4 };
+  step2Beams.add(bm);
+  craftClickMeshes.push(bm);
+});
+step2Beams.visible = false;
+
+// 步2→步3 待折的第 5 张浅蓝卡纸（带两侧 1cm 深蓝折线）
+var rawDeckSheet = new THREE.Group();
+var rdBase = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.034, 1.18), blueDeckMat);
+rdBase.position.set(0, 0.035, 1.24); rdBase.castShadow = true; rdBase.userData = { craftTarget: 3 };
+var rdF1 = new THREE.Mesh(new THREE.BoxGeometry(3.16, 0.042, 0.038), blueCreaseMat);
+rdF1.position.set(0, 0.038, 1.66); rdF1.userData = { craftTarget: 3 };
+var rdF2 = new THREE.Mesh(new THREE.BoxGeometry(3.16, 0.042, 0.038), blueCreaseMat);
+rdF2.position.set(0, 0.038, 0.82); rdF2.userData = { craftTarget: 3 };
+var rawHit3 = new THREE.Mesh(new THREE.BoxGeometry(3.48, 0.46, 1.45), HIT_MAT);
+rawHit3.position.set(0, 0.18, 1.24); rawHit3.userData = { craftTarget: 3 };
+rawDeckSheet.add(rdBase, rdF1, rdF2, rawHit3);
+craftClickMeshes.push(rdBase, rdF1, rdF2, rawHit3);
+rawDeckSheet.visible = false;
+craftGrp.add(rawDeckSheet);
+
+// 步3完成：两边折起 1cm 的淡天蓝凹槽桥面
+var step3Deck = new THREE.Group();
+craftGrp.add(step3Deck);
+var sdBase = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.035, 1.06), blueDeckMat);
+sdBase.position.set(0, 0.04, 1.22); sdBase.castShadow = true; sdBase.userData = { craftTarget: 4 };
+var sdW1 = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.22, 0.045), blueFlangeMat);
+sdW1.position.set(0, 0.13, 1.75); sdW1.userData = { craftTarget: 4 };
+var sdW2 = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.22, 0.045), blueFlangeMat);
+sdW2.position.set(0, 0.13, 0.69); sdW2.userData = { craftTarget: 4 };
+var rawHit4 = new THREE.Mesh(new THREE.BoxGeometry(3.55, 0.50, 2.80), HIT_MAT);
+rawHit4.position.set(0, 0.20, 0.35); rawHit4.userData = { craftTarget: 4 };
+step3Deck.add(sdBase, sdW1, sdW2, rawHit4);
+craftClickMeshes.push(sdBase, sdW1, sdW2, rawHit4);
+step3Deck.visible = false;
+
+/* ===== 成品可弯曲 3D 纸桥（支持 flat / u / reinforced 三种高对比结构） ===== */
+var bridgeGrp = new THREE.Group();
+bridgeGrp.visible = false;
+workGrp.add(bridgeGrp);
+var deckPivotL, deckPivotR, deckRoot, pierRefs = [], beamRefs = [], archRef = null;
+
+var STRUCT_INFO = {
+  flat: { name: '平纸对照桥', maxSafe: 0, deckY: 1.02, bendPerCoin: 0.24 },
+  u: { name: '原版凹槽桥', maxSafe: 4, deckY: 1.04, bendPerCoin: 0.035 },
+  reinforced: { name: '瓦楞拱形加固桥', maxSafe: 8, deckY: 1.08, bendPerCoin: 0.015 }
+};
+
+function buildLiveBridge(structType) {
+  while (bridgeGrp.children.length) bridgeGrp.remove(bridgeGrp.children[0]);
+  pierRefs = []; beamRefs = []; archRef = null;
+
+  var info = STRUCT_INFO[structType];
+  [-1.22, 1.22].forEach(function (x) {
+    [-0.45, 0.45].forEach(function (z) {
+      var pg = new THREE.Group();
+      pg.position.set(x, 0.02, z);
+      var l1 = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.98, 0.22), kraftShadeMat);
+      l1.position.set(-0.04, 0.49, 0); l1.rotation.z = 0.06; l1.castShadow = true;
+      var l2 = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.98, 0.22), kraftPaperMat);
+      l2.position.set(0.04, 0.49, 0); l2.rotation.z = -0.06; l2.castShadow = true;
+      var crease = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.96, 0.24), toon('#8c6239'));
+      crease.position.set(0, 0.49, 0);
+      var tp = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.11, 0.28), tapeMat);
+      tp.position.set(0, 0.92, 0);
+      pg.add(l1, l2, crease, tp);
+      bridgeGrp.add(pg);
+      pierRefs.push({ grp: pg, side: x < 0 ? -1 : 1 });
+    });
+  });
+
+  if (structType !== 'flat') {
+    [-0.45, 0.45].forEach(function (z) {
+      var bm = new THREE.Mesh(new THREE.BoxGeometry(3.48, 0.11, 0.14), beamCardMat);
+      bm.position.set(0, 0.98, z); bm.castShadow = true;
+      bridgeGrp.add(bm);
+      beamRefs.push(bm);
+    });
+  }
+
+  // 第 6 张卡纸折成的暖珊瑚橙 W 形波浪瓦楞 + 拱形内撑
+  if (structType === 'reinforced') {
+    archRef = new THREE.Group();
+    for (var ai = -3; ai <= 3; ai++) {
+      var u = ai / 3.3;
+      var ax = u * 1.18;
+      var ay = 0.56 + (1 - u * u) * 0.44;
+      var seg = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.048, 0.96), coralArchMat);
+      seg.position.set(ax, ay, 0); seg.rotation.z = -u * 0.65; seg.castShadow = true;
+      archRef.add(seg);
+    }
+    for (var zi = -0.42; zi <= 0.43; zi += 0.21) {
+      var w1 = new THREE.Mesh(new THREE.BoxGeometry(3.38, 0.038, 0.16), coralWaveMat);
+      w1.position.set(0, 1.0, zi - 0.045); w1.rotation.x = 0.62;
+      var w2 = new THREE.Mesh(new THREE.BoxGeometry(3.38, 0.038, 0.16), coralArchMat);
+      w2.position.set(0, 1.0, zi + 0.045); w2.rotation.x = -0.62;
+      var ridge = new THREE.Mesh(new THREE.BoxGeometry(3.39, 0.018, 0.02), coralCreaseMat);
+      ridge.position.set(0, 1.04, zi);
+      archRef.add(w1, w2, ridge);
+    }
+    bridgeGrp.add(archRef);
+  }
+
+  deckRoot = new THREE.Group();
+  deckRoot.position.set(0, info.deckY, 0);
+  bridgeGrp.add(deckRoot);
+
+  deckPivotL = new THREE.Group(); deckPivotL.position.set(-1.74, 0, 0);
+  deckPivotR = new THREE.Group(); deckPivotR.position.set(1.74, 0, 0);
+  deckRoot.add(deckPivotL, deckPivotR);
+
+  var activeDeckMat = structType === 'flat' ? flatPaperMat : blueDeckMat;
+
+  function addHalf(parent, dir) {
+    var cx = dir * 0.87;
+    var base = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.04, 1.18), activeDeckMat);
+    base.position.set(cx, 0.02, 0); base.castShadow = true; base.receiveShadow = true;
+    parent.add(base);
+    if (structType === 'flat') {
+      // 平纸清晰深灰边缘线条，直观体现薄薄一张无立边
+      var e1 = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.044, 0.026), flatEdgeMat);
+      e1.position.set(cx, 0.022, 0.585);
+      var e2 = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.044, 0.026), flatEdgeMat);
+      e2.position.set(cx, 0.022, -0.585);
+      var midLine = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.045, 1.16), flatEdgeMat);
+      midLine.position.set(dir * 1.73, 0.022, 0);
+      parent.add(e1, e2, midLine);
+    } else {
+      // 淡天蓝卡纸折起立边 + 深蓝折痕线
+      var w1 = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.24, 0.048), blueFlangeMat);
+      w1.position.set(cx, 0.13, 0.59); w1.castShadow = true;
+      var w2 = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.24, 0.048), blueFlangeMat);
+      w2.position.set(cx, 0.13, -0.59); w2.castShadow = true;
+      var cr1 = new THREE.Mesh(new THREE.BoxGeometry(1.76, 0.026, 0.056), blueCreaseMat);
+      cr1.position.set(cx, 0.255, 0.59);
+      var cr2 = new THREE.Mesh(new THREE.BoxGeometry(1.76, 0.026, 0.056), blueCreaseMat);
+      cr2.position.set(cx, 0.255, -0.59);
+      var crB1 = new THREE.Mesh(new THREE.BoxGeometry(1.76, 0.022, 0.028), blueCreaseMat);
+      crB1.position.set(cx, 0.042, 0.56);
+      var crB2 = new THREE.Mesh(new THREE.BoxGeometry(1.76, 0.022, 0.028), blueCreaseMat);
+      crB2.position.set(cx, 0.042, -0.56);
+      var tp = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.052, 1.24), tapeMat);
+      tp.position.set(dir * 0.52, 0.042, 0);
+      parent.add(w1, w2, cr1, cr2, crB1, crB2, tp);
+    }
+  }
+  addHalf(deckPivotL, 1);
+  addHalf(deckPivotR, -1);
+}
+
+/* 桥上硬币池（最多 9 枚，每枚都可再拖回左盘取下，D5！） */
+var coinPool = [];
+var bridgeCoinMeshes = [];
+var COIN_SLOTS = [
+  [-0.38, -0.18], [0.38, 0.18], [-0.38, 0.22], [0.38, -0.2],
+  [0.0, 0.0], [-0.84, 0.0], [0.84, 0.0], [0.0, -0.28], [0.0, 0.28]
+];
+for (var ci = 0; ci < 9; ci++) {
+  var cm = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.24, 0.24, 0.056, 24),
+    [toon('#64748b'), new THREE.MeshToonMaterial({ map: coinTex }), toon('#64748b')]
+  );
+  cm.castShadow = true; cm.visible = false;
+  cm.userData = { coinIdx: ci };
+  var cmHit = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.34, 14), HIT_MAT);
+  cmHit.position.y = 0.12;
+  cmHit.userData = { coinIdx: ci };
+  cm.add(cmHit);
+  workGrp.add(cm);
+  bridgeCoinMeshes.push(cmHit, cm);
+  coinPool.push({ idx: ci, mesh: cm, active: false, y: 2.3, vy: 0, slot: COIN_SLOTS[ci], landed: false });
+}
+
+var COIN_OK_SPEECH = [
+  '',
+  '放上第1枚一角硬币，纸桥稳稳托住啦！再拖一枚试试吧！',
+  '放上第2枚一角硬币，纸桥稳稳站住，承重任务达标啦！可以继续拖硬币测极限！',
+  '放上第3枚一角硬币，纸桥依然很稳固！',
+  '放上第4枚一角硬币，原版凹槽纸桥稳稳托住了4枚硬币！',
+  '放上第5枚一角硬币，加固后的纸桥轻松超越了原版4枚的记录！',
+  '放上第6枚一角硬币，波浪瓦楞和纸拱支撑超级稳固！',
+  '放上第7枚一角硬币，加固纸桥还是稳稳的！',
+  '放上第8枚一角硬币，太厉害了！加固纸桥稳稳托住了8枚硬币，承重翻倍啦！',
+  '已经放满9枚硬币啦！'
+];
+
+/* ===== 状态机 ===== */
+var craftStep = 0; // 0..4 (4 = 桥已建成进入拖硬币阶段)
+var curStruct = 'u';
+var coinCount = 0;
+var isCollapsed = false;
+var curBend = 0, targetBend = 0;
+var toolAnim = { type: 'none', t: 0 };
+
+var found = {}, stamps = { s1: false, s2: false, s3: false };
+var celebrated = false, demo = false, resetGen = 0;
+var curGuideSpeech = '第1步：拖动桌左的3D橙柄剪刀，剪开绿垫上两张A4纸的红虚线！';
+
+var cueTagEl = $('#targetCue');
+
+function markInteracted() { document.body.classList.add('interacted'); }
+
+function projectToScreen(vec3) {
+  var v = vec3.clone().project(camera);
+  return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight };
+}
+function spawnFloatMsg(text, worldPos, cls) {
+  var p = projectToScreen(worldPos);
+  var d = document.createElement('div');
+  d.className = 'float-msg' + (cls ? ' ' + cls : '');
+  d.style.left = p.x + 'px'; d.style.top = p.y + 'px';
+  d.textContent = text;
+  $('#labels').appendChild(d);
+  setTimeout(function () { if (d.parentNode) d.parentNode.removeChild(d); }, 1550);
+}
+
+function syncDishCoins() {
+  var remain = Math.max(0, 9 - coinCount);
+  dishCoins.forEach(function (m, idx) { m.visible = idx < remain; });
+}
+
+function addDiscovery(key, stampKey, html, spoken) {
+  if (!found[key]) {
+    found[key] = true;
+    var el = document.createElement('div');
+    el.className = 'stk';
+    el.innerHTML = html;
+    $('#ntList').prepend(el);
+    $('#ntCnt').textContent = Object.keys(found).length;
+  }
+  if (stampKey && !stamps[stampKey]) {
+    stamps[stampKey] = true;
+    var sEl = $('#' + stampKey.replace('s', 'st'));
+    if (sEl) sEl.classList.add('lit');
+  }
+  updateGuide(false);
+  if (!demo && !celebrated && stamps.s1 && stamps.s2 && stamps.s3) {
+    celebrated = true;
+    saveProgress(LESSON_ID, true);
+    sfxWin();
+    launchConfetti();
+    $('#winToast').classList.add('show');
+    speak('太棒啦！你亲手造出了纸桥，拖硬币测出了承重，还用一张A4纸成功加固改进，快来看看科学小结论并领小红花吧！', true);
+    return;
+  }
+  if (spoken && !demo) speak(spoken);
+}
+
+function updateLoadUI() {
+  var info = STRUCT_INFO[curStruct];
+  $('#bridgeTag').textContent = !bridgeGrp.visible ? '造桥中' : info.name;
+  $('#coinCountTxt').textContent = coinCount + ' 枚';
+  var pct = Math.min(100, Math.round((coinCount / 8) * 100));
+  $('#loadBar').style.width = pct + '%';
+  var stEl = $('#loadStatus');
+  stEl.className = 'lc-stat';
+  if (!bridgeGrp.visible) {
+    stEl.textContent = '亲手剪折 ' + craftStep + ' / 4 步';
+  } else if (isCollapsed) {
+    stEl.classList.add('fail');
+    stEl.textContent = curStruct === 'flat' ? '平纸1枚即塌！点下方改进' : '超重弯塌啦！点下方加固';
+  } else if (coinCount === 0) {
+    stEl.textContent = curStruct === 'flat' ? '平纸无立边 · 拖1枚试试' : '纸桥稳立 · 拖硬币上桥';
+  } else if (coinCount >= 2 && coinCount <= info.maxSafe) {
+    stEl.textContent = '稳稳托住 ' + coinCount + ' 枚 ✓';
+  } else {
+    stEl.classList.add('warn');
+    stEl.textContent = '已放 ' + coinCount + ' 枚（继续拖试试）';
+  }
+  syncDishCoins();
+}
+
+function syncStructButtons() {
+  $$('.cmp-card').forEach(function (b) { b.classList.toggle('on', b.dataset.struct === curStruct); });
+}
+
+function updateGuide(speakIt) {
+  $$('.cmp-card').forEach(function (b) { b.classList.remove('glow'); });
+  var uBtn = $('[data-struct="u"]');
+  var bestBtn = $('[data-struct="reinforced"]');
+
+  if (bridgeGrp.visible && isCollapsed) {
+    if (curStruct === 'flat') {
+      $('#guideIco').textContent = '💥';
+      if (!stamps.s2) {
+        curGuideSpeech = '平纸桥没有立边支撑，放1枚硬币就塌啦！怎么改才能变结实？点下方【凹槽】把纸折出立边试试！';
+        if (uBtn) uBtn.classList.add('glow');
+      } else {
+        curGuideSpeech = '平纸桥没有立边支撑，放1枚硬币就塌啦！点下方【瓦楞拱】加波浪拱撑更结实！';
+        if (bestBtn) bestBtn.classList.add('glow');
+      }
+    } else if (curStruct === 'u') {
+      $('#guideIco').textContent = '💡';
+      curGuideSpeech = '凹槽桥比平纸强多啦！想托住更多硬币？点下方【瓦楞拱】加一层波浪纸加固！';
+      if (bestBtn) bestBtn.classList.add('glow');
+    } else {
+      $('#guideIco').textContent = '🏆';
+      curGuideSpeech = '瓦楞拱稳托8枚，第9枚达到极限啦！可拖回硬币或切换三座桥继续对比！';
+    }
+    $('#guideTxt').textContent = curGuideSpeech;
+  } else if (!bridgeGrp.visible) {
+    if (craftStep === 0) {
+      $('#guideIco').textContent = '✂️';
+      curGuideSpeech = '第1步：拖动桌左的3D剪刀到绿垫红虚线上，剪开折成4根纸桥墩！';
+    } else if (craftStep === 1) {
+      $('#guideIco').textContent = '📏';
+      curGuideSpeech = '第2步：直接点击绿垫上新铺出的2张浅蓝卡纸，折成2根紧实长条主梁！';
+    } else if (craftStep === 2) {
+      $('#guideIco').textContent = '📐';
+      curGuideSpeech = '第3步：点击绿垫前方的第5张卡纸，两边折起1厘米变成凹槽桥面！';
+    } else {
+      $('#guideIco').textContent = '📎';
+      curGuideSpeech = '第4步：拖动桌左的3D黄色胶带卷到纸桥上，把桥墩、主梁和桥面固定住！';
+    }
+    $('#guideTxt').textContent = curGuideSpeech;
+  } else if (curStruct === 'flat') {
+    $('#guideIco').textContent = '📄';
+    curGuideSpeech = '现在是平纸桥，没有任何折边！拖1枚左盘1角硬币上去看看会怎样！';
+    $('#guideTxt').textContent = curGuideSpeech;
+  } else if (!stamps.s2) {
+    $('#guideIco').textContent = '🟡';
+    curGuideSpeech = '纸桥站稳啦！从桌左硬币盘抓起1角硬币，一枚枚拖到桥面上测承重吧！';
+    $('#guideTxt').textContent = curGuideSpeech;
+  } else if (!stamps.s3) {
+    $('#guideIco').textContent = '🌊';
+    if (curStruct !== 'reinforced') {
+      curGuideSpeech = '凹槽桥比平纸强多啦！想托住更多硬币？点下方【瓦楞拱】加一层波浪纸加固！';
+      if (bestBtn) bestBtn.classList.add('glow');
+    } else {
+      curGuideSpeech = '把左盘的1角硬币一枚枚拖上瓦楞拱纸桥，挑战稳托5枚以上赢通关吧！';
+    }
+    $('#guideTxt').textContent = curGuideSpeech;
+  } else if (!stamps.s1) {
+    $('#guideIco').textContent = '✂️';
+    curGuideSpeech = '太棒了！点下方【凹槽】或左侧剪刀完成亲手剪折造桥，就能集齐3枚印章通关！';
+    if (uBtn) uBtn.classList.add('glow');
+    $('#guideTxt').textContent = curGuideSpeech;
+  } else {
+    $('#guideIco').textContent = '🏆';
+    curGuideSpeech = '太棒啦！平纸0枚塌 vs 凹槽稳托4枚 vs 瓦楞拱稳托8枚，可随时切三座桥继续拖硬币实验！';
+    $('#guideTxt').textContent = curGuideSpeech;
+  }
+  var gb = $('#guideBar'); gb.classList.remove('pulse'); void gb.offsetWidth; gb.classList.add('pulse');
+  if (speakIt) speak(curGuideSpeech, true);
+}
+
+/* ===== 4 步亲手剪折制作逻辑 ===== */
+function syncCraftVisuals() {
+  rawSheets.visible = (craftStep === 0);
+  step1Piers.visible = (craftStep >= 1 && craftStep < 4);
+  rawBeamsSheets.visible = (craftStep === 1);
+  step2Beams.visible = (craftStep >= 2 && craftStep < 4);
+  rawDeckSheet.visible = (craftStep === 2);
+  step3Deck.visible = (craftStep === 3);
+}
+
+function advanceCraftStep(stepNum, silent) {
+  if (craftStep >= 4) return;
+  craftStep = Math.min(4, Math.max(craftStep + 1, stepNum));
+  bridgeGrp.visible = false;
+  syncCraftVisuals();
+
+  if (craftStep === 1) {
+    sfxSnip();
+    toolAnim = { type: 'scissors', t: 0 };
+    spawnFloatMsg('✂️ 剪折出 4 根对折桥墩！', new THREE.Vector3(MAT_CX, 0.9, MAT_CZ - 0.3), 'ok');
+    addDiscovery('craft_1', null, '✂️ 第1步：用剪刀把2张A4纸裁成4张，折紧对折做成4根桥墩',
+      silent ? null : '第1步完成！把两张纸裁成四张，折紧对折做成四根桥墩小条！');
+  } else if (craftStep === 2) {
+    sfxFold();
+    spawnFloatMsg('📏 啪啪折出 2 根长条主梁！', new THREE.Vector3(MAT_CX, 0.9, MAT_CZ + 0.15), 'ok');
+    addDiscovery('craft_2', null, '📏 第2步：2张A4纸折出2根紧实长条主梁',
+      silent ? null : '第2步完成！用另外两张A4纸折出了两根紧实的长条主梁！');
+  } else if (craftStep === 3) {
+    sfxFold();
+    spawnFloatMsg('📐 第5张纸折成凹槽桥面！', new THREE.Vector3(MAT_CX, 0.95, MAT_CZ + 0.9), 'ok');
+    addDiscovery('craft_3', null, '📐 第3步：第5张纸两边折起1厘米做成凹槽桥面',
+      silent ? null : '第3步完成！把第5张纸两边折起约1厘米，做成了抗弯曲的凹槽桥面！');
+  } else if (craftStep === 4) {
+    sfxFold();
+    toolAnim = { type: 'tape', t: 0 };
+    curStruct = 'u';
+    syncStructButtons();
+    buildLiveBridge('u');
+    bridgeGrp.visible = true;
+    clearCoins(true);
+    spawnFloatMsg('📎 胶带固定完成，纸桥站稳啦！', new THREE.Vector3(MAT_CX, 1.55, MAT_CZ), 'ok');
+    addDiscovery('craft_4', 's1', '📎 第4步：胶带固定桥墩、主梁与凹槽桥面，纸桥稳稳站立！',
+      silent ? null : '太棒啦！四根桥墩、两根主梁和凹槽桥面用胶带固定好了，纸桥稳稳站立在桌上！快把左盘的1角硬币拖上桥面测承重吧！');
+  }
+  updateLoadUI();
+  updateGuide(false);
+}
+
+/* ===== 硬币承重与可逆取下（D5） ===== */
+function clearCoins(silent) {
+  coinCount = 0;
+  isCollapsed = false;
+  targetBend = 0;
+  coinPool.forEach(function (c) {
+    c.active = false; c.mesh.visible = false; c.landed = false; c.mesh.rotation.set(0, 0, 0);
+  });
+  updateLoadUI();
+  if (!silent && !demo) speak('已把硬币全放回左盘，纸桥恢复平整啦！');
+}
+
+function selectStruct(type, silent) {
+  curStruct = type;
+  syncStructButtons();
+  // 若还没亲手造完凹槽桥，点【凹槽】直接回到绿垫亲手真剪真折粘胶带！
+  if (type === 'u' && craftStep < 4 && !demo) {
+    bridgeGrp.visible = false;
+    clearCoins(true);
+    syncCraftVisuals();
+    sfxFold();
+    updateLoadUI();
+    updateGuide(false);
+    if (!silent) speak('好主意！我们来亲手把卡纸剪折成结实的凹槽桥吧！先拖动桌左的剪刀剪红线！');
+    return;
+  }
+  // 允许随时对比三座成品纸桥（无步锁！）
+  rawSheets.visible = false; step1Piers.visible = false; rawBeamsSheets.visible = false;
+  step2Beams.visible = false; rawDeckSheet.visible = false; step3Deck.visible = false;
+  buildLiveBridge(type);
+  bridgeGrp.visible = true;
+  clearCoins(true);
+  sfxFold();
+  updateLoadUI();
+  updateGuide(false);
+  if (!silent && !demo) {
+    if (type === 'flat') speak('切换为平纸对照桥，没有任何折边支撑，拖1枚硬币上去看看会怎样！');
+    else if (type === 'u') speak('切换为原版凹槽桥，两边折起1厘米立边，拖硬币测测能稳托几枚！');
+    else speak('切换为暖橙瓦楞拱加固桥！多加了一层波浪瓦楞和拱形内撑，快拖硬币挑战稳托5枚以上吧！');
+  }
+}
+
+function addOneCoin(dropX, dropZ, silent) {
+  if (!bridgeGrp.visible) return;
+  if (isCollapsed || coinCount >= 9) {
+    if (isCollapsed && !silent && !demo) {
+      if (curStruct === 'flat') {
+        speak(!stamps.s2
+          ? '平纸桥已经塌啦！点下方凹槽按钮，把纸折出立边再试试吧！'
+          : '平纸桥已经塌啦！点下方瓦楞拱加波浪拱撑更结实！');
+      } else {
+        speak('纸桥已经弯塌啦，把桥上的硬币拖回左盘，或点下方瓦楞拱加固再试吧！');
+      }
+    }
+    return;
+  }
+  // 找到第一个未激活的槽位
+  var slotObj = null;
+  for (var i = 0; i < coinPool.length; i++) {
+    if (!coinPool[i].active) { slotObj = coinPool[i]; break; }
+  }
+  if (!slotObj) return;
+
+  coinCount++;
+  slotObj.active = true;
+  slotObj.landed = false;
+  var sx = typeof dropX === 'number' ? Math.max(-1.05, Math.min(1.05, dropX - MAT_CX)) : slotObj.slot[0];
+  var sz = typeof dropZ === 'number' ? Math.max(-0.36, Math.min(0.36, dropZ - MAT_CZ)) : slotObj.slot[1];
+  slotObj.curX = sx;
+  slotObj.curZ = sz;
+  slotObj.y = 1.85;
+  slotObj.vy = 0;
+  slotObj.mesh.visible = true;
+  slotObj.mesh.position.set(sx, slotObj.y, sz);
+  slotObj.mesh.rotation.set(0, 0, 0);
+
+  var info = STRUCT_INFO[curStruct];
+  var g = resetGen;
+  setTimeout(function () {
+    if (g !== resetGen) return;
+    sfxCoin();
+    if (coinCount > info.maxSafe) {
+      isCollapsed = true;
+      targetBend = 0.44;
+      sfxCollapse();
+      spawnFloatMsg('💥 第 ' + coinCount + ' 枚超重，纸桥弯塌啦！', new THREE.Vector3(MAT_CX, 1.55, MAT_CZ), 'bad');
+      if (curStruct === 'flat') {
+        var flatTip = !stamps.s2
+          ? '平纸桥没有立边支撑，放1枚硬币就塌啦！怎么改才能变结实？快点下方凹槽按钮，把纸折出立边试试！'
+          : '平纸桥没有立边支撑，放1枚硬币就塌啦！怎么改才能变结实？快点下方瓦楞拱，加波浪拱撑更结实！';
+        addDiscovery('test_flat', null, '📄 平纸桥：无立边支撑，放 1 枚硬币就弯塌！', silent ? null : flatTip);
+      } else if (curStruct === 'u') {
+        addDiscovery('test_u_max', null, '📐 原版凹槽桥极限：稳托 4 枚，第 5 枚超重弯塌',
+          silent ? null : '凹槽桥比平纸强多啦！放超过4枚才塌，想托住更多硬币？点下方瓦楞拱加一层波浪纸加固！');
+      } else if (!silent && !demo) {
+        speak('放到第9枚一角硬币，达到承重极限啦！');
+      }
+      updateGuide(false);
+    } else {
+      targetBend = coinCount * info.bendPerCoin;
+      spawnFloatMsg('🟡 稳托第 ' + coinCount + ' 枚！', new THREE.Vector3(MAT_CX, 1.6, MAT_CZ), 'ok');
+      var speech = COIN_OK_SPEECH[coinCount] || '';
+      if (curStruct === 'u' && coinCount >= 2 && !stamps.s2) {
+        var uDoneSpeech = '凹槽桥比平纸强多啦！稳稳托住2枚硬币达标啦！想托住更多硬币？点下方瓦楞拱加一层波浪纸加固！';
+        addDiscovery('test_u_pass', 's2', '🟡 硬币实测达标：凹槽纸桥稳稳托住 2 枚以上 1 角硬币！', silent ? null : uDoneSpeech);
+      } else if (curStruct === 'u' && coinCount === 4) {
+        addDiscovery('test_u_4', 's2', '📐 原版凹槽桥稳稳托住 4 枚 1 角硬币！', silent ? null : speech);
+      } else if (curStruct === 'reinforced' && coinCount >= 5) {
+        $('#diagBanner').classList.add('show');
+        addDiscovery('test_reinf', 's3', '🌊 加固改进成功：平纸0枚塌 vs 凹槽4枚 vs 瓦楞拱稳托 ' + coinCount + ' 枚！', silent ? null : speech);
+      } else if (!silent && !demo && speech) {
+        speak(speech);
+      }
+    }
+    updateLoadUI();
+  }, 190);
+}
+
+function removeSpecificCoin(idx, silent) {
+  var c = coinPool[idx];
+  if (!c || !c.active) return;
+  c.active = false;
+  c.mesh.visible = false;
+  c.landed = false;
+  coinCount = Math.max(0, coinCount - 1);
+  var info = STRUCT_INFO[curStruct];
+  isCollapsed = coinCount > info.maxSafe;
+  targetBend = isCollapsed ? 0.44 : coinCount * info.bendPerCoin;
+  sfxFold();
+  updateLoadUI();
+  if (!silent && !demo) speak('把1枚一角硬币放回左盘啦！');
+}
+
+/* ===== 真正 3D 拖拽（剪刀、胶带、双向硬币）+ 绿垫纸张点击 ===== */
+var ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+var dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.95);
+var dragPt = new THREE.Vector3();
+var dragState = null; // { kind: 'scissors'|'tape'|'dishCoin'|'bridgeCoin', coinIdx?, startX, startY, moved }
+
+function setPtrFromEvent(e) {
+  var r = cv.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+}
+
+cv.addEventListener('pointerdown', function (e) {
+  markInteracted();
+  setPtrFromEvent(e);
+
+  // 1) 检查是否抓住桥上已放好的硬币（可拖回左盘取下，D5！）
+  if (bridgeGrp.visible) {
+    var activeCoins = bridgeCoinMeshes.filter(function (m) {
+      var c = coinPool[m.userData.coinIdx];
+      return c && c.active && c.mesh.visible;
+    });
+    var bcHits = ray.intersectObjects(activeCoins, false);
+    if (bcHits.length) {
+      var ci = bcHits[0].object.userData.coinIdx;
+      dragState = { kind: 'bridgeCoin', coinIdx: ci, startX: e.clientX, startY: e.clientY, moved: false };
+      coinPool[ci].mesh.visible = false;
+      dragCoinMesh.visible = true;
+      var wp = new THREE.Vector3();
+      coinPool[ci].mesh.getWorldPosition(wp);
+      dragCoinMesh.position.set(wp.x, 1.35, wp.z);
+      if (cv.setPointerCapture) try { cv.setPointerCapture(e.pointerId); } catch (ex) {}
+      sfxFold();
+      return;
+    }
+  }
+
+  // 2) 步1/步2折纸阶段优先命中绿垫上的待折纸张（避免飞回中的剪刀吞掉点纸事件！）
+  if (!bridgeGrp.visible && (craftStep === 1 || craftStep === 2)) {
+    var visCraftPrio = craftClickMeshes.filter(function (m) {
+      var p = m;
+      while (p) { if (!p.visible) return false; p = p.parent; }
+      return true;
+    });
+    var cHitsP = ray.intersectObjects(visCraftPrio, false);
+    if (cHitsP.length && cHitsP[0].object.userData.craftTarget === craftStep + 1) {
+      advanceCraftStep(craftStep + 1, false);
+      return;
+    }
+  }
+
+  // 3) 检查左侧三大 3D 工具：剪刀 / 胶带 / 硬币盘（正在自动飞行的工具不拦截绿垫点击）
+  var activePropHits = propHits.filter(function (m) {
+    if (toolAnim.type === 'scissors' && m.userData.prop === 'scissors') return false;
+    if (toolAnim.type === 'tape' && m.userData.prop === 'tape') return false;
+    return true;
+  });
+  var pHits = ray.intersectObjects(activePropHits, false);
+  if (pHits.length) {
+    var prop = pHits[0].object.userData.prop;
+    if (prop === 'scissors') {
+      if (craftStep === 0 && !bridgeGrp.visible) {
+        dragState = { kind: 'scissors', startX: e.clientX, startY: e.clientY, moved: false };
+        if (cv.setPointerCapture) try { cv.setPointerCapture(e.pointerId); } catch (ex) {}
+        sfxSnip();
+      } else if (!stamps.s1 && bridgeGrp.visible) {
+        // 若跳过剪折直接切换过对比，点剪刀可回到第1步亲手造桥
+        bridgeGrp.visible = false;
+        craftStep = 0;
+        syncCraftVisuals();
+        updateLoadUI();
+        updateGuide(true);
+      } else {
+        sfxSnip();
+        speak('剪刀已经把A4纸裁成4根桥墩啦，使用剪刀要注意安全哦！');
+      }
+      return;
+    }
+    if (prop === 'tape') {
+      if (craftStep === 3 && !bridgeGrp.visible) {
+        dragState = { kind: 'tape', startX: e.clientX, startY: e.clientY, moved: false };
+        if (cv.setPointerCapture) try { cv.setPointerCapture(e.pointerId); } catch (ex) {}
+        sfxFold();
+      } else if (craftStep < 3 && !bridgeGrp.visible) {
+        sfxFold();
+        speak('这是黄色胶带卷！先把桥墩、主梁和凹槽桥面折好，再用胶带粘牢哦！');
+      } else {
+        sfxFold();
+        speak('胶带已经把纸桥接口牢牢固定住啦！');
+      }
+      return;
+    }
+    if (prop === 'dish') {
+      if (!bridgeGrp.visible) {
+        speak('这是测试承重用的一角硬币盘！先把绿垫上的纸桥剪折固定好，再来拖硬币试压吧！');
+        return;
+      }
+      if (isCollapsed || coinCount >= 9) {
+        speak(isCollapsed ? '纸桥已经弯塌啦，把硬币拖回左盘或切换下方瓦楞拱桥再测吧！' : '已经放满9枚硬币啦！');
+        return;
+      }
+      dragState = { kind: 'dishCoin', startX: e.clientX, startY: e.clientY, moved: false };
+      dragCoinMesh.visible = true;
+      dragCoinMesh.position.set(dishPos.x, 1.05, dishPos.z);
+      if (cv.setPointerCapture) try { cv.setPointerCapture(e.pointerId); } catch (ex) {}
+      sfxCoin();
+      return;
+    }
+  }
+
+  // 3) 阶段 1：直接点击绿垫上的纸张推进对应手工步骤
+  if (!bridgeGrp.visible && craftStep < 4) {
+    var visCraft = craftClickMeshes.filter(function (m) {
+      var p = m;
+      while (p) { if (!p.visible) return false; p = p.parent; }
+      return true;
+    });
+    var cHits = ray.intersectObjects(visCraft, false);
+    if (cHits.length) {
+      var tgt = cHits[0].object.userData.craftTarget;
+      if (tgt === craftStep + 1) {
+        advanceCraftStep(tgt, false);
+      } else if (craftStep === 0) {
+        advanceCraftStep(1, false);
+      } else if (craftStep === 3) {
+        advanceCraftStep(4, false);
+      }
+    }
+  }
+});
+
+cv.addEventListener('pointermove', function (e) {
+  setPtrFromEvent(e);
+  if (!dragState) {
+    var hover = ray.intersectObjects(propHits, false).length > 0;
+    if (!hover && bridgeGrp.visible) {
+      hover = ray.intersectObjects(bridgeCoinMeshes.filter(function (m) {
+        var c = coinPool[m.userData.coinIdx];
+        return c && c.active && c.mesh.visible;
+      }), false).length > 0;
+    }
+    if (!hover && !bridgeGrp.visible) {
+      var visC = craftClickMeshes.filter(function (m) {
+        var p = m; while (p) { if (!p.visible) return false; p = p.parent; } return true;
+      });
+      hover = ray.intersectObjects(visC, false).length > 0;
+    }
+    cv.style.cursor = hover ? 'grab' : 'default';
+    return;
+  }
+
+  cv.style.cursor = 'grabbing';
+  if (Math.hypot(e.clientX - dragState.startX, e.clientY - dragState.startY) > 10) {
+    dragState.moved = true;
+  }
+  if (!ray.ray.intersectPlane(dragPlane, dragPt)) return;
+  var x = Math.max(-4.2, Math.min(3.6, dragPt.x));
+  var z = Math.max(-1.8, Math.min(2.1, dragPt.z));
+
+  if (dragState.kind === 'scissors') {
+    toolScis.position.set(x, 0.55, z);
+    var sn = Math.sin(performance.now() * 0.024) * 0.22;
+    scisBladeA.rotation.y = 0.14 + sn;
+    scisBladeB.rotation.y = -0.14 - sn;
+  } else if (dragState.kind === 'tape') {
+    toolTape.position.set(x, 0.72, z);
+    toolTape.rotation.y += 0.08;
+  } else if (dragState.kind === 'dishCoin' || dragState.kind === 'bridgeCoin') {
+    dragCoinMesh.position.set(x, 1.38, z);
+    dropRing.visible = (x > -2.35);
+    if (dropRing.visible) {
+      var info = STRUCT_INFO[curStruct];
+      dropRing.position.set(
+        Math.max(MAT_CX - 1.35, Math.min(MAT_CX + 1.35, x)),
+        info.deckY + 0.14,
+        Math.max(MAT_CZ - 0.44, Math.min(MAT_CZ + 0.44, z))
+      );
+    }
+  }
+});
+
+function finishDrag() {
+  if (!dragState) return;
+  var ds = dragState;
+  dragState = null;
+  cv.style.cursor = 'default';
+  dropRing.visible = false;
+
+  if (ds.kind === 'scissors') {
+    scisBladeA.rotation.y = 0.14; scisBladeB.rotation.y = -0.14;
+    if (!ds.moved || toolScis.position.x > -2.35) {
+      toolScis.position.copy(scisHome);
+      advanceCraftStep(1, false);
+    } else {
+      toolScis.position.copy(scisHome);
+    }
+  } else if (ds.kind === 'tape') {
+    if (!ds.moved || toolTape.position.x > -2.35) {
+      toolTape.position.copy(tapeHome);
+      advanceCraftStep(4, false);
+    } else {
+      toolTape.position.copy(tapeHome);
+    }
+  } else if (ds.kind === 'dishCoin') {
+    dragCoinMesh.visible = false;
+    if (!ds.moved) {
+      addOneCoin(undefined, undefined, false);
+    } else if (dragCoinMesh.position.x > -2.35) {
+      addOneCoin(dragCoinMesh.position.x, dragCoinMesh.position.z, false);
+    }
+  } else if (ds.kind === 'bridgeCoin') {
+    dragCoinMesh.visible = false;
+    var c = coinPool[ds.coinIdx];
+    if (!ds.moved || dragCoinMesh.position.x < -1.55) {
+      removeSpecificCoin(ds.coinIdx, false);
+    } else {
+      // 放回桥面新位置
+      c.curX = Math.max(-1.05, Math.min(1.05, dragCoinMesh.position.x - MAT_CX));
+      c.curZ = Math.max(-0.36, Math.min(0.36, dragCoinMesh.position.z - MAT_CZ));
+      c.mesh.position.x = c.curX;
+      c.mesh.position.z = c.curZ;
+      c.mesh.visible = true;
+      sfxCoin();
+    }
+  }
+}
+
+cv.addEventListener('pointerup', finishDrag);
+cv.addEventListener('pointercancel', finishDrag);
+
+/* ===== 重置与完整演示 ===== */
+function resetAll() {
+  resetGen++;
+  demo = false;
+  dragState = null;
+  dragCoinMesh.visible = false;
+  dropRing.visible = false;
+  stopVoice();
+  craftStep = 0;
+  curStruct = 'u';
+  found = {};
+  stamps = { s1: false, s2: false, s3: false };
+  celebrated = false;
+  toolAnim = { type: 'none', t: 0 };
+  toolScis.position.copy(scisHome);
+  toolTape.position.copy(tapeHome);
+  bridgeGrp.visible = false;
+  syncCraftVisuals();
+  syncStructButtons();
+  clearCoins(true);
+
+  $('#ntList').innerHTML = ''; $('#ntCnt').textContent = '0';
+  $$('.st').forEach(function (s) { s.classList.remove('lit'); });
+  $('#diagBanner').classList.remove('show');
+  $('#winToast').classList.remove('show');
+  $('#qFb').textContent = '';
+  $$('.qopt').forEach(function (b) { b.classList.remove('ok', 'bad'); });
+  $('#demoBtn').classList.remove('on');
+  updateLoadUI();
+  updateGuide(false);
+}
+
+function startDemo() {
+  markInteracted();
+  resetAll();
+  demo = true;
+  $('#demoBtn').classList.add('on');
+  var g = resetGen;
+  var steps = [
+    [250, function () { speak('演示开始！先看用剪刀、折纸和胶带亲手造一座凹槽纸桥！', true); }],
+    [1600, function () { advanceCraftStep(1, true); speak('剪刀剪开两张纸，折成4根对折纸桥墩。', true); }],
+    [3500, function () { advanceCraftStep(2, true); speak('再点新铺出的2张纸，折成2根长条主梁。', true); }],
+    [5400, function () { advanceCraftStep(3, true); speak('把第5张纸两边折起，做成凹槽桥面。', true); }],
+    [7300, function () { advanceCraftStep(4, true); speak('胶带固定完成！接着把左盘的1角硬币一枚枚拖上桥面测承重！', true); }],
+    [9800, function () { addOneCoin(undefined, undefined, true); }],
+    [10600, function () { addOneCoin(undefined, undefined, true); }],
+    [11400, function () { addOneCoin(undefined, undefined, true); }],
+    [12200, function () { addOneCoin(undefined, undefined, true); speak('原版凹槽桥稳托4枚硬币！再切换到瓦楞拱，看看加固后的承重！', true); }],
+    [14600, function () { selectStruct('reinforced', true); }],
+    [15600, function () { addOneCoin(undefined, undefined, true); }],
+    [16200, function () { addOneCoin(undefined, undefined, true); }],
+    [16800, function () { addOneCoin(undefined, undefined, true); }],
+    [17400, function () { addOneCoin(undefined, undefined, true); }],
+    [18000, function () { addOneCoin(undefined, undefined, true); }],
+    [18600, function () { addOneCoin(undefined, undefined, true); speak('W形瓦楞拱轻松托住更多硬币，承重翻倍啦！现在轮到你亲手试试吧！', true); }],
+    [21400, function () { demo = false; $('#demoBtn').classList.remove('on'); }]
+  ];
+  steps.forEach(function (it) { setTimeout(function () { if (g === resetGen) it[1](); }, it[0]); });
+}
+
+$$('.cmp-card').forEach(function (b) {
+  b.addEventListener('click', function () { markInteracted(); selectStruct(b.dataset.struct, false); });
+});
+$('#voiceBtn').addEventListener('click', function () {
+  markInteracted();
+  voiceOn = !voiceOn;
+  this.classList.toggle('on', voiceOn);
+  if (voiceOn) updateGuide(true); else stopVoice();
+});
+$('#demoBtn').addEventListener('click', startDemo);
+$('#guideBar').addEventListener('click', function () { markInteracted(); updateGuide(true); });
+$('#resetBtn').addEventListener('click', resetAll);
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+$('#winKeepBtn').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgainBtn').addEventListener('click', resetAll);
+$('#qOpts').addEventListener('click', function (e) {
+  var b = e.target.closest('.qopt');
+  if (!b) return;
+  if (b.dataset.ok === '1') {
+    b.classList.add('ok');
+    $('#qFb').textContent = '🌸 答对啦！获得本课小红花！';
+    saveProgress(LESSON_ID, true);
+    sfxFold();
+    speak('答对啦！获得本课小红花！', true);
+  } else {
+    b.classList.add('bad');
+    var h = b.dataset.hint || '再想想哦！';
+    $('#qFb').textContent = h;
+    speak(h, true);
+  }
+});
+
+/* ===== 渲染循环 ===== */
+var introT0 = performance.now(), lastT = performance.now();
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  camera.updateProjectionMatrix();
+  cfCv.width = w; cfCv.height = h;
+}
+window.addEventListener('resize', fit);
+fit();
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (now - lastT) / 1000));
+  lastT = now;
+  var t = now * 0.001;
+
+  var pop = Math.min(1, (performance.now() - introT0) / 680);
+  var ease = 1 - Math.pow(1 - pop, 3);
+  live.scale.setScalar(0.01 + 0.99 * ease);
+
+  // 更新当前金色呼吸光环 & 单焦点跳动 #targetCue 气泡（零死胡同闭环指路！）
+  var haloPos = null, haloRad = 1.0, cueText = '', domCueBtn = null, cueUrgent = false;
+  if (!dragState && !demo) {
+    if (bridgeGrp.visible && isCollapsed) {
+      // 无论何时塌桥，立刻精准跳到底部对应改进按钮上方脉冲指路！
+      cueUrgent = true;
+      if (curStruct === 'flat') {
+        if (!stamps.s2) {
+          domCueBtn = $('[data-struct="u"]');
+          cueText = '👆 点【凹槽】把纸折出立边试试！';
+        } else {
+          domCueBtn = $('[data-struct="reinforced"]');
+          cueText = '👆 点【瓦楞拱】加波浪拱撑更结实！';
+        }
+      } else if (curStruct === 'u') {
+        domCueBtn = $('[data-struct="reinforced"]');
+        cueText = '👆 点【瓦楞拱】加波浪拱撑更结实！';
+      }
+    } else if (!celebrated) {
+      if (!bridgeGrp.visible) {
+        if (craftStep === 0) {
+          haloPos = new THREE.Vector3(scisHome.x, 0.04, scisHome.z);
+          haloRad = 0.96;
+          cueText = '✂️ 拖或点剪刀剪红线';
+        } else if (craftStep === 1) {
+          haloPos = new THREE.Vector3(MAT_CX, 0.09, MAT_CZ + 0.24);
+          haloRad = 1.48;
+          cueText = '👆 点纸折长条主梁';
+        } else if (craftStep === 2) {
+          haloPos = new THREE.Vector3(MAT_CX, 0.09, MAT_CZ + 1.24);
+          haloRad = 1.42;
+          cueText = '👆 点第5张纸折凹槽';
+        } else if (craftStep === 3) {
+          haloPos = new THREE.Vector3(tapeHome.x, 0.04, tapeHome.z);
+          haloRad = 0.86;
+          cueText = '📎 拖或点胶带固定纸桥';
+        }
+      } else if (curStruct === 'flat') {
+        haloPos = new THREE.Vector3(dishPos.x, 0.04, dishPos.z);
+        haloRad = 1.12;
+        cueText = '🟡 拖或点1枚硬币试压平纸';
+      } else if (!stamps.s2) {
+        haloPos = new THREE.Vector3(dishPos.x, 0.04, dishPos.z);
+        haloRad = 1.12;
+        cueText = '🟡 拖或点1角硬币上桥';
+      } else if (!stamps.s3) {
+        if (curStruct !== 'reinforced') {
+          domCueBtn = $('[data-struct="reinforced"]');
+          cueText = '👆 点【瓦楞拱】加波浪拱撑更结实！';
+        } else if (coinCount < 5) {
+          haloPos = new THREE.Vector3(dishPos.x, 0.04, dishPos.z);
+          haloRad = 1.12;
+          cueText = '🟡 拖或点硬币，挑战稳托5枚！';
+        }
+      } else if (!stamps.s1) {
+        domCueBtn = $('[data-struct="u"]');
+        cueText = '👆 点【凹槽】亲手剪折造桥';
+      }
+    }
+  }
+
+  cueTagEl.classList.toggle('urgent', cueUrgent);
+  if (domCueBtn) {
+    guideHalo.visible = false;
+    var br = domCueBtn.getBoundingClientRect();
+    cueTagEl.textContent = cueText;
+    cueTagEl.style.left = Math.max(120, Math.min(window.innerWidth - 120, br.left + br.width / 2)) + 'px';
+    cueTagEl.style.top = (br.top - 12) + 'px';
+    cueTagEl.classList.add('show');
+  } else if (haloPos) {
+    guideHalo.visible = true;
+    guideHalo.position.copy(haloPos);
+    var sc = haloRad * (1 + Math.sin(t * 4.8) * 0.08);
+    guideHalo.scale.setScalar(sc);
+    var lblP = haloPos.clone(); lblP.y += 0.56;
+    var sp = projectToScreen(lblP);
+    cueTagEl.textContent = cueText;
+    cueTagEl.style.left = Math.max(106, Math.min(window.innerWidth - 260, sp.x)) + 'px';
+    cueTagEl.style.top = Math.max(92, Math.min(window.innerHeight - 85, sp.y)) + 'px';
+    cueTagEl.classList.add('show');
+  } else {
+    guideHalo.visible = false;
+    cueTagEl.classList.remove('show');
+  }
+
+  // 剪刀/胶带自动动作动画
+  if (toolAnim.type === 'scissors') {
+    toolAnim.t += dt * 1.45;
+    var p = toolAnim.t;
+    if (p < 1) {
+      var arc = Math.sin(p * Math.PI);
+      toolScis.position.lerpVectors(scisHome, new THREE.Vector3(MAT_CX, 0.55, MAT_CZ - 0.35), arc);
+      var snip = Math.sin(p * Math.PI * 6) * 0.24;
+      scisBladeA.rotation.y = 0.14 + snip;
+      scisBladeB.rotation.y = -0.14 - snip;
+    } else {
+      toolScis.position.copy(scisHome);
+      scisBladeA.rotation.y = 0.14; scisBladeB.rotation.y = -0.14;
+      toolAnim.type = 'none';
+    }
+  } else if (toolAnim.type === 'tape') {
+    toolAnim.t += dt * 1.35;
+    if (toolAnim.t < 1) {
+      var arc2 = Math.sin(toolAnim.t * Math.PI);
+      toolTape.position.lerpVectors(tapeHome, new THREE.Vector3(MAT_CX, 1.38, MAT_CZ), arc2);
+      toolTape.rotation.y += dt * 7;
+    } else {
+      toolTape.position.copy(tapeHome);
+      toolAnim.type = 'none';
+    }
+  }
+
+  // 桥面弹性弯曲物理与硬币贴合
+  curBend += (targetBend - curBend) * Math.min(1, dt * 9);
+  if (bridgeGrp.visible && deckPivotL && deckPivotR) {
+    deckPivotL.rotation.z = -curBend;
+    deckPivotR.rotation.z = curBend;
+    var dipCenter = Math.sin(curBend) * 1.45;
+    beamRefs.forEach(function (bm) { bm.position.y = 0.98 - dipCenter * 0.48; });
+    pierRefs.forEach(function (pr) {
+      pr.grp.rotation.z = isCollapsed ? pr.side * 0.16 : pr.side * curBend * 0.12;
+    });
+
+    var info = STRUCT_INFO[curStruct];
+    coinPool.forEach(function (c) {
+      if (!c.active) return;
+      var cx = typeof c.curX === 'number' ? c.curX : c.slot[0];
+      var distRatio = Math.max(0, 1 - Math.abs(cx) / 1.74);
+      var surfaceY = info.deckY + 0.068 - dipCenter * distRatio;
+      if (!c.landed) {
+        c.vy -= 18 * dt;
+        c.y += c.vy * dt;
+        if (c.y <= surfaceY) { c.y = surfaceY; c.vy = 0; c.landed = true; }
+        c.mesh.position.y = c.y;
+      } else {
+        c.mesh.position.y += (surfaceY - c.mesh.position.y) * Math.min(1, dt * 12);
+        var slope = (cx < -0.08 ? -1 : (cx > 0.08 ? 1 : 0)) * curBend * 0.85;
+        c.mesh.rotation.z += (slope - c.mesh.rotation.z) * Math.min(1, dt * 10);
+      }
+    });
+  }
+
+  if (cfList.length) {
+    cfCtx.clearRect(0, 0, cfCv.width, cfCv.height);
+    for (var i = cfList.length - 1; i >= 0; i--) {
+      var q = cfList[i];
+      q.life -= dt; q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 260 * dt; q.r += q.vr * dt;
+      if (q.life <= 0 || q.y > cfCv.height + 40) { cfList.splice(i, 1); continue; }
+      cfCtx.save(); cfCtx.translate(q.x, q.y); cfCtx.rotate(q.r);
+      cfCtx.fillStyle = q.c; cfCtx.fillRect(-q.w / 2, -q.h / 2, q.w, q.h);
+      cfCtx.restore();
+    }
+  }
+
+  renderer.render(scene, camera);
+}
+
+syncCraftVisuals();
+syncStructButtons();
+updateLoadUI();
+updateGuide(false);
+
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () {
+    return {
+      triangles: renderer.info.render.triangles,
+      celebrated: celebrated,
+      craftStep: craftStep,
+      curStruct: curStruct,
+      bridgeVisible: bridgeGrp.visible,
+      isCollapsed: isCollapsed,
+      coinCount: coinCount,
+      stamps: stamps,
+      cueText: cueTagEl.classList.contains('show') ? cueTagEl.textContent : '',
+      guideTxt: $('#guideTxt').textContent,
+      targets: {
+        scissors: projectToScreen(scisHome.clone().add(new THREE.Vector3(0.05, 0.12, 0))),
+        tape: projectToScreen(tapeHome.clone().add(new THREE.Vector3(0, 0.12, 0))),
+        dish: projectToScreen(dishPos.clone().add(new THREE.Vector3(0, 0.15, 0))),
+        matStep1: projectToScreen(new THREE.Vector3(MAT_CX, 0.14, MAT_CZ - 0.35)),
+        matStep2: projectToScreen(new THREE.Vector3(MAT_CX, 0.14, MAT_CZ + 0.24)),
+        matStep3: projectToScreen(new THREE.Vector3(MAT_CX, 0.14, MAT_CZ + 1.24)),
+        bridge: projectToScreen(new THREE.Vector3(MAT_CX, 1.12, MAT_CZ))
+      }
+    };
+  },
+  startDemo: startDemo,
+  resetAll: resetAll
+};
+
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

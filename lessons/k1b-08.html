@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第8课 白天与黑夜 · 24小时日月东升西落全景</title>
+<style>
+:root{--accent:#e56d17;--ink:#2a2218;--line:#e4d5ba;--card:rgba(255,253,248,.94)}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#87c5f4;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.46em;color:#7a6a52;font-weight:600}
+body.no-py rt{display:none}
+
+/* 左上标题卡片 */
+#hudTL{position:fixed;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:10px;
+  padding:7px 14px 7px 9px;border-radius:16px;background:var(--card);border:1.5px solid var(--line);
+  box-shadow:0 4px 16px rgba(40,30,15,.16)}
+#backBtn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:#5c4b34;font-size:19px;font-weight:900}
+#backBtn:hover{border-color:var(--accent);color:var(--accent)}
+.hd-t{font-size:16px;font-weight:900;line-height:1.5}
+.hd-sub{font-size:11.5px;color:#7b6c56;font-weight:700}
+
+/* 顶部中央动态分步小助手（U2） */
+#guideBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:6;
+  max-width:min(460px,calc(100vw - 640px));display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:15px;background:rgba(255,250,240,.96);
+  border:2px solid #f08a24;box-shadow:0 6px 18px rgba(130,68,12,.18);
+  font-size:13.5px;font-weight:800;color:#753a07;cursor:pointer;line-height:1.38;transition:all .2s}
+#guideBar:active{transform:translateX(-50%) scale(.98)}
+#guideBar.done{border-color:#16a34a;background:#f0fdf4;color:#166534}
+@media (max-width:1180px){
+  #guideBar{top:62px;left:12px;transform:none;max-width:min(460px,calc(100vw - 260px))}
+  #guideBar:active{transform:scale(.98)}
+}
+
+/* 右上工具条 + 顶部防遮挡入口微标签 */
+#hudTR{position:fixed;top:12px;right:12px;z-index:7;display:flex;align-items:center;gap:6px}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:38px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);
+  background:var(--card);font-family:inherit;font-size:13.5px;font-weight:800;color:#4a3c28;cursor:pointer;
+  box-shadow:0 3px 0 #d9c8ab;transition:all .14s;white-space:nowrap}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:#b8500a;color:#fff;box-shadow:0 3px 0 #b8500a}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#ffedd5;border:1.5px solid var(--accent);color:#b44908;font-size:10.5px;font-weight:900;
+  white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(229,109,23,.24);
+  animation:cuePop 1.6s ease-in-out infinite;transition:opacity .25s}
+body.interacted .entry-cue{opacity:0;animation:none}
+@keyframes cuePop{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+
+/* 右上可收起窄版发现栏（D3） */
+#notes{position:fixed;top:60px;right:12px;z-index:6;width:224px;padding:9px 11px;border-radius:15px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 6px 18px rgba(40,30,15,.14)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+.nt-title{font-size:13.5px;font-weight:900}
+.nt-cnt{font-size:12.5px;font-weight:900;color:var(--accent)}
+.nt-tog{padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:11px;font-weight:800;color:#6c5c45;cursor:pointer}
+.stamps{display:flex;gap:4px;margin-bottom:6px}
+.st{flex:1;text-align:center;padding:3px 2px;border-radius:8px;font-size:11px;font-weight:800;
+  border:1.5px dashed #d7c5a4;color:#9b8a70;background:#faf4e8;transition:all .2s;line-height:1.45}
+.st.lit{border-style:solid;border-color:var(--accent);background:#fff2df;color:#b8500a;animation:pop .4s cubic-bezier(.2,1.6,.4,1)}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList,#notes.collapsed .stamps{display:none}
+#notes.collapsed .nt-head{margin-bottom:0}
+.stk{padding:5px 8px;border-radius:10px;background:#fff;border:1px solid #ece0c9;font-size:12px;font-weight:700;line-height:1.42;animation:pop .4s cubic-bezier(.2,1.5,.4,1)}
+@keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* 飘浮反馈词层与单焦点 3D 引导气泡 */
+#floatLayer{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden}
+.cue3d{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:6px 14px;border-radius:99px;
+  background:#fff7ed;border:2px solid #ea580c;color:#9a3412;font-size:13px;font-weight:900;white-space:nowrap;
+  box-shadow:0 4px 14px rgba(234,88,12,.30);animation:cueBob 1.3s ease-in-out infinite;display:none;pointer-events:none}
+.cue3d.moon-cue{background:#eff6ff;border-color:#2563eb;color:#1e3a8a;box-shadow:0 4px 16px rgba(37,99,235,.38)}
+.cue3d.show{display:block}
+@keyframes cueBob{0%,100%{transform:translate(-50%,-100%) translateY(0)}50%{transform:translate(-50%,-100%) translateY(-6px)}}
+.fword{position:absolute;transform:translate(-50%,-100%);padding:5px 13px;border-radius:99px;
+  background:rgba(255,252,244,.95);border:2px solid var(--accent);color:#9a3c07;
+  font-size:14.5px;font-weight:900;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.18);
+  animation:floatUp 1.85s ease-out forwards;pointer-events:none}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-60%) scale(.7)}16%{opacity:1;transform:translate(-50%,-100%) scale(1.05)}100%{opacity:0;transform:translate(-50%,-185%) scale(1)}}
+
+/* 底部 24 小时日月大循环渐变滑杆坞（U7：extraBtns === 1） */
+#bottomDock{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:6;
+  width:min(610px,calc(100vw - 24px));padding:9px 14px;border-radius:20px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 8px 24px rgba(30,22,12,.18);
+  display:flex;flex-direction:column;gap:6px}
+.slider-row{display:flex;align-items:center;gap:9px}
+.clock-pill{min-width:124px;padding:4px 10px;border-radius:11px;background:#fff4e2;border:1.5px solid #f0c286;
+  text-align:center;font-size:13px;font-weight:900;color:#9a3c07;white-space:nowrap;transition:all .2s}
+.clock-pill.night{background:#e0e7ff;border-color:#818cf8;color:#1e3a8a}
+.end-ico{font-size:18px;line-height:1;flex:none}
+#hourSlider{flex:1;height:12px;-webkit-appearance:none;appearance:none;border-radius:99px;outline:none;cursor:pointer;
+  background:linear-gradient(90deg,#f7a440 0%,#5cc0f8 25%,#f47a38 50%,#1d2b57 75%,#f7a440 100%);
+  border:1.5px solid #d9c7a8}
+#hourSlider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:24px;height:24px;border-radius:50%;
+  background:#fff;border:3px solid var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.26);cursor:pointer}
+.auto-btn{width:36px;height:34px;border-radius:11px;border:1.5px solid #2b7de9;background:#eff6ff;
+  font-family:inherit;font-size:15px;font-weight:900;color:#1d5fc0;cursor:pointer;display:grid;place-items:center;flex:none;
+  box-shadow:0 2px 0 #bfdbfe;transition:all .14s}
+.auto-btn:hover{background:#dbeafe}
+.auto-btn.on{background:#2b7de9;color:#fff;box-shadow:0 2px 0 #1d4ed8}
+.period-dots{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+.pdot{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:800;
+  background:#faf4e8;border:1.5px solid #e6d8be;color:#8c795e;transition:all .18s}
+.pdot.active{border-color:var(--accent);background:#fff3e0;color:#b8500a}
+.pdot.done{border-color:#16a34a;background:#dcfce7;color:#166534}
+.pdot.pulse{border-color:#f59e0b;animation:dotPulse 1.2s ease-in-out infinite}
+@keyframes dotPulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.55)}50%{box-shadow:0 0 0 6px rgba(245,158,11,0)}}
+
+/* 通关彩带 + 结论与1题巩固弹窗 */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+#winToast{position:fixed;inset:0;z-index:35;display:none;place-items:center;background:rgba(36,24,10,.36);padding:16px}
+#winToast.show{display:grid}
+.win-card{width:min(460px,100%);max-height:86vh;overflow-y:auto;background:#fffdf8;
+  border:2.5px solid var(--accent);border-radius:22px;padding:18px 20px;text-align:center;
+  box-shadow:0 20px 50px rgba(40,22,4,.28);animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+.win-concl{margin:10px 0;padding:10px 12px;border-radius:13px;background:#fff8eb;border:1.5px solid #f2cf9b;
+  text-align:left;font-size:13.5px;line-height:1.6;color:#5a3309}
+.win-quiz{margin:10px 0;padding:10px 12px;border-radius:13px;background:#f8fafc;border:1.5px solid #d9e2ec;text-align:left}
+.win-quiz h4{margin:0 0 7px;font-size:13.5px;color:#2b3a4a}
+.qopts{display:flex;flex-direction:column;gap:7px}
+.qopt{padding:8px 11px;border-radius:11px;border:1.5px solid #d9d0be;background:#fff;
+  font-family:inherit;font-size:13.5px;font-weight:800;text-align:left;cursor:pointer;transition:all .14s;color:var(--ink)}
+.qopt:hover{border-color:var(--accent);background:#fff9f0}
+.qopt.ok{border-color:#2b8a3e;background:#ebfbee;color:#2b8a3e}
+.qopt.bad{border-color:#e03131;background:#fff5f5;color:#c92a2a}
+.qfb{margin-top:7px;font-size:12.5px;font-weight:800;min-height:18px;color:#b45309}
+.qfb.ok{color:#2b8a3e}
+.win-acts{display:flex;justify-content:center;gap:10px;margin-top:12px}
+
+@media (max-width:760px){
+  #hudTL{top:8px;left:8px;padding:5px 10px 5px 6px}
+  .hd-t{font-size:14px}.hd-sub{display:none}
+  #hudTR{top:8px;right:8px;gap:4px}.tbtn{height:32px;padding:0 8px;font-size:12px}
+  .entry-cue{display:none}
+  #guideBar{top:48px;left:8px;right:8px;max-width:none;font-size:12px;padding:5px 10px}
+  #notes{top:auto;bottom:122px;right:8px;width:200px}
+  #ntList{max-height:70px}
+  #bottomDock{bottom:8px;padding:6px 8px}
+  .pdot{padding:2px 6px;font-size:11px}
+  .clock-pill{min-width:98px;font-size:12px}
+}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="floatLayer">
+  <div class="cue3d" id="targetCue">👆 拖动太阳从东往西滑一滑</div>
+</div>
+<canvas id="confetti"></canvas>
+
+<div id="hudTL">
+  <a id="backBtn" href="../index.html" title="返回书包">‹</a>
+  <div>
+    <div class="hd-t" data-py="dì kè bái tiān yǔ hēi yè">第8课 白天与黑夜</div>
+    <div class="hd-sub">活页 · 课本第 35 页「24 小时日月连续东升西落」</div>
+  </div>
+</div>
+
+<div id="guideBar" title="点我重听当前步骤">
+  <span id="guideIco">🌅</span>
+  <span id="guideTxt">第1步：按住天上的太阳，从东往西滑过天空体验白天吧！</span>
+</div>
+
+<div id="hudTR">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<aside id="notes">
+  <div class="nt-head">
+    <span class="nt-title" data-py="wǒ de fā xiàn">我的发现</span>
+    <span class="nt-cnt" id="ntCnt">0/4</span>
+    <button class="nt-tog" id="ntTog" type="button">收起</button>
+  </div>
+  <div class="stamps">
+    <span class="st" id="st1" data-py="rì chū jǐng xiàng">日出景象</span>
+    <span class="st" id="st2" data-py="rì luò yuè shēng">日落月升</span>
+    <span class="st" id="st3" data-py="zhòu yè jiāo tì">昼夜交替</span>
+  </div>
+  <div id="ntList"></div>
+</aside>
+
+<div id="bottomDock">
+  <div class="period-dots">
+    <span class="pdot" id="dotDawn" data-p="dawn">🌅 日出</span>
+    <span class="pdot" id="dotNoon" data-p="noon">☀️ 正午</span>
+    <span class="pdot" id="dotDusk" data-p="dusk">🌇 日落月升</span>
+    <span class="pdot" id="dotNight" data-p="night">🌙 月行夜空</span>
+  </div>
+  <div class="slider-row">
+    <span class="clock-pill" id="clockLabel">06:00 清晨</span>
+    <span class="end-ico" title="清晨日出">🌅</span>
+    <input id="hourSlider" type="range" min="6" max="30" step="0.25" value="6" aria-label="24小时日月交替循环滑杆">
+    <span class="end-ico" title="次日黎明">🌅</span>
+    <button class="auto-btn" id="autoBtn" type="button" title="播放/暂停昼夜轮换" aria-label="播放昼夜轮换">▶</button>
+  </div>
+</div>
+
+<div id="winToast">
+  <div class="win-card">
+    <div style="font-size:40px">🏆</div>
+    <h3 style="margin:4px 0" data-py="tài bàng la zhòu yè fā xiàn quán jí qí">太棒啦！昼夜发现全集齐！</h3>
+    <div class="win-concl">
+      <b>✨ 科学小结论：</b>太阳每天从东方升起带来白天、从西方落下；黑夜降临时月亮也从东方升起滑过夜空落向西方，随后太阳再次升起，白天与黑夜周而复始地交替出现！
+    </div>
+    <div class="win-quiz">
+      <h4>💡 考考你 · 答对领小红花 🌸</h4>
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:8px">傍晚太阳从西方落下后，夜晚的天空会发生什么变化？</div>
+      <div class="qopts" id="qOpts">
+        <button class="qopt" type="button" data-ok="1">🌙 月亮从东方升起滑过夜空，星星闪烁、路灯亮起，天亮时太阳又从东方升起</button>
+        <button class="qopt" type="button" data-hint="再想想哦！太阳从东方升起是清晨日出的时候。">🌅 太阳一直停在西边不会落下</button>
+        <button class="qopt" type="button" data-hint="再想想哦！月亮和太阳一样，都是从东方升起、滑向西方落下的。">☀️ 月亮一直固定不动，第二天不会天亮</button>
+      </div>
+      <div class="qfb" id="qFb"></div>
+    </div>
+    <div class="win-acts">
+      <button class="tbtn" id="winKeepBtn" type="button">继续玩</button>
+      <button class="tbtn on" id="winAgainBtn" type="button">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js"></script>
+<script src="../vendor/voice.js"></script>
+<script>
+(function () {
+'use strict';
+
+try { sessionStorage.setItem('xk_last_vol', 'k1b'); } catch (e) {}
+
+var LESSON_ID = 'k1b-08';
+var BOOK_PROGRESS_KEY = 'xk_k1b_progress';
+
+var $ = function (s) { return document.querySelector(s); };
+var HAN = /[\u3400-\u9fff]/;
+var pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function ruby(text, py) {
+  if (!py) return esc(text);
+  var syl = py.trim().split(/\s+/), i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) {
+      var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; }
+      out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>';
+    } else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+document.querySelectorAll('[data-py]').forEach(function (el) { el.innerHTML = ruby(el.textContent, el.dataset.py); });
+
+$('#backBtn').addEventListener('click', function () {
+  try { sessionStorage.setItem('xk_last_vol', 'k1b'); } catch (e) {}
+});
+
+/* ===== 语音与轻柔音效 ===== */
+var voiceOn = true;
+function stopVoice() {
+  if (window.__xkVoice) window.__xkVoice.stop();
+  else if (window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
+}
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
+  if (!('speechSynthesis' in window)) return;
+  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+}
+var audioCtx = null;
+function playChime(freqs) {
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!audioCtx) audioCtx = new AC();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    var now = audioCtx.currentTime;
+    freqs.forEach(function (f, idx) {
+      var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(f, now + idx * 0.09);
+      g.gain.setValueAtTime(0.001, now + idx * 0.09);
+      g.gain.exponentialRampToValueAtTime(0.12, now + idx * 0.09 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.28);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(now + idx * 0.09); o.stop(now + idx * 0.09 + 0.3);
+    });
+  } catch (e) {}
+}
+
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem(BOOK_PROGRESS_KEY) || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem(BOOK_PROGRESS_KEY, JSON.stringify(d));
+  } catch (e) {}
+}
+
+/* ===== 彩带庆祝 ===== */
+var cCv = $('#confetti'), cCtx = cCv.getContext('2d'), confettiParts = [];
+function resizeConfetti() { cCv.width = window.innerWidth; cCv.height = window.innerHeight; }
+function burstConfetti() {
+  confettiParts = [];
+  var cols = ['#f59e0b', '#ef4444', '#3b82f6', '#10b981', '#ec4899', '#eab308'];
+  for (var i = 0; i < 85; i++) {
+    confettiParts.push({
+      x: cCv.width * (0.2 + Math.random() * 0.6), y: cCv.height * 0.3,
+      vx: (Math.random() - 0.5) * 9, vy: -4 - Math.random() * 7,
+      s: 6 + Math.random() * 6, r: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.25,
+      col: cols[i % cols.length], life: 1
+    });
+  }
+}
+function tickConfetti() {
+  if (!confettiParts.length) return;
+  cCtx.clearRect(0, 0, cCv.width, cCv.height);
+  for (var i = confettiParts.length - 1; i >= 0; i--) {
+    var p = confettiParts[i];
+    p.x += p.vx; p.y += p.vy; p.vy += 0.22; p.r += p.vr; p.life -= 0.008;
+    if (p.life <= 0 || p.y > cCv.height + 20) { confettiParts.splice(i, 1); continue; }
+    cCtx.save(); cCtx.globalAlpha = Math.max(0, p.life);
+    cCtx.translate(p.x, p.y); cCtx.rotate(p.r);
+    cCtx.fillStyle = p.col; cCtx.fillRect(-p.s * 0.5, -p.s * 0.3, p.s, p.s * 0.6);
+    cCtx.restore();
+  }
+}
+
+/* ===== Three.js r147 24 小时日月连续东升西落 3D 昼夜全景 ===== */
+var cv = $('#cv');
+var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color('#7ec2f4');
+scene.fog = new THREE.Fog('#9fd5f8', 18, 44);
+
+var camera = new THREE.PerspectiveCamera(38, 16 / 9, 0.1, 100);
+camera.position.set(0.45, 4.9, 13.6);
+camera.lookAt(0.4, 2.1, -1.6);
+
+var hemiL = new THREE.HemisphereLight('#fff5de', '#5f7a58', 0.85);
+scene.add(hemiL);
+var sunL = new THREE.DirectionalLight('#fff2cc', 0.95);
+sunL.position.set(-7, 4, 4);
+sunL.castShadow = true;
+sunL.shadow.mapSize.set(1024, 1024);
+sunL.shadow.camera.left = -10; sunL.shadow.camera.right = 10;
+sunL.shadow.camera.top = 10; sunL.shadow.camera.bottom = -10;
+scene.add(sunL);
+
+var toon = function (col, opts) { return new THREE.MeshToonMaterial(Object.assign({ color: col }, opts || {})); };
+var live = new THREE.Group();
+scene.add(live);
+
+/* 1. 可点击天空穹顶 & 晚霞地平带 */
+var skyBackdrop = new THREE.Mesh(
+  new THREE.PlaneGeometry(48, 24),
+  new THREE.MeshBasicMaterial({ color: '#7ec2f4', depthWrite: false })
+);
+skyBackdrop.position.set(0, 7.2, -14.5);
+skyBackdrop.userData.hit = 'sky';
+live.add(skyBackdrop);
+
+var horizonBand = new THREE.Mesh(
+  new THREE.PlaneGeometry(48, 7.5),
+  new THREE.MeshBasicMaterial({ color: '#ffd18c', transparent: true, opacity: 0.65, depthWrite: false })
+);
+horizonBand.position.set(0, 2.4, -14.0);
+horizonBand.userData.hit = 'sky';
+live.add(horizonBand);
+
+/* 2. 3D 太阳与 3D 大月亮（同等体量 + 同等超大优先拾取球，无视山峰云朵！） */
+var ORB_HIT_MAT = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false });
+
+var sunGroup = new THREE.Group();
+var sunCoreMat = new THREE.MeshBasicMaterial({ color: '#ffdd47' });
+var sunCore = new THREE.Mesh(new THREE.SphereGeometry(0.95, 24, 18), sunCoreMat);
+sunCore.userData.hit = 'sun';
+sunGroup.add(sunCore);
+var sunHaloMat = new THREE.MeshBasicMaterial({ color: '#ffae42', transparent: true, opacity: 0.42 });
+var sunHalo = new THREE.Mesh(new THREE.SphereGeometry(1.42, 20, 14), sunHaloMat);
+sunHalo.userData.hit = 'sun';
+sunGroup.add(sunHalo);
+var sunRays = new THREE.Group();
+for (var sr = 0; sr < 10; sr++) {
+  var rayM = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.58, 6), new THREE.MeshBasicMaterial({ color: '#ffe673' }));
+  var ang = (sr / 10) * Math.PI * 2;
+  rayM.position.set(Math.cos(ang) * 1.32, Math.sin(ang) * 1.32, 0);
+  rayM.rotation.z = ang - Math.PI / 2;
+  rayM.userData.hit = 'sun';
+  sunRays.add(rayM);
+}
+sunGroup.add(sunRays);
+var sunDragRingMat = new THREE.MeshBasicMaterial({ color: '#fff7d6', transparent: true, opacity: 0.65, side: THREE.DoubleSide });
+var sunDragRing = new THREE.Mesh(new THREE.RingGeometry(1.52, 1.78, 28), sunDragRingMat);
+sunDragRing.userData.hit = 'sun';
+sunGroup.add(sunDragRing);
+var sunHit = new THREE.Mesh(new THREE.SphereGeometry(2.95, 14, 12), ORB_HIT_MAT);
+sunHit.userData.hit = 'sun';
+sunGroup.add(sunHit);
+live.add(sunGroup);
+
+// 带温柔月球陨石坑纹理的 3D 大月亮（与太阳同等级醒目！）
+var moonTexCanvas = document.createElement('canvas');
+moonTexCanvas.width = 256; moonTexCanvas.height = 128;
+(function (ctx) {
+  ctx.fillStyle = '#fff6c7'; ctx.fillRect(0, 0, 256, 128);
+  var craters = [
+    [68, 44, 18, 'rgba(220,192,120,0.45)'], [132, 62, 24, 'rgba(210,180,108,0.40)'],
+    [192, 46, 15, 'rgba(220,192,120,0.45)'], [98, 88, 12, 'rgba(215,186,115,0.42)'],
+    [164, 86, 16, 'rgba(205,176,104,0.38)'], [42, 74, 10, 'rgba(220,192,120,0.38)']
+  ];
+  craters.forEach(function (c) {
+    ctx.beginPath(); ctx.arc(c[0], c[1], c[2], 0, Math.PI * 2);
+    ctx.fillStyle = c[3]; ctx.fill();
+  });
+})(moonTexCanvas.getContext('2d'));
+var moonTex = new THREE.CanvasTexture(moonTexCanvas);
+
+var moonGroup = new THREE.Group();
+var moonCore = new THREE.Mesh(new THREE.SphereGeometry(0.95, 24, 18), new THREE.MeshBasicMaterial({ map: moonTex }));
+moonCore.userData.hit = 'moon';
+moonGroup.add(moonCore);
+var moonGlow = new THREE.Mesh(new THREE.SphereGeometry(1.40, 20, 14), new THREE.MeshBasicMaterial({ color: '#dbeafe', transparent: true, opacity: 0.34 }));
+moonGlow.userData.hit = 'moon';
+moonGroup.add(moonGlow);
+var moonDragRingMat = new THREE.MeshBasicMaterial({ color: '#e0f2fe', transparent: true, opacity: 0.68, side: THREE.DoubleSide });
+var moonDragRing = new THREE.Mesh(new THREE.RingGeometry(1.48, 1.74, 28), moonDragRingMat);
+moonDragRing.userData.hit = 'moon';
+moonGroup.add(moonDragRing);
+var moonHit = new THREE.Mesh(new THREE.SphereGeometry(2.95, 14, 12), ORB_HIT_MAT);
+moonHit.userData.hit = 'moon';
+moonGroup.add(moonHit);
+live.add(moonGroup);
+
+// 东→西淡雅高空弧线轨迹点（视觉暗示太阳与月亮都从东往西滑行！）
+var arcDots = [];
+var arcDotMat = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.24 });
+for (var ad = 0; ad <= 16; ad++) {
+  var ap = ad / 16;
+  var aa = Math.PI * (1 - ap);
+  var dotM = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), arcDotMat);
+  dotM.position.set(Math.cos(aa) * 6.3, Math.sin(aa) * 3.15 + 2.30, -11.3);
+  live.add(dotM);
+  arcDots.push(dotM);
+}
+
+var starGroup = new THREE.Group();
+var starMeshes = [];
+for (var st = 0; st < 56; st++) {
+  var sm = new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.065 + (st % 3) * 0.026, 0),
+    new THREE.MeshBasicMaterial({ color: st % 4 === 0 ? '#fde68a' : '#ffffff', transparent: true, opacity: 0 })
+  );
+  sm.position.set(-12.5 + ((st * 37) % 250) / 10, 3.0 + ((st * 29) % 58) / 10, -12.5);
+  sm.userData.phase = st * 0.7;
+  starGroup.add(sm);
+  starMeshes.push(sm);
+}
+live.add(starGroup);
+
+/* 3. 3D 云朵（随傍晚晚霞变红彤彤） */
+var clouds = [], cloudMats = [];
+function makeCloud(x, y, z, s) {
+  var g = new THREE.Group();
+  var mat = new THREE.MeshToonMaterial({ color: '#ffffff' });
+  cloudMats.push(mat);
+  [[-0.65, 0, 0, 0.52], [0, 0.22, 0.05, 0.68], [0.7, 0.04, 0, 0.55], [0.22, -0.05, -0.1, 0.48]].forEach(function (c) {
+    var m = new THREE.Mesh(new THREE.SphereGeometry(c[3], 14, 12), mat);
+    m.position.set(c[0], c[1], c[2]);
+    m.userData.hit = 'sky';
+    g.add(m);
+  });
+  g.position.set(x, y, z);
+  g.scale.setScalar(s);
+  g.userData.baseX = x;
+  g.userData.speed = 0.14 + Math.random() * 0.12;
+  live.add(g);
+  clouds.push(g);
+}
+makeCloud(-6.2, 5.2, -9.2, 1.05);
+makeCloud(-1.8, 5.8, -10.0, 0.95);
+makeCloud(2.6, 5.0, -9.5, 1.1);
+makeCloud(5.8, 4.3, -8.8, 0.85);
+makeCloud(-4.0, 4.1, -8.2, 0.78);
+
+/* 4. 远山、公园岸边草地与湖泊 */
+var ground = new THREE.Mesh(new THREE.BoxGeometry(28, 0.6, 16), toon('#78b85a'));
+ground.position.set(0, -0.3, -1.5); ground.receiveShadow = true;
+live.add(ground);
+
+var hillData = [
+  [-8.2, -9.4, 3.6, 2.2, '#5a9464'], [-4.2, -9.8, 4.4, 2.6, '#4c825a'],
+  [0.2, -10.2, 4.8, 2.5, '#578e62'], [4.8, -9.6, 4.2, 2.4, '#4b7e58'], [8.6, -9.0, 3.6, 2.1, '#5a8e64']
+];
+hillData.forEach(function (h) {
+  var m = new THREE.Mesh(new THREE.ConeGeometry(h[2], h[3], 14), toon(h[4]));
+  m.position.set(h[0], h[3] * 0.36, h[1]);
+  m.scale.set(1.3, 1, 0.7);
+  live.add(m);
+});
+
+var lakeMat = new THREE.MeshToonMaterial({ color: '#47a9df' });
+var lake = new THREE.Mesh(new THREE.CylinderGeometry(4.4, 4.4, 0.16, 36), lakeMat);
+lake.scale.set(1.22, 1, 0.72);
+lake.position.set(-0.6, -0.02, -0.3);
+lake.receiveShadow = true;
+lake.userData.hit = 'lake';
+live.add(lake);
+
+var reflMat = new THREE.MeshBasicMaterial({ color: '#ffe07d', transparent: true, opacity: 0.55 });
+var lakeRefl = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 3.8), reflMat);
+lakeRefl.rotation.x = -Math.PI / 2;
+lakeRefl.position.set(-2.2, 0.08, -0.3);
+lakeRefl.userData.hit = 'lake';
+live.add(lakeRefl);
+
+var dockWood = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.14, 1.3), toon('#b9824a'));
+dockWood.position.set(-3.3, 0.1, 1.2); dockWood.castShadow = true; dockWood.receiveShadow = true;
+live.add(dockWood);
+for (var p = 0; p < 4; p++) {
+  var post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.5, 8), toon('#8f5d32'));
+  post.position.set(-4.0 + (p % 2) * 1.4, 0.25, 0.7 + Math.floor(p / 2) * 1.0);
+  live.add(post);
+}
+
+/* 5. 东侧公园垂柳与绿树 */
+function makeTree(x, z, s, isWillow) {
+  var g = new THREE.Group();
+  var trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.11 * s, 0.16 * s, 1.25 * s, 8), toon('#7c5230'));
+  trunk.position.y = 0.62 * s; trunk.castShadow = true; g.add(trunk);
+  if (isWillow) {
+    var top = new THREE.Mesh(new THREE.SphereGeometry(0.82 * s, 12, 10), toon('#5fa847'));
+    top.position.y = 1.42 * s; top.scale.set(1.1, 0.85, 1.1); top.castShadow = true; g.add(top);
+    for (var w = 0; w < 6; w++) {
+      var ang = (w / 6) * Math.PI * 2;
+      var strand = new THREE.Mesh(new THREE.CylinderGeometry(0.05 * s, 0.09 * s, 0.9 * s, 6), toon('#72ba54'));
+      strand.position.set(Math.cos(ang) * 0.58 * s, 0.96 * s, Math.sin(ang) * 0.58 * s);
+      g.add(strand);
+    }
+  } else {
+    var c1 = new THREE.Mesh(new THREE.SphereGeometry(0.68 * s, 12, 10), toon('#4f9a44'));
+    c1.position.y = 1.45 * s; c1.castShadow = true; g.add(c1);
+    var c2 = new THREE.Mesh(new THREE.SphereGeometry(0.5 * s, 10, 8), toon('#66b454'));
+    c2.position.set(0.32 * s, 1.25 * s, 0.15 * s); g.add(c2);
+  }
+  g.position.set(x, 0, z);
+  live.add(g);
+}
+makeTree(-5.8, -2.0, 1.15, true);
+makeTree(-4.7, -3.4, 1.0, false);
+makeTree(-6.7, 0.4, 0.95, true);
+makeTree(-2.2, -3.8, 0.85, false);
+makeTree(1.2, -3.6, 0.88, false);
+
+/* 6. 西侧小区楼房与夜晚会亮灯的窗户 */
+var windowMats = [];
+function makeBuilding(x, z, w, h, d, col, rows, cols) {
+  var g = new THREE.Group();
+  var body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), toon(col));
+  body.position.y = h * 0.5; body.castShadow = true; body.receiveShadow = true;
+  body.userData.hit = 'building';
+  g.add(body);
+  var roof = new THREE.Mesh(new THREE.BoxGeometry(w + 0.16, 0.16, d + 0.16), toon('#8b6b56'));
+  roof.position.y = h + 0.08;
+  g.add(roof);
+  for (var r = 0; r < rows; r++) {
+    for (var c = 0; c < cols; c++) {
+      var wm = new THREE.MeshBasicMaterial({ color: '#6485a3' });
+      windowMats.push({ mat: wm, seed: (r * 7 + c * 13 + x * 5) % 10 });
+      var pane = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.42), wm);
+      pane.position.set((c - (cols - 1) / 2) * (w / (cols + 0.5)), 0.65 + r * ((h - 0.85) / Math.max(1, rows)), d * 0.5 + 0.02);
+      pane.userData.hit = 'building';
+      g.add(pane);
+    }
+  }
+  g.position.set(x, 0, z);
+  live.add(g);
+}
+makeBuilding(3.3, -3.0, 1.65, 2.5, 1.3, '#e8d7be', 3, 2);
+makeBuilding(5.1, -2.5, 1.5, 2.1, 1.25, '#dcd0c4', 2, 2);
+makeBuilding(4.1, -0.7, 1.4, 1.75, 1.15, '#f0dfd0', 2, 2);
+
+/* 7. 湖畔路灯（夜晚自动亮起暖黄光晕） */
+var lampBulbMats = [], lampHaloMats = [];
+function makeLamp(x, z) {
+  var g = new THREE.Group();
+  var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.06, 1.85, 8), toon('#475569'));
+  pole.position.y = 0.92; pole.castShadow = true; pole.userData.hit = 'lamp'; g.add(pole);
+  var arm = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.05, 0.05), toon('#475569'));
+  arm.position.set(-0.16, 1.82, 0); g.add(arm);
+  var bMat = new THREE.MeshBasicMaterial({ color: '#cbd5e1' });
+  lampBulbMats.push(bMat);
+  var bulb = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 10), bMat);
+  bulb.position.set(-0.32, 1.72, 0); bulb.userData.hit = 'lamp'; g.add(bulb);
+  var hMat = new THREE.MeshBasicMaterial({ color: '#fde68a', transparent: true, opacity: 0 });
+  lampHaloMats.push(hMat);
+  var halo = new THREE.Mesh(new THREE.SphereGeometry(0.42, 12, 10), hMat);
+  halo.position.set(-0.32, 1.72, 0); g.add(halo);
+  var pool = new THREE.Mesh(new THREE.CircleGeometry(0.65, 16), hMat);
+  pool.rotation.x = -Math.PI / 2; pool.position.set(-0.28, 0.04, 0); g.add(pool);
+  g.position.set(x, 0, z);
+  live.add(g);
+}
+makeLamp(2.3, 1.0);
+makeLamp(3.8, 1.5);
+makeLamp(-4.5, 1.8);
+
+/* 8. 东 / 西 方位标牌（明确日月皆东升西落） */
+function makeSign(txt, sub, col, x, z) {
+  var g = new THREE.Group();
+  var post = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 1.05, 8), toon('#8c5d32'));
+  post.position.y = 0.52; g.add(post);
+  var c = document.createElement('canvas'); c.width = 220; c.height = 128;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#fffaf0'; ctx.strokeStyle = col; ctx.lineWidth = 10;
+  ctx.fillRect(6, 6, 208, 116); ctx.strokeRect(6, 6, 208, 116);
+  ctx.fillStyle = col; ctx.font = 'bold 54px "Microsoft YaHei",sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(txt, 110, 66);
+  ctx.fillStyle = '#5c4b34'; ctx.font = 'bold 26px "Microsoft YaHei",sans-serif';
+  ctx.fillText(sub, 110, 106);
+  var tex = new THREE.CanvasTexture(c);
+  var board = new THREE.Mesh(new THREE.BoxGeometry(1.22, 0.70, 0.08), new THREE.MeshBasicMaterial({ map: tex }));
+  board.position.y = 1.18;
+  board.userData.hit = txt === '东' ? 'east' : 'west';
+  g.add(board);
+  g.position.set(x, 0, z);
+  live.add(g);
+}
+makeSign('东', '日月升起', '#e56d17', -5.4, 2.2);
+makeSign('西', '日月落下', '#d9480f', 4.8, 2.2);
+
+/* ===== 完整 24 小时相位映射：curCycle ∈ [6, 30]（06:00 → 18:00 白天太阳东升西落，18:00 → 30:00 黑夜月亮东升西落！） ===== */
+var curCycle = 6.0, targetCycle = 6.0, autoCycle = false;
+
+var keyframes = [
+  { h: 0,    sky: '#0d1733', hor: '#192a54', hemiS: '#2b3e6e', hemiG: '#141e2e', sunC: '#8cb4ec', sunI: 0.22, cld: '#36486e', lake: '#183058', fog: '#142244' },
+  { h: 4.5,  sky: '#182752', hor: '#5b4464', hemiS: '#485278', hemiG: '#1d2734', sunC: '#b0a6d4', sunI: 0.26, cld: '#5f5b7a', lake: '#253c63', fog: '#2d3458' },
+  { h: 6,    sky: '#6fa9dc', hor: '#ffbe6b', hemiS: '#ffe0b3', hemiG: '#5f7a58', sunC: '#ffbc57', sunI: 0.85, cld: '#ffe7c4', lake: '#5aa6d6', fog: '#f5cfa3' },
+  { h: 8.5,  sky: '#68b9f2', hor: '#bce6ff', hemiS: '#fff6e0', hemiG: '#6f9458', sunC: '#fff2cc', sunI: 0.96, cld: '#ffffff', lake: '#42a8e6', fog: '#a9dcf8' },
+  { h: 12,   sky: '#49a8f2', hor: '#b0e2ff', hemiS: '#ffffff', hemiG: '#78a05d', sunC: '#fff9e6', sunI: 1.05, cld: '#ffffff', lake: '#2e9ee0', fog: '#9ad6fa' },
+  { h: 16,   sky: '#65b4eb', hor: '#d8e8f5', hemiS: '#fff2d6', hemiG: '#708f56', sunC: '#ffe8b3', sunI: 0.92, cld: '#fff5e6', lake: '#3e9cd8', fog: '#b5daf0' },
+  { h: 18,   sky: '#5d538e', hor: '#f56236', hemiS: '#ffb88c', hemiG: '#5a5049', sunC: '#ff6f3c', sunI: 0.72, cld: '#ff7d57', lake: '#805c70', fog: '#d97b5c' },
+  { h: 19.5, sky: '#1e2c59', hor: '#5e3d59', hemiS: '#3e4772', hemiG: '#202936', sunC: '#9ab4e8', sunI: 0.28, cld: '#4f5476', lake: '#203860', fog: '#2e3559' },
+  { h: 22,   sky: '#0d1733', hor: '#192a54', hemiS: '#2b3e6e', hemiG: '#141e2e', sunC: '#8cb4ec', sunI: 0.22, cld: '#36486e', lake: '#183058', fog: '#142244' },
+  { h: 24,   sky: '#0d1733', hor: '#192a54', hemiS: '#2b3e6e', hemiG: '#141e2e', sunC: '#8cb4ec', sunI: 0.22, cld: '#36486e', lake: '#183058', fog: '#142244' }
+];
+var cA = new THREE.Color(), cB = new THREE.Color();
+function lerpCol(hexA, hexB, t, out) { cA.set(hexA); cB.set(hexB); return out.copy(cA).lerp(cB, t); }
+
+function norm24(ch) { return ((ch % 24) + 24) % 24; }
+
+function getPeriodKey(ch) {
+  if (ch >= 6.0 && ch <= 8.5) return 'dawn';
+  if (ch >= 10.5 && ch <= 14.0) return 'noon';
+  if (ch >= 16.8 && ch <= 19.4) return 'dusk';
+  if (ch >= 22.0 && ch <= 29.95) return 'night';
+  return null;
+}
+
+function formatClock(ch) {
+  var h = norm24(ch);
+  var hh = Math.floor(h), mm = Math.round((h - hh) * 60);
+  if (mm === 60) { mm = 0; hh = (hh + 1) % 24; }
+  var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+  var tag = ch >= 29.2 ? '次日黎明' : (ch < 8.5 ? '清晨日出' : ch < 11 ? '上午' : ch < 14 ? '阳光正午' : ch < 16.8 ? '下午' : ch < 19.2 ? '傍晚日落' : ch < 22 ? '初夜月升' : ch < 26 ? '午夜月圆' : '黎明将至');
+  return pad(hh) + ':' + pad(mm) + ' ' + tag;
+}
+
+function applyTimeVisuals(ch, nowSec) {
+  var h = norm24(ch);
+  var k0 = keyframes[0], k1 = keyframes[keyframes.length - 1];
+  for (var i = 0; i < keyframes.length - 1; i++) {
+    if (h >= keyframes[i].h && h <= keyframes[i + 1].h) { k0 = keyframes[i]; k1 = keyframes[i + 1]; break; }
+  }
+  var span = Math.max(0.001, k1.h - k0.h), t = (h - k0.h) / span;
+
+  lerpCol(k0.sky, k1.sky, t, scene.background);
+  skyBackdrop.material.color.copy(scene.background);
+  lerpCol(k0.hor, k1.hor, t, horizonBand.material.color);
+  lerpCol(k0.fog, k1.fog, t, scene.fog.color);
+  lerpCol(k0.hemiS, k1.hemiS, t, hemiL.color);
+  lerpCol(k0.hemiG, k1.hemiG, t, hemiL.groundColor);
+  lerpCol(k0.sunC, k1.sunC, t, sunL.color);
+  sunL.intensity = k0.sunI + (k1.sunI - k0.sunI) * t;
+  lerpCol(k0.lake, k1.lake, t, lakeMat.color);
+  cloudMats.forEach(function (m) { lerpCol(k0.cld, k1.cld, t, m.color); });
+
+  // 1) 太阳：06:00 从东(-6.4)升起 → 12:00 正午最高(0, 6.3) → 18:00 落到西(+6.4)
+  //    在 18.0..18.6 西沉隐退，在 29.2..30.0 东方再现！
+  var sunVis = (ch <= 18.55) || (ch >= 29.15);
+  sunGroup.visible = sunVis;
+  if (sunVis) {
+    var sunPhase, sunScale = 1;
+    if (ch <= 18.55) {
+      sunPhase = Math.max(0, Math.min(1, (ch - 6.0) / 12.0));
+      if (ch > 18.0) sunScale = Math.max(0.05, 1 - (ch - 18.0) / 0.55);
+    } else {
+      sunPhase = 0;
+      sunScale = Math.max(0.05, (ch - 29.15) / 0.85);
+    }
+    var ang = Math.PI * (1 - sunPhase); // PI(East/-X) -> 0(West/+X)
+    var sx = Math.cos(ang) * 6.4;
+    var sy = Math.sin(ang) * 3.15 + 2.30 - (1 - sunScale) * 0.7;
+    sunGroup.position.set(sx, sy, -10.8);
+    sunGroup.scale.setScalar(sunScale);
+    sunRays.rotation.z = nowSec * 0.55;
+    var warmEdge = Math.pow(1 - Math.sin(sunPhase * Math.PI), 1.4);
+    lerpCol('#ffe46b', '#ff692b', warmEdge, sunCoreMat.color);
+    lerpCol('#ffd066', '#ff4d24', warmEdge, sunHaloMat.color);
+    if (ch <= 18.2) {
+      sunL.position.set(sx * 1.1, Math.max(2.6, sy * 1.25), 4.5);
+      lakeRefl.position.x = sx * 0.45;
+      reflMat.color.copy(sunCoreMat.color);
+      reflMat.opacity = 0.28 + 0.45 * Math.sin(sunPhase * Math.PI + 0.2);
+    }
+  }
+
+  // 2) 月亮：18:00 从东(-6.2)冉冉升起 → 24:00 午夜正中最高(0, 5.45) → 30:00 (次日 06:00) 落向西(+6.2)！
+  var moonVis = (ch >= 17.45 && ch <= 30.0);
+  moonGroup.visible = moonVis;
+  var nightAmt = (ch >= 19.2 && ch <= 28.6) ? 1 : (ch > 17.6 && ch < 19.2) ? (ch - 17.6) / 1.6 : (ch > 28.6 && ch < 29.9) ? (29.9 - ch) / 1.3 : 0;
+  if (moonVis) {
+    var moonPhase = Math.max(0, Math.min(1, (ch - 18.0) / 12.0));
+    var moonScale = ch < 18.0 ? Math.max(0.08, (ch - 17.45) / 0.55) : (ch > 29.4 ? Math.max(0.12, (30.0 - ch) / 0.6) : 1);
+    var mang = Math.PI * (1 - moonPhase); // PI(East/-X) -> 0(West/+X)
+    var mx = Math.cos(mang) * 6.2;
+    var my = Math.sin(mang) * 3.10 + 2.30 - (1 - moonScale) * 0.6;
+    moonGroup.position.set(mx, my, -10.6);
+    moonGroup.scale.setScalar(moonScale);
+    moonCore.rotation.y = nowSec * 0.12;
+    if (ch > 18.2) {
+      sunL.position.set(mx, Math.max(3, my), 5);
+      lakeRefl.position.x = mx * 0.44;
+      reflMat.color.set('#fff3b0');
+      reflMat.opacity = 0.42 * Math.max(0.3, nightAmt);
+    }
+  }
+
+  arcDotMat.opacity = 0.16 + 0.14 * nightAmt;
+  starMeshes.forEach(function (sm) {
+    sm.material.opacity = nightAmt * (0.45 + 0.55 * Math.abs(Math.sin(nowSec * 2.2 + sm.userData.phase)));
+  });
+
+  // 窗户灯光与路灯在天暗时柔和点亮
+  var lightOn = nightAmt > 0.35;
+  windowMats.forEach(function (w) {
+    var lit = lightOn && (w.seed !== 2 && w.seed !== 7);
+    w.mat.color.set(lit ? '#ffe27a' : (nightAmt > 0.5 ? '#2c3d59' : '#6f97b8'));
+  });
+  lampBulbMats.forEach(function (m) { m.color.set(lightOn ? '#fff2a6' : '#cbd5e1'); });
+  lampHaloMats.forEach(function (m) { m.opacity = lightOn ? 0.36 * nightAmt : 0; });
+
+  // 更新时钟显示与时段进度徽章
+  var clockEl = $('#clockLabel');
+  clockEl.textContent = formatClock(ch);
+  clockEl.classList.toggle('night', ch >= 18.2 && ch <= 29.2);
+  var pk = getPeriodKey(ch);
+  document.querySelectorAll('.pdot').forEach(function (d) { d.classList.toggle('active', d.dataset.p === pk); });
+
+  // 呼吸拖拽光环反馈
+  var ringPulse = 1 + Math.sin(nowSec * 4.2) * 0.08;
+  sunDragRing.scale.setScalar(draggingOrb === 'sun' ? 1.18 : ringPulse);
+  sunDragRingMat.opacity = draggingOrb === 'sun' ? 0.90 : (0.36 + 0.22 * Math.sin(nowSec * 4.2));
+  moonDragRing.scale.setScalar(draggingOrb === 'moon' ? 1.18 : ringPulse);
+  moonDragRingMat.opacity = draggingOrb === 'moon' ? 0.92 : (0.40 + 0.24 * Math.sin(nowSec * 4.2));
+}
+
+/* ===== 探索记录、印章、严格通关判定（D7, U1, U2） ===== */
+var found = {}, midNightSeen = false, stamps = { s1: false, s2: false, s3: false }, celebrated = false, demo = false;
+var resetGen = 0;
+var draggingOrb = null, dragStartX = 0, dragStartY = 0, dragStartCycle = 6.0, prevDragCycle = 6.0, dragMoved = false;
+var curGuideSpeech = '第1步：按住天上的太阳向右拖动，看看清晨日出时太阳从东方升起吧！';
+
+var PERIOD_INFO = {
+  dawn:  { stamp: 's1', badge: '🌅 清晨日出：金黄太阳从东方升起，大地亮起来啦！', spoken: '清晨日出！金黄的太阳从东方缓缓升起，新的一天开始啦！', fw: '🌅 太阳从东方升起！', dot: '#dotDawn' },
+  noon:  { stamp: null, badge: '☀️ 阳光正午：太阳高高挂在天空正中，公园阳光普照！', spoken: '阳光正午！太阳高高挂在天空中央，阳光普照暖洋洋的！', fw: '☀️ 太阳高挂天空正中！', dot: '#dotNoon' },
+  dusk:  { stamp: 's2', badge: '🌇 日落月升：太阳落向西方，大月亮紧接着从东方升起啦！', spoken: '傍晚日落！太阳落向西方，快看东边天空，大月亮从东方升起来啦！现在拖月亮滑过夜空吧！', fw: '🌇 太阳西落，🌙月亮东升！', dot: '#dotDusk' },
+  night: { stamp: null, badge: '🌙 月行夜空：月亮从东滑过午夜繁星落向西方，迎来次日黎明！', spoken: '太棒啦！大月亮从东方滑过繁星夜空落向西方，太阳紧接着又从东方升起，昼夜不停交替！', fw: '🌙 月落西山，🌅次日黎明！', dot: '#dotNight' }
+};
+
+function spawnFloat(text, xPct, yPct) {
+  var el = document.createElement('div');
+  el.className = 'fword';
+  el.textContent = text;
+  el.style.left = (xPct || 46) + '%';
+  el.style.top = (yPct || 42) + '%';
+  $('#floatLayer').appendChild(el);
+  var g = resetGen;
+  setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); void g; }, 1900);
+}
+
+function addDiscovery(key, fromUser) {
+  var info = PERIOD_INFO[key];
+  if (!info) return;
+  var isNew = !found[key];
+  if (isNew) {
+    found[key] = true;
+    var el = document.createElement('div');
+    el.className = 'stk';
+    el.textContent = info.badge;
+    $('#ntList').prepend(el);
+    var cnt = Object.keys(found).length;
+    $('#ntCnt').textContent = cnt + '/4';
+    var dot = $(info.dot);
+    if (dot) dot.classList.add('done');
+    playChime([523, 659, 784]);
+  }
+  if (info.stamp && !stamps[info.stamp]) {
+    stamps[info.stamp] = true;
+    $('#' + info.stamp.replace('s', 'st')).classList.add('lit');
+  }
+  var allFour = found.dawn && found.noon && found.dusk && found.night;
+  if (allFour && !stamps.s3) {
+    stamps.s3 = true;
+    $('#st3').classList.add('lit');
+  }
+  updateGuide(false);
+  if (!demo && !celebrated && allFour) {
+    celebrated = true;
+    saveProgress(LESSON_ID, true);
+    burstConfetti();
+    playChime([523, 659, 784, 1046]);
+    var g = resetGen;
+    setTimeout(function () {
+      if (g !== resetGen) return;
+      $('#winToast').classList.add('show');
+      speak('太棒啦！你亲自拖动太阳和月亮，体验了太阳东升西落、月亮也东升西落的完整昼夜大循环！快来看科学小结论领小红花吧！', true);
+    }, 650);
+    return;
+  }
+  if (fromUser && !demo && isNew) {
+    spawnFloat(info.fw, 46, 38);
+    speak(info.spoken);
+  }
+}
+
+function updateGuide(speakIt) {
+  document.querySelectorAll('.pdot').forEach(function (d) { d.classList.remove('pulse'); });
+  var ico = '🌅';
+  if (!found.dawn) {
+    curGuideSpeech = '第1步：按住天上的太阳向右拖动，看看清晨太阳从东方升起吧！';
+    $('#dotDawn').classList.add('pulse');
+  } else if (!found.noon) {
+    ico = '☀️';
+    curGuideSpeech = '第2步：继续拖着太阳向右滑到天空正中，感受阳光正午！';
+    $('#dotNoon').classList.add('pulse');
+  } else if (!found.dusk) {
+    ico = '🌇';
+    curGuideSpeech = '第3步：把太阳继续拖向西边落下，看看东边会升起什么吧！';
+    $('#dotDusk').classList.add('pulse');
+  } else if (!found.night) {
+    ico = '🌙';
+    curGuideSpeech = midNightSeen
+      ? '第4步：午夜繁星亮啦！继续把月亮拖向西方，迎接次日黎明！'
+      : '第4步：月亮从东边升起啦！按住大月亮从东往西拖过夜空吧！';
+    $('#dotNight').classList.add('pulse');
+  } else {
+    ico = '🏆';
+    curGuideSpeech = '太棒啦！完整 24 小时日月轮换体验完啦，随时自由拖动太阳、月亮或播放循环！';
+  }
+  $('#guideIco').textContent = ico;
+  $('#guideTxt').textContent = curGuideSpeech;
+  $('#guideBar').classList.toggle('done', !!(found.dawn && found.noon && found.dusk && found.night));
+  if (speakIt) speak(curGuideSpeech, true);
+}
+
+var lastLoggedPeriod = null;
+function evaluateCycleProgress(ch) {
+  if (ch >= 6.0 && ch <= 8.5) {
+    if (!found.dawn) addDiscovery('dawn', true);
+  } else if (ch >= 10.5 && ch <= 14.0) {
+    if (!found.noon) addDiscovery('noon', true);
+  } else if (ch >= 16.8 && ch <= 19.4) {
+    if (!found.dusk) addDiscovery('dusk', true);
+  } else if (ch >= 22.0 && ch <= 26.2) {
+    if (!midNightSeen) {
+      midNightSeen = true;
+      updateGuide(false);
+      if (!demo) {
+        spawnFloat('🌙 午夜月圆！星星闪烁，路灯窗户全亮啦！', 46, 36);
+        speak('午夜月圆！满天繁星闪烁，公园路灯和小区窗户都亮灯啦！继续把月亮向西拖，迎接明天太阳升起吧！');
+      }
+    }
+  } else if (ch >= 27.0 && ch <= 30.0) {
+    midNightSeen = true;
+    if (!found.night) addDiscovery('night', true);
+  }
+}
+
+function recordSweptCycle(cFrom, cTo) {
+  var dist = Math.abs(cTo - cFrom);
+  var steps = Math.max(1, Math.ceil(dist / 0.4));
+  for (var i = 0; i <= steps; i++) {
+    var sc = cFrom + (cTo - cFrom) * (i / steps);
+    evaluateCycleProgress(sc);
+  }
+}
+
+function setCycle(ch, recordNow, speakOnRepeat) {
+  targetCycle = Math.max(6.0, Math.min(30.0, ch));
+  $('#hourSlider').value = targetCycle;
+  if (recordNow) {
+    var pk = getPeriodKey(targetCycle);
+    var wasFound = pk && !!found[pk];
+    evaluateCycleProgress(targetCycle);
+    if (pk && wasFound && speakOnRepeat && !demo && PERIOD_INFO[pk]) {
+      spawnFloat(PERIOD_INFO[pk].fw, 46, 38);
+      speak(PERIOD_INFO[pk].spoken);
+    }
+    lastLoggedPeriod = pk;
+  }
+}
+
+/* ===== 自动演示模式（U2 慢速配音分步演示，绝不触发通关） ===== */
+function stopDemo() {
+  if (!demo) return;
+  demo = false;
+  $('#demoBtn').classList.remove('on');
+  $('#demoBtn').textContent = '▶ 演示';
+}
+function startDemo() {
+  markInteracted();
+  if (demo) { stopDemo(); stopVoice(); return; }
+  autoCycle = false; $('#autoBtn').classList.remove('on'); $('#autoBtn').textContent = '▶';
+  demo = true;
+  resetGen++;
+  var g = resetGen;
+  $('#demoBtn').classList.add('on');
+  $('#demoBtn').textContent = '⏸ 停止';
+  var steps = [
+    { ch: 6.2,  fw: '🌅 太阳从东方升起！', msg: '清晨六点，金黄的太阳从东方山后缓缓升起！' },
+    { ch: 12.0, fw: '☀️ 太阳高挂正午天空！', msg: '中午十二点，太阳滑到天空正中，公园阳光普照！' },
+    { ch: 18.2, fw: '🌇 太阳西落，🌙月亮东升！', msg: '傍晚六点，太阳落向西方，大月亮紧接着从东边升起啦！' },
+    { ch: 24.0, fw: '🌙 午夜月圆，繁星路灯亮啦！', msg: '午夜十二点，大月亮滑到夜空正中，繁星闪烁、路灯和窗户亮起暖灯！' },
+    { ch: 29.2, fw: '🌅 月落西山，太阳再从东方升起！', msg: '月亮继续滑向西方落下，太阳紧接着又从东方升起，昼夜不停轮换！' }
+  ];
+  steps.forEach(function (st, idx) {
+    setTimeout(function () {
+      if (g !== resetGen || !demo) return;
+      targetCycle = st.ch; $('#hourSlider').value = st.ch;
+      speak(st.msg, true);
+      spawnFloat(st.fw, 46, 36);
+    }, idx * 3300);
+  });
+  setTimeout(function () {
+    if (g !== resetGen) return;
+    stopDemo();
+    speak('演示结束！现在请你先拖动太阳从东滑向西，再拖动月亮从东滑过夜空落向西边吧！', true);
+  }, steps.length * 3300 + 400);
+}
+
+function resetAll() {
+  resetGen++;
+  stopDemo();
+  stopVoice();
+  autoCycle = false;
+  draggingOrb = null;
+  $('#autoBtn').classList.remove('on');
+  $('#autoBtn').textContent = '▶';
+  found = {}; midNightSeen = false; stamps = { s1: false, s2: false, s3: false }; celebrated = false; lastLoggedPeriod = null;
+  curCycle = 6.0; targetCycle = 6.0; $('#hourSlider').value = 6;
+  $('#ntList').innerHTML = ''; $('#ntCnt').textContent = '0/4';
+  document.querySelectorAll('.st').forEach(function (s) { s.classList.remove('lit'); });
+  document.querySelectorAll('.pdot').forEach(function (d) { d.classList.remove('done', 'active'); });
+  $('#winToast').classList.remove('show');
+  $('#qFb').textContent = ''; $('#qFb').className = 'qfb';
+  document.querySelectorAll('.qopt').forEach(function (b) { b.classList.remove('ok', 'bad'); });
+  updateGuide(false);
+}
+
+/* ===== 太阳与月亮同等自由度 3D 直接拖拽（超大优先拾取球，完全无视山体云朵！） ===== */
+function markInteracted() { document.body.classList.add('interacted'); }
+var CYCLE_STEPS = [6.2, 12.0, 18.25, 24.0, 28.8];
+var cycleStepIdx = 0;
+
+var ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+function pickHit(e) {
+  var r = cv.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+
+  // 1) 绝对优先检测太阳与月亮超大透明拾取球（太阳在西与月亮在东永不重叠）
+  var preferMoon = curCycle >= 18.0 && curCycle <= 29.5;
+  if (preferMoon) {
+    if (moonGroup.visible && ray.intersectObject(moonHit, false).length) return 'moon';
+    if (sunGroup.visible && ray.intersectObject(sunHit, false).length) return 'sun';
+  } else {
+    if (sunGroup.visible && ray.intersectObject(sunHit, false).length) return 'sun';
+    if (moonGroup.visible && ray.intersectObject(moonHit, false).length) return 'moon';
+  }
+
+  // 2) 检测其余可互动场景元素
+  var hits = ray.intersectObjects(live.children, true);
+  for (var i = 0; i < hits.length; i++) {
+    if (hits[i].object.userData && hits[i].object.userData.hit) return hits[i].object.userData.hit;
+  }
+  return null;
+}
+
+function nextUnexploredCycle() {
+  if (!found.dawn) return 6.2;
+  if (!found.noon) return 12.0;
+  if (!found.dusk) return 18.25;
+  if (!midNightSeen) return 24.0;
+  if (!found.night) return 28.8;
+  cycleStepIdx = (cycleStepIdx + 1) % CYCLE_STEPS.length;
+  return CYCLE_STEPS[cycleStepIdx];
+}
+
+cv.addEventListener('pointerdown', function (e) {
+  markInteracted();
+  if (demo) stopDemo();
+  var hitTag = pickHit(e);
+  if (hitTag === 'sun' || hitTag === 'moon') {
+    draggingOrb = hitTag;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    // 若抓住次日刚升起的太阳，无缝归位到 6.0 开启新一轮白天拖拽
+    if (hitTag === 'sun' && curCycle >= 29.0) {
+      curCycle = 6.0; targetCycle = 6.0;
+    } else if (hitTag === 'moon' && curCycle < 18.0) {
+      curCycle = 18.0; targetCycle = 18.0;
+    }
+    dragStartCycle = curCycle;
+    prevDragCycle = curCycle;
+    dragMoved = false;
+    autoCycle = false; $('#autoBtn').classList.remove('on'); $('#autoBtn').textContent = '▶';
+    cv.style.cursor = 'grabbing';
+    if (cv.setPointerCapture) try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+    return;
+  }
+  if (!hitTag || hitTag === 'sky') {
+    autoCycle = false; $('#autoBtn').classList.remove('on'); $('#autoBtn').textContent = '▶';
+    setCycle(nextUnexploredCycle(), true, true);
+  } else if (hitTag === 'lamp') {
+    var isNight = curCycle >= 18.5 && curCycle <= 29.0;
+    spawnFloat(isNight ? '💡 天黑了，路灯亮起照亮道路！' : '💡 白天阳光充足，路灯关着省电！', 55, 56);
+    speak(isNight ? '天黑了，公园路灯亮起来，照亮夜晚的道路！' : '白天阳光明亮，路灯休息不开灯！');
+  } else if (hitTag === 'building') {
+    var isN = curCycle >= 18.5 && curCycle <= 29.0;
+    spawnFloat(isN ? '🏠 夜幕降临，小区家家亮灯啦！' : '🏠 白天小楼沐浴在阳光里！', 60, 48);
+    speak(isN ? '天黑了，小区窗户亮起了温暖的灯光！' : '白天太阳照亮小区楼房，不用开灯！');
+  } else if (hitTag === 'lake') {
+    spawnFloat('🌊 湖面倒映着天色、太阳与月亮！', 45, 62);
+    speak('清澈的公园湖面，白天倒映太阳和晚霞，夜晚倒映明亮的月光！');
+  } else if (hitTag === 'east') {
+    spawnFloat('➡️ 东方：太阳和月亮都从东方升起！', 24, 62);
+    speak('这是东方！清晨太阳从东方升起，傍晚月亮也从东方升起！');
+  } else if (hitTag === 'west') {
+    spawnFloat('⬅️ 西方：太阳和月亮都从西方落下！', 72, 62);
+    speak('这是西方！傍晚太阳从西方落下，黎明月亮也从西方落下！');
+  }
+});
+
+cv.addEventListener('pointermove', function (e) {
+  if (!draggingOrb) {
+    var hover = pickHit(e);
+    cv.style.cursor = (hover === 'sun' || hover === 'moon') ? 'grab' : 'pointer';
+    return;
+  }
+  if (!dragMoved && Math.hypot(e.clientX - dragStartX, e.clientY - dragStartY) >= 8) {
+    dragMoved = true;
+    recordSweptCycle(dragStartCycle, dragStartCycle);
+  }
+  if (dragMoved) {
+    var r = cv.getBoundingClientRect();
+    var dx = e.clientX - dragStartX;
+    var spanW = Math.max(240, r.width * 0.50);
+    var mapped;
+    if (draggingOrb === 'sun') {
+      // 太阳自由度：06:00 东升 ↔ 12:00 正午 ↔ 18:30 西落（月亮随即从东方升起！）
+      mapped = Math.max(6.0, Math.min(18.35, dragStartCycle + (dx / spanW) * 12.8));
+    } else {
+      // 月亮同等自由度：18:00 东升 ↔ 24:00 午夜正中 ↔ 30:00 (次日06:00) 西落黎明！
+      mapped = Math.max(17.85, Math.min(30.0, dragStartCycle + (dx / spanW) * 12.8));
+    }
+    targetCycle = mapped;
+    curCycle = mapped;
+    $('#hourSlider').value = mapped.toFixed(2);
+    recordSweptCycle(prevDragCycle, mapped);
+    prevDragCycle = mapped;
+  }
+});
+
+function finishOrbDrag(e) {
+  if (!draggingOrb) return;
+  var orb = draggingOrb;
+  draggingOrb = null;
+  cv.style.cursor = 'pointer';
+  if (cv.releasePointerCapture && e && e.pointerId !== undefined) try { cv.releasePointerCapture(e.pointerId); } catch (err) {}
+  if (!dragMoved) {
+    var pkNow = getPeriodKey(curCycle);
+    if (pkNow && !found[pkNow] && !(pkNow === 'night' && curCycle < 27.0)) {
+      evaluateCycleProgress(curCycle);
+    } else {
+      setCycle(nextUnexploredCycle(), true, true);
+    }
+  } else {
+    evaluateCycleProgress(curCycle);
+    // 月亮拖到西边尽头迎来次日黎明，无缝循环衔接回清晨 06:00，太阳已在东边升起！
+    if (orb === 'moon' && curCycle >= 29.75) {
+      curCycle = 6.0; targetCycle = 6.0;
+      $('#hourSlider').value = '6';
+    }
+  }
+}
+cv.addEventListener('pointerup', finishOrbDrag);
+cv.addEventListener('pointercancel', finishOrbDrag);
+
+$('#hourSlider').addEventListener('input', function () {
+  markInteracted();
+  if (demo) stopDemo();
+  autoCycle = false; $('#autoBtn').classList.remove('on'); $('#autoBtn').textContent = '▶';
+  var prev = curCycle;
+  var ch = parseFloat(this.value);
+  targetCycle = ch; curCycle = ch;
+  recordSweptCycle(prev, ch);
+});
+
+$('#autoBtn').addEventListener('click', function () {
+  markInteracted(); if (demo) stopDemo();
+  autoCycle = !autoCycle;
+  this.classList.toggle('on', autoCycle);
+  this.textContent = autoCycle ? '⏸' : '▶';
+  if (autoCycle) speak('开始自动播放 24 小时日月轮换，仔细看太阳和月亮怎么轮流从东边升起、落向西边吧！');
+});
+
+$('#voiceBtn').addEventListener('click', function () {
+  markInteracted();
+  voiceOn = !voiceOn;
+  this.classList.toggle('on', voiceOn);
+  if (voiceOn) updateGuide(true); else stopVoice();
+});
+$('#demoBtn').addEventListener('click', startDemo);
+$('#guideBar').addEventListener('click', function () { markInteracted(); updateGuide(true); });
+$('#resetBtn').addEventListener('click', resetAll);
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+$('#winKeepBtn').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgainBtn').addEventListener('click', resetAll);
+$('#qOpts').addEventListener('click', function (e) {
+  var b = e.target.closest('.qopt');
+  if (!b) return;
+  if (b.dataset.ok === '1') {
+    b.classList.add('ok');
+    $('#qFb').textContent = '🌸 答对啦！太阳西落后月亮从东方升起滑向西方，昼夜周而复始！获得小红花！';
+    $('#qFb').className = 'qfb ok';
+    saveProgress(LESSON_ID, true);
+    playChime([659, 784, 1046]);
+    speak('答对啦！获得本课小红花！', true);
+  } else {
+    b.classList.add('bad');
+    var h = b.dataset.hint || '再想想哦！';
+    $('#qFb').textContent = h;
+    $('#qFb').className = 'qfb';
+    speak(h, true);
+  }
+});
+
+/* ===== 帧循环 ===== */
+var introT0 = performance.now(), lastT = performance.now();
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  camera.updateProjectionMatrix();
+  resizeConfetti();
+}
+window.addEventListener('resize', fit);
+fit();
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (now - lastT) / 1000));
+  lastT = now;
+  var nowSec = now * 0.001;
+
+  var pop = Math.min(1, (performance.now() - introT0) / 680);
+  live.scale.setScalar(0.01 + 0.99 * (1 - Math.pow(1 - pop, 3)));
+
+  if (autoCycle) {
+    var prevC = curCycle;
+    targetCycle += dt * 2.2;
+    if (targetCycle >= 30.0) {
+      recordSweptCycle(prevC, 30.0);
+      targetCycle = 6.0 + (targetCycle - 30.0);
+      curCycle = targetCycle;
+    } else {
+      curCycle = targetCycle;
+      recordSweptCycle(prevC, curCycle);
+    }
+    $('#hourSlider').value = curCycle.toFixed(2);
+  } else if (!draggingOrb) {
+    var diff = targetCycle - curCycle;
+    curCycle += diff * Math.min(1, dt * 6.5);
+  }
+
+  clouds.forEach(function (c) {
+    c.position.x += c.userData.speed * dt;
+    if (c.position.x > 9.5) c.position.x = -9.5;
+  });
+
+  applyTimeVisuals(curCycle, nowSec);
+
+  // 单焦点 #targetCue 气泡：白天紧贴太阳、黑夜紧贴月亮！
+  var cueEl = $('#targetCue');
+  var allDone = !!(found.dawn && found.noon && found.dusk && found.night);
+  if (demo || celebrated || draggingOrb || allDone) {
+    cueEl.classList.remove('show');
+  } else {
+    var showMoonCue = (curCycle >= 17.85 && curCycle <= 29.6) || (found.dusk && moonGroup.visible);
+    var orbPos = showMoonCue ? moonGroup.position : sunGroup.position;
+    var pv = new THREE.Vector3(orbPos.x, orbPos.y + 1.62, orbPos.z).project(camera);
+    var cx = (pv.x * 0.5 + 0.5) * window.innerWidth;
+    var cy = (-pv.y * 0.5 + 0.5) * window.innerHeight;
+    if (cy < 280) cx = Math.min(window.innerWidth - 268, cx);
+    cx = Math.max(135, Math.min(window.innerWidth - 135, cx));
+    cy = Math.max(92, Math.min(window.innerHeight - 135, cy));
+    cueEl.classList.toggle('moon-cue', showMoonCue);
+    if (!found.dawn) {
+      cueEl.textContent = '👆 拖动太阳从东往西滑一滑';
+    } else if (!found.noon) {
+      cueEl.textContent = '👆 把太阳向右拖到天空正中';
+    } else if (!found.dusk) {
+      cueEl.textContent = '👆 继续向右拖太阳落向西方';
+    } else if (!midNightSeen) {
+      cueEl.textContent = '👆 按住大月亮，从东往西拖过夜空！';
+    } else {
+      cueEl.textContent = '👆 继续把月亮拖向西边迎接次日黎明！';
+    }
+    cueEl.style.left = cx + 'px';
+    cueEl.style.top = cy + 'px';
+    cueEl.classList.add('show');
+  }
+
+  tickConfetti();
+  renderer.render(scene, camera);
+}
+
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () {
+    return {
+      triangles: renderer.info.render.triangles,
+      celebrated: celebrated,
+      curCycle: curCycle,
+      curHour: norm24(curCycle),
+      midNightSeen: midNightSeen,
+      found: found
+    };
+  },
+  project3D: function (x, y, z) {
+    var v = new THREE.Vector3(x, y, z).project(camera);
+    return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight };
+  },
+  getTargets: function () {
+    return {
+      sun: this.project3D(sunGroup.position.x, sunGroup.position.y, sunGroup.position.z),
+      moon: this.project3D(moonGroup.position.x, moonGroup.position.y, moonGroup.position.z),
+      sunVisible: sunGroup.visible,
+      moonVisible: moonGroup.visible,
+      eastSky: this.project3D(-6.2, 3.2, -10.6),
+      midSky: this.project3D(0, 6.2, -10.6),
+      westSky: this.project3D(6.2, 3.2, -10.6)
+    };
+  },
+  startDemo: startDemo,
+  resetAll: resetAll
+};
+updateGuide(false);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

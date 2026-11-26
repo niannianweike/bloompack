@@ -1,0 +1,1242 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第13课 改进我的纸蜻蜓 · 双机调校竞飞场（活页）</title>
+<style>
+:root{--ink:#2a3040;--paper:#fffaf0;--line:#e3d6bd;--accent:#e56d17}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#d9c19b;color:var(--ink);
+  font-family:"Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+ruby{ruby-align:center}
+rt{font-size:.5em;font-weight:600;color:#8a6d4a;letter-spacing:0}
+body.no-py rt{display:none}
+
+.chip{position:fixed;left:14px;top:12px;z-index:5;display:flex;align-items:center;gap:10px;
+  padding:6px 14px 6px 6px;border-radius:16px;background:rgba(255,250,240,.92);border:1.5px solid var(--line);
+  box-shadow:0 6px 18px rgba(80,55,20,.12)}
+.home{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:var(--ink);font-size:20px;font-weight:800}
+.home:hover{border-color:var(--accent);color:var(--accent)}
+.chip h1{margin:0;font-size:20px;line-height:1.5;font-weight:800}
+.chip small{display:block;font-size:12px;color:#8a7b62;font-weight:700;margin-top:-2px}
+
+.tools{position:fixed;right:14px;top:12px;z-index:5;display:flex;gap:8px}
+.tbtn{position:relative;height:40px;padding:0 14px;border-radius:13px;border:1.5px solid var(--line);background:rgba(255,250,240,.94);
+  font:inherit;font-size:15px;font-weight:800;color:var(--ink);cursor:pointer;box-shadow:0 3px 0 #e2d2b5}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:#bf5409;color:#fff;box-shadow:0 3px 0 #bf5409}
+.tbtn.cue-pulse{animation:cueGlow 1.5s ease-in-out infinite}
+.cue-tag{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#e56d17;color:#fff;font-size:10px;font-weight:800;line-height:1.45;white-space:nowrap;
+  box-shadow:0 2px 6px rgba(185,78,8,.35);pointer-events:none;transition:opacity .35s,transform .35s}
+#demoBtn .cue-tag{background:#2578e5;box-shadow:0 2px 6px rgba(37,120,229,.35)}
+.cue-tag.hide{opacity:0;transform:translateX(-50%) translateY(-4px)}
+@keyframes cueGlow{0%,100%{box-shadow:0 3px 0 #bf5409,0 0 0 0 rgba(229,109,23,.5)}50%{box-shadow:0 3px 0 #bf5409,0 0 0 7px rgba(229,109,23,0)}}
+
+#guideBar{position:fixed;left:50%;top:6px;transform:translateX(-50%);z-index:5;
+  display:flex;align-items:center;gap:6px;max-width:min(440px,calc(100vw - 680px));
+  padding:5px 12px;border-radius:14px;background:rgba(255,250,240,.96);
+  border:2px solid #f08a24;box-shadow:0 4px 14px rgba(130,68,12,.16);
+  font-size:13px;font-weight:800;line-height:1.3;color:#7a3e08;cursor:pointer;transition:transform .2s,border-color .25s}
+#guideBar:hover{border-color:#d65b0a}
+#guideBar:active{transform:translateX(-50%) scale(.98)}
+#guideBar.pulse{animation:guidePop .45s ease}
+.gb-ico{flex:none;font-size:18px;line-height:1}
+.gb-txt{flex:1}
+@keyframes guidePop{0%{transform:translateX(-50%) scale(.94)}50%{transform:translateX(-50%) scale(1.03)}100%{transform:translateX(-50%) scale(1)}}
+@media (max-width:1160px){
+  #guideBar{left:14px;top:66px;transform:none;max-width:calc(100vw - 260px)}
+  #guideBar:active{transform:scale(.98)}
+  @keyframes guidePop{0%{transform:scale(.95)}50%{transform:scale(1.02)}100%{transform:scale(1)}}
+}
+
+/* 飞后双机对比与调校诊断卡 */
+#cmpBanner{position:fixed;left:14px;top:78px;z-index:6;width:274px;
+  padding:10px 12px;border-radius:16px;background:rgba(255,250,240,.96);border:2px solid #f08a24;
+  box-shadow:0 10px 26px rgba(95,52,12,.2);display:none;flex-direction:column;gap:7px;
+  animation:cmpIn .32s cubic-bezier(.2,1.4,.4,1)}
+#cmpBanner.show{display:flex}
+#cmpBanner.win{border-color:#16a34a;background:linear-gradient(150deg,#fffaf0 0%,#effcf3 100%)}
+@keyframes cmpIn{0%{opacity:0;transform:translateY(-8px) scale(.94)}100%{opacity:1;transform:none}}
+.cmp-hd{display:flex;align-items:center;justify-content:space-between;font-size:13.5px;font-weight:900;color:#b84906}
+#cmpBanner.win .cmp-hd{color:#15803d}
+.cmp-x{border:1px solid var(--line);background:#fff;color:#7a6544;border-radius:7px;width:22px;height:22px;line-height:18px;text-align:center;font-weight:900;cursor:pointer;padding:0}
+.cmp-scores{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:6px 8px;border-radius:11px;background:#fff;border:1.5px solid #eedcc0;font-size:12.5px;font-weight:800}
+.cmp-sc{display:flex;flex-direction:column;align-items:center;flex:1}
+.cmp-sc b{font-size:16px}
+.cmp-sc.b b{color:#1b66c2}
+.cmp-sc.m b{color:#c94d0c}
+.cmp-vs{font-size:11px;font-weight:900;padding:2px 6px;border-radius:99px;background:#fff1df;color:#c2560c;white-space:nowrap}
+#cmpBanner.win .cmp-vs{background:#dcfce7;color:#15803d}
+.cmp-tags{display:flex;flex-wrap:wrap;gap:4px}
+.cmp-tag{padding:2px 7px;border-radius:8px;font-size:11.5px;font-weight:800;background:#f7eddc;color:#6c573c}
+.cmp-tag.good{background:#e7f8ed;color:#15803d}
+.cmp-tag.warn{background:#fff0e6;color:#c24d0b}
+.cmp-tip{padding:7px 9px;border-radius:11px;background:#fff5e6;border:1.5px dashed #e58e26;font-size:12.5px;font-weight:800;line-height:1.5;color:#7a3e08}
+#cmpBanner.win .cmp-tip{background:#ecfdf3;border-color:#22c55e;color:#156934}
+
+#notes{position:fixed;right:14px;top:64px;z-index:4;width:226px;overflow:hidden;
+  padding:9px 11px 10px;border-radius:16px;background:rgba(255,250,240,.92);border:1.5px solid var(--line);
+  box-shadow:0 8px 22px rgba(80,55,20,.12)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:15px;font-weight:800;margin-bottom:6px}
+.nt-head-r{display:flex;align-items:center;gap:6px}
+.nt-tog{border:1px solid var(--line);background:#fff;color:#7a6544;border-radius:8px;padding:1px 7px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+.nt-tog:hover{border-color:var(--accent);color:var(--accent)}
+#notes.collapsed #ntList{display:none}
+#notes.collapsed .stamps{margin-bottom:0}
+.stamps{display:flex;gap:5px;margin-bottom:7px}
+.stamp{flex:1;text-align:center;padding:3px 0 2px;border-radius:10px;border:1.5px dashed #d8c7a6;color:#b3a283;font-size:13px;font-weight:800;line-height:1.5}
+.stamp.lit{border-style:solid;border-color:#e56d17;background:#fff3e2;color:#c2560c;animation:pop .45s cubic-bezier(.2,1.6,.4,1)}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto;padding-right:2px}
+.stk{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:11px;background:#fff;border:1.5px solid #f0dcc0;
+  font-size:14px;font-weight:800;line-height:1.6;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+.stk i{font-style:normal;width:24px;height:24px;flex:none;border-radius:7px;display:grid;place-items:center;color:#fff;font-size:13px}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+
+#confettiCanvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:18}
+#winToast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.84);z-index:20;
+  width:min(450px,92vw);max-height:85vh;overflow-y:auto;
+  display:flex;flex-direction:column;gap:10px;padding:16px 18px;border-radius:22px;
+  background:linear-gradient(155deg,#fffaf0 0%,#fff1d6 100%);border:2.5px solid #f08a24;
+  box-shadow:0 18px 44px rgba(100,52,10,.32);opacity:0;pointer-events:none;
+  transition:opacity .32s,transform .38s cubic-bezier(.2,1.5,.4,1)}
+#winToast.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.win-head{display:flex;align-items:center;gap:12px}
+.win-medal{width:48px;height:48px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:26px;
+  background:radial-gradient(circle at 35% 30%,#fff3a6,#f59e0b);box-shadow:0 3px 10px rgba(229,109,23,.35)}
+.win-txt{display:flex;flex-direction:column;gap:2px}
+.win-ttl{font-size:18px;font-weight:900;color:#b84906;line-height:1.5}
+.win-sub{font-size:13px;font-weight:800;color:#7a6544;line-height:1.45}
+.win-concl{padding:10px 12px;border-radius:14px;background:#fff;border:1.5px solid #f2c98a;font-size:13.5px;line-height:1.6;color:#3d3224;font-weight:700}
+.win-concl-h{font-size:13px;font-weight:900;color:#c2560c;margin-bottom:3px}
+.win-quiz{padding:10px 12px;border-radius:14px;background:#fffdf7;border:1.5px dashed #e58e26;display:flex;flex-direction:column;gap:7px}
+.win-quiz-h{font-size:13px;font-weight:900;color:#b84906}
+.win-quiz-q{font-size:14px;font-weight:800;color:#2a3040;line-height:1.5}
+.win-opts{display:flex;flex-direction:column;gap:6px}
+.qopt{width:100%;text-align:left;padding:8px 11px;border-radius:11px;border:1.5px solid #e3d6bd;background:#fff;
+  font:inherit;font-size:13.5px;font-weight:800;color:#2a3040;cursor:pointer;transition:all .16s}
+.qopt:hover{border-color:#e56d17;background:#fff7eb}
+.qopt.ok{border-color:#16a34a;background:#ecfdf3;color:#15803d}
+.qopt.wrong{border-color:#dc2626;background:#fef2f2;color:#b91c1c}
+.quiz-fb{font-size:13px;font-weight:800;line-height:1.5;min-height:18px;display:none}
+.quiz-fb.show{display:block}
+.quiz-fb.ok{color:#15803d}
+.quiz-fb.err{color:#c2560c}
+.win-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:2px}
+.wact{height:36px;padding:0 14px;border-radius:11px;border:1.5px solid var(--line);background:#fff;
+  font:inherit;font-size:13.5px;font-weight:800;color:var(--ink);cursor:pointer;white-space:nowrap}
+.wact.pri{background:var(--accent);border-color:#bf5409;color:#fff}
+.wact.pri rt{color:#ffe4c4}
+
+/* 底部紧凑滑块调校条 + 同时松手按钮 */
+#tuneBar{position:fixed;left:50%;bottom:64px;transform:translateX(-50%);z-index:5;display:flex;align-items:center;gap:12px;
+  padding:8px 12px;border-radius:18px;background:rgba(255,250,240,.95);border:1.5px solid var(--line);
+  box-shadow:0 6px 18px rgba(80,55,20,.14);max-width:96vw}
+.sld{display:flex;flex-direction:column;gap:2px;min-width:128px;padding:4px 7px;border-radius:12px;border:2px solid transparent;transition:all .22s}
+.sld.coach-hi,.sld.demo-hi{background:#fff3e0;border-color:#f06818;animation:sldGlow 1.15s ease-in-out infinite}
+@keyframes sldGlow{0%,100%{box-shadow:0 0 0 0 rgba(240,104,24,.55)}50%{box-shadow:0 0 0 8px rgba(240,104,24,0)}}
+.sld-top{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;line-height:1.4;color:#6c573c}
+.sld-top b{color:#c2560c;font-size:13px}
+.sld input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:99px;
+  background:#eedcc0;outline:none;cursor:pointer}
+.sld input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;
+  background:#f06818;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(150,60,10,.35);cursor:pointer}
+.launchBtn{flex:none;height:44px;padding:0 16px;border-radius:13px;border:1.5px solid #bf5409;background:#f06818;
+  color:#fff;font:inherit;font-size:16px;font-weight:800;line-height:1.4;cursor:pointer;box-shadow:0 3px 0 #bf5409;white-space:nowrap}
+.launchBtn.glow-next{animation:sldGlow 1.15s ease-in-out infinite}
+.launchBtn rt{color:#ffe6ca}
+.launchBtn:active{transform:translateY(1px)}
+
+#verbs{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:4;display:flex;gap:10px;transition:opacity .5s}
+.verb{display:flex;align-items:center;gap:7px;padding:5px 13px;border-radius:99px;background:rgba(255,250,240,.94);
+  border:1.5px solid var(--line);font-size:16px;font-weight:800;line-height:1.5;box-shadow:0 4px 14px rgba(80,55,20,.12)}
+.verb svg{width:20px;height:20px}
+.verb.done{border-color:#16a34a;color:#15803d;background:#effaf2}
+.verb.done::after{content:"✓";font-weight:900;color:#16a34a}
+
+#labels{position:fixed;inset:0;pointer-events:none;z-index:3}
+.tmr{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:4px 12px;border-radius:13px;white-space:nowrap;
+  background:rgba(255,250,240,.96);border:2px solid #2b8cf0;color:var(--ink);font-size:15px;font-weight:900;line-height:1.55;
+  box-shadow:0 5px 14px rgba(40,48,64,.16);opacity:0;transition:opacity .2s}
+.tmr.org{border-color:#f06818}
+.tmr.show{opacity:1}
+.tmr span.sec{font-size:19px;margin-left:4px;color:#1b66c2}
+.tmr.org span.sec{color:#c94d0c}
+.word{position:absolute;left:0;top:0;transform:translate(-50%,-100%);font-size:24px;font-weight:900;line-height:1.65;white-space:nowrap;
+  color:#c2560c;text-shadow:0 2px 0 #fff,0 0 8px #fff;pointer-events:none;animation:floatUp 1.6s ease-out forwards}
+.word.ok{color:#15803d}
+.word.cool{color:#1d62b5}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-50%) scale(.65)}18%{opacity:1;transform:translate(-50%,-100%) scale(1.06)}100%{opacity:0;transform:translate(-50%,-185%) scale(1)}}
+
+#hand{position:fixed;left:0;top:0;width:60px;height:60px;z-index:6;pointer-events:none;opacity:0;transition:opacity .3s;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.25))}
+
+@media (max-width:760px){
+  .chip{left:8px;top:8px;padding:4px 10px 4px 4px}
+  .chip h1{font-size:15px}.chip small{display:none}
+  .home{width:32px;height:32px}
+  .tools{right:8px;top:8px;gap:5px}.tbtn{height:34px;padding:0 9px;font-size:13px}
+  .cue-tag{font-size:9px;top:-9px;padding:0 5px}
+  #guideBar{left:8px;top:52px;right:200px;max-width:none;padding:5px 9px;font-size:12px}
+  .gb-ico{font-size:15px}
+  #cmpBanner{left:8px;top:102px;width:min(248px,calc(100vw - 208px));padding:8px 9px;gap:5px}
+  .cmp-hd,.cmp-tip{font-size:11.5px}.cmp-scores{font-size:11px;padding:4px 6px}.cmp-sc b{font-size:14px}
+  #notes{top:54px;right:8px;width:186px;padding:7px 9px}
+  #ntList{max-height:108px}
+  .stk{font-size:13px;padding:4px 7px}
+  #winToast{padding:12px 14px;gap:8px}
+  .win-medal{width:38px;height:38px;font-size:22px}.win-ttl{font-size:15px}.win-sub{font-size:12px}
+  .win-concl,.win-quiz-q,.qopt{font-size:12.5px}
+  #tuneBar{bottom:52px;gap:7px;padding:6px 8px;flex-wrap:wrap;justify-content:center;width:96vw}
+  .sld{min-width:96px;flex:1;padding:3px 5px}.sld-top{font-size:11px}
+  .launchBtn{height:36px;padding:0 12px;font-size:13px;width:100%}
+  #verbs{bottom:8px;gap:5px}.verb{font-size:13px;padding:4px 9px}.verb svg{width:16px;height:16px}
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="labels"></div>
+<canvas id="confettiCanvas"></canvas>
+
+<div id="winToast" aria-live="polite">
+  <div class="win-head">
+    <div class="win-medal">🏆</div>
+    <div class="win-txt">
+      <div class="win-ttl" id="winTtl"></div>
+      <div class="win-sub" id="winSub"></div>
+    </div>
+  </div>
+  <div class="win-concl">
+    <div class="win-concl-h">✨ 科学小结论</div>
+    <div id="winConclTxt">纸蜻蜓的飞翼越长越宽、折尾配重适中，受到的空气阻力就越大，旋转下落得就越慢、越平稳！</div>
+  </div>
+  <div class="win-quiz">
+    <div class="win-quiz-h">💡 考考你 · 答对领小红花 🌸</div>
+    <div class="win-quiz-q">想让纸蜻蜓在空中留得更久、落得更慢，应该怎么改进？</div>
+    <div class="win-opts" id="quizOpts">
+      <button class="qopt" data-ok="1" type="button">🦋 把飞翼改长改宽、配重适中</button>
+      <button class="qopt" data-ok="0" type="button">✂️ 把飞翼剪得又短又窄</button>
+      <button class="qopt" data-ok="0" type="button">🪨 在尾巴绑很多重东西</button>
+    </div>
+    <div class="quiz-fb" id="quizFb"></div>
+  </div>
+  <div class="win-btns">
+    <button class="wact" id="winCloseBtn" type="button"></button>
+    <button class="wact pri" id="winReplayBtn" type="button"></button>
+  </div>
+</div>
+
+<div class="chip">
+  <a class="home" href="../index.html" title="回到书包">‹</a>
+  <div><h1 id="ttl"></h1><small>活页 · 课本第 51 页「双机调校竞飞场」</small></div>
+</div>
+<div id="guideBar" title="点我再听一遍玩法提示" aria-live="polite"><span class="gb-ico" id="gbIco">🔧</span><span class="gb-txt" id="gbTxt"></span></div>
+<div id="cmpBanner" aria-live="polite">
+  <div class="cmp-hd"><span id="cmpTitle">📊 双机飞行对比小诊断</span><button class="cmp-x" id="cmpCloseBtn" type="button" title="收起">×</button></div>
+  <div class="cmp-scores">
+    <div class="cmp-sc b"><span>上节课款</span><b id="cmpBaseT">0.0s</b></div>
+    <span class="cmp-vs" id="cmpDiff">一样快</span>
+    <div class="cmp-sc m"><span>我的改进款</span><b id="cmpMineT">0.0s</b></div>
+  </div>
+  <div class="cmp-tags" id="cmpTags"></div>
+  <div class="cmp-tip" id="cmpTip"></div>
+</div>
+<div class="tools">
+  <button class="tbtn on cue-pulse" id="voiceBtn" type="button">🔊 语音<span class="cue-tag" id="voiceCue">点我听玩法</span></button>
+  <button class="tbtn cue-pulse" id="demoBtn" type="button">▶ 演示<span class="cue-tag" id="demoCue">不会玩点演示</span></button>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<aside id="notes">
+  <div class="nt-head"><span id="ntTitle"></span><span class="nt-head-r"><span id="ntCount" style="color:#c2560c">0</span><button class="nt-tog" id="ntTog" type="button">收起</button></span></div>
+  <div class="stamps"><span class="stamp" data-k="t" id="stT"></span><span class="stamp" data-k="c" id="stC"></span><span class="stamp" data-k="w" id="stW"></span></div>
+  <div id="ntList"></div>
+</aside>
+
+<div id="tuneBar">
+  <label class="sld" id="sldLen">
+    <span class="sld-top"><span id="sl1"></span><b id="sv1">中</b></span>
+    <input id="inLen" type="range" min="0" max="100" value="45">
+  </label>
+  <label class="sld" id="sldWid">
+    <span class="sld-top"><span id="sl2"></span><b id="sv2">中</b></span>
+    <input id="inWid" type="range" min="0" max="100" value="45">
+  </label>
+  <label class="sld" id="sldWt">
+    <span class="sld-top"><span id="sl3"></span><b id="sv3">中</b></span>
+    <input id="inWt" type="range" min="0" max="100" value="45">
+  </label>
+  <button class="launchBtn" id="launchBtn" type="button"></button>
+</div>
+
+<div id="verbs">
+  <span class="verb" data-v="tune"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2.5" fill="currentColor"/><circle cx="15" cy="17" r="2.5" fill="currentColor"/></svg><span id="vb1"></span></span>
+  <span class="verb" data-v="drop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v14M7 13l5 5 5-5"/></svg><span id="vb2"></span></span>
+  <span class="verb" data-v="win"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l2-9 6 4 6-4 2 9H4z"/></svg><span id="vb3"></span></span>
+</div>
+
+<svg id="hand" viewBox="0 0 64 64"><path d="M26 6c3 0 5 2 5 5v17l3-1c2-6 9-5 9 0 2-3 8-2 8 3 3-1 7 1 7 5v12c0 9-7 15-16 15h-6c-6 0-10-3-13-8L13 41c-2-3 0-7 4-7 2 0 3 1 4 2V11c0-3 2-5 5-5z" fill="#fff" stroke="#2a3040" stroke-width="3" stroke-linejoin="round"/></svg>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js"></script>
+<script src="../vendor/voice.js"></script>
+<script>
+(function () {
+'use strict';
+
+/* ===================== 拼音 ===================== */
+var HAN = /[\u3400-\u9fff]/, pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function ruby(text, py) {
+  var syl = py ? py.trim().split(/\s+/) : [], i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) { var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; } out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>'; }
+    else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+var $ = function (s) { return document.querySelector(s); };
+$('#ttl').innerHTML = ruby('第13课 改进我的纸蜻蜓', 'dì kè gǎi jìn wǒ de zhǐ qīng tíng');
+$('#ntTitle').innerHTML = ruby('我的发现', 'wǒ de fā xiàn');
+$('#stT').innerHTML = ruby('调造型', 'tiáo zào xíng');
+$('#stC').innerHTML = ruby('双机比', 'shuāng jī bǐ');
+$('#stW').innerHTML = ruby('赢冠军', 'yíng guàn jūn');
+$('#sl1').innerHTML = ruby('飞翼长度', 'fēi yì cháng dù');
+$('#sl2').innerHTML = ruby('飞翼宽度', 'fēi yì kuān dù');
+$('#sl3').innerHTML = ruby('折尾重量', 'zhé wěi zhòng liàng');
+$('#launchBtn').innerHTML = ruby('同时松手试飞', 'tóng shí sōng shǒu shì fēi');
+$('#vb1').innerHTML = ruby('调造型', 'tiáo zào xíng');
+$('#vb2').innerHTML = ruby('双机放飞', 'shuāng jī fàng fēi');
+$('#vb3').innerHTML = ruby('飞赢旧款', 'fēi yíng jiù kuǎn');
+$('#winTtl').innerHTML = ruby('太棒啦！全部发现集齐啦！', 'tài bàng la quán bù fā xiàn jí qí la');
+$('#winSub').innerHTML = ruby('你真是个小小科学家！', 'nǐ zhēn shì gè xiǎo xiǎo kē xué jiā');
+$('#winCloseBtn').innerHTML = ruby('继续玩', 'jì xù wán');
+$('#winReplayBtn').innerHTML = ruby('再玩一次', 'zài wán yī cì');
+
+/* ===================== 进度记录与入口提示 ===================== */
+var LESSON_ID = 'k1a-13';
+var CONCLUSION_TEXT = '纸蜻蜓的飞翼越长越宽、折尾配重适中，受到的空气阻力就越大，旋转下落得就越慢、越平稳！';
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem('xk_k1a_progress') || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem('xk_k1a_progress', JSON.stringify(d));
+  } catch (e) {}
+}
+var entryCueDone = false;
+function dismissEntryCues() {
+  if (entryCueDone) return;
+  entryCueDone = true;
+  $('#voiceBtn').classList.remove('cue-pulse');
+  $('#demoBtn').classList.remove('cue-pulse');
+  var vc = $('#voiceCue'), dc = $('#demoCue');
+  if (vc) vc.classList.add('hide');
+  if (dc) dc.classList.add('hide');
+}
+
+/* ===================== 离线儿童语音引导 ===================== */
+var voiceOn = true, voiceWelcomed = false;
+var currentGuideSpeech = '小朋友你好！先拖动下面滑块，把橘色纸蜻蜓的飞翼拉长拉宽，再点同时松手试飞，和左边上节课款比一比谁落得更慢！';
+var lastCoachMsg = '';
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
+  if (!('speechSynthesis' in window)) return;
+  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+}
+function welcomeVoiceOnce() {
+  dismissEntryCues();
+  if (voiceWelcomed) return;
+  voiceWelcomed = true;
+  speak(currentGuideSpeech);
+}
+
+function clearSliderCoach() {
+  ['#sldLen', '#sldWid', '#sldWt'].forEach(function (s) {
+    $(s).classList.remove('coach-hi', 'demo-hi');
+  });
+  $('#launchBtn').classList.remove('glow-next');
+}
+
+function updateGuide(speakIt) {
+  var ico = '🔧', txt = '', sp = '';
+  if (!demo) clearSliderCoach();
+  if (!kinds.t) {
+    ico = '🔧';
+    txt = '第 1 步：拖动下方滑块（先试试「飞翼长度」或「飞翼宽度」），看看右边橘色纸蜻蜓怎么变！';
+    sp = '第1步：拖动下面的滑块，先试试把飞翼长度或飞翼宽度往右拉大，看看右边橘色纸蜻蜓怎么变！';
+    if (!demo) { $('#sldLen').classList.add('coach-hi'); $('#sldWid').classList.add('coach-hi'); }
+  } else if (!kinds.c) {
+    ico = '🚀';
+    txt = '第 2 步：造型调好啦！点「同时松手试飞」（或拖高黄色横杆松手），和左边上节课款比一比！';
+    sp = '第2步：造型调好啦！现在点同时松手试飞，和左边上节课款比一比谁落得更慢！';
+    if (!demo) $('#launchBtn').classList.add('glow-next');
+  } else if (!kinds.w) {
+    ico = '🎯';
+    txt = lastCoachMsg || '第 3 步：想让改进款落得更慢更稳？把「飞翼长度」和「飞翼宽度」拉大、折尾调到「适中」，再试飞一次！';
+    sp = txt;
+    if (!demo) {
+      if (cfgMine.len < 68) $('#sldLen').classList.add('coach-hi');
+      if (cfgMine.wid < 68) $('#sldWid').classList.add('coach-hi');
+      if (cfgMine.wt < 38 || cfgMine.wt > 68) $('#sldWt').classList.add('coach-hi');
+      if (cfgMine.len >= 68 && cfgMine.wid >= 68 && cfgMine.wt >= 38 && cfgMine.wt <= 68) $('#launchBtn').classList.add('glow-next');
+    }
+  } else {
+    ico = '🏆';
+    txt = '太棒啦！改进款稳稳拿到冠军！你还可以继续调节滑块探索更多飞行组合！';
+    sp = '太棒啦！改进款稳稳拿到冠军！你还可以继续调节滑块探索更多飞行组合！';
+  }
+  currentGuideSpeech = sp;
+  $('#gbIco').textContent = ico;
+  $('#gbTxt').textContent = txt;
+  var gb = $('#guideBar');
+  gb.classList.remove('pulse'); void gb.offsetWidth; gb.classList.add('pulse');
+  if (speakIt) speak(sp);
+}
+
+/* ===================== Three 基础 ===================== */
+var canvas = $('#c');
+var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera(32, 1, 0.1, 200);
+var raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2();
+
+scene.add(new THREE.HemisphereLight(0xfff8ee, 0xcdb08a, 0.42));
+var sun = new THREE.DirectionalLight(0xfff1dc, 0.66);
+sun.position.set(-4, 12, 7);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+(function (c) { c.left = -7; c.right = 7; c.top = 7; c.bottom = -6; c.near = 1; c.far = 40; })(sun.shadow.camera);
+sun.shadow.bias = -0.0008;
+scene.add(sun);
+
+var ramp = new THREE.DataTexture(new Uint8Array([120, 120, 120, 255, 185, 185, 185, 255, 232, 232, 232, 255, 255, 255, 255, 255]), 4, 1, THREE.RGBAFormat);
+ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+var INK = new THREE.LineBasicMaterial({ color: 0x2a3040, transparent: true, opacity: 0.78 });
+function toon(hex, extra) {
+  var o = { color: new THREE.Color(hex), gradientMap: ramp };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshToonMaterial(o);
+}
+function mesh(geo, mat, ink) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  if (ink !== false) m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), INK));
+  return m;
+}
+function ctex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c);
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+
+/* ===================== 书桌 + 摊开的课本 ===================== */
+var deskTex = ctex(512, 512, function (g, w, h) {
+  g.fillStyle = '#c9a36b'; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 70; i++) { g.fillStyle = 'rgba(120,80,35,' + (Math.random() * 0.05).toFixed(3) + ')'; g.fillRect(0, Math.random() * h, w, 1 + Math.random() * 3); }
+});
+deskTex.wrapS = deskTex.wrapT = THREE.RepeatWrapping; deskTex.repeat.set(3, 3);
+var deskM = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshLambertMaterial({ map: deskTex }));
+deskM.rotation.x = -Math.PI / 2; deskM.position.y = -0.2; deskM.receiveShadow = true;
+scene.add(deskM);
+
+function pageTex(right) {
+  return ctex(512, 640, function (g, w, h) {
+    g.fillStyle = '#fbf6ea'; g.fillRect(0, 0, w, h);
+    var gr = g.createLinearGradient(right ? 0 : w, 0, right ? 60 : w - 60, 0);
+    gr.addColorStop(0, 'rgba(120,90,45,.18)'); gr.addColorStop(1, 'rgba(120,90,45,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#e4d8c2';
+    for (var r = 0; r < 15; r++) { var y = 60 + r * 36; if (r === 5 || r === 11) continue; g.fillRect(50, y, w - 100 - (r % 4) * 40, 8); }
+    g.fillStyle = '#b9a98c'; g.font = 'bold 22px sans-serif'; g.textAlign = right ? 'right' : 'left';
+    g.fillText(right ? '51' : '50', right ? w - 40 : 40, h - 26);
+  });
+}
+var book = new THREE.Group(); scene.add(book);
+[-1, 1].forEach(function (sx) {
+  var pg = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.16, 6.6), [
+    new THREE.MeshLambertMaterial({ color: 0xefe6d2 }), new THREE.MeshLambertMaterial({ color: 0xefe6d2 }),
+    new THREE.MeshLambertMaterial({ map: pageTex(sx > 0) }), new THREE.MeshLambertMaterial({ color: 0xe4d8c0 }),
+    new THREE.MeshLambertMaterial({ color: 0xefe6d2 }), new THREE.MeshLambertMaterial({ color: 0xefe6d2 })
+  ]);
+  pg.position.set(sx * 2.62, -0.08, 0); pg.receiveShadow = true; pg.castShadow = true;
+  book.add(pg);
+});
+var cover = new THREE.Mesh(new THREE.BoxGeometry(10.7, 0.06, 6.9), new THREE.MeshLambertMaterial({ color: 0xe56d17 }));
+cover.position.y = -0.19; book.add(cover);
+
+/* ===================== 活页底板 + 竞飞场 ===================== */
+var BASE = 0.1;
+var live = new THREE.Group(); scene.add(live);
+var boardTex = ctex(512, 300, function (g, w, h) {
+  g.fillStyle = '#fffaf0'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(214,196,160,.52)'; g.lineWidth = 1;
+  for (var x = 0; x < w; x += 16) { g.beginPath(); g.moveTo(x + .5, 0); g.lineTo(x + .5, h); g.stroke(); }
+  for (var y = 0; y < h; y += 16) { g.beginPath(); g.moveTo(0, y + .5); g.lineTo(w, y + .5); g.stroke(); }
+});
+var board = mesh(new THREE.BoxGeometry(8.2, BASE, 4.7), [
+  toon('#ead6b0'), toon('#ead6b0'), new THREE.MeshToonMaterial({ map: boardTex, gradientMap: ramp, color: 0xf6ead2 }),
+  toon('#ead6b0'), toon('#ead6b0'), toon('#ead6b0')
+]);
+board.position.y = BASE / 2; board.castShadow = false;
+live.add(board);
+
+var figTex = ctex(512, 300, function (g, w, h) {
+  g.fillStyle = '#fbf3e2'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = '#2b8cf0'; g.lineWidth = 6; g.strokeRect(6, 6, w - 12, h - 12);
+  g.fillStyle = '#2b8cf0'; g.fillRect(110, 95, 110, 26); g.fillRect(156, 121, 18, 65);
+  g.fillStyle = '#f06818'; g.fillRect(275, 85, 145, 34); g.fillRect(338, 119, 20, 70);
+  g.fillStyle = '#8a7b62'; g.font = 'bold 26px sans-serif'; g.textAlign = 'center'; g.fillText('双机调校竞飞场', w / 2, h - 22);
+});
+var figCard = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 4.7), new THREE.MeshBasicMaterial({ map: figTex, transparent: true }));
+figCard.rotation.x = -Math.PI / 2; figCard.position.y = 0.012;
+scene.add(figCard);
+
+/* ===================== 双道竞飞龙门架 + 着陆垫 ===================== */
+var arena = new THREE.Group(); live.add(arena);
+
+var padTex = ctex(512, 240, function (g, w, h) {
+  g.fillStyle = '#e8f5ed'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(42,48,64,.14)'; g.lineWidth = 3; g.setLineDash([8, 6]);
+  g.beginPath(); g.moveTo(w / 2, 14); g.lineTo(w / 2, h - 14); g.stroke();
+  g.setLineDash([]);
+  // 左：天蓝上节课款
+  g.fillStyle = 'rgba(43,140,240,.14)'; g.beginPath(); g.arc(w * 0.27, h * 0.48, 66, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = '#2b8cf0'; g.lineWidth = 6; g.stroke();
+  // 右：鲜橘改进款
+  g.fillStyle = 'rgba(240,104,24,.14)'; g.beginPath(); g.arc(w * 0.73, h * 0.48, 66, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = '#f06818'; g.lineWidth = 6; g.stroke();
+  g.fillStyle = '#1b5da3'; g.font = 'bold 25px sans-serif'; g.textAlign = 'center'; g.fillText('上节课款', w * 0.27, h - 16);
+  g.fillStyle = '#c24d0b'; g.fillText('我的改进款', w * 0.73, h - 16);
+});
+var pad = mesh(new THREE.BoxGeometry(5.6, 0.04, 3.0), [
+  toon('#c9e4d4'), toon('#c9e4d4'), new THREE.MeshToonMaterial({ map: padTex, gradientMap: ramp }),
+  toon('#c9e4d4'), toon('#c9e4d4'), toon('#c9e4d4')
+]);
+pad.position.set(0, BASE + 0.02, 0.12);
+arena.add(pad);
+
+// 龙门架双立柱 + 顶横梁 + 高度标尺
+var woodM = toon('#d5a058'), woodD = toon('#b47b38');
+[-2.55, 2.55].forEach(function (px) {
+  var col = mesh(new THREE.BoxGeometry(0.18, 4.3, 0.18), woodM);
+  col.position.set(px, BASE + 2.15, -0.52);
+  arena.add(col);
+  var baseFoot = mesh(new THREE.BoxGeometry(0.45, 0.12, 0.55), woodD);
+  baseFoot.position.set(px, BASE + 0.06, -0.52);
+  arena.add(baseFoot);
+});
+var topBeam = mesh(new THREE.BoxGeometry(5.4, 0.16, 0.22), woodD);
+topBeam.position.set(0, BASE + 4.32, -0.52);
+arena.add(topBeam);
+
+// 标尺背板（中央清晰高度刻度线）
+var rulerTex = ctex(128, 512, function (g, w, h) {
+  g.fillStyle = '#fff9ec'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#2a3040';
+  for (var i = 0; i <= 20; i++) {
+    var y = h - 18 - i * ((h - 36) / 20);
+    g.fillRect(0, y, i % 5 === 0 ? 42 : 20, 3);
+    g.fillRect(w - (i % 5 === 0 ? 42 : 20), y, i % 5 === 0 ? 42 : 20, 3);
+    if (i % 5 === 0) { g.font = 'bold 20px sans-serif'; g.textAlign = 'center'; g.fillText((i * 10) + '', w / 2, y + 7); }
+  }
+});
+var midRuler = mesh(new THREE.BoxGeometry(0.46, 4.2, 0.06), [
+  woodM, woodM, woodM, woodM, new THREE.MeshToonMaterial({ map: rulerTex, gradientMap: ramp }), woodM
+]);
+midRuler.position.set(0, BASE + 2.1, -0.52);
+arena.add(midRuler);
+
+// 可上下拖动的松手放飞横杆
+var gantryBar = new THREE.Group();
+gantryBar.position.set(0, BASE + 3.65, 0.12);
+arena.add(gantryBar);
+var barRod = mesh(new THREE.BoxGeometry(4.1, 0.11, 0.16), toon('#f2b63d'));
+barRod.userData.pick = 'bar'; gantryBar.add(barRod);
+var barHandle = mesh(new THREE.SphereGeometry(0.19, 16, 12), toon('#f06818'));
+barHandle.position.set(0, 0, 0.14); barHandle.userData.pick = 'bar'; gantryBar.add(barHandle);
+
+/* ===================== 双机 3D 模型（高对比度：天蓝 vs 鲜橘） ===================== */
+var pickMeshes = [barRod, barHandle];
+function makeDragonfly(wingHex, stemHex) {
+  var root = new THREE.Group();
+  var wingMat = toon(wingHex), stemMat = toon(stemHex);
+
+  var stem = mesh(new THREE.BoxGeometry(0.16, 0.68, 0.075), stemMat);
+  stem.position.y = 0.34; stem.userData.pick = 'df'; pickMeshes.push(stem); root.add(stem);
+
+  // 底部折尾配重块 + 3 个可动态显隐的回形针
+  var tailFold = mesh(new THREE.BoxGeometry(0.18, 0.18, 0.11), stemMat);
+  tailFold.position.y = 0.09; tailFold.userData.pick = 'df'; pickMeshes.push(tailFold); root.add(tailFold);
+
+  var clips = [];
+  var clipMat = toon('#ffd447');
+  for (var ci = 0; ci < 3; ci++) {
+    var cl = mesh(new THREE.TorusGeometry(0.085, 0.022, 8, 16), clipMat, false);
+    cl.scale.set(0.75, 1.4, 1);
+    cl.position.set((ci - 1) * 0.055, 0.09, 0.045);
+    root.add(cl);
+    clips.push(cl);
+  }
+
+  // 左/右飞翼锚点（实时缩放长度 X 与宽度 Z）
+  var wLPiv = new THREE.Group(); wLPiv.position.set(0, 0.68, 0); root.add(wLPiv);
+  var wL = mesh(new THREE.BoxGeometry(0.85, 0.024, 0.3), wingMat);
+  wL.position.set(-0.425, 0, 0); wL.userData.pick = 'df'; pickMeshes.push(wL); wLPiv.add(wL);
+  wLPiv.rotation.z = -0.17; wLPiv.rotation.x = 0.28;
+
+  var wRPiv = new THREE.Group(); wRPiv.position.set(0, 0.68, 0); root.add(wRPiv);
+  var wR = mesh(new THREE.BoxGeometry(0.85, 0.024, 0.3), wingMat);
+  wR.position.set(0.425, 0, 0); wR.userData.pick = 'df'; pickMeshes.push(wR); wRPiv.add(wR);
+  wRPiv.rotation.z = 0.17; wRPiv.rotation.x = -0.28;
+
+  // 旋转气流光环
+  var swirl = new THREE.Group();
+  var rings = [];
+  for (var ri = 0; ri < 2; ri++) {
+    var r = new THREE.Mesh(
+      new THREE.TorusGeometry(0.65 + ri * 0.18, 0.018, 6, 26, Math.PI * 1.35),
+      new THREE.MeshBasicMaterial({ color: new THREE.Color(wingHex), transparent: true, opacity: 0.55 })
+    );
+    r.rotation.x = Math.PI / 2; r.position.y = 0.52 + ri * 0.18;
+    swirl.add(r); rings.push(r);
+  }
+  swirl.visible = false;
+  arena.add(swirl);
+
+  return { root: root, wLPiv: wLPiv, wRPiv: wRPiv, tailFold: tailFold, clips: clips, swirl: swirl, rings: rings };
+}
+
+var dfBase = makeDragonfly('#2b8cf0', '#1864ba'); // 天蓝：上节课款
+var dfMine = makeDragonfly('#f06818', '#c24908'); // 鲜橘：我的改进款
+arena.add(dfBase.root);
+arena.add(dfMine.root);
+
+// 获胜皇冠 & 彩屑星星
+var crownGrp = new THREE.Group();
+var crownMat = toon('#ffd43b');
+var cBase = mesh(new THREE.CylinderGeometry(0.22, 0.18, 0.12, 12), crownMat);
+crownGrp.add(cBase);
+for (var k = 0; k < 5; k++) {
+  var ang = k * Math.PI * 2 / 5;
+  var pt = mesh(new THREE.ConeGeometry(0.06, 0.16, 6), crownMat, false);
+  pt.position.set(Math.cos(ang) * 0.17, 0.12, Math.sin(ang) * 0.17);
+  crownGrp.add(pt);
+}
+crownGrp.visible = false;
+arena.add(crownGrp);
+
+/* ===================== 实时变形与物理参数 ===================== */
+var cfgBase = { len: 45, wid: 45, wt: 45 };
+var cfgMine = { len: 45, wid: 45, wt: 45 };
+
+function applyMorph(df, c) {
+  var sx = 0.58 + (c.len / 100) * 0.92;  // 飞翼长度 0.58 ~ 1.50
+  var sz = 0.55 + (c.wid / 100) * 0.95;  // 飞翼宽度 0.55 ~ 1.50
+  df.wLPiv.scale.set(sx, 1, sz);
+  df.wRPiv.scale.set(sx, 1, sz);
+  // 折尾厚度与可见回形针数（1~3个）
+  var wScale = 0.75 + (c.wt / 100) * 0.75;
+  df.tailFold.scale.set(1, wScale, 0.8 + (c.wt / 100) * 0.9);
+  var clipCnt = c.wt < 30 ? 0 : c.wt < 62 ? 1 : c.wt < 84 ? 2 : 3;
+  df.clips.forEach(function (cl, idx) { cl.visible = idx < clipCnt; });
+}
+applyMorph(dfBase, cfgBase);
+applyMorph(dfMine, cfgMine);
+
+function aeroOf(c) {
+  var L = c.len / 100, W = c.wid / 100, M = c.wt / 100;
+  var area = (0.65 + 0.75 * L) * (0.65 + 0.75 * W); // 0.42 .. 1.96
+  // 理想重量区 0.42~0.68：太轻会剧烈摇晃失速，太重受重力下拉快
+  var wobble = M < 0.35 ? (0.35 - M) * 1.45 : (M < 0.48 ? (0.48 - M) * 0.25 : 0.04);
+  var massPenalty = M > 0.65 ? (M - 0.65) * 1.4 : (M < 0.32 ? (0.32 - M) * 0.85 : 0);
+  var fallSpd = THREE.MathUtils.clamp((1.95 / Math.pow(area, 0.68)) + massPenalty - 0.12, 0.82, 2.65);
+  var spinRate = THREE.MathUtils.clamp(12 + area * 6.5 - wobble * 9, 5, 24);
+  return { fallSpd: fallSpd, spinRate: spinRate, wobble: wobble };
+}
+
+var DF_X = 1.22;
+var launchY = 3.55;
+var raceState = 'ready'; // 'ready' | 'dropping' | 'done'
+var pBase = { x: -DF_X, y: 3.55, vy: 0, yaw: 0, t: 0, landed: false, aero: aeroOf(cfgBase) };
+var pMine = { x:  DF_X, y: 3.55, vy: 0, yaw: 0, t: 0, landed: false, aero: aeroOf(cfgMine) };
+
+function resetRace(keepY) {
+  raceState = 'ready';
+  if (!keepY) launchY = 3.55;
+  crownGrp.visible = false;
+  pBase = { x: -DF_X, y: launchY, vy: 0, yaw: 0, t: 0, landed: false, aero: aeroOf(cfgBase) };
+  pMine = { x:  DF_X, y: launchY, vy: 0, yaw: 0, t: 0, landed: false, aero: aeroOf(cfgMine) };
+  dfBase.swirl.visible = false;
+  dfMine.swirl.visible = false;
+}
+
+function launchRace() {
+  resetRace(true);
+  $('#cmpBanner').classList.remove('show', 'win');
+  clearSliderCoach();
+  pBase.aero = aeroOf(cfgBase);
+  pMine.aero = aeroOf(cfgMine);
+  raceState = 'dropping';
+  markAct('drop'); ghost.off = true;
+  tone(540, 0.14, 'sine', 0.11, 820);
+  floatWord('双机同时放飞!', 'shuāng jī tóng shí fàng fēi', new THREE.Vector3(0, launchY + 0.55, 0.2), 'cool');
+}
+
+/* ===================== 滑块控制 ===================== */
+function tagWord(v, a, b, c) { return v < 34 ? a : v > 66 ? c : b; }
+function syncSlidersUI() {
+  $('#inLen').value = cfgMine.len; $('#sv1').textContent = tagWord(cfgMine.len, '短', '中', '长');
+  $('#inWid').value = cfgMine.wid; $('#sv2').textContent = tagWord(cfgMine.wid, '窄', '中', '宽');
+  $('#inWt').value  = cfgMine.wt;  $('#sv3').textContent = tagWord(cfgMine.wt, '轻', '适中', '重');
+  applyMorph(dfMine, cfgMine);
+}
+function onSlide(e) {
+  audio(); welcomeVoiceOnce(); stopDemo(); introSkip();
+  cfgMine.len = Number($('#inLen').value);
+  cfgMine.wid = Number($('#inWid').value);
+  cfgMine.wt  = Number($('#inWt').value);
+  syncSlidersUI();
+  if (raceState !== 'ready') resetRace(true);
+  markAct('tune'); ghost.off = true;
+  tone(380 + (cfgMine.len + cfgMine.wid) * 2.2, 0.05, 'triangle', 0.05);
+  var sid = e && e.target ? e.target.id : '';
+  var firstTune = !kinds.t;
+  if (sid === 'inLen') {
+    discover('tune-len', 't', '改变飞翼长度看造型变化', 'gǎi biàn fēi yì cháng dù kàn zào xíng biàn huà', '#e56d17', '🔧', firstTune);
+  } else if (sid === 'inWid') {
+    discover('tune-wid', 't', '改变飞翼宽度看造型变化', 'gǎi biàn fēi yì kuān dù kàn zào xíng biàn huà', '#e56d17', '🔧', firstTune);
+  } else if (sid === 'inWt') {
+    discover('tune-wt', 't', '增减折尾配重改变重心', 'zēng jiǎn zhé wěi pèi zhòng gǎi biàn zhòng xīn', '#e56d17', '⚖', firstTune);
+  }
+  updateGuide(firstTune);
+}
+$('#inLen').addEventListener('input', onSlide);
+$('#inWid').addEventListener('input', onSlide);
+$('#inWt').addEventListener('input', onSlide);
+
+/* ===================== 相机取景 ===================== */
+var portrait = false;
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  portrait = w / h < 0.85;
+  var tgt = new THREE.Vector3(portrait ? 0 : 0.95, portrait ? 1.85 : 2.1, 0);
+  var dir = new THREE.Vector3(0, 0.30, 0.954).normalize();
+  var needW = portrait ? 6.8 : 9.8, needH = portrait ? 8.2 : 6.4;
+  var vf = THREE.MathUtils.degToRad(camera.fov), hf = 2 * Math.atan(Math.tan(vf / 2) * camera.aspect);
+  var d = Math.max(needW / 2 / Math.tan(hf / 2), needH / 2 / Math.tan(vf / 2) * 0.9);
+  camera.position.copy(tgt).addScaledVector(dir, d);
+  camera.lookAt(tgt);
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', fit);
+
+/* ===================== 音效 ===================== */
+var AC = null;
+function audio() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } } if (AC && AC.state === 'suspended') AC.resume(); return AC; }
+function tone(f, dur, type, vol, f2, delay) {
+  var a = audio(); if (!a) return;
+  var t = a.currentTime + (delay || 0), o = a.createOscillator(), g = a.createGain();
+  o.type = type || 'sine'; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.12, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + 0.03);
+}
+function sDing() { tone(880, 0.16, 'sine', 0.11); tone(1320, 0.28, 'sine', 0.09, null, 0.1); }
+function sWin() { tone(523, 0.14, 'triangle', 0.11); tone(659, 0.14, 'triangle', 0.11, null, 0.11); tone(784, 0.16, 'triangle', 0.11, null, 0.22); tone(1046, 0.34, 'sine', 0.12, null, 0.33); }
+function sLand() { tone(230, 0.09, 'triangle', 0.1, 145); }
+function sTriumph() {
+  [523, 659, 784, 1046, 1318].forEach(function (f, i) {
+    tone(f, i === 4 ? 0.42 : 0.16, i === 4 ? 'sine' : 'triangle', 0.11, null, i * 0.1);
+  });
+}
+
+/* ===================== 通关礼花与勋章 ===================== */
+var confC = $('#confettiCanvas'), confCtx = confC.getContext('2d'), confParts = [], celebrated = false, quizAnswered = false;
+function launchConfetti() {
+  confC.width = window.innerWidth; confC.height = window.innerHeight;
+  var cols = ['#f59e0b', '#e56d17', '#2b8cf0', '#16a34a', '#ec4899', '#a855f7'];
+  confParts = [];
+  for (var i = 0; i < 90; i++) {
+    var ang = -Math.PI / 2 + (Math.random() - 0.5) * 1.5;
+    var spd = 280 + Math.random() * 440;
+    confParts.push({
+      x: confC.width * (0.3 + Math.random() * 0.4), y: confC.height * 0.28,
+      vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd - 80,
+      w: 7 + Math.random() * 7, h: 5 + Math.random() * 6,
+      rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 11,
+      col: cols[i % cols.length], life: 2.2 + Math.random() * 1.1
+    });
+  }
+}
+function stepConfetti(dt) {
+  if (!confParts.length) return;
+  if (confC.width !== window.innerWidth || confC.height !== window.innerHeight) {
+    confC.width = window.innerWidth; confC.height = window.innerHeight;
+  }
+  confCtx.clearRect(0, 0, confC.width, confC.height);
+  for (var i = confParts.length - 1; i >= 0; i--) {
+    var p = confParts[i];
+    p.life -= dt;
+    if (p.life <= 0) { confParts.splice(i, 1); continue; }
+    p.vy += 620 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
+    confCtx.save(); confCtx.translate(p.x, p.y); confCtx.rotate(p.rot);
+    confCtx.globalAlpha = Math.min(1, p.life);
+    confCtx.fillStyle = p.col; confCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+    confCtx.restore();
+  }
+  if (!confParts.length) confCtx.clearRect(0, 0, confC.width, confC.height);
+}
+function resetQuizUI() {
+  quizAnswered = false;
+  document.querySelectorAll('#quizOpts .qopt').forEach(function (b) { b.classList.remove('ok', 'wrong'); });
+  var fb = $('#quizFb');
+  fb.textContent = ''; fb.className = 'quiz-fb';
+}
+document.querySelectorAll('#quizOpts .qopt').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    audio();
+    var ok = btn.getAttribute('data-ok') === '1';
+    var fb = $('#quizFb');
+    if (ok) {
+      document.querySelectorAll('#quizOpts .qopt').forEach(function (b) { b.classList.remove('wrong'); });
+      btn.classList.add('ok');
+      quizAnswered = true;
+      sTriumph(); launchConfetti();
+      fb.textContent = '🌸 太棒了！获得本课小红花！飞翼越长越宽、配重适中，空气阻力越大，纸蜻蜓落得越慢越稳！';
+      fb.className = 'quiz-fb show ok';
+      speak('太棒了！获得本课小红花！飞翼越长越宽、配重适中，空气阻力越大，纸蜻蜓落得越慢越稳！');
+      saveProgress(LESSON_ID, true);
+    } else {
+      btn.classList.add('wrong');
+      tone(240, 0.14, 'triangle', 0.09, 190);
+      fb.textContent = '再想想刚才的双机对比哦～飞翼太小或尾巴太重都会落得更快，试试把飞翼改长改宽那个选项吧！';
+      fb.className = 'quiz-fb show err';
+      speak('再想想刚才的双机对比哦，飞翼太小或尾巴太重都会落得更快，再试一次吧！');
+    }
+  });
+});
+function checkWin() {
+  if (celebrated) return;
+  if (kinds.t && kinds.c && kinds.w) {
+    celebrated = true;
+    saveProgress(LESSON_ID, true);
+    setTimeout(function () {
+      sTriumph(); launchConfetti();
+      $('#winToast').classList.add('show');
+      speak('太棒啦！全部发现集齐啦！科学小结论：' + CONCLUSION_TEXT + ' 来答一道小问题领小红花吧！');
+    }, 1100);
+  }
+}
+function hideWinToast() {
+  $('#winToast').classList.remove('show');
+  confParts = []; confCtx.clearRect(0, 0, confC.width, confC.height);
+}
+
+/* ===================== 浮动双机秒表 & 飘字 ===================== */
+var labelsEl = $('#labels');
+var tmrL = document.createElement('div'); tmrL.className = 'tmr'; labelsEl.appendChild(tmrL);
+var tmrR = document.createElement('div'); tmrR.className = 'tmr org'; labelsEl.appendChild(tmrR);
+var vtmp = new THREE.Vector3();
+function toScreen(v) { vtmp.copy(v).project(camera); return { x: (vtmp.x + 1) / 2 * window.innerWidth, y: (1 - vtmp.y) / 2 * window.innerHeight }; }
+function floatWord(text, py, worldPos, cls) {
+  var p = toScreen(worldPos), el = document.createElement('div');
+  el.className = 'word' + (cls ? ' ' + cls : ''); el.innerHTML = ruby(text, py);
+  el.style.left = Math.max(100, Math.min(window.innerWidth - 100, p.x)) + 'px';
+  el.style.top = Math.max(70, Math.min(window.innerHeight - 130, p.y)) + 'px';
+  labelsEl.appendChild(el); setTimeout(function () { el.remove(); }, 1650);
+}
+
+/* ===================== 我的发现 ===================== */
+var found = {}, foundN = 0, kinds = { t: false, c: false, w: false };
+var acted = { tune: false, drop: false, win: false }, actions = 0;
+function markAct(v) {
+  if (!acted[v]) { acted[v] = true; var el = document.querySelector('.verb[data-v="' + v + '"]'); if (el) el.classList.add('done'); }
+  actions++;
+}
+function discover(key, kind, text, py, color, ico, silentVoice) {
+  if (found[key]) return;
+  found[key] = true; foundN++;
+  var el = document.createElement('div'); el.className = 'stk';
+  el.innerHTML = '<i style="background:' + color + '">' + ico + '</i><span>' + ruby(text, py) + '</span>';
+  var list = $('#ntList'); list.insertBefore(el, list.firstChild);
+  while (list.children.length > 6) list.removeChild(list.lastChild);
+  $('#ntCount').textContent = foundN;
+  if (!kinds[kind]) { kinds[kind] = true; $('#st' + kind.toUpperCase()).classList.add('lit'); }
+  sDing();
+  if (!silentVoice) speak(text);
+  checkWin();
+}
+
+function showComparisonCoach(diff) {
+  var bT = pBase.t.toFixed(1), mT = pMine.t.toFixed(1);
+  $('#cmpBaseT').textContent = bT + 's';
+  $('#cmpMineT').textContent = mT + 's';
+  var won = diff > 0.18, lost = diff < -0.12;
+  $('#cmpDiff').textContent = won
+    ? ('慢 +' + diff.toFixed(1) + 's 🏆')
+    : lost
+      ? ('快 ' + Math.abs(diff).toFixed(1) + 's')
+      : '差不多快';
+
+  // 逐项对比参数与上节课款（45/45/45）
+  var tags = [], reasons = [], fixSliders = [];
+  if (cfgMine.len > 55) tags.push({ t: '飞翼更长', c: 'good' });
+  else if (cfgMine.len < 38) { tags.push({ t: '飞翼偏短', c: 'warn' }); reasons.push('飞翼偏短'); fixSliders.push('#sldLen'); }
+  else tags.push({ t: '长度相同', c: '' });
+
+  if (cfgMine.wid > 55) tags.push({ t: '飞翼更宽', c: 'good' });
+  else if (cfgMine.wid < 38) { tags.push({ t: '飞翼偏窄', c: 'warn' }); reasons.push('飞翼偏窄'); fixSliders.push('#sldWid'); }
+  else tags.push({ t: '宽度相同', c: '' });
+
+  if (cfgMine.wt < 33) { tags.push({ t: '尾巴太轻摇晃', c: 'warn' }); reasons.push('尾巴太轻会摇晃'); fixSliders.push('#sldWt'); }
+  else if (cfgMine.wt > 70) { tags.push({ t: '尾巴太重', c: 'warn' }); reasons.push('尾巴太重'); fixSliders.push('#sldWt'); }
+  else tags.push({ t: '配重适中', c: 'good' });
+
+  $('#cmpTags').innerHTML = tags.map(function (x) {
+    return '<span class="cmp-tag ' + x.c + '">' + x.t + '</span>';
+  }).join('');
+
+  var tip = '';
+  clearSliderCoach();
+  if (won) {
+    tip = '太棒啦！改进款比上节课款多留空 ' + diff.toFixed(1) + ' 秒，飞翼更长更宽、空气阻力更大，稳稳拿到冠军！';
+    lastCoachMsg = tip;
+  } else if (lost) {
+    var whyStr = reasons.length ? ('因为' + reasons.join('、') + '。') : '因为飞翼面积还不够大。';
+    var how = [];
+    if (cfgMine.len < 65) { how.push('「飞翼长度」往右拉长'); fixSliders.push('#sldLen'); }
+    if (cfgMine.wid < 65) { how.push('「飞翼宽度」往右拉宽'); fixSliders.push('#sldWid'); }
+    if (cfgMine.wt < 35 || cfgMine.wt > 70) { how.push('「折尾重量」调到适中'); fixSliders.push('#sldWt'); }
+    tip = '改进款落得更快！' + whyStr + '想让它落得更慢更稳，试着把' + how.join('、') + '，再试飞一次！';
+    lastCoachMsg = tip;
+    if (!demo) fixSliders.forEach(function (sel) { $(sel).classList.add('coach-hi'); });
+  } else {
+    tip = '两只落得差不多快！试着把「飞翼长度」或「飞翼宽度」往右拉大，就能飞得比上节课款更慢更稳哦！';
+    lastCoachMsg = tip;
+    if (!demo) { $('#sldLen').classList.add('coach-hi'); $('#sldWid').classList.add('coach-hi'); }
+  }
+  $('#cmpTip').textContent = tip;
+  $('#cmpBanner').classList.toggle('win', won);
+  $('#cmpBanner').classList.add('show');
+  updateGuide(false);
+  if (!celebrated) speak(tip);
+}
+
+function evaluateRace() {
+  discover('dual-cmp', 'c', '双机同高同时松手最公平', 'shuāng jī tóng gāo tóng shí sōng shǒu zuì gōng píng', '#2b8cf0', '⏱', true);
+  var diff = pMine.t - pBase.t;
+  if (diff > 0.18) {
+    crownGrp.visible = true;
+    markAct('win'); sWin();
+    floatWord('改进款更稳更慢赢啦!', 'gǎi jìn kuǎn gèng wěn gèng màn yíng la', new THREE.Vector3(DF_X, BASE + 1.5, 0.2), 'ok');
+    if (cfgMine.len > 55 && cfgMine.wid > 55) {
+      discover('win-champ', 'w', '宽长飞翼留空更长赢冠军', 'kuān cháng fēi yì liú kōng gèng cháng yíng guàn jūn', '#16a34a', '🏆', true);
+    } else if (cfgMine.len > 55) {
+      discover('win-champ', 'w', '加长飞翼留空更长赢冠军', 'jiā cháng fēi yì liú kōng gèng cháng yíng guàn jūn', '#16a34a', '🏆', true);
+    } else if (cfgMine.wid > 55) {
+      discover('win-champ', 'w', '加宽飞翼留空更长赢冠军', 'jiā kuān fēi yì liú kōng gèng cháng yíng guàn jūn', '#16a34a', '🏆', true);
+    } else {
+      discover('win-champ', 'w', '调好配重飞得更稳赢冠军', 'tiáo hǎo pèi zhòng fēi de gèng wěn yíng guàn jūn', '#16a34a', '🏆', true);
+    }
+  } else if (cfgMine.wt < 30) {
+    floatWord('尾部太轻会摇晃!', 'wěi bù tài qīng huì yáo huàng', new THREE.Vector3(DF_X, BASE + 1.4, 0.2));
+    discover('too-light', 'c', '折尾太轻飞行会摇晃', 'zhé wěi tài qīng fēi xíng huì yáo huàng', '#7c4dcc', '⚖', true);
+  } else if (cfgMine.wt > 78) {
+    floatWord('尾部太重落得快!', 'wěi bù tài zhòng luò de kuài', new THREE.Vector3(DF_X, BASE + 1.4, 0.2));
+    discover('too-heavy', 'c', '折尾太重下降得更快', 'zhé wěi tài zhòng xià jiàng de gèng kuài', '#7c4dcc', '⚖', true);
+  } else if (diff < -0.15) {
+    floatWord('飞翼太小落得快!', 'fēi yì tài xiǎo luò de kuài', new THREE.Vector3(DF_X, BASE + 1.4, 0.2));
+  } else {
+    floatWord('两架差不多快,调大飞翼试试!', 'liǎng jià chà bù duō kuài tiáo dà fēi yì shì shì', new THREE.Vector3(0, BASE + 1.6, 0.2), 'cool');
+  }
+  showComparisonCoach(diff);
+}
+
+/* ===================== 拖动龙门放飞杆 ===================== */
+var dragBar = false;
+var pPlaneV = new THREE.Plane(new THREE.Vector3(0, 0, 1), -0.12), ptmp = new THREE.Vector3();
+function setNDC(e) { ndc.x = (e.clientX / window.innerWidth) * 2 - 1; ndc.y = -(e.clientY / window.innerHeight) * 2 + 1; raycaster.setFromCamera(ndc, camera); }
+
+canvas.addEventListener('pointerdown', function (e) {
+  audio(); welcomeVoiceOnce(); stopDemo(); introSkip();
+  setNDC(e);
+  var h = raycaster.intersectObjects(pickMeshes, false)[0];
+  if (h) {
+    dragBar = true; ghost.off = true;
+    resetRace(true);
+    canvas.style.cursor = 'ns-resize';
+    try { canvas.setPointerCapture(e.pointerId); } catch (er) {}
+  }
+});
+canvas.addEventListener('pointermove', function (e) {
+  setNDC(e);
+  if (dragBar) {
+    if (raycaster.ray.intersectPlane(pPlaneV, ptmp)) {
+      launchY = THREE.MathUtils.clamp(ptmp.y - 0.68, BASE + 1.5, 3.85);
+      pBase.y = pMine.y = launchY;
+    }
+    return;
+  }
+  var h = raycaster.intersectObjects(pickMeshes, false)[0];
+  canvas.style.cursor = h ? 'ns-resize' : 'default';
+});
+function releaseBar() {
+  if (!dragBar) return;
+  dragBar = false; canvas.style.cursor = 'default';
+  launchRace();
+}
+canvas.addEventListener('pointerup', releaseBar);
+canvas.addEventListener('pointercancel', releaseBar);
+
+/* ===================== 幽灵手示范 ===================== */
+var ghost = { off: false, t: 0 }, handEl = $('#hand');
+function updateGhost(dt) {
+  if (ghost.off || intro.t < 1.6) { handEl.style.opacity = 0; return; }
+  ghost.t = (ghost.t + dt) % 2.4;
+  var r = $('#inLen').getBoundingClientRect();
+  var u = Math.min(1, Math.max(0, (ghost.t - 0.3) / 1.4));
+  var x = r.left + r.width * (0.45 + 0.42 * u), y = r.top + r.height / 2;
+  handEl.style.opacity = ghost.t < 2.0 ? 0.92 : 0;
+  handEl.style.transform = 'translate(' + (x - 16) + 'px,' + (y + 4) + 'px)';
+}
+
+/* ===================== 老师演示（逐条高亮滑块 + 语音讲解） ===================== */
+var demo = null;
+var DEMO = [
+  ['say', '#sldLen', '先看第一条：把「飞翼长度」往右拉长，看橘色纸蜻蜓的翅膀变长啦！'],
+  ['slide', 'len', 88, 1.5], ['wait', 0.7],
+  ['say', '#sldWid', '再看第二条：把「飞翼宽度」往右加宽，翅膀面积变大，空气阻力更大！'],
+  ['slide', 'wid', 86, 1.5], ['wait', 0.7],
+  ['say', '#sldWt', '最后看第三条：把「折尾重量」调到适中，飞起来既不摇晃也不太重！'],
+  ['slide', 'wt', 56, 1.3], ['wait', 0.8],
+  ['say', '#launchBtn', '调好啦！现在两只纸蜻蜓同时松手，比一比谁落得更慢！'],
+  ['wait', 0.55],
+  ['launch'],
+  ['wait', 4.9],
+  ['end']
+];
+function startDemo() {
+  dismissEntryCues();
+  resetAll(true);
+  demo = { i: 0, t: 0, fromVal: 45, inited: false };
+  ghost.off = true;
+  $('#demoBtn').classList.add('on'); $('#demoBtn').textContent = '■ 停止';
+}
+function stopDemo() {
+  if (!demo) return; demo = null;
+  clearSliderCoach();
+  $('#demoBtn').classList.remove('on'); $('#demoBtn').textContent = '▶ 演示';
+  updateGuide(false);
+}
+function stepDemo(dt) {
+  if (!demo) return;
+  var s = DEMO[demo.i]; demo.t += dt;
+  if (!s || s[0] === 'end') { stopDemo(); return; }
+  if (s[0] === 'wait') { if (demo.t >= s[1]) { demo.i++; demo.t = 0; demo.inited = false; } return; }
+  if (s[0] === 'say') {
+    clearSliderCoach();
+    if (s[1]) {
+      var el = $(s[1]);
+      if (el) el.classList.add(s[1] === '#launchBtn' ? 'glow-next' : 'demo-hi');
+    }
+    $('#gbIco').textContent = '👩‍🏫';
+    $('#gbTxt').textContent = s[2];
+    speak(s[2]);
+    demo.i++; demo.t = 0; demo.inited = false;
+    return;
+  }
+  if (s[0] === 'slide') {
+    var prop = s[1], toVal = s[2], dur = s[3];
+    if (!demo.inited) { demo.inited = true; demo.fromVal = cfgMine[prop]; }
+    var u = Math.min(1, demo.t / dur);
+    cfgMine[prop] = Math.round(demo.fromVal + (toVal - demo.fromVal) * u);
+    syncSlidersUI();
+    if (u >= 1) {
+      markAct('tune');
+      if (prop === 'wt') {
+        discover('tuned', 't', '加宽加长飞翼并调好配重', 'jiā kuān jiā cháng fēi yì bìng tiáo hǎo pèi zhòng', '#e56d17', '🔧', true);
+      }
+      demo.i++; demo.t = 0; demo.inited = false;
+    }
+    return;
+  }
+  if (s[0] === 'launch') { clearSliderCoach(); launchRace(); demo.i++; demo.t = 0; demo.inited = false; }
+}
+
+/* ===================== 开场动画 ===================== */
+var intro = { t: 0, done: false };
+function introSkip() {
+  if (intro.done) return;
+  intro.t = 3.5; intro.done = true;
+  figCard.visible = false;
+  board.scale.set(1, 1, 1); arena.scale.setScalar(1);
+}
+function backOut(t) { var c = 1.65; t = Math.min(1, Math.max(0, t)); return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); }
+function updateIntro(dt) {
+  if (intro.done) return;
+  if (!intro.t0) intro.t0 = performance.now();
+  intro.t = Math.max(intro.t + dt, (performance.now() - intro.t0) / 1000 * 1.4); var t = intro.t;
+  var lift = Math.min(1, Math.max(0, (t - 0.2) / 0.65));
+  figCard.position.y = 0.012 + lift * 1.6;
+  figCard.material.opacity = 1 - lift; figCard.visible = lift < 1;
+  board.scale.set(1, Math.max(0.02, backOut((t - 0.3) / 0.5)), 1);
+  arena.scale.setScalar(Math.max(0.01, backOut((t - 0.52) / 0.55)));
+  if (t >= 2.2) introSkip();
+}
+
+/* ===================== 重来 ===================== */
+function resetAll(keepDemo) {
+  if (!keepDemo) stopDemo();
+  cfgMine = { len: 45, wid: 45, wt: 45 };
+  syncSlidersUI();
+  resetRace(false);
+  found = {}; foundN = 0; kinds = { t: false, c: false, w: false };
+  acted = { tune: false, drop: false, win: false }; actions = 0;
+  celebrated = false; lastCoachMsg = '';
+  hideWinToast(); resetQuizUI();
+  $('#cmpBanner').classList.remove('show', 'win');
+  $('#ntList').innerHTML = ''; $('#ntCount').textContent = '0';
+  document.querySelectorAll('.stamp').forEach(function (s) { s.classList.remove('lit'); });
+  document.querySelectorAll('.verb').forEach(function (v) { v.classList.remove('done'); });
+  $('#verbs').style.opacity = 1;
+  updateGuide(false);
+}
+
+/* ===================== 主循环 ===================== */
+var last = performance.now(), now = 0;
+function stepOneDF(p, df, dt, baseX) {
+  if (raceState === 'ready') {
+    df.root.position.set(baseX, BASE + p.y, 0.12);
+    df.root.rotation.set(0, now * 0.5, 0);
+    df.swirl.visible = false;
+    return;
+  }
+  if (!p.landed) {
+    p.t += dt;
+    var a = p.aero;
+    p.vy += (-a.fallSpd - p.vy) * (1 - Math.exp(-5.2 * dt));
+    p.y += p.vy * dt;
+    p.yaw += a.spinRate * dt;
+    var wobX = Math.sin(p.t * 7.5) * a.wobble * 0.45;
+    p.x = baseX + wobX;
+    df.root.position.set(p.x, BASE + Math.max(0.04, p.y), 0.12);
+    df.root.rotation.set(Math.cos(p.t * 7.5) * a.wobble * 0.45, p.yaw, Math.sin(p.t * 7.5) * a.wobble * 0.55);
+    df.swirl.visible = true;
+    df.swirl.position.set(p.x, BASE + p.y, 0.12);
+    df.rings.forEach(function (r, idx) { r.rotation.z += dt * (a.spinRate * 0.6 + idx * 2); });
+    if (p.y <= 0.04) {
+      p.y = 0.04; p.landed = true; df.swirl.visible = false; sLand();
+      df.root.position.set(p.x, BASE + 0.04, 0.12);
+      df.root.rotation.set(0, p.yaw, 0);
+    }
+  }
+}
+
+function frame(t) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (t - last) / 1000)); last = t; now = t / 1000;
+  updateIntro(dt);
+  stepDemo(dt);
+
+  gantryBar.position.y = BASE + launchY + 0.72;
+  stepOneDF(pBase, dfBase, dt, -DF_X);
+  stepOneDF(pMine, dfMine, dt,  DF_X);
+
+  if (raceState === 'dropping' && pBase.landed && pMine.landed) {
+    raceState = 'done';
+    evaluateRace();
+  }
+
+  if (crownGrp.visible) {
+    crownGrp.position.set(pMine.x, BASE + 1.25 + Math.sin(now * 4.5) * 0.08, 0.12);
+    crownGrp.rotation.y += dt * 1.8;
+  }
+
+  // 双机实时秒表
+  var showTmr = raceState === 'dropping' || raceState === 'done' || intro.t > 1.0;
+  tmrL.classList.toggle('show', showTmr);
+  tmrR.classList.toggle('show', showTmr);
+  if (showTmr) {
+    tmrL.innerHTML = ruby('上节课款', 'shàng jié kè kuǎn') + '<span class="sec">' + pBase.t.toFixed(1) + 's</span>';
+    tmrR.innerHTML = ruby('我的改进款', 'wǒ de gǎi jìn kuǎn') + '<span class="sec">' + pMine.t.toFixed(1) + 's</span>';
+    var spL = toScreen(new THREE.Vector3(pBase.x, BASE + pBase.y + 1.15, 0.12));
+    var spR = toScreen(new THREE.Vector3(pMine.x, BASE + pMine.y + 1.15, 0.12));
+    var minY = 94;
+    tmrL.style.transform = 'translate(' + spL.x + 'px,' + Math.max(minY, spL.y) + 'px) translate(-50%,-100%)';
+    tmrR.style.transform = 'translate(' + spR.x + 'px,' + Math.max(minY, spR.y) + 'px) translate(-50%,-100%)';
+  }
+
+  updateGhost(dt);
+  stepConfetti(dt);
+  $('#verbs').style.opacity = actions > 8 ? 0.4 : 1;
+
+  renderer.render(scene, camera);
+}
+
+/* ===================== 按钮与测试钩子 ===================== */
+$('#voiceBtn').addEventListener('click', function () {
+  audio();
+  if (!entryCueDone) {
+    dismissEntryCues();
+    voiceOn = true; voiceWelcomed = true;
+    $('#voiceBtn').classList.add('on');
+    $('#voiceBtn').textContent = '🔊 语音';
+    updateGuide(true);
+    return;
+  }
+  voiceOn = !voiceOn;
+  $('#voiceBtn').classList.toggle('on', voiceOn);
+  $('#voiceBtn').textContent = voiceOn ? '🔊 语音' : '🔇 静音';
+  if (voiceOn) { voiceWelcomed = true; updateGuide(true); }
+  else if ('speechSynthesis' in window) { try { (window.__xkVoice ? window.__xkVoice.stop() : window.speechSynthesis.cancel()); } catch (e) {} }
+});
+$('#guideBar').addEventListener('click', function () {
+  audio(); dismissEntryCues();
+  if (!voiceOn) {
+    voiceOn = true;
+    $('#voiceBtn').classList.add('on');
+    $('#voiceBtn').textContent = '🔊 语音';
+  }
+  voiceWelcomed = true;
+  updateGuide(true);
+});
+$('#cmpCloseBtn').addEventListener('click', function () { $('#cmpBanner').classList.remove('show'); });
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  $('#ntTog').textContent = c ? '展开' : '收起';
+});
+$('#winCloseBtn').addEventListener('click', hideWinToast);
+$('#winReplayBtn').addEventListener('click', function () { resetAll(false); });
+$('#launchBtn').addEventListener('click', function () { audio(); welcomeVoiceOnce(); stopDemo(); introSkip(); launchRace(); });
+$('#demoBtn').addEventListener('click', function () { audio(); dismissEntryCues(); introSkip(); if (demo) stopDemo(); else startDemo(); });
+$('#resetBtn').addEventListener('click', function () { resetAll(false); });
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () { return { triangles: renderer.info.render.triangles, pixelRatio: renderer.getPixelRatio(), found: foundN, kinds: kinds, cfgMine: cfgMine, celebrated: celebrated }; },
+  launchRace: launchRace,
+  startDemo: startDemo
+};
+
+syncSlidersUI();
+updateGuide(false);
+fit();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

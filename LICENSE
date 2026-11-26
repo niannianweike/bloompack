@@ -1,0 +1,23 @@
+# 绽放书包（BloomPack）非商用双许可声明
+
+本项目采用「代码 + 内容」非商用双许可模式：
+
+## 1. 软件代码许可（非商用）
+本仓库中所有原创源代码（含 `index.html`、`lessons/*.html` 交互与 3D 渲染代码、`vendor/voice.js`、`vendor/pdf-book.js`、`studio/` 及 `tools/`）适用 **PolyForm Noncommercial License 1.0.0**。
+- 仅限个人学习、家庭辅导、公益教育、非营利教学与研究等非商业用途；
+- 未经著作权人书面授权，不得用于任何商业或营利场景；
+- 官方协议正文：https://polyformproject.org/licenses/noncommercial/1.0.0/
+
+## 2. 教具内容、文案与语音许可（非商用）
+本仓库中所有原创交互教学文案、实验引导脚本、文档与离线引导语音包（`audio/`）适用 **CC BY-NC-SA 4.0（署名-非商业性使用-相同方式共享 4.0）**。
+- 复用或改编需保留署名、不得用于商业用途，且衍生作品需沿用相同许可；
+- 官方协议正文：https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+## 3. 第三方开源依赖
+- `vendor/three.min.js`：Three.js（MIT，见 `vendor/three.LICENSE`）
+- `vendor/pdf.min.js`、`vendor/pdf.worker.min.js`：PDF.js（Apache-2.0）
+
+## 4. 教材版权归属声明
+- 相关义务教育科学教材的版权归原出版社及著作权人所有。
+- 本项目为非商用原创 3D 交互教具，仓库内不包含任何教材 PDF 原文件、整页扫描图片或全书原文。
+- 翻书视图中的「本机导入原书 PDF」功能仅在用户本地浏览器离线解析用户自有合法文件，不向服务器上传或对外分发。

@@ -1,0 +1,1140 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第1课 观察物体 · 比一比（活页）</title>
+<style>
+:root{--ink:#2a3040;--paper:#fffaf0;--line:#e3d6bd;--accent:#e56d17}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#d9c19b;color:var(--ink);
+  font-family:"Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+ruby{ruby-align:center}
+rt{font-size:.5em;font-weight:600;color:#8a6d4a;letter-spacing:0}
+body.no-py rt{display:none}
+
+/* 左上：返回 + 课题（轻） */
+.chip{position:fixed;left:14px;top:12px;z-index:5;display:flex;align-items:center;gap:10px;
+  padding:6px 14px 6px 6px;border-radius:16px;background:rgba(255,250,240,.92);border:1.5px solid var(--line);
+  box-shadow:0 6px 18px rgba(80,55,20,.12)}
+.home{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:var(--ink);font-size:20px;font-weight:800}
+.home:hover{border-color:var(--accent);color:var(--accent)}
+.chip h1{margin:0;font-size:20px;line-height:1.5;font-weight:800}
+.chip small{display:block;font-size:12px;color:#8a7b62;font-weight:700;margin-top:-2px}
+
+/* 右上：演示 / 重来 / 拼音 */
+.tools{position:fixed;right:14px;top:12px;z-index:7;display:flex;gap:8px}
+.tbtn{position:relative;height:40px;padding:0 14px;border-radius:13px;border:1.5px solid var(--line);background:rgba(255,250,240,.94);
+  font:inherit;font-size:15px;font-weight:800;color:var(--ink);cursor:pointer;box-shadow:0 3px 0 #e2d2b5}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:#bf5409;color:#fff;box-shadow:0 3px 0 #bf5409}
+.tbtn.cue-pulse{animation:cueRing 1.8s ease-in-out infinite}
+@keyframes cueRing{0%,100%{box-shadow:0 3px 0 #e2d2b5,0 0 0 0 rgba(229,109,23,.48)}50%{box-shadow:0 3px 0 #e2d2b5,0 0 0 8px rgba(229,109,23,0)}}
+.tbtn.on.cue-pulse{animation:cueRingOn 1.8s ease-in-out infinite}
+@keyframes cueRingOn{0%,100%{box-shadow:0 3px 0 #bf5409,0 0 0 0 rgba(229,109,23,.55)}50%{box-shadow:0 3px 0 #bf5409,0 0 0 9px rgba(229,109,23,0)}}
+.cue-tag{position:absolute;left:50%;top:calc(100% + 6px);transform:translateX(-50%);white-space:nowrap;pointer-events:none;
+  padding:2px 8px;border-radius:99px;background:#e56d17;color:#fff;font-size:11px;font-weight:800;line-height:1.4;
+  box-shadow:0 3px 10px rgba(191,84,9,.32);transition:opacity .35s,transform .35s}
+.cue-tag::before{content:"";position:absolute;left:50%;top:-4px;transform:translateX(-50%) rotate(45deg);width:8px;height:8px;background:#e56d17}
+body.cues-off .cue-tag{opacity:0;transform:translateX(-50%) translateY(-4px)}
+body.cues-off .tbtn.cue-pulse{animation:none}
+
+/* 步骤小助手提示条 */
+#guideBar{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:5;
+  max-width:min(440px,calc(100vw - 700px));padding:7px 14px;border-radius:99px;
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+  background:rgba(255,250,240,.95);border:2px solid #f59e0b;box-shadow:0 6px 18px rgba(80,55,20,.14);
+  font-size:14px;font-weight:800;color:var(--ink);line-height:1.35;transition:border-color .25s}
+#guideBar:hover{border-color:var(--accent)}
+#guideBar.bump{animation:gbBump .45s cubic-bezier(.2,1.5,.4,1)}
+@keyframes gbBump{0%{transform:translateX(-50%) scale(.92)}50%{transform:translateX(-50%) scale(1.05)}100%{transform:translateX(-50%) scale(1)}}
+.gb-ico{font-size:16px;flex:none}
+#guideTxt{flex:1;min-width:0}
+.gb-prog{flex:none;padding:2px 8px;border-radius:99px;background:#fff3e0;border:1px solid #f3c489;color:#c2560c;font-size:12px;font-weight:900}
+
+/* 我的发现：自动贴上的小贴纸（紧凑可收起，不遮挡 3D 器材） */
+#notes{position:fixed;right:14px;top:82px;z-index:4;width:222px;max-height:calc(100% - 156px);overflow:hidden;
+  padding:9px 10px 10px;border-radius:16px;background:rgba(255,250,240,.92);border:1.5px solid var(--line);
+  box-shadow:0 8px 22px rgba(80,55,20,.12);transition:top .3s,opacity .3s}
+body.cues-off #notes{top:64px;max-height:calc(100% - 140px)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:15px;font-weight:800;margin-bottom:6px}
+.nt-acts{display:flex;align-items:center;gap:6px}
+.nt-tog{height:24px;padding:0 8px;border-radius:8px;border:1px solid var(--line);background:#fff;
+  font:inherit;font-size:12px;font-weight:800;color:#8a7b62;cursor:pointer}
+.nt-tog:hover{border-color:var(--accent);color:var(--accent)}
+.stamps{display:flex;gap:5px;margin-bottom:6px}
+.stamp{flex:1;text-align:center;padding:3px 0 2px;border-radius:10px;border:1.5px dashed #d8c7a6;color:#b3a283;font-size:13px;font-weight:800;line-height:1.45}
+.stamp.lit{border-style:solid;border-color:#e56d17;background:#fff3e2;color:#c2560c;animation:pop .45s cubic-bezier(.2,1.6,.4,1)}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:152px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList{display:none}
+#notes.collapsed .stamps{margin-bottom:0}
+.stk{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:11px;background:#fff;border:1.5px solid #f0dcc0;
+  font-size:15px;font-weight:800;line-height:1.55;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+.stk i{font-style:normal;width:24px;height:24px;flex:none;border-radius:7px;display:grid;place-items:center;color:#fff;font-size:13px}
+.stk b{color:#c2560c}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* 通关奖励弹条 + 彩带 */
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:18;display:none}
+#celebrate{position:fixed;left:50%;top:50%;transform:translate(-50%,-46%) scale(.86);z-index:19;
+  width:min(450px,92vw);max-height:85vh;overflow-y:auto;padding:18px 20px 16px;border-radius:22px;text-align:center;
+  background:rgba(255,250,240,.98);border:2.5px solid #f59e0b;box-shadow:0 16px 40px rgba(80,55,20,.28);
+  opacity:0;pointer-events:none;transition:opacity .32s,transform .38s cubic-bezier(.2,1.5,.4,1)}
+#celebrate.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.cel-medal{font-size:44px;line-height:1.1;margin-bottom:2px}
+.cel-txt{font-size:20px;font-weight:900;color:#c2560c;line-height:1.55}
+.cel-sub{font-size:13px;font-weight:700;color:#6e604b;margin:2px 0 10px}
+.cel-concl{text-align:left;padding:10px 12px;border-radius:14px;background:#fff5e3;border:1.5px solid #f4c88c;margin:0 0 12px}
+.cel-concl-t{font-size:13px;font-weight:900;color:#c2560c;margin-bottom:4px}
+.cel-concl p{margin:0;font-size:14px;font-weight:800;color:#3d3428;line-height:1.55}
+.cel-quiz{text-align:left;padding:10px 12px;border-radius:14px;background:#fff;border:1.5px solid var(--line);margin:0 0 14px}
+.quiz-t{font-size:13px;font-weight:900;color:#d94886;margin-bottom:5px}
+.quiz-q{font-size:14px;font-weight:800;color:var(--ink);line-height:1.5;margin-bottom:9px}
+.quiz-opts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.qopt{padding:9px 6px;border-radius:12px;border:2px solid var(--line);background:#fffaf0;cursor:pointer;
+  font:inherit;font-size:14px;font-weight:800;color:var(--ink);display:flex;flex-direction:column;align-items:center;gap:4px;
+  box-shadow:0 2px 0 #e2d2b5;transition:all .18s}
+.qopt span.qi{font-size:22px;line-height:1}
+.qopt:hover{border-color:var(--accent);background:#fff3e0}
+.qopt.ok{border-color:#16a34a;background:#eafaf0;color:#15803d;box-shadow:0 2px 0 #86efac}
+.qopt.wrong{border-color:#f59e0b;background:#fff7ed;animation:qShake .36s}
+@keyframes qShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.quiz-fb{min-height:20px;margin-top:8px;font-size:13px;font-weight:800;line-height:1.45;color:#c2560c}
+.quiz-fb.ok{color:#15803d}
+.cel-btns{display:flex;justify-content:center;gap:10px}
+.cel-btn{height:38px;padding:0 16px;border-radius:12px;border:1.5px solid var(--line);background:#fff;
+  font:inherit;font-size:15px;font-weight:800;color:var(--ink);cursor:pointer;box-shadow:0 3px 0 #e2d2b5}
+.cel-btn.pri{background:var(--accent);border-color:#bf5409;color:#fff;box-shadow:0 3px 0 #bf5409}
+
+/* 底部三个动作提示（做过就打勾，不拦人） */
+#verbs{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:4;display:flex;gap:10px;transition:opacity .5s}
+.verb{display:flex;align-items:center;gap:7px;padding:6px 14px;border-radius:99px;background:rgba(255,250,240,.94);
+  border:1.5px solid var(--line);font-size:17px;font-weight:800;box-shadow:0 4px 14px rgba(80,55,20,.12)}
+.verb svg{width:22px;height:22px}
+.verb.done{border-color:#16a34a;color:#15803d;background:#effaf2}
+.verb.done::after{content:"✓";font-weight:900;color:#16a34a}
+.verb.guide-pulse{border-color:#e56d17;background:#fff3e0;animation:verbPulse 1.15s ease-in-out infinite}
+@keyframes verbPulse{0%,100%{transform:scale(1);box-shadow:0 4px 14px rgba(80,55,20,.12),0 0 0 0 rgba(229,109,23,.5)}50%{transform:scale(1.06);box-shadow:0 4px 14px rgba(80,55,20,.12),0 0 0 8px rgba(229,109,23,0)}}
+
+/* 3D 标签（物体名 + 拼音） */
+#labels{position:fixed;inset:0;pointer-events:none;z-index:3}
+.lbl{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:2px 10px;border-radius:99px;white-space:nowrap;
+  background:rgba(42,48,64,.88);color:#fff;font-size:16px;font-weight:800;line-height:1.75;opacity:0;transition:opacity .2s}
+.lbl rt{color:#ffe0b8}
+.lbl.show{opacity:1}
+.word{position:absolute;left:0;top:0;transform:translate(-50%,-100%);font-size:30px;font-weight:900;line-height:1.6;
+  color:#c2560c;text-shadow:0 2px 0 #fff,0 0 8px #fff;pointer-events:none;animation:floatUp 1.1s ease-out forwards}
+.word.hard{color:#2f5fa8}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-60%) scale(.6)}20%{opacity:1;transform:translate(-50%,-100%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-190%) scale(1)}}
+
+/* 幽灵手：一开始示范“拖过去”，第一次动手后消失 */
+#hand{position:fixed;left:0;top:0;width:64px;height:64px;z-index:6;pointer-events:none;opacity:0;transition:opacity .3s;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.25))}
+
+@media (max-width:1120px){
+  #guideBar{top:68px;left:14px;transform:none;max-width:calc(100vw - 260px)}
+  #guideBar.bump{animation:none}
+}
+@media (max-width:760px){
+  .chip{left:8px;top:8px;padding:4px 10px 4px 4px}
+  .chip h1{font-size:16px}.chip small{display:none}
+  .home{width:32px;height:32px}
+  .tools{right:8px;top:8px;gap:6px}.tbtn{height:34px;padding:0 10px;font-size:13px}
+  .cue-tag{display:none}
+  #guideBar{top:52px;left:50%;transform:translateX(-50%);max-width:calc(100vw - 20px);padding:5px 11px;font-size:13px}
+  #notes,body.cues-off #notes{top:auto;bottom:64px;right:8px;left:8px;width:auto;max-height:118px;padding:8px 10px}
+  #ntList .stk:nth-child(n+2){display:none}
+  .stk{font-size:15px}
+  #verbs{bottom:10px;gap:6px}.verb{font-size:14px;padding:4px 10px}.verb svg{width:18px;height:18px}
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="labels"></div>
+
+<div class="chip">
+  <a class="home" href="../index.html" title="回到书包">‹</a>
+  <div><h1 id="ttl"></h1><small>活页 · 课本第 4 页「比一比」</small></div>
+</div>
+
+<div id="guideBar" role="status" aria-live="polite" title="点我再听一次提示">
+  <span class="gb-ico">👉</span>
+  <span id="guideTxt">第1步：拖 2 件文具到天平两边盘里，比比谁重谁轻！</span>
+  <span class="gb-prog" id="guideProg">0/3</span>
+</div>
+
+<div class="tools">
+  <button class="tbtn on cue-pulse" id="voiceBtn" type="button" title="语音引导开关"><span class="tbtn-lbl">🔊 语音</span><span class="cue-tag">点我听玩法</span></button>
+  <button class="tbtn cue-pulse" id="demoBtn" type="button"><span class="tbtn-lbl">▶ 演示</span><span class="cue-tag">不会玩点演示</span></button>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<aside id="notes">
+  <div class="nt-head"><span id="ntTitle"></span><div class="nt-acts"><span id="ntCount" style="color:#c2560c">0</span><button class="nt-tog" id="ntTog" type="button">收起</button></div></div>
+  <div class="stamps"><span class="stamp" data-k="w" id="stW"></span><span class="stamp" data-k="s" id="stS"></span><span class="stamp" data-k="l" id="stL"></span></div>
+  <div id="ntList"></div>
+</aside>
+
+<canvas id="confetti"></canvas>
+<div id="celebrate" role="status" aria-live="polite">
+  <div class="cel-medal">🏆</div>
+  <div class="cel-txt" id="celTxt"></div>
+  <div class="cel-sub" id="celSub"></div>
+  <div class="cel-concl">
+    <div class="cel-concl-t">✨ 科学小结论</div>
+    <p>我们可以用天平比轻重、用手按压测软硬、在垫子上对齐一端比长短！</p>
+  </div>
+  <div class="cel-quiz">
+    <div class="quiz-t">💡 考考你 · 答对领小红花 🌸</div>
+    <div class="quiz-q">用天平比轻重时，比较重的那一边会怎样？</div>
+    <div class="quiz-opts" id="quizOpts">
+      <button class="qopt" type="button" data-ok="1"><span class="qi">⬇️</span><span>往下沉</span></button>
+      <button class="qopt" type="button" data-ok="0"><span class="qi">⬆️</span><span>往上翘</span></button>
+      <button class="qopt" type="button" data-ok="0"><span class="qi">➖</span><span>一动不动</span></button>
+    </div>
+    <div class="quiz-fb" id="quizFb"></div>
+  </div>
+  <div class="cel-btns">
+    <button class="cel-btn" id="celKeep" type="button">继续玩</button>
+    <button class="cel-btn pri" id="celAgain" type="button">再玩一次</button>
+  </div>
+</div>
+
+<div id="verbs">
+  <span class="verb" data-v="drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span id="vb1"></span></span>
+  <span class="verb" data-v="press"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10M8 9l4 4 4-4M4 20h16"/></svg><span id="vb2"></span></span>
+  <span class="verb" data-v="tap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg><span id="vb3"></span></span>
+</div>
+
+<svg id="hand" viewBox="0 0 64 64"><path d="M26 6c3 0 5 2 5 5v17l3-1c2-6 9-5 9 0 2-3 8-2 8 3 3-1 7 1 7 5v12c0 9-7 15-16 15h-6c-6 0-10-3-13-8L13 41c-2-3 0-7 4-7 2 0 3 1 4 2V11c0-3 2-5 5-5z" fill="#fff" stroke="#2a3040" stroke-width="3" stroke-linejoin="round"/></svg>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js"></script>
+<script src="../vendor/voice.js"></script>
+<script>
+(function () {
+'use strict';
+
+/* ===================== 拼音 ===================== */
+var HAN = /[\u3400-\u9fff]/, pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function ruby(text, py) {
+  var syl = py ? py.trim().split(/\s+/) : [], i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) { var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; } out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>'; }
+    else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+var $ = function (s) { return document.querySelector(s); };
+$('#ttl').innerHTML = ruby('第1课 观察物体', 'dì kè guān chá wù tǐ');
+$('#ntTitle').innerHTML = ruby('我的发现', 'wǒ de fā xiàn');
+$('#stW').innerHTML = ruby('轻重', 'qīng zhòng');
+$('#stS').innerHTML = ruby('软硬', 'ruǎn yìng');
+$('#stL').innerHTML = ruby('长短', 'cháng duǎn');
+$('#vb1').innerHTML = ruby('拖一拖', 'tuō yi tuō');
+$('#vb2').innerHTML = ruby('按一按', 'àn yi àn');
+$('#vb3').innerHTML = ruby('敲一敲', 'qiāo yi qiāo');
+$('#celTxt').innerHTML = ruby('太棒啦！全部发现集齐啦！', 'tài bàng la quán bù fā xiàn jí qí la');
+$('#celSub').innerHTML = ruby('轻重、软硬、长短全都比过啦', 'qīng zhòng ruǎn yìng cháng duǎn quán dōu bǐ guò la');
+
+/* ===================== 物品（质量为真实量级，单位 g） ===================== */
+var ITEMS = [
+  { id: 'chalk',  name: '粉笔',   py: 'fěn bǐ',     mass: 10,  soft: 0,    len: 0.80, snd: 'chalk',   color: '#9aa3b5', home: [0.10, 0.80] },
+  { id: 'eraser', name: '橡皮',   py: 'xiàng pí',   mass: 15,  soft: 0.34, len: 0.50, snd: 'rubber',  color: '#ee7fa0', home: [1.10, 0.80] },
+  { id: 'brush',  name: '黑板擦', py: 'hēi bǎn cā', mass: 60,  soft: 0.17, len: 1.05, snd: 'wood',    color: '#a8682f', home: [2.45, 0.80] },
+  { id: 'pencil', name: '铅笔',   py: 'qiān bǐ',    mass: 6,   soft: 0,    len: 1.70, snd: 'wood',    color: '#3a3f4b', home: [0.55, 1.65] },
+  { id: 'ruler',  name: '尺子',   py: 'chǐ zi',     mass: 22,  soft: 0,    len: 1.60, snd: 'metal',   color: '#7f8a98', home: [2.50, 1.65] },
+  { id: 'box',    name: '文具盒', py: 'wén jù hé',  mass: 120, soft: 0.03, len: 1.80, snd: 'plastic', color: '#e6649a', home: [-2.85, -1.32] }
+];
+var DESK = { id: 'desk', name: '桌板', py: 'zhuō bǎn', soft: 0, color: '#c9a36b' };
+var IMAP = {}; ITEMS.forEach(function (it) { IMAP[it.id] = it; });
+
+/* ===================== Three 基础 ===================== */
+var canvas = $('#c');
+var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera(32, 1, 0.1, 200);
+var raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2();
+
+scene.add(new THREE.HemisphereLight(0xfff8ee, 0xcdb08a, 0.42));
+var sun = new THREE.DirectionalLight(0xfff1dc, 0.66);
+sun.position.set(-4, 12, 7);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+(function (c) { c.left = -7; c.right = 7; c.top = 6; c.bottom = -6; c.near = 1; c.far = 40; })(sun.shadow.camera);
+sun.shadow.bias = -0.0008;
+scene.add(sun);
+
+// 课本插图画风：4 阶色调 + 墨线
+var ramp = new THREE.DataTexture(new Uint8Array([120, 120, 120, 255, 185, 185, 185, 255, 232, 232, 232, 255, 255, 255, 255, 255]), 4, 1, THREE.RGBAFormat);
+ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+var INK = new THREE.LineBasicMaterial({ color: 0x2a3040, transparent: true, opacity: 0.8 });
+function toon(hex, extra) {
+  var o = { color: new THREE.Color(hex), gradientMap: ramp };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshToonMaterial(o);
+}
+function mesh(geo, mat, ink) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  if (ink !== false) m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), INK));
+  return m;
+}
+function ctex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c);
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+
+/* ===================== 书桌 + 摊开的课本 ===================== */
+var deskTex = ctex(512, 512, function (g, w, h) {
+  g.fillStyle = '#c9a36b'; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 70; i++) { g.fillStyle = 'rgba(120,80,35,' + (Math.random() * 0.05).toFixed(3) + ')'; g.fillRect(0, Math.random() * h, w, 1 + Math.random() * 3); }
+});
+deskTex.wrapS = deskTex.wrapT = THREE.RepeatWrapping; deskTex.repeat.set(3, 3);
+var deskM = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshLambertMaterial({ map: deskTex }));
+deskM.rotation.x = -Math.PI / 2; deskM.position.y = -0.2; deskM.receiveShadow = true;
+scene.add(deskM);
+
+function pageTex(right) {
+  return ctex(512, 640, function (g, w, h) {
+    g.fillStyle = '#fbf6ea'; g.fillRect(0, 0, w, h);
+    var gr = g.createLinearGradient(right ? 0 : w, 0, right ? 60 : w - 60, 0);
+    gr.addColorStop(0, 'rgba(120,90,45,.18)'); gr.addColorStop(1, 'rgba(120,90,45,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#e4d8c2';
+    for (var r = 0; r < 15; r++) { var y = 60 + r * 36; if (r === 5 || r === 11) continue; g.fillRect(50, y, w - 100 - (r % 4) * 40, 8); }
+    g.fillStyle = '#b9a98c'; g.font = 'bold 22px sans-serif'; g.textAlign = right ? 'right' : 'left';
+    g.fillText(right ? '5' : '4', right ? w - 40 : 40, h - 26);
+  });
+}
+var book = new THREE.Group(); scene.add(book);
+[-1, 1].forEach(function (sx) {
+  var pg = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.16, 6.6), [
+    new THREE.MeshLambertMaterial({ color: 0xefe6d2 }), new THREE.MeshLambertMaterial({ color: 0xefe6d2 }),
+    new THREE.MeshLambertMaterial({ map: pageTex(sx > 0) }), new THREE.MeshLambertMaterial({ color: 0xe4d8c0 }),
+    new THREE.MeshLambertMaterial({ color: 0xefe6d2 }), new THREE.MeshLambertMaterial({ color: 0xefe6d2 })
+  ]);
+  pg.position.set(sx * 2.62, -0.08, 0); pg.receiveShadow = true; pg.castShadow = true;
+  book.add(pg);
+});
+var cover = new THREE.Mesh(new THREE.BoxGeometry(10.7, 0.06, 6.9), new THREE.MeshLambertMaterial({ color: 0xe56d17 }));
+cover.position.y = -0.19; book.add(cover);
+
+/* ===================== 从书页上“站起来”的活页底板 ===================== */
+var BASE = 0.1;                      // 底板上表面高度
+var BOARD = { x0: -4.1, x1: 4.1, z0: -2.35, z1: 2.35 };
+var live = new THREE.Group(); scene.add(live);
+var boardTex = ctex(512, 300, function (g, w, h) {
+  g.fillStyle = '#fffaf0'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(214,196,160,.55)'; g.lineWidth = 1;
+  for (var x = 0; x < w; x += 16) { g.beginPath(); g.moveTo(x + .5, 0); g.lineTo(x + .5, h); g.stroke(); }
+  for (var y = 0; y < h; y += 16) { g.beginPath(); g.moveTo(0, y + .5); g.lineTo(w, y + .5); g.stroke(); }
+});
+var board = mesh(new THREE.BoxGeometry(8.2, BASE, 4.7), [
+  toon('#ead6b0'), toon('#ead6b0'), new THREE.MeshToonMaterial({ map: boardTex, gradientMap: ramp, color: 0xf6ead2 }), toon('#ead6b0'), toon('#ead6b0'), toon('#ead6b0')
+]);
+board.position.y = BASE / 2; board.castShadow = false;
+live.add(board);
+
+// 揭起的插图卡片（一开始平躺在书页上，飞起淡出）
+var figTex = ctex(512, 300, function (g, w, h) {
+  g.fillStyle = '#fbf3e2'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = '#d4006c'; g.lineWidth = 6; g.strokeRect(6, 6, w - 12, h - 12);
+  g.strokeStyle = '#8a7b62'; g.lineWidth = 3;
+  g.beginPath(); g.moveTo(250, 70); g.lineTo(250, 170); g.moveTo(150, 90); g.lineTo(350, 90); g.stroke();
+  g.strokeRect(120, 100, 60, 18); g.strokeRect(320, 100, 60, 18);
+  g.strokeRect(60, 210, 120, 20); g.strokeRect(220, 205, 70, 30); g.strokeRect(330, 210, 130, 22);
+  g.fillStyle = '#8a7b62'; g.font = 'bold 26px sans-serif'; g.textAlign = 'center'; g.fillText('比一比', w / 2, h - 22);
+});
+var figCard = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 4.7), new THREE.MeshBasicMaterial({ map: figTex, transparent: true }));
+figCard.rotation.x = -Math.PI / 2; figCard.position.y = 0.012;
+scene.add(figCard);
+
+/* ===================== 天平（两只吊盘，盘子始终水平） ===================== */
+var BAL = { x: 0.45, z: -1.15, piv: 1.62, arm: 1.48, hang: 0.8 };
+var balance = new THREE.Group(); live.add(balance);
+var wood = toon('#d9a65f'), woodDark = toon('#b9803e'), metal = toon('#c9d1db');
+var foot = mesh(new THREE.CylinderGeometry(0.55, 0.62, 0.12, 28), woodDark); foot.position.set(BAL.x, BASE + 0.06, BAL.z); balance.add(foot);
+var post = mesh(new THREE.CylinderGeometry(0.075, 0.09, BAL.piv - BASE - 0.1, 14), wood); post.position.set(BAL.x, (BAL.piv + BASE) / 2, BAL.z); balance.add(post);
+var dial = mesh(new THREE.CircleGeometry(0.42, 28, Math.PI * 1.15, Math.PI * 0.7), toon('#fffaf0', { side: THREE.DoubleSide }));
+dial.position.set(BAL.x, BAL.piv - 0.05, BAL.z + 0.11); balance.add(dial);
+var tick = mesh(new THREE.BoxGeometry(0.02, 0.12, 0.01), toon('#e56d17'), false); tick.position.set(BAL.x, BAL.piv - 0.41, BAL.z + 0.115); balance.add(tick);
+var beam = new THREE.Group(); beam.position.set(BAL.x, BAL.piv, BAL.z); balance.add(beam);
+beam.add(mesh(new THREE.BoxGeometry(BAL.arm * 2 + 0.2, 0.1, 0.14), wood));
+var cap = mesh(new THREE.SphereGeometry(0.11, 16, 12), toon('#e56d17')); beam.add(cap);
+var needle = mesh(new THREE.BoxGeometry(0.035, 0.42, 0.02), toon('#2a3040'), false); needle.position.set(0, -0.21, 0.14); beam.add(needle);
+[-1, 1].forEach(function (sx) { var hk = mesh(new THREE.SphereGeometry(0.06, 10, 8), metal); hk.position.x = sx * BAL.arm; beam.add(hk); });
+var trays = [-1, 1].map(function (sx) {
+  var g = new THREE.Group();
+  var plate = mesh(new THREE.CylinderGeometry(0.66, 0.6, 0.06, 32), metal); g.add(plate);
+  var rim = mesh(new THREE.TorusGeometry(0.65, 0.03, 8, 32), toon('#aeb8c4'), false); rim.rotation.x = Math.PI / 2; rim.position.y = 0.03; g.add(rim);
+  var glow = new THREE.Mesh(new THREE.RingGeometry(0.7, 0.86, 40), new THREE.MeshBasicMaterial({ color: 0xffb23c, transparent: true, opacity: 0, side: THREE.DoubleSide }));
+  glow.rotation.x = -Math.PI / 2; glow.position.y = 0.04; g.add(glow);
+  var strings = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0x6b7280 }));
+  strings.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(18), 3));
+  live.add(g); live.add(strings);
+  return { side: sx, g: g, glow: glow, strings: strings, items: [], pos: new THREE.Vector3() };
+});
+var balAng = 0, balVel = 0, balChangedAt = 0;
+
+/* ===================== 比长短垫子（左端有挡板，放上去自动靠齐） ===================== */
+var MAT = { x0: -3.95, x1: -0.55, z0: 0.62, z1: 2.12, rows: [0.98, 1.74] };
+var matTex = ctex(512, 220, function (g, w, h) {
+  g.fillStyle = '#d6efe0'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(40,120,80,.25)'; g.lineWidth = 2;
+  for (var x = 30; x < w; x += 30) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, x % 150 === 0 ? 40 : 20); g.stroke(); }
+});
+var matM = mesh(new THREE.BoxGeometry(MAT.x1 - MAT.x0, 0.03, MAT.z1 - MAT.z0), [toon('#bfe3cd'), toon('#bfe3cd'), new THREE.MeshToonMaterial({ map: matTex, gradientMap: ramp }), toon('#bfe3cd'), toon('#bfe3cd'), toon('#bfe3cd')]);
+matM.position.set((MAT.x0 + MAT.x1) / 2, BASE + 0.015, (MAT.z0 + MAT.z1) / 2); live.add(matM);
+var stop = mesh(new THREE.BoxGeometry(0.12, 0.26, MAT.z1 - MAT.z0), woodDark); stop.position.set(MAT.x0 + 0.06, BASE + 0.13, (MAT.z0 + MAT.z1) / 2); live.add(stop);
+var matItems = [null, null];
+var diffBar = mesh(new THREE.BoxGeometry(1, 0.03, 0.12), toon('#e56d17', { transparent: true, opacity: 0.9 }), false);
+diffBar.visible = false; live.add(diffBar);
+var matGlowMat = matM.material[2];
+
+/* ===================== 物品模型（原点在底面中心，沿 X 躺放） ===================== */
+function build(it) {
+  var g = new THREE.Group(), body = new THREE.Group(); g.add(body);
+  var h;
+  if (it.id === 'chalk') {
+    var c = mesh(new THREE.CylinderGeometry(0.075, 0.075, it.len, 16), toon('#fff6c8')); c.rotation.z = Math.PI / 2; c.position.y = 0.075; body.add(c); h = 0.15;
+  } else if (it.id === 'eraser') {
+    var e = mesh(new THREE.BoxGeometry(it.len, 0.2, 0.3), toon('#f7a3bb')); e.position.y = 0.1; body.add(e);
+    var sl = mesh(new THREE.BoxGeometry(0.26, 0.206, 0.306), toon('#5aa0e6')); sl.position.set(0.08, 0.1, 0); body.add(sl); h = 0.2;
+  } else if (it.id === 'brush') {
+    var felt = mesh(new THREE.BoxGeometry(it.len, 0.13, 0.42), toon('#5b6270')); felt.position.y = 0.065; body.add(felt);
+    var top = mesh(new THREE.BoxGeometry(it.len, 0.2, 0.42), toon('#c08a4e')); top.position.y = 0.23; body.add(top); h = 0.33;
+  } else if (it.id === 'pencil') {
+    var p = mesh(new THREE.CylinderGeometry(0.065, 0.065, it.len - 0.26, 6), toon('#30343e')); p.rotation.z = Math.PI / 2; p.position.set(-0.13, 0.065, 0); body.add(p);
+    var tip = mesh(new THREE.ConeGeometry(0.065, 0.26, 6), toon('#ecc893')); tip.rotation.z = -Math.PI / 2; tip.position.set(it.len / 2 - 0.13, 0.065, 0); body.add(tip);
+    var lead = mesh(new THREE.ConeGeometry(0.022, 0.08, 6), toon('#2a2a2a'), false); lead.rotation.z = -Math.PI / 2; lead.position.set(it.len / 2 - 0.02, 0.065, 0); body.add(lead); h = 0.13;
+  } else if (it.id === 'ruler') {
+    var rt = ctex(512, 96, function (q, w, hh) {
+      q.fillStyle = '#d5dbe3'; q.fillRect(0, 0, w, hh); q.fillStyle = '#2a3040';
+      for (var i = 0; i <= 150; i++) { var x = 12 + i * (w - 24) / 150; q.fillRect(x, 0, 1.5, i % 10 === 0 ? 34 : i % 5 === 0 ? 24 : 14); }
+      q.font = 'bold 18px sans-serif'; q.textAlign = 'center';
+      for (var n = 0; n <= 15; n++) q.fillText(String(n), 12 + n * 10 * (w - 24) / 150, 56);
+    });
+    var r = mesh(new THREE.BoxGeometry(it.len, 0.035, 0.34), [toon('#aeb8c4'), toon('#aeb8c4'), new THREE.MeshToonMaterial({ map: rt, gradientMap: ramp }), toon('#aeb8c4'), toon('#aeb8c4'), toon('#aeb8c4')]);
+    r.position.y = 0.0175; body.add(r); h = 0.035;
+  } else {
+    var b = mesh(new THREE.BoxGeometry(it.len, 0.3, 0.62), toon('#f28fb5')); b.position.y = 0.15; body.add(b);
+    var lid = mesh(new THREE.BoxGeometry(it.len + 0.02, 0.06, 0.64), toon('#e6649a')); lid.position.y = 0.3; body.add(lid);
+    var stk = mesh(new THREE.CircleGeometry(0.13, 20), toon('#ffd35c'), false); stk.rotation.x = -Math.PI / 2; stk.position.set(0.45, 0.335, 0); body.add(stk); h = 0.36;
+  }
+  g.traverse(function (o) { if (o.isMesh) o.userData.item = it; });
+  it.h = h; it.g = g; it.body = body;
+  it.zone = 'board'; it.pos = new THREE.Vector3(it.home[0], BASE, it.home[1]);
+  it.cur = it.pos.clone(); it.target = it.pos.clone(); it.yaw = 0;
+  it.sq = 0; it.sqGoal = 0; it.hop = 0; it.hover = 0; it.pop = 0;
+  g.position.copy(it.cur);
+  live.add(g);
+}
+ITEMS.forEach(build);
+
+// 按压用的卡通手指
+var finger = new THREE.Group();
+var fBody = mesh(new THREE.CapsuleGeometry(0.13, 0.55, 6, 12), toon('#ffd2b0')); fBody.position.y = 0.4; finger.add(fBody);
+var nail = mesh(new THREE.SphereGeometry(0.08, 10, 8), toon('#fff0e6'), false); nail.scale.set(1, 0.4, 1); nail.position.set(0, 0.14, 0.09); finger.add(nail);
+finger.visible = false; scene.add(finger);
+
+/* ===================== 相机取景 ===================== */
+var portrait = false;
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  portrait = w / h < 0.85;
+  var tgt = new THREE.Vector3(portrait ? 0 : 0.65, 0.55, portrait ? 0 : 0.05);
+  var dir = portrait ? new THREE.Vector3(0.62, 0.78, 0).normalize() : new THREE.Vector3(0, 0.72, 0.69).normalize();
+  var needW = portrait ? 5.6 : 9.8, needH = portrait ? 9.2 : 6.4;
+  var vf = THREE.MathUtils.degToRad(camera.fov), hf = 2 * Math.atan(Math.tan(vf / 2) * camera.aspect);
+  var d = Math.max(needW / 2 / Math.tan(hf / 2), needH / 2 / Math.tan(vf / 2) * 0.82);
+  camera.position.copy(tgt).addScaledVector(dir, d);
+  camera.lookAt(tgt);
+  camera.updateProjectionMatrix();
+  dirty = true;
+}
+var dirty = true;
+window.addEventListener('resize', fit);
+
+/* ===================== 声音（WebAudio 合成，免外链） ===================== */
+var AC = null;
+function audio() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } } if (AC && AC.state === 'suspended') AC.resume(); return AC; }
+function tone(f, dur, type, vol, f2, delay) {
+  var a = audio(); if (!a) return;
+  var t = a.currentTime + (delay || 0), o = a.createOscillator(), g = a.createGain();
+  o.type = type || 'sine'; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.15, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + 0.02);
+}
+function noise(dur, freq, vol) {
+  var a = audio(); if (!a) return;
+  var n = Math.floor(a.sampleRate * dur), b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0);
+  for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
+  var s = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+  s.buffer = b; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 1.2; g.gain.value = vol || 0.4;
+  s.connect(f); f.connect(g); g.connect(a.destination); s.start();
+}
+var SND = {
+  chalk:   function () { noise(0.05, 3200, 0.5); tone(1900, 0.05, 'triangle', 0.05); },
+  rubber:  function () { tone(150, 0.12, 'sine', 0.22, 90); },
+  wood:    function () { tone(260, 0.14, 'triangle', 0.2, 180); noise(0.04, 900, 0.3); },
+  metal:   function () { tone(1760, 0.7, 'sine', 0.12); tone(2650, 0.5, 'sine', 0.06); },
+  plastic: function () { tone(620, 0.07, 'square', 0.06, 420); noise(0.03, 1800, 0.25); },
+  desk:    function () { tone(180, 0.16, 'triangle', 0.22, 120); noise(0.05, 700, 0.3); }
+};
+function sPlace() { tone(220, 0.08, 'sine', 0.12, 160); }
+function sSquish() { tone(200, 0.25, 'sine', 0.12, 120); }
+function sDing() { tone(880, 0.16, 'sine', 0.12); tone(1320, 0.28, 'sine', 0.1, null, 0.1); }
+function sWin() {
+  var ns = [523.25, 659.25, 783.99, 1046.5, 783.99, 1046.5];
+  var ts = [0, 0.11, 0.22, 0.34, 0.50, 0.62];
+  var ds = [0.14, 0.14, 0.14, 0.22, 0.12, 0.42];
+  for (var i = 0; i < ns.length; i++) tone(ns[i], ds[i], 'triangle', 0.15, null, ts[i]);
+}
+
+/* ===================== 离线儿童语音引导（speechSynthesis） ===================== */
+var voiceOn = true, welcomeSpoken = false;
+var WELCOME_TXT = '小朋友，把文具拖到天平上比轻重，拖到绿垫子上比长短，长按还能比软硬哦！';
+function stopVoice() { try { if ('speechSynthesis' in window) (window.__xkVoice ? window.__xkVoice.stop() : window.speechSynthesis.cancel()); } catch (e) {} }
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
+  if (!('speechSynthesis' in window)) return;
+  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+}
+function speakWelcomeOnce() {
+  if (welcomeSpoken) return;
+  welcomeSpoken = true;
+  speak(WELCOME_TXT);
+}
+
+/* ===================== 进度存储（小红花） ===================== */
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem('xk_k1a_progress') || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem('xk_k1a_progress', JSON.stringify(d));
+  } catch (e) {}
+}
+function dismissCues() { document.body.classList.add('cues-off'); }
+function sNudge() { tone(240, 0.12, 'sine', 0.13, 185); }
+
+/* ===================== 通关彩带与勋章 ===================== */
+var celebrated = false, quizSolved = false, confRaf = 0;
+function launchConfetti() {
+  var cv = $('#confetti'), ctx = cv.getContext('2d');
+  var w = cv.width = window.innerWidth, h = cv.height = window.innerHeight;
+  cv.style.display = 'block';
+  var cols = ['#f59e0b', '#ef4444', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'];
+  var ps = [];
+  for (var i = 0; i < 90; i++) {
+    var ang = -Math.PI / 2 + (Math.random() - 0.5) * 1.9;
+    var sp = 240 + Math.random() * 440;
+    ps.push({
+      x: w * (0.25 + Math.random() * 0.5), y: h * 0.24,
+      vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 80,
+      w: 7 + Math.random() * 6, h: 4 + Math.random() * 5,
+      r: Math.random() * 6.28, vr: (Math.random() - 0.5) * 12,
+      c: cols[i % cols.length]
+    });
+  }
+  var t0 = performance.now();
+  if (confRaf) cancelAnimationFrame(confRaf);
+  (function step(nowMs) {
+    var el = (nowMs - t0) / 1000;
+    ctx.clearRect(0, 0, w, h);
+    var alpha = el > 2.2 ? Math.max(0, 1 - (el - 2.2) / 0.9) : 1;
+    ctx.globalAlpha = alpha;
+    for (var i = 0; i < ps.length; i++) {
+      var p = ps[i];
+      p.x += p.vx * 0.016; p.y += p.vy * 0.016; p.vy += 680 * 0.016; p.r += p.vr * 0.016;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+      ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    }
+    if (el < 3.1) confRaf = requestAnimationFrame(step);
+    else { cv.style.display = 'none'; confRaf = 0; }
+  })(t0);
+}
+function hideCelebrate() {
+  $('#celebrate').classList.remove('show');
+  if (confRaf) { cancelAnimationFrame(confRaf); confRaf = 0; }
+  $('#confetti').style.display = 'none';
+}
+function resetQuiz() {
+  quizSolved = false;
+  document.querySelectorAll('#quizOpts .qopt').forEach(function (b) { b.classList.remove('ok', 'wrong'); });
+  var fb = $('#quizFb'); fb.textContent = ''; fb.classList.remove('ok');
+}
+function checkWin() {
+  if (celebrated || demo) return;
+  if (kinds.w && kinds.s && kinds.l) {
+    celebrated = true;
+    saveProgress('k1a-01', true);
+    sWin();
+    launchConfetti();
+    $('#celebrate').classList.add('show');
+    updateGuide(false);
+    speak('太棒啦！轻重、软硬、长短全都比过啦！科学小结论：我们可以用天平比轻重、用手按压测软硬、在垫子上对齐一端比长短！快来答一道小问题领小红花吧！');
+  }
+}
+
+/* ===================== 分步小助手 ===================== */
+var curGuideSpeech = WELCOME_TXT, curGuideKey = '', lastVoiceGuideKey = '', guidePhase = 'w', guidePulseT = 0;
+function updateGuide(speakIt) {
+  var doneN = (kinds.w ? 1 : 0) + (kinds.s ? 1 : 0) + (kinds.l ? 1 : 0);
+  var txtEl = $('#guideTxt'), progEl = $('#guideProg'), barEl = $('#guideBar');
+  var pressVerb = document.querySelector('.verb[data-v="press"]');
+  if (pressVerb) pressVerb.classList.remove('guide-pulse');
+
+  if (!kinds.w) {
+    guidePhase = 'w';
+    var hasL = trays[0].items.length > 0, hasR = trays[1].items.length > 0;
+    if (hasL !== hasR) {
+      txtEl.textContent = '比轻重：再拖 1 件文具到天平另一边盘里！';
+      curGuideSpeech = '天平一边放好啦，再拖一件文具到另一边的盘子里，看看哪边往下沉！';
+      curGuideKey = 'w1';
+    } else {
+      txtEl.textContent = '比轻重：拖 2 件文具到天平左右盘里比一比！';
+      curGuideSpeech = '先来比轻重，把两件文具分别拖到天平左右两个盘子里，看看谁重谁轻！';
+      curGuideKey = 'w0';
+    }
+    progEl.textContent = doneN + '/3';
+  } else if (!kinds.s) {
+    guidePhase = 's';
+    if (pressVerb) pressVerb.classList.add('guide-pulse');
+    txtEl.textContent = '测软硬：长按橡皮、铅笔或尺子，感受软和硬！';
+    curGuideSpeech = '接下来测软硬，用手指长按橡皮、铅笔或尺子不松手，感受一下谁软谁硬吧！';
+    curGuideKey = 's0';
+    progEl.textContent = doneN + '/3';
+  } else if (!kinds.l) {
+    guidePhase = 'l';
+    var matN = (matItems[0] ? 1 : 0) + (matItems[1] ? 1 : 0);
+    if (matN === 1) {
+      txtEl.textContent = '比长短：再拖 1 件文具到绿垫子上对齐比一比！';
+      curGuideSpeech = '绿垫子上已经放好一件啦，再拖一件文具放上去靠齐左端，看看谁更长！';
+      curGuideKey = 'l1';
+    } else {
+      txtEl.textContent = '比长短：拖 2 件文具到绿垫子上靠齐木挡板比长短！';
+      curGuideSpeech = '最后来比长短，把两件文具拖到左下角的绿垫子上，靠齐左边木挡板比一比谁长谁短吧！';
+      curGuideKey = 'l0';
+    }
+    progEl.textContent = doneN + '/3';
+  } else {
+    guidePhase = 'done';
+    txtEl.textContent = '太棒啦！轻重、软硬、长短 3 项发现全都集齐！';
+    curGuideSpeech = '太棒啦！轻重、软硬、长短全都发现啦，你可以继续自由玩耍！';
+    curGuideKey = 'done';
+    progEl.textContent = '3/3 ✓';
+  }
+  barEl.classList.remove('bump');
+  void barEl.offsetWidth;
+  barEl.classList.add('bump');
+  if (speakIt && !demo) speak(curGuideSpeech);
+}
+function pulseGuideTarget() {
+  guidePulseT = 2.6;
+  if (guidePhase === 'w') {
+    IMAP.chalk.hop = 1.0; IMAP.brush.hop = 0.85;
+  } else if (guidePhase === 's') {
+    IMAP.eraser.hop = 1.0; IMAP.pencil.hop = 0.85;
+  } else if (guidePhase === 'l') {
+    IMAP.pencil.hop = 1.0; IMAP.ruler.hop = 0.85;
+  }
+}
+
+/* ===================== 标签与飘字 ===================== */
+var labelsEl = $('#labels');
+ITEMS.forEach(function (it) {
+  var el = document.createElement('div'); el.className = 'lbl'; el.innerHTML = ruby(it.name, it.py);
+  labelsEl.appendChild(el); it.lbl = el;
+});
+var vtmp = new THREE.Vector3();
+function toScreen(v) { vtmp.copy(v).project(camera); return { x: (vtmp.x + 1) / 2 * window.innerWidth, y: (1 - vtmp.y) / 2 * window.innerHeight }; }
+function floatWord(text, py, worldPos, hard) {
+  var p = toScreen(worldPos), el = document.createElement('div');
+  el.className = 'word' + (hard ? ' hard' : ''); el.innerHTML = ruby(text, py);
+  el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
+  labelsEl.appendChild(el); setTimeout(function () { el.remove(); }, 1150);
+}
+
+/* ===================== 我的发现（自动贴纸） ===================== */
+var found = {}, foundN = 0, kinds = { w: false, s: false, l: false };
+function discover(key, kind, html, color, spoken) {
+  if (found[key]) return;
+  found[key] = true; foundN++;
+  var el = document.createElement('div'); el.className = 'stk';
+  el.innerHTML = '<i style="background:' + color + '">' + (kind === 'w' ? '⚖' : kind === 's' ? '✋' : '📏') + '</i><span>' + html + '</span>';
+  var list = $('#ntList'); list.insertBefore(el, list.firstChild);
+  while (list.children.length > 7) list.removeChild(list.lastChild);
+  $('#ntCount').textContent = foundN;
+  var newStamp = false;
+  if (!kinds[kind]) {
+    kinds[kind] = true; newStamp = true;
+    $('#st' + kind.toUpperCase()).classList.add('lit');
+  }
+  sDing();
+  var willWin = !celebrated && !demo && kinds.w && kinds.s && kinds.l;
+  if (willWin) {
+    checkWin();
+  } else {
+    updateGuide(false);
+    if (newStamp && !demo) {
+      pulseGuideTarget();
+      speak((spoken ? spoken + '！' : '') + curGuideSpeech);
+    } else if (!demo && spoken) {
+      speak(spoken);
+    }
+  }
+}
+function nm(o) { return ruby(o.name, o.py); }
+var W = { qing: ruby('轻', 'qīng'), zhong: ruby('重', 'zhòng'), ruan: ruby('软', 'ruǎn'), ying: ruby('硬', 'yìng'), chang: ruby('长', 'cháng'), bi: ruby('比', 'bǐ'), du: ruby('都很硬', 'dōu hěn yìng'), he: ruby('和', 'hé'), ruanS: ruby('软软的', 'ruǎn ruǎn de'), yingS: ruby('硬硬的', 'yìng yìng de') };
+
+/* ===================== 区域与摆放 ===================== */
+function trayTop(t) { return t.pos.y + 0.03; }
+function removeFromZone(it) {
+  trays.forEach(function (t) { var i = t.items.indexOf(it); if (i >= 0) { t.items.splice(i, 1); balChangedAt = now; } });
+  for (var r = 0; r < 2; r++) if (matItems[r] === it) matItems[r] = null;
+  it.zone = 'none';
+}
+function placeOn(it, zone, x, z) {
+  removeFromZone(it);
+  if (zone === 'L' || zone === 'R') {
+    var t = trays[zone === 'L' ? 0 : 1];
+    t.items.push(it); it.zone = zone; balChangedAt = now;
+  } else if (zone === 'mat') {
+    var row = matItems[0] === null ? 0 : matItems[1] === null ? 1 : (Math.abs(z - MAT.rows[0]) < Math.abs(z - MAT.rows[1]) ? 0 : 1);
+    if (matItems[row]) { var old = matItems[row]; old.zone = 'board'; old.pos.set(old.home[0], BASE, old.home[1]); }
+    matItems[row] = it; it.zone = 'mat'; it.matRow = row; it.matAt = now;
+  } else {
+    it.zone = 'board';
+    it.pos.set(THREE.MathUtils.clamp(x, BOARD.x0 + it.len / 2, BOARD.x1 - it.len / 2), BASE, THREE.MathUtils.clamp(z, BOARD.z0 + 0.3, BOARD.z1 - 0.3));
+  }
+  sPlace();
+  updateGuide(false);
+}
+function zoneAt(x, z) {
+  for (var i = 0; i < 2; i++) { var t = trays[i]; if (Math.hypot(x - t.pos.x, z - t.pos.z) < 0.95) return i === 0 ? 'L' : 'R'; }
+  if (x > MAT.x0 && x < MAT.x1 + 0.3 && z > MAT.z0 - 0.15 && z < MAT.z1 + 0.15) return 'mat';
+  return 'board';
+}
+function computeTargets() {
+  trays.forEach(function (t) {
+    var y = trayTop(t), k = 0;
+    t.items.forEach(function (it, i) {
+      it.target.set(t.pos.x + (i % 2 ? 0.08 : -0.06), y + k, t.pos.z + (i % 2 ? -0.07 : 0.05));
+      it.yaw = (i % 3) * 0.35 - 0.3;
+      k += it.h * (1 - it.sq * 0.6);
+    });
+  });
+  for (var r = 0; r < 2; r++) {
+    var m = matItems[r]; if (!m) continue;
+    m.target.set(MAT.x0 + 0.12 + m.len / 2, BASE + 0.03, MAT.rows[r]); m.yaw = 0;
+  }
+  ITEMS.forEach(function (it) { if (it.zone === 'board') { it.target.copy(it.pos); it.yaw = 0; } });
+}
+
+/* ===================== 指针：拖 / 按住 / 点 ===================== */
+var P = null, hovered = null, now = 0, acted = { drag: false, press: false, tap: false }, actions = 0;
+function setNDC(e) { ndc.x = (e.clientX / window.innerWidth) * 2 - 1; ndc.y = -(e.clientY / window.innerHeight) * 2 + 1; raycaster.setFromCamera(ndc, camera); }
+var itemMeshes = []; ITEMS.forEach(function (it) { it.g.traverse(function (o) { if (o.isMesh) itemMeshes.push(o); }); });
+function pickItem(e) {
+  setNDC(e); var h = raycaster.intersectObjects(itemMeshes, false)[0];
+  if (h) return { it: h.object.userData.item, point: h.point };
+  // 细小的东西（粉笔、铅笔）不好点中：离屏幕上最近的物品 36px 以内也算点中
+  var best = null, bd = 36;
+  ITEMS.forEach(function (it) {
+    if (it.pop < 0.5) return;
+    var c = it.cur.clone().setY(it.cur.y + it.h / 2), half = new THREE.Vector3(it.len / 2, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), it.g.rotation.y);
+    var a = toScreen(c.clone().sub(half)), b = toScreen(c.clone().add(half));
+    var dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy || 1;
+    var u = Math.max(0, Math.min(1, ((e.clientX - a.x) * dx + (e.clientY - a.y) * dy) / L2));
+    var d = Math.hypot(e.clientX - (a.x + dx * u), e.clientY - (a.y + dy * u));
+    if (d < bd) { bd = d; best = it; }
+  });
+  return best ? { it: best, point: best.cur.clone().setY(best.cur.y + best.h) } : null;
+}
+function pickBoard(e) { setNDC(e); var h = raycaster.intersectObject(board, false)[0]; return h ? h.point : null; }
+var plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), ptmp = new THREE.Vector3();
+function planePoint(e, y) { setNDC(e); plane.constant = -y; return raycaster.ray.intersectPlane(plane, ptmp) ? ptmp.clone() : null; }
+function markAct(v) {
+  if (!acted[v]) { acted[v] = true; var el = document.querySelector('.verb[data-v="' + v + '"]'); if (el) el.classList.add('done'); }
+  actions++;
+}
+
+canvas.addEventListener('pointerdown', function (e) {
+  audio(); stopDemo(); introSkip(); dismissCues(); speakWelcomeOnce();
+  var hit = pickItem(e);
+  if (hit) P = { it: hit.it, x: e.clientX, y: e.clientY, t: performance.now() / 1000, mode: 'pending', point: hit.point };
+  else { var bp = pickBoard(e); if (bp) P = { it: null, x: e.clientX, y: e.clientY, t: performance.now() / 1000, mode: 'pending', point: bp }; }
+  try { canvas.setPointerCapture(e.pointerId); } catch (er) {}
+});
+canvas.addEventListener('pointermove', function (e) {
+  if (P) {
+    var moved = Math.hypot(e.clientX - P.x, e.clientY - P.y);
+    if (P.mode === 'press' && P.it && moved > 12 && press && press.t < 0.5) { endPress(); P.mode = 'pending'; }
+    if (P.mode === 'pending' && P.it && moved > 7) {
+      P.mode = 'drag'; removeFromZone(P.it); P.it.dragging = true; ghost.off = true;
+    }
+    if (P.mode === 'drag') { P.e = { clientX: e.clientX, clientY: e.clientY }; dirty = true; }
+    if (P.mode === 'press' && moved > 40) endPress();
+    return;
+  }
+  var h = pickItem(e);
+  hovered = h ? h.it : null;
+  canvas.style.cursor = hovered ? 'grab' : 'default';
+  dirty = true;
+});
+function finishPointer() {
+  if (!P) return;
+  if (P.mode === 'drag') {
+    var it = P.it; it.dragging = false;
+    var z = zoneAt(it.cur.x, it.cur.z);
+    placeOn(it, z, it.cur.x, it.cur.z);
+    markAct('drag');
+  } else if (P.mode === 'press') endPress();
+  else if (P.mode === 'pending') tap(P.it, P.point);
+  P = null; dirty = true;
+}
+canvas.addEventListener('pointerup', finishPointer);
+canvas.addEventListener('pointercancel', finishPointer);
+canvas.addEventListener('pointerleave', function () { if (!P) { hovered = null; dirty = true; } });
+
+function tap(it, point) {
+  if (it) { SND[it.snd](); it.hop = 1; markAct('tap'); }
+  else if (point) { SND.desk(); markAct('tap'); }
+}
+
+/* 按住：手指压下去。软的会被压扁，硬的压不动 */
+var press = null, lastPressed = null;
+function startPress(it, point) {
+  var obj = it || DESK;
+  press = { obj: obj, it: it, t: 0, t0: now, point: point.clone(), done: false };
+  finger.visible = true;
+  if (it) it.sqGoal = it.soft;
+}
+function endPress() {
+  if (!press) return;
+  if (press.it) press.it.sqGoal = 0;
+  press = null; finger.visible = false; dirty = true;
+  if (P && P.mode === 'press') P.mode = 'ended';
+}
+function pressReached(p) {
+  var o = p.obj, soft = o.soft > 0.05;
+  var top = p.it ? p.it.cur.clone().setY(p.it.cur.y + p.it.h) : p.point.clone();
+  floatWord(soft ? '软' : '硬', soft ? 'ruǎn' : 'yìng', top.add(new THREE.Vector3(0, 0.5, 0)), !soft);
+  if (soft) sSquish(); else (SND[o.snd] || SND.desk)();
+  markAct('press');
+  if (lastPressed && lastPressed.id !== o.id) {
+    var a = lastPressed, b = o, key = 's:' + [a.id, b.id].sort().join('-');
+    var sa = a.soft > 0.05 ? a.soft : 0, sb = b.soft > 0.05 ? b.soft : 0;
+    if (sa === 0 && sb === 0) discover(key, 's', nm(a) + W.he + nm(b) + W.du, '#2f5fa8', a.name + '和' + b.name + '都很硬');
+    else if (sa !== sb) { var s1 = sa > sb ? a : b, s2 = sa > sb ? b : a; discover(key, 's', nm(s1) + W.bi + nm(s2) + '<b>' + W.ruan + '</b>', '#e56d17', s1.name + '比' + s2.name + '软'); }
+  } else if (p.it && !kinds.s) {
+    discover('s1:' + o.id, 's', nm(o) + '<b>' + (soft ? W.ruanS : W.yingS) + '</b>', soft ? '#e56d17' : '#2f5fa8', o.name + (soft ? '按起来软软的' : '按起来硬硬的'));
+  }
+  lastPressed = o;
+}
+
+/* ===================== 发现：轻重 / 长短 ===================== */
+function checkBalance() {
+  var L = trays[0].items, R = trays[1].items;
+  if (L.length !== 1 || R.length !== 1) return;
+  if (now - balChangedAt < 1.1 || Math.abs(balVel) > 0.05) return;
+  var a = L[0], b = R[0]; if (a.mass === b.mass) return;
+  var light = a.mass < b.mass ? a : b, heavy = a.mass < b.mass ? b : a;
+  discover('w:' + [a.id, b.id].sort().join('-'), 'w', nm(light) + W.bi + nm(heavy) + '<b>' + W.qing + '</b>', '#16a34a', light.name + '比' + heavy.name + '轻');
+}
+function checkMat() {
+  var a = matItems[0], b = matItems[1];
+  if (!a || !b) { diffBar.visible = false; return; }
+  var la = a.len, lb = b.len, longer = la >= lb ? a : b, shorter = la >= lb ? b : a;
+  var x0 = MAT.x0 + 0.12 + shorter.len, x1 = MAT.x0 + 0.12 + longer.len;
+  if (x1 - x0 > 0.02) {
+    diffBar.visible = true; diffBar.scale.x = x1 - x0;
+    diffBar.position.set((x0 + x1) / 2, BASE + longer.h + 0.06, MAT.rows[longer.matRow]);
+  } else diffBar.visible = false;
+  if (now - Math.max(a.matAt, b.matAt) > 0.6 && Math.abs(la - lb) > 0.02)
+    discover('l:' + [a.id, b.id].sort().join('-'), 'l', nm(longer) + W.bi + nm(shorter) + '<b>' + W.chang + '</b>', '#7c4dcc', longer.name + '比' + shorter.name + '长');
+}
+
+/* ===================== 幽灵手示范（第一次动手前循环） ===================== */
+var ghost = { off: false, t: 0 }, handEl = $('#hand');
+function updateGhost(dt) {
+  if (ghost.off || intro.t < 1.6) { handEl.style.opacity = 0; return; }
+  ghost.t = (ghost.t + dt) % 2.6;
+  var a = toScreen(IMAP.chalk.cur.clone().setY(BASE + 0.1)), b = toScreen(trays[0].pos.clone().setY(trays[0].pos.y + 0.1));
+  var u = Math.min(1, Math.max(0, (ghost.t - 0.5) / 1.3)), e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+  var x = a.x + (b.x - a.x) * e, y = a.y + (b.y - a.y) * e - Math.sin(e * Math.PI) * 60;
+  handEl.style.opacity = ghost.t < 2.2 ? 0.95 : 0;
+  handEl.style.transform = 'translate(' + (x - 20) + 'px,' + (y - 6) + 'px) scale(' + (ghost.t < 0.5 || ghost.t > 1.8 ? 1 : 0.9) + ')';
+}
+
+/* ===================== 老师演示（任意点击即停止） ===================== */
+var demo = null;
+var DEMO = [
+  ['fly', 'chalk', 'L'], ['fly', 'brush', 'R'], ['wait', 2.0],
+  ['press', 'brush', 1.1], ['wait', 0.4], ['pressDesk', 1.0], ['wait', 0.6],
+  ['fly', 'pencil', 'mat'], ['fly', 'chalk', 'mat'], ['wait', 1.6],
+  ['fly', 'eraser', 'L'], ['fly', 'chalk', 'R'], ['wait', 2.0], ['end']
+];
+function setBtnLbl(sel, txt) { var el = document.querySelector(sel + ' .tbtn-lbl'); if (el) el.textContent = txt; else $(sel).textContent = txt; }
+function startDemo() { dismissCues(); resetAll(true); demo = { i: 0, t: 0 }; ghost.off = true; $('#demoBtn').classList.add('on'); setBtnLbl('#demoBtn', '■ 停止'); }
+function stopDemo() { if (!demo) return; demo = null; endPress(); ITEMS.forEach(function (it) { it.flying = null; }); $('#demoBtn').classList.remove('on'); setBtnLbl('#demoBtn', '▶ 演示'); }
+function stepDemo(dt) {
+  if (!demo) return;
+  var s = DEMO[demo.i]; demo.t += dt;
+  if (!s || s[0] === 'end') { stopDemo(); return; }
+  if (s[0] === 'wait') { if (demo.t >= s[1]) { demo.i++; demo.t = 0; } return; }
+  if (s[0] === 'fly') {
+    var it = IMAP[s[1]];
+    if (!demo.started) {
+      demo.started = true; removeFromZone(it);
+      var to = s[2] === 'L' ? trays[0].pos : s[2] === 'R' ? trays[1].pos : new THREE.Vector3(MAT.x0 + 0.12 + it.len / 2, BASE, MAT.rows[matItems[0] ? 1 : 0]);
+      it.flying = { from: it.cur.clone(), to: to.clone(), zone: s[2], t: 0 };
+    }
+    if (!it.flying) { demo.started = false; demo.i++; demo.t = 0; }
+    return;
+  }
+  if (s[0] === 'press' || s[0] === 'pressDesk') {
+    if (!demo.started) {
+      demo.started = true;
+      if (s[0] === 'press') { var pi = IMAP[s[1]]; startPress(pi, pi.cur.clone().setY(pi.cur.y + pi.h)); }
+      else startPress(null, new THREE.Vector3(2.2, BASE, -0.2));
+    }
+    var dur = s[0] === 'press' ? s[2] : s[1];
+    if (demo.t >= dur) { endPress(); demo.started = false; demo.i++; demo.t = 0; }
+  }
+}
+
+/* ===================== 开场：插图从书页上揭起，器材“啪”地站起来 ===================== */
+var intro = { t: 0, done: false };
+function introSkip() { if (intro.t < 1.5) intro.t = 1.5; }
+function backOut(t) { var c = 1.7; t = Math.min(1, Math.max(0, t)); return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); }
+function updateIntro(dt) {
+  if (intro.done) return;
+  if (!intro.t0) intro.t0 = performance.now();
+  intro.t = Math.max(intro.t + dt, (performance.now() - intro.t0) / 1000 * 1.4);
+  var t = intro.t;
+  var lift = Math.min(1, Math.max(0, (t - 0.25) / 0.7));
+  figCard.position.y = 0.012 + lift * 1.6;
+  figCard.material.opacity = 1 - lift;
+  figCard.visible = lift < 1;
+  var bs = backOut((t - 0.35) / 0.55);
+  board.scale.set(1, Math.max(0.01, bs), 1);
+  live.position.y = 0;
+  var bb = backOut((t - 0.55) / 0.6); balance.scale.setScalar(Math.max(0.001, bb));
+  trays.forEach(function (tr) { tr.g.scale.setScalar(Math.max(0.001, bb)); tr.strings.visible = bb > 0.6; });
+  matM.scale.set(1, 1, Math.max(0.01, backOut((t - 0.6) / 0.5))); stop.scale.setScalar(Math.max(0.001, backOut((t - 0.65) / 0.5)));
+  ITEMS.forEach(function (it, i) { it.pop = Math.max(0.001, backOut((t - 0.75 - i * 0.07) / 0.5)); });
+  if (t > 0.9 && t < 3.6) ITEMS.forEach(function (it) { it.introLbl = true; });
+  if (t >= 3.6) { ITEMS.forEach(function (it) { it.introLbl = false; }); intro.done = true; }
+  dirty = true;
+}
+
+/* ===================== 重来 ===================== */
+function resetAll(keepDemo) {
+  if (!keepDemo) stopDemo();
+  endPress(); stopVoice(); hideCelebrate(); celebrated = false; resetQuiz(); deskShake = 0; board.position.y = BASE / 2; guidePulseT = 0;
+  trays.forEach(function (t) { t.items.length = 0; });
+  matItems[0] = matItems[1] = null; diffBar.visible = false;
+  ITEMS.forEach(function (it) { it.zone = 'board'; it.pos.set(it.home[0], BASE, it.home[1]); it.sq = it.sqGoal = 0; it.flying = null; it.dragging = false; });
+  found = {}; foundN = 0; kinds = { w: false, s: false, l: false }; lastPressed = null;
+  $('#ntList').innerHTML = ''; $('#ntCount').textContent = '0';
+  document.querySelectorAll('.stamp').forEach(function (s) { s.classList.remove('lit'); });
+  balChangedAt = now; dirty = true;
+  updateGuide(false);
+}
+
+/* ===================== 主循环 ===================== */
+var last = performance.now();
+function frame(t) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (t - last) / 1000)); last = t; now = t / 1000;
+  updateIntro(dt);
+  stepDemo(dt);
+
+  // 指针：按住不动 0.22 秒 → 变成“按一按”
+  if (P && P.mode === 'pending' && performance.now() / 1000 - P.t > 0.24) {
+    P.mode = 'press'; startPress(P.it, P.it ? P.it.cur.clone().setY(P.it.cur.y + P.it.h) : P.point);
+  }
+
+  // 天平：两边质量差决定倾斜（重的一边下沉），弹簧阻尼摆动
+  var mL = trays[0].items.reduce(function (s, it) { return s + it.mass; }, 0);
+  var mR = trays[1].items.reduce(function (s, it) { return s + it.mass; }, 0);
+  var goal = 0.26 * Math.tanh((mR - mL) / 22);
+  balVel += ((goal - balAng) * 38 - balVel * 5.5) * dt;
+  balAng += balVel * dt;
+  beam.rotation.z = -balAng;
+  trays.forEach(function (tr) {
+    var ex = BAL.x + tr.side * BAL.arm * Math.cos(balAng), ey = BAL.piv - tr.side * BAL.arm * Math.sin(balAng);
+    tr.pos.set(ex, ey - BAL.hang, BAL.z);
+    tr.g.position.copy(tr.pos);
+    var a = tr.strings.geometry.attributes.position.array, k = 0;
+    for (var j = 0; j < 3; j++) {
+      var ang = j * Math.PI * 2 / 3 + 0.4;
+      a[k++] = ex; a[k++] = ey; a[k++] = BAL.z;
+      a[k++] = ex + Math.cos(ang) * 0.6 * tr.g.scale.x; a[k++] = tr.pos.y + 0.03; a[k++] = BAL.z + Math.sin(ang) * 0.6 * tr.g.scale.x;
+    }
+    tr.strings.geometry.attributes.position.needsUpdate = true;
+  });
+
+  computeTargets();
+
+  // 拖动中的高亮区域
+  var dragZone = null;
+  if (P && P.mode === 'drag') {
+    var it0 = P.it;
+    var nearTray = trays.some(function (tr) { return Math.hypot(it0.cur.x - tr.pos.x, it0.cur.z - tr.pos.z) < 1.4; });
+    var liftY = nearTray ? Math.max(trays[0].pos.y, trays[1].pos.y) + 0.55 : BASE + 0.6;
+    if (P.e) { var pp = planePoint(P.e, liftY); if (pp) it0.target.set(THREE.MathUtils.clamp(pp.x, BOARD.x0 - 0.5, BOARD.x1 + 0.5), liftY, THREE.MathUtils.clamp(pp.z, BOARD.z0 - 0.5, BOARD.z1 + 0.8)); }
+    else it0.target.set(it0.cur.x, liftY, it0.cur.z);
+    it0.yaw = 0;
+    dragZone = zoneAt(it0.cur.x, it0.cur.z);
+  }
+  if (guidePulseT > 0) guidePulseT = Math.max(0, guidePulseT - dt);
+  var pulseWave = guidePulseT > 0 ? (0.45 + 0.45 * Math.sin(now * 10)) * Math.min(1, guidePulseT) : 0;
+  trays.forEach(function (tr, i) {
+    var tgtOp = dragZone === (i ? 'R' : 'L') ? 0.85 : (guidePhase === 'w' ? pulseWave * 0.78 : 0);
+    tr.glow.material.opacity += (tgtOp - tr.glow.material.opacity) * 0.25;
+  });
+  var matHint = dragZone === 'mat' ? 1 : (guidePhase === 'l' ? pulseWave * 0.85 : 0);
+  matGlowMat.color.setRGB(1, 1, 1).lerp(new THREE.Color(0xfff0c8), matHint);
+
+  // 演示用的飞行
+  ITEMS.forEach(function (it) {
+    if (!it.flying) return;
+    var f = it.flying; f.t += dt / 0.75;
+    var u = Math.min(1, f.t), e = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+    it.target.lerpVectors(f.from, f.to, e); it.target.y += Math.sin(u * Math.PI) * 1.2 + (f.zone === 'L' || f.zone === 'R' ? 0.05 : 0) * e;
+    if (u >= 1) { it.flying = null; placeOn(it, f.zone, f.to.x, f.to.z); markAct('drag'); }
+  });
+
+  // 物品跟随、压扁、跳一下、悬停
+  var kk = 1 - Math.exp(-16 * dt);
+  ITEMS.forEach(function (it) {
+    if (it.flying || it.dragging) it.cur.lerp(it.target, it.flying ? 1 : 1 - Math.exp(-22 * dt));
+    else it.cur.lerp(it.target, kk);
+    it.sq += (it.sqGoal * (press && press.it === it ? Math.min(1, press.t / 0.35) : 1) - it.sq) * (1 - Math.exp(-14 * dt));
+    if (it.hop > 0) it.hop = Math.max(0, it.hop - dt * 3.2);
+    var hv = (hovered === it && !P) ? 1 : 0; it.hover += (hv - it.hover) * 0.25;
+    var hopY = Math.sin(it.hop * Math.PI) * 0.35 * it.hop;
+    it.g.position.set(it.cur.x, it.cur.y + hopY + it.hover * 0.06, it.cur.z);
+    it.g.rotation.y += (it.yaw - it.g.rotation.y) * 0.2;
+    var s = it.pop;
+    it.body.scale.set(s * (1 + it.sq * 0.3), s * (1 - it.sq), s * (1 + it.sq * 0.3));
+    // 标签
+    var showL = it.introLbl || it.hover > 0.5 || (P && P.it === it);
+    if (showL) { var sp = toScreen(it.cur.clone().setY(it.cur.y + it.h + 0.18)); it.lbl.style.transform = 'translate(' + sp.x + 'px,' + sp.y + 'px) translate(-50%,-100%)'; }
+    it.lbl.classList.toggle('show', !!showL);
+  });
+
+  // 手指
+  if (press) {
+    press.t = now - press.t0;
+    var o = press.it, depth = o ? o.h * o.soft * Math.min(1, press.t / 0.35) : 0;
+    var px = o ? o.cur.x : press.point.x, pz = o ? o.cur.z : press.point.z;
+    var surf = o ? o.cur.y + o.h : BASE;
+    var down = Math.min(1, press.t / 0.2);
+    finger.position.set(px + 0.05, surf - depth + (1 - down) * 0.8, pz + 0.05);
+    finger.rotation.z = -0.25;
+    if (!o && press.t > 0.25) deskShake = 0.04;
+    if (!press.done && press.t > 0.35) { press.done = true; pressReached(press); }
+  }
+  if (typeof deskShake === 'number' && deskShake > 0) { board.position.y = BASE / 2 - Math.sin(now * 80) * deskShake * 0.08; deskShake = Math.max(0, deskShake - dt * 0.2); }
+  else board.position.y = BASE / 2;
+
+  checkBalance();
+  checkMat();
+  updateGhost(dt);
+  $('#verbs').style.opacity = actions > 8 ? 0.35 : 1;
+
+  renderer.render(scene, camera);
+}
+var deskShake = 0;
+
+/* ===================== 按钮与小问答 ===================== */
+$('#voiceBtn').addEventListener('click', function () {
+  audio(); introSkip(); dismissCues();
+  if (!voiceOn || lastVoiceGuideKey !== curGuideKey) {
+    welcomeSpoken = true; voiceOn = true; lastVoiceGuideKey = curGuideKey;
+    $('#voiceBtn').classList.add('on'); setBtnLbl('#voiceBtn', '🔊 语音');
+    pulseGuideTarget();
+    speak(curGuideSpeech, true);
+    return;
+  }
+  voiceOn = false;
+  $('#voiceBtn').classList.remove('on');
+  setBtnLbl('#voiceBtn', '🔇 静音');
+  stopVoice();
+});
+$('#guideBar').addEventListener('click', function () {
+  audio(); introSkip(); dismissCues();
+  welcomeSpoken = true; voiceOn = true; lastVoiceGuideKey = curGuideKey;
+  $('#voiceBtn').classList.add('on'); setBtnLbl('#voiceBtn', '🔊 语音');
+  pulseGuideTarget();
+  speak(curGuideSpeech, true);
+});
+document.querySelectorAll('#quizOpts .qopt').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    audio();
+    var fb = $('#quizFb');
+    if (btn.getAttribute('data-ok') === '1') {
+      quizSolved = true;
+      document.querySelectorAll('#quizOpts .qopt').forEach(function (b) { b.classList.remove('wrong'); });
+      btn.classList.add('ok');
+      fb.classList.add('ok');
+      fb.textContent = '🌸 太棒了！获得本课小红花！用天平比轻重时，重的那一边会往下沉！';
+      sWin();
+      saveProgress('k1a-01', true);
+      speak('太棒了！获得本课小红花！用天平比轻重时，比较重的那一边会往下沉，轻的那一边会往上翘！', true);
+    } else if (!quizSolved) {
+      btn.classList.remove('wrong'); void btn.offsetWidth; btn.classList.add('wrong');
+      fb.classList.remove('ok');
+      fb.textContent = '再想想哦～像跷跷板一样，比较重的一边会往哪边落下去呢？';
+      sNudge();
+      speak('再想想哦，像玩跷跷板一样，比较重的那一边会怎样呢？', true);
+    }
+  });
+});
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  $('#ntTog').textContent = c ? '展开' : '收起';
+});
+$('#celKeep').addEventListener('click', hideCelebrate);
+$('#celAgain').addEventListener('click', function () { resetAll(false); });
+$('#demoBtn').addEventListener('click', function () { audio(); introSkip(); dismissCues(); if (demo) stopDemo(); else startDemo(); });
+$('#resetBtn').addEventListener('click', function () { resetAll(false); });
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () { return { triangles: renderer.info.render.triangles, pixelRatio: renderer.getPixelRatio(), found: foundN, kinds: kinds, celebrated: celebrated }; },
+  screenOf: function (id) { var it = IMAP[id]; return it ? toScreen(it.cur.clone().setY(it.cur.y + it.h / 2)) : null; },
+  trayScreen: function (i) { return toScreen(trays[i].pos.clone().setY(trays[i].pos.y + 0.05)); },
+  matScreen: function () { return toScreen(new THREE.Vector3(-2.2, BASE, MAT.rows[0])); },
+  startDemo: startDemo,
+  state: function () { return { zones: ITEMS.map(function (i) { return i.id + ':' + i.zone; }).join(' '), P: P && P.mode, tray: trays.map(function (t) { return t.items.length; }) }; }
+};
+
+updateGuide(false);
+fit();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1304 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第6课 动物是生物 · 窗帘蝴蝶与小狗（活页）</title>
+<style>
+:root{--ink:#2a3040;--paper:#fffaf0;--line:#e3d6bd;--accent:#e56d17}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#d9c19b;color:var(--ink);
+  font-family:"Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+ruby{ruby-align:center}
+rt{font-size:.5em;font-weight:600;color:#8a6d4a;letter-spacing:0}
+body.no-py rt{display:none}
+
+.chip{position:fixed;left:14px;top:12px;z-index:5;display:flex;align-items:center;gap:10px;
+  padding:6px 14px 6px 6px;border-radius:16px;background:rgba(255,250,240,.92);border:1.5px solid var(--line);
+  box-shadow:0 6px 18px rgba(80,55,20,.12)}
+.home{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:var(--ink);font-size:20px;font-weight:800}
+.home:hover{border-color:var(--accent);color:var(--accent)}
+.chip h1{margin:0;font-size:20px;line-height:1.5;font-weight:800}
+.chip small{display:block;font-size:12px;color:#8a7b62;font-weight:700;margin-top:-2px}
+
+.tools{position:fixed;right:14px;top:12px;z-index:5;display:flex;gap:8px;align-items:flex-start}
+.tbtn-wrap{position:relative;display:inline-flex;flex-direction:column;align-items:center}
+.tbtn{height:40px;padding:0 14px;border-radius:13px;border:1.5px solid var(--line);background:rgba(255,250,240,.94);
+  font:inherit;font-size:15px;font-weight:800;color:var(--ink);cursor:pointer;box-shadow:0 3px 0 #e2d2b5;white-space:nowrap}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:#bf5409;color:#fff;box-shadow:0 3px 0 #bf5409}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#ffedd5;border:1.5px solid #e56d17;color:#b44908;font-size:10.5px;font-weight:900;white-space:nowrap;
+  box-shadow:0 3px 8px rgba(229,109,23,.25);pointer-events:none;z-index:6;
+  animation:cueFloat 1.5s ease-in-out infinite;transition:opacity .35s,transform .35s}
+.entry-cue::before{display:none}
+body.interacted .entry-cue{opacity:0;pointer-events:none;animation:none}
+body:not(.interacted) #voiceBtn{animation:btnPulse 1.8s ease-in-out infinite}
+@keyframes cueFloat{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(4px)}}
+@keyframes btnPulse{0%,100%{box-shadow:0 3px 0 #bf5409,0 0 0 0 rgba(229,109,23,.45)}50%{box-shadow:0 3px 0 #bf5409,0 0 0 8px rgba(229,109,23,0)}}
+
+#guideBar{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:5;
+  max-width:min(460px,calc(100vw - 520px));padding:8px 16px;border-radius:16px;
+  background:rgba(255,250,240,.95);border:2px solid #f59e0b;box-shadow:0 6px 20px rgba(120,70,10,.15);
+  font-size:14px;font-weight:800;line-height:1.45;color:#7c3a0b;text-align:center;
+  transition:transform .25s,box-shadow .25s}
+#guideBar.flash{transform:translateX(-50%) scale(1.04);box-shadow:0 8px 26px rgba(229,109,23,.32)}
+
+#notes{position:fixed;right:14px;top:64px;z-index:4;width:244px;overflow:hidden;
+  padding:8px 10px 10px;border-radius:16px;background:rgba(255,250,240,.92);border:1.5px solid var(--line);
+  box-shadow:0 8px 22px rgba(80,55,20,.12);transition:opacity .3s}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:15px;font-weight:800;margin-bottom:6px}
+.nt-right{display:flex;align-items:center;gap:6px}
+#ntToggle{border:1px solid var(--line);background:#fff;color:#8a6d4a;border-radius:8px;padding:1px 7px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+#ntToggle:hover{border-color:var(--accent);color:var(--accent)}
+.stamps{display:flex;gap:5px;margin-bottom:6px}
+.stamp{flex:1;text-align:center;padding:3px 0 2px;border-radius:10px;border:1.5px dashed #d8c7a6;color:#b3a283;font-size:13px;font-weight:800;line-height:1.5}
+.stamp.lit{border-style:solid;border-color:#e56d17;background:#fff3e2;color:#c2560c;animation:pop .45s cubic-bezier(.2,1.6,.4,1)}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:158px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList{display:none}
+#notes.collapsed .stamps{margin-bottom:0}
+.stk{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:11px;background:#fff;border:1.5px solid #f0dcc0;
+  font-size:14px;font-weight:800;line-height:1.6;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+.stk i{font-style:normal;width:24px;height:24px;flex:none;border-radius:7px;display:grid;place-items:center;color:#fff;font-size:13px}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:9;overflow:hidden}
+.conf{position:absolute;width:10px;height:14px;border-radius:3px;opacity:0;animation:confFall 2.1s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes confFall{0%{opacity:1;transform:translate(0,0) rotate(0deg) scale(.8)}15%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--rot)) scale(1)}}
+#winToast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.86);z-index:12;
+  width:min(450px,92vw);max-height:85vh;overflow-y:auto;
+  display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 20px;border-radius:22px;
+  background:rgba(255,250,240,.98);border:2.5px solid #f59e0b;box-shadow:0 16px 40px rgba(100,55,10,.28);
+  opacity:0;pointer-events:none;transition:opacity .32s,transform .35s cubic-bezier(.2,1.5,.4,1)}
+#winToast.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.win-trophy{font-size:40px;line-height:1}
+#winMsg{font-size:20px;font-weight:900;color:#c2560c;line-height:1.5;text-align:center}
+.win-concl{width:100%;padding:10px 13px;border-radius:14px;background:#fff7e6;border:1.5px solid #f6c478;text-align:left}
+.win-concl-t{font-size:13px;font-weight:900;color:#b45309;margin-bottom:4px}
+.win-concl-b{font-size:14px;font-weight:800;color:#4a3520;line-height:1.6}
+.win-quiz{width:100%;padding:11px 13px;border-radius:14px;background:#fff;border:1.5px solid #e9d9bd;text-align:left}
+.win-quiz-t{font-size:13px;font-weight:900;color:#e56d17;margin-bottom:5px}
+.win-quiz-q{font-size:15px;font-weight:900;color:var(--ink);margin-bottom:8px;line-height:1.45}
+.quiz-opts{display:flex;flex-direction:column;gap:7px}
+.qopt{width:100%;text-align:left;padding:10px 12px;border-radius:12px;border:1.5px solid #e3d6bd;background:#fffdf8;
+  font:inherit;font-size:14.5px;font-weight:800;color:var(--ink);cursor:pointer;transition:transform .12s,border-color .15s,background .15s}
+.qopt:hover{border-color:#e56d17;background:#fff6eb}
+.qopt:active{transform:scale(.98)}
+.qopt.ok{border-color:#16a34a;background:#dcfce7;color:#14532d}
+.qopt.err{border-color:#f97316;background:#ffedd5;color:#9a3412}
+.quiz-fb{margin-top:8px;font-size:13.5px;font-weight:800;line-height:1.5;min-height:20px}
+.quiz-fb.ok{color:#15803d}
+.quiz-fb.err{color:#c2410c}
+.win-btns{display:flex;gap:10px;margin-top:2px}
+.wbtn{height:38px;padding:0 18px;border-radius:12px;border:1.5px solid var(--line);background:#fff;color:var(--ink);font:inherit;font-size:14px;font-weight:800;cursor:pointer}
+.wbtn.pri{background:#e56d17;border-color:#bf5409;color:#fff}
+.wbtn:hover{filter:brightness(.96)}
+
+#verbs{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:4;display:flex;gap:10px;transition:opacity .5s}
+.verb{display:flex;align-items:center;gap:7px;padding:6px 14px;border-radius:99px;background:rgba(255,250,240,.94);
+  border:1.5px solid var(--line);font-size:17px;font-weight:800;box-shadow:0 4px 14px rgba(80,55,20,.12)}
+.verb svg{width:22px;height:22px}
+.verb.done{border-color:#16a34a;color:#15803d;background:#effaf2}
+.verb.done::after{content:"✓";font-weight:900;color:#16a34a}
+
+#labels{position:fixed;inset:0;pointer-events:none;z-index:3}
+.lbl{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:2px 10px;border-radius:99px;white-space:nowrap;
+  background:rgba(42,48,64,.88);color:#fff;font-size:15px;font-weight:800;line-height:1.75;opacity:0;transition:opacity .2s}
+.lbl rt{color:#ffe0b8}
+.lbl.show{opacity:1}
+.word{position:absolute;left:0;top:0;transform:translate(-50%,-100%);font-size:27px;font-weight:900;line-height:1.6;
+  color:#c2560c;text-shadow:0 2px 0 #fff,0 0 8px #fff;pointer-events:none;animation:floatUp 1.25s ease-out forwards;white-space:nowrap}
+.word.cool{color:#2f5fa8}
+.word.good{color:#15803d}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-60%) scale(.6)}18%{opacity:1;transform:translate(-50%,-100%) scale(1.08)}100%{opacity:0;transform:translate(-50%,-190%) scale(1)}}
+
+#hand{position:fixed;left:0;top:0;width:64px;height:64px;z-index:6;pointer-events:none;opacity:0;transition:opacity .3s;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.25))}
+
+@media (max-width:960px){
+  #guideBar{top:62px;max-width:min(440px,calc(100vw - 280px));font-size:13px;padding:6px 12px}
+}
+@media (max-width:760px){
+  .chip{left:8px;top:8px;padding:4px 10px 4px 4px}
+  .chip h1{font-size:16px}.chip small{display:none}
+  .home{width:32px;height:32px}
+  .tools{right:8px;top:8px;gap:6px}.tbtn{height:34px;padding:0 10px;font-size:13px}
+  .entry-cue{top:38px;font-size:11px;padding:2px 7px}
+  #guideBar{top:50px;left:8px;right:8px;transform:none;max-width:none;font-size:12.5px;padding:5px 10px}
+  #guideBar.flash{transform:scale(1.02)}
+  #notes{top:auto;bottom:60px;right:8px;left:8px;width:auto;max-height:112px;padding:7px 10px}
+  #ntList .stk:nth-child(n+2){display:none}
+  .stk{font-size:14px}
+  #verbs{bottom:10px;gap:6px}.verb{font-size:14px;padding:4px 10px}.verb svg{width:18px;height:18px}
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="labels"></div>
+
+<div class="chip">
+  <a class="home" href="../index.html" title="回到书包">‹</a>
+  <div><h1 id="ttl"></h1><small>活页 · 课本第 23 页「窗帘蝴蝶与小狗」</small></div>
+</div>
+<div class="tools">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button" title="语音引导">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+<div id="guideBar" aria-live="polite"></div>
+
+<aside id="notes">
+  <div class="nt-head"><span id="ntTitle"></span><span class="nt-right"><span id="ntCount" style="color:#c2560c">0</span><button id="ntToggle" type="button">收起</button></span></div>
+  <div class="stamps"><span class="stamp" id="stB"></span><span class="stamp" id="stD"></span><span class="stamp" id="stL"></span></div>
+  <div id="ntList"></div>
+</aside>
+
+<div id="confetti"></div>
+<div id="winToast" role="status" aria-live="polite">
+  <div class="win-trophy">🏆</div>
+  <div id="winMsg"></div>
+  <div class="win-concl">
+    <div class="win-concl-t">✨ 科学小结论</div>
+    <div class="win-concl-b">蝴蝶和真小狗都是生物，会自己活动、吃食物、对周围有反应；玩具狗没有生命，只会靠发条走！</div>
+  </div>
+  <div class="win-quiz">
+    <div class="win-quiz-t">💡 考考你 · 答对领小红花 🌸</div>
+    <div class="win-quiz-q">把狗粮碗端过去，下面哪一个会高兴地吃狗粮？</div>
+    <div class="quiz-opts" id="quizOpts">
+      <button class="qopt" data-ok="1" type="button">🐶 真小狗（生物）</button>
+      <button class="qopt" data-ok="0" type="button">🤖 发条玩具狗（非生物）</button>
+    </div>
+    <div class="quiz-fb" id="quizFb"></div>
+  </div>
+  <div class="win-btns">
+    <button class="wbtn pri" id="winKeep" type="button">继续玩</button>
+    <button class="wbtn" id="winAgain" type="button">再玩一次</button>
+  </div>
+</div>
+
+<div id="verbs">
+  <span class="verb" data-v="curtain"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16M6 4v16M18 4v16M6 12c3 0 4 4 6 4s3-4 6-4"/></svg><span id="vb1"></span></span>
+  <span class="verb" data-v="feed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13h16l-2 6H6l-2-6z"/><path d="M8 10c1-2 3-2 4 0 1-2 3-2 4 0"/></svg><span id="vb2"></span></span>
+  <span class="verb" data-v="play"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M9 10h.01M15 10h.01M9 15c1.5 1.5 4.5 1.5 6 0"/></svg><span id="vb3"></span></span>
+</div>
+
+<svg id="hand" viewBox="0 0 64 64"><path d="M26 6c3 0 5 2 5 5v17l3-1c2-6 9-5 9 0 2-3 8-2 8 3 3-1 7 1 7 5v12c0 9-7 15-16 15h-6c-6 0-10-3-13-8L13 41c-2-3 0-7 4-7 2 0 3 1 4 2V11c0-3 2-5 5-5z" fill="#fff" stroke="#2a3040" stroke-width="3" stroke-linejoin="round"/></svg>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js"></script>
+<script src="../vendor/voice.js"></script>
+<script>
+(function () {
+'use strict';
+
+/* ===================== 拼音 ===================== */
+var HAN = /[\u3400-\u9fff]/, pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function ruby(text, py) {
+  var syl = py ? py.trim().split(/\s+/) : [], i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) { var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; } out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>'; }
+    else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+var $ = function (s) { return document.querySelector(s); };
+$('#ttl').innerHTML = ruby('第6课 动物是生物', 'dì kè dòng wù shì shēng wù');
+$('#ntTitle').innerHTML = ruby('我的发现', 'wǒ de fā xiàn');
+$('#stB').innerHTML = ruby('蝴蝶', 'hú dié');
+$('#stD').innerHTML = ruby('小狗', 'xiǎo gǒu');
+$('#stL').innerHTML = ruby('生物', 'shēng wù');
+$('#vb1').innerHTML = ruby('拉窗帘', 'lā chuāng lián');
+$('#vb2').innerHTML = ruby('喂食物', 'wèi shí wù');
+$('#vb3').innerHTML = ruby('逗小狗', 'dòu xiǎo gǒu');
+$('#winMsg').innerHTML = '🌟 ' + ruby('太棒啦！全部发现集齐啦！', 'tài bàng la quán bù fā xiàn jí qí la');
+
+/* ===================== Three 基础 ===================== */
+var canvas = $('#c');
+var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera(32, 1, 0.1, 200);
+var raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2();
+
+scene.add(new THREE.HemisphereLight(0xfff8ee, 0xcdb08a, 0.42));
+var sun = new THREE.DirectionalLight(0xfff1dc, 0.66);
+sun.position.set(-4, 12, 7);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+(function (c) { c.left = -7; c.right = 7; c.top = 6; c.bottom = -6; c.near = 1; c.far = 40; })(sun.shadow.camera);
+sun.shadow.bias = -0.0008;
+scene.add(sun);
+
+var ramp = new THREE.DataTexture(new Uint8Array([120, 120, 120, 255, 185, 185, 185, 255, 232, 232, 232, 255, 255, 255, 255, 255]), 4, 1, THREE.RGBAFormat);
+ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+var INK = new THREE.LineBasicMaterial({ color: 0x2a3040, transparent: true, opacity: 0.8 });
+function toon(hex, extra) {
+  var o = { color: new THREE.Color(hex), gradientMap: ramp };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshToonMaterial(o);
+}
+function mesh(geo, mat, ink) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  if (ink !== false) m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), INK));
+  return m;
+}
+function ctex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c);
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+
+/* ===================== 书桌 + 摊开的课本 ===================== */
+var deskTex = ctex(512, 512, function (g, w, h) {
+  g.fillStyle = '#c9a36b'; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 70; i++) { g.fillStyle = 'rgba(120,80,35,' + (Math.random() * 0.05).toFixed(3) + ')'; g.fillRect(0, Math.random() * h, w, 1 + Math.random() * 3); }
+});
+deskTex.wrapS = deskTex.wrapT = THREE.RepeatWrapping; deskTex.repeat.set(3, 3);
+var deskM = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshLambertMaterial({ map: deskTex }));
+deskM.rotation.x = -Math.PI / 2; deskM.position.y = -0.2; deskM.receiveShadow = true;
+scene.add(deskM);
+
+function pageTex(right) {
+  return ctex(512, 640, function (g, w, h) {
+    g.fillStyle = '#fbf6ea'; g.fillRect(0, 0, w, h);
+    var gr = g.createLinearGradient(right ? 0 : w, 0, right ? 60 : w - 60, 0);
+    gr.addColorStop(0, 'rgba(120,90,45,.18)'); gr.addColorStop(1, 'rgba(120,90,45,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#e4d8c2';
+    for (var r = 0; r < 15; r++) { var y = 60 + r * 36; if (r === 5 || r === 11) continue; g.fillRect(50, y, w - 100 - (r % 4) * 40, 8); }
+    g.fillStyle = '#b9a98c'; g.font = 'bold 22px sans-serif'; g.textAlign = right ? 'right' : 'left';
+    g.fillText(right ? '24' : '23', right ? w - 40 : 40, h - 26);
+  });
+}
+var baseBook = new THREE.Group(); scene.add(baseBook);
+[-1, 1].forEach(function (sx) {
+  var pg = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.16, 6.6), [
+    new THREE.MeshLambertMaterial({ color: 0xefe6d2 }), new THREE.MeshLambertMaterial({ color: 0xefe6d2 }),
+    new THREE.MeshLambertMaterial({ map: pageTex(sx > 0) }), new THREE.MeshLambertMaterial({ color: 0xe4d8c0 }),
+    new THREE.MeshLambertMaterial({ color: 0xefe6d2 }), new THREE.MeshLambertMaterial({ color: 0xefe6d2 })
+  ]);
+  pg.position.set(sx * 2.62, -0.08, 0); pg.receiveShadow = true; pg.castShadow = true;
+  baseBook.add(pg);
+});
+var coverM = new THREE.Mesh(new THREE.BoxGeometry(10.7, 0.06, 6.9), new THREE.MeshLambertMaterial({ color: 0xe56d17 }));
+coverM.position.y = -0.19; baseBook.add(coverM);
+
+/* ===================== 活页底板 ===================== */
+var BASE = 0.1;
+var BOARD = { x0: -4.1, x1: 4.1, z0: -2.35, z1: 2.35 };
+var live = new THREE.Group(); scene.add(live);
+var boardTex = ctex(512, 300, function (g, w, h) {
+  g.fillStyle = '#fffaf0'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(214,196,160,.55)'; g.lineWidth = 1;
+  for (var x = 0; x < w; x += 16) { g.beginPath(); g.moveTo(x + .5, 0); g.lineTo(x + .5, h); g.stroke(); }
+  for (var y = 0; y < h; y += 16) { g.beginPath(); g.moveTo(0, y + .5); g.lineTo(w, y + .5); g.stroke(); }
+});
+var board = mesh(new THREE.BoxGeometry(8.2, BASE, 4.7), [
+  toon('#ead6b0'), toon('#ead6b0'), new THREE.MeshToonMaterial({ map: boardTex, gradientMap: ramp, color: 0xf6ead2 }), toon('#ead6b0'), toon('#ead6b0'), toon('#ead6b0')
+]);
+board.position.y = BASE / 2; board.castShadow = false;
+live.add(board);
+
+var figTex = ctex(512, 300, function (g, w, h) {
+  g.fillStyle = '#fbf3e2'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = '#e56d17'; g.lineWidth = 6; g.strokeRect(6, 6, w - 12, h - 12);
+  g.strokeStyle = '#8a7b62'; g.lineWidth = 4;
+  g.strokeRect(55, 45, 160, 150);
+  g.strokeRect(275, 115, 75, 65); g.strokeRect(380, 115, 75, 65);
+  g.fillStyle = '#8a7b62'; g.font = 'bold 26px sans-serif'; g.textAlign = 'center'; g.fillText('窗帘蝴蝶与小狗', w / 2, h - 20);
+});
+var figCard = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 4.7), new THREE.MeshBasicMaterial({ map: figTex, transparent: true }));
+figCard.rotation.x = -Math.PI / 2; figCard.position.y = 0.012;
+scene.add(figCard);
+
+// 右侧小草坪垫（整体微向左让位，确保玩具狗远离右上发现面板）
+var lawn = mesh(new THREE.BoxGeometry(3.6, 0.03, 2.55), toon('#cfe9c4'));
+lawn.position.set(1.05, BASE + 0.015, -0.25); live.add(lawn);
+
+/* ===================== 左后方：阳光教室窗户 + 蓝窗帘 + 3D蝴蝶 ===================== */
+var WIN_POS = new THREE.Vector3(-2.35, BASE, -1.25);
+var winG = new THREE.Group(); winG.position.copy(WIN_POS); live.add(winG);
+
+// 教室淡黄墙壁立板 + 窗框
+var wallM = mesh(new THREE.BoxGeometry(2.75, 2.35, 0.14), toon('#f8ead0'));
+wallM.position.set(0, 1.175, -0.1); winG.add(wallM);
+var skyTex = ctex(256, 256, function (g, w, h) {
+  var gr = g.createLinearGradient(0, 0, 0, h);
+  gr.addColorStop(0, '#74c6f5'); gr.addColorStop(1, '#d9f2ff');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#ffe56b'; g.beginPath(); g.arc(200, 58, 32, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#ffffff';
+  g.beginPath(); g.arc(72, 85, 24, 0, Math.PI * 2); g.arc(98, 80, 28, 0, Math.PI * 2); g.arc(122, 88, 20, 0, Math.PI * 2); g.fill();
+});
+var pane = new THREE.Mesh(new THREE.PlaneGeometry(1.95, 1.6), new THREE.MeshBasicMaterial({ map: skyTex }));
+pane.position.set(0, 1.25, -0.02); winG.add(pane);
+// 窗格木条
+var sill = mesh(new THREE.BoxGeometry(2.25, 0.1, 0.34), toon('#d9a65f'));
+sill.position.set(0, 0.42, 0.06); winG.add(sill);
+var barH = mesh(new THREE.BoxGeometry(2.05, 0.07, 0.08), toon('#ffffff'));
+barH.position.set(0, 1.25, 0.01); winG.add(barH);
+var barV = mesh(new THREE.BoxGeometry(0.07, 1.65, 0.08), toon('#ffffff'));
+barV.position.set(0, 1.25, 0.01); winG.add(barV);
+var rod = mesh(new THREE.CylinderGeometry(0.035, 0.035, 2.55, 10), toon('#b9803e'));
+rod.rotation.z = Math.PI / 2; rod.position.set(0, 2.18, 0.16); winG.add(rod);
+
+// 可晃动的分段蓝窗帘
+var CURT_W = 1.15, CURT_H = 1.78;
+var curtGeo = new THREE.PlaneGeometry(CURT_W, CURT_H, 10, 10);
+curtGeo.translate(0, -CURT_H / 2, 0);
+var curtBase = new Float32Array(curtGeo.attributes.position.array);
+var curtTex = ctex(256, 256, function (g, w, h) {
+  g.fillStyle = '#4e9be6'; g.fillRect(0, 0, w, h);
+  g.fillStyle = 'rgba(255,255,255,.18)';
+  for (var x = 0; x < w; x += 32) g.fillRect(x, 0, 10, h);
+  g.fillStyle = '#fff5cc'; g.fillRect(0, h - 18, w, 10);
+});
+var curtainM = new THREE.Mesh(curtGeo, new THREE.MeshToonMaterial({ map: curtTex, gradientMap: ramp, side: THREE.DoubleSide }));
+curtainM.position.set(-0.52, 2.16, 0.18);
+curtainM.castShadow = true; curtainM.receiveShadow = true;
+curtainM.userData.kind = 'curtain';
+winG.add(curtainM);
+
+// 3D 彩色蝴蝶（停在蓝窗帘上）
+var bfG = new THREE.Group(); live.add(bfG);
+var bfBody = mesh(new THREE.CapsuleGeometry(0.035, 0.18, 4, 8), toon('#3a2e2a'), false);
+bfBody.rotation.x = Math.PI / 2; bfG.add(bfBody);
+var wingTex = ctex(128, 128, function (g, w, h) {
+  g.fillStyle = '#ff982b'; g.beginPath(); g.ellipse(64, 48, 56, 40, -0.2, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#ff6b2b'; g.beginPath(); g.ellipse(52, 92, 38, 28, 0.25, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#ffe66d'; g.beginPath(); g.arc(76, 44, 16, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#2a3040'; g.beginPath(); g.arc(78, 44, 7, 0, Math.PI * 2); g.fill();
+});
+var wingMat = new THREE.MeshBasicMaterial({ map: wingTex, transparent: true, side: THREE.DoubleSide });
+var wingL = new THREE.Group(), wingR = new THREE.Group();
+var wlMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 0.36), wingMat);
+wlMesh.position.set(-0.16, 0, 0); wingL.add(wlMesh);
+var wrMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 0.36), wingMat);
+wrMesh.position.set(0.16, 0, 0); wrMesh.scale.x = -1; wingR.add(wrMesh);
+bfG.add(wingL, wingR);
+bfG.traverse(function (o) { if (o.isMesh) o.userData.kind = 'butterfly'; });
+
+var bfPerch = new THREE.Vector3(WIN_POS.x - 0.45, BASE + 1.45, WIN_POS.z + 0.28);
+var bfState = { mode: 'perch', pos: bfPerch.clone(), t: 0, flap: 0 };
+bfG.position.copy(bfPerch);
+
+/* ===================== 右侧两只小狗：真小狗 vs 发条玩具狗 ===================== */
+// 1. 真小狗（暖棕色毛绒小狗，会摇尾巴、蹦跳、跑去吃狗粮）
+var RDOG_HOME = new THREE.Vector3(0.18, BASE + 0.03, -0.3);
+var rDog = {
+  g: new THREE.Group(), body: new THREE.Group(),
+  pos: RDOG_HOME.clone(), target: RDOG_HOME.clone(),
+  hop: 0, munch: 0, wagBoost: 0, pop: 0.01
+};
+rDog.g.add(rDog.body); rDog.g.position.copy(RDOG_HOME); live.add(rDog.g);
+
+var rDogGlow = new THREE.Mesh(
+  new THREE.RingGeometry(0.58, 0.74, 32),
+  new THREE.MeshBasicMaterial({ color: 0xffb23c, transparent: true, opacity: 0, side: THREE.DoubleSide })
+);
+rDogGlow.rotation.x = -Math.PI / 2; rDogGlow.position.y = 0.02; rDog.g.add(rDogGlow);
+
+var furMat = toon('#d98c45'), furLight = toon('#f5cfa0');
+var rdTorso = mesh(new THREE.CapsuleGeometry(0.24, 0.44, 8, 14), furMat);
+rdTorso.rotation.x = Math.PI / 2; rdTorso.position.set(0, 0.38, 0); rDog.body.add(rdTorso);
+var rdLegs = [];
+[[-0.14, 0.22], [0.14, 0.22], [-0.14, -0.2], [0.14, -0.2]].forEach(function (p) {
+  var lg = mesh(new THREE.CylinderGeometry(0.065, 0.06, 0.26, 10), furLight);
+  lg.position.set(p[0], 0.13, p[1]); rDog.body.add(lg); rdLegs.push(lg);
+});
+var rdHead = new THREE.Group(); rdHead.position.set(0, 0.62, 0.34); rDog.body.add(rdHead);
+rdHead.add(mesh(new THREE.SphereGeometry(0.24, 16, 14), furMat));
+var rdSnout = mesh(new THREE.SphereGeometry(0.11, 12, 10), furLight);
+rdSnout.position.set(0, -0.05, 0.2); rdHead.add(rdSnout);
+var rdNose = mesh(new THREE.SphereGeometry(0.045, 10, 8), toon('#2a3040'), false);
+rdNose.position.set(0, -0.02, 0.29); rdHead.add(rdNose);
+[-0.085, 0.085].forEach(function (ex) {
+  var eye = mesh(new THREE.SphereGeometry(0.032, 10, 8), toon('#2a3040'), false);
+  eye.position.set(ex, 0.06, 0.2); rdHead.add(eye);
+  var ear = mesh(new THREE.CapsuleGeometry(0.06, 0.16, 4, 8), toon('#a65c28'));
+  ear.position.set(ex * 2.4, 0.02, 0.02); ear.rotation.z = ex > 0 ? -0.35 : 0.35; rdHead.add(ear);
+});
+var rdCollar = mesh(new THREE.TorusGeometry(0.18, 0.035, 8, 18), toon('#ef4444'));
+rdCollar.rotation.x = Math.PI / 2; rdCollar.position.set(0, 0.49, 0.26); rDog.body.add(rdCollar);
+var rdTail = new THREE.Group(); rdTail.position.set(0, 0.46, -0.34); rDog.body.add(rdTail);
+var rdTailM = mesh(new THREE.CapsuleGeometry(0.045, 0.22, 4, 8), furMat);
+rdTailM.position.set(0, 0.12, -0.06); rdTailM.rotation.x = -0.6; rdTail.add(rdTailM);
+
+rDog.g.traverse(function (o) { if (o.isMesh && o !== rDogGlow) o.userData.kind = 'realDog'; });
+
+// 2. 发条玩具狗（塑料薄荷白，背上有金色发条钥匙）
+var TDOG_HOME = new THREE.Vector3(1.92, BASE + 0.03, -0.15);
+var tDog = {
+  g: new THREE.Group(), body: new THREE.Group(),
+  pos: TDOG_HOME.clone(), power: 0, phase: 0, pop: 0.01
+};
+tDog.g.add(tDog.body); tDog.g.position.copy(TDOG_HOME); live.add(tDog.g);
+
+var tDogGlow = new THREE.Mesh(
+  new THREE.RingGeometry(0.58, 0.74, 32),
+  new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0, side: THREE.DoubleSide })
+);
+tDogGlow.rotation.x = -Math.PI / 2; tDogGlow.position.y = 0.02; tDog.g.add(tDogGlow);
+
+var toyMat = toon('#7bd6c8'), toyWhite = toon('#eef4f8');
+var tdTorso = mesh(new THREE.BoxGeometry(0.42, 0.36, 0.66), toyMat);
+tdTorso.position.set(0, 0.38, 0); tDog.body.add(tdTorso);
+var tdLegs = [];
+[[-0.14, 0.22], [0.14, 0.22], [-0.14, -0.22], [0.14, -0.22]].forEach(function (p) {
+  var lg = mesh(new THREE.BoxGeometry(0.1, 0.24, 0.1), toyWhite);
+  lg.position.set(p[0], 0.12, p[1]); tDog.body.add(lg); tdLegs.push(lg);
+});
+var tdHead = mesh(new THREE.BoxGeometry(0.36, 0.32, 0.34), toyWhite);
+tdHead.position.set(0, 0.62, 0.32); tDog.body.add(tdHead);
+[-0.08, 0.08].forEach(function (ex) {
+  var eye = mesh(new THREE.CircleGeometry(0.035, 10), toon('#2a3040'), false);
+  eye.position.set(ex, 0.65, 0.495); tDog.body.add(eye);
+  var ear = mesh(new THREE.BoxGeometry(0.07, 0.16, 0.12), toyMat);
+  ear.position.set(ex * 2.6, 0.72, 0.3); tDog.body.add(ear);
+});
+var tdNose = mesh(new THREE.BoxGeometry(0.08, 0.06, 0.06), toon('#334155'));
+tdNose.position.set(0, 0.57, 0.51); tDog.body.add(tdNose);
+
+// 背上的金色大发条钥匙
+var keyG = new THREE.Group(); keyG.position.set(0, 0.58, -0.06); tDog.body.add(keyG);
+var keyStem = mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.22, 10), toon('#f5b82e'));
+keyStem.position.y = 0.1; keyG.add(keyStem);
+[-0.12, 0.12].forEach(function (kx) {
+  var ring = mesh(new THREE.TorusGeometry(0.09, 0.03, 8, 16), toon('#f5b82e'));
+  ring.position.set(kx, 0.24, 0); keyG.add(ring);
+});
+
+tDog.g.traverse(function (o) { if (o.isMesh && o !== tDogGlow) o.userData.kind = 'toyDog'; });
+keyG.traverse(function (o) { if (o.isMesh) o.userData.kind = 'windKey'; });
+
+/* ===================== 前排 2 件可拖拽食物：花蜜小碟 & 狗粮碗 ===================== */
+var FOODS = [
+  { id: 'nectar', name: '花蜜碟', py: 'huā mì dié', x: -2.25, z: 1.38 },
+  { id: 'bowl',   name: '狗粮碗', py: 'gǒu liáng wǎn', x: 1.05, z: 1.38 }
+];
+var FMAP = {}; FOODS.forEach(function (f) { FMAP[f.id] = f; });
+
+FOODS.forEach(function (fd) {
+  var pad = mesh(new THREE.CylinderGeometry(0.5, 0.54, 0.05, 24), toon('#e2c79a'));
+  pad.position.set(fd.x, BASE + 0.025, fd.z); live.add(pad);
+
+  var g = new THREE.Group(), body = new THREE.Group(); g.add(body);
+  if (fd.id === 'nectar') {
+    var dish = mesh(new THREE.CylinderGeometry(0.38, 0.28, 0.09, 22), toon('#fff4df'));
+    dish.position.y = 0.045; body.add(dish);
+    for (var p = 0; p < 6; p++) {
+      var ang = p * Math.PI / 3;
+      var pet = mesh(new THREE.SphereGeometry(0.11, 10, 8), toon('#ff6fa5'));
+      pet.scale.set(1.2, 0.38, 0.85);
+      pet.position.set(Math.cos(ang) * 0.16, 0.12, Math.sin(ang) * 0.16);
+      body.add(pet);
+    }
+    var center = mesh(new THREE.SphereGeometry(0.1, 12, 10), toon('#ffd33d'));
+    center.scale.set(1, 0.55, 1); center.position.y = 0.14; body.add(center);
+    fd.h = 0.25;
+  } else {
+    var bowl = mesh(new THREE.CylinderGeometry(0.36, 0.42, 0.22, 22), toon('#eb5746'));
+    bowl.position.y = 0.11; body.add(bowl);
+    for (var k = 0; k < 10; k++) {
+      var a = k * 0.85, r = (k % 3) * 0.09;
+      var kib = mesh(new THREE.SphereGeometry(0.065, 8, 6), toon('#7c4a21'), false);
+      kib.position.set(Math.cos(a) * r, 0.22 + (k % 2) * 0.03, Math.sin(a) * r);
+      body.add(kib);
+    }
+    fd.h = 0.3;
+  }
+
+  fd.g = g; fd.body = body;
+  fd.home = new THREE.Vector3(fd.x, BASE + 0.05, fd.z);
+  fd.cur = fd.home.clone(); fd.target = fd.home.clone();
+  fd.pop = 0.01; fd.hover = 0; fd.dragging = false; fd.flying = null;
+  g.traverse(function (o) { if (o.isMesh) { o.userData.kind = 'food'; o.userData.food = fd; } });
+  g.position.copy(fd.cur);
+  live.add(g);
+});
+
+// 欢呼星光粒子
+var sparkles = [];
+for (var pi = 0; pi < 14; pi++) {
+  var pm = new THREE.Mesh(new THREE.OctahedronGeometry(0.055, 0), new THREE.MeshBasicMaterial({ color: pi % 2 ? 0xffe45e : 0xff7aa8 }));
+  pm.visible = false; live.add(pm);
+  sparkles.push({ m: pm, v: new THREE.Vector3(), life: 0 });
+}
+function burst(pos) {
+  sparkles.forEach(function (p) {
+    p.m.visible = true; p.m.position.copy(pos);
+    p.v.set((Math.random() - 0.5) * 1.9, 1.2 + Math.random() * 1.2, (Math.random() - 0.5) * 1.6);
+    p.life = 0.55 + Math.random() * 0.25;
+  });
+}
+
+/* ===================== 相机取景 ===================== */
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  var portrait = w / h < 0.85;
+  var tgt = new THREE.Vector3(portrait ? 0 : 0.25, 0.65, portrait ? 0.1 : 0.02);
+  var dir = portrait ? new THREE.Vector3(0.25, 0.72, 0.65).normalize() : new THREE.Vector3(0, 0.64, 0.77).normalize();
+  var needW = portrait ? 6.4 : 8.7, needH = portrait ? 9.5 : 6.1;
+  var vf = THREE.MathUtils.degToRad(camera.fov), hf = 2 * Math.atan(Math.tan(vf / 2) * camera.aspect);
+  var d = Math.max(needW / 2 / Math.tan(hf / 2), needH / 2 / Math.tan(vf / 2) * 0.84);
+  camera.position.copy(tgt).addScaledVector(dir, d);
+  camera.lookAt(tgt);
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', fit);
+
+/* ===================== WebAudio 音效 ===================== */
+var AC = null;
+function audio() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } } if (AC && AC.state === 'suspended') AC.resume(); return AC; }
+function tone(f, dur, type, vol, f2, delay) {
+  var a = audio(); if (!a) return;
+  var t = a.currentTime + (delay || 0), o = a.createOscillator(), g = a.createGain();
+  o.type = type || 'sine'; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.14, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + 0.02);
+}
+function noise(dur, freq, vol) {
+  var a = audio(); if (!a) return;
+  var n = Math.floor(a.sampleRate * dur), b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0);
+  for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 1.5);
+  var s = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+  s.buffer = b; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 1.1; g.gain.value = vol || 0.3;
+  s.connect(f); f.connect(g); g.connect(a.destination); s.start();
+}
+function sCurtain() { noise(0.24, 950, 0.28); }
+function sFlutter() { tone(640, 0.1, 'sine', 0.08, 920); tone(780, 0.1, 'sine', 0.07, 1080, 0.11); }
+function sBark() { tone(420, 0.09, 'sawtooth', 0.09, 620); tone(460, 0.11, 'sawtooth', 0.09, 660, 0.13); }
+function sMunch() { noise(0.06, 1600, 0.28); setTimeout(function () { noise(0.06, 1800, 0.25); }, 150); }
+function sWind() { for (var i = 0; i < 4; i++) tone(900 + i * 120, 0.04, 'square', 0.06, null, i * 0.07); }
+function sNope() { tone(240, 0.12, 'triangle', 0.13, 170); }
+function sDing() { tone(880, 0.14, 'sine', 0.11); tone(1320, 0.24, 'sine', 0.09, null, 0.09); }
+function sWin() {
+  tone(523, 0.14, 'sine', 0.13, null, 0);
+  tone(659, 0.14, 'sine', 0.13, null, 0.11);
+  tone(784, 0.16, 'sine', 0.14, null, 0.22);
+  tone(1046, 0.36, 'sine', 0.15, null, 0.34);
+  tone(784, 0.32, 'triangle', 0.07, null, 0.34);
+}
+
+/* ===================== 进度持久化与儿童离线语音引导 ===================== */
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem('xk_k1a_progress') || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem('xk_k1a_progress', JSON.stringify(d));
+  } catch (e) {}
+}
+function dismissCues() {
+  document.body.classList.add('interacted');
+}
+
+var voiceOn = true, voiceWelcomed = false;
+var CONCL_VOICE = '蝴蝶和真小狗都是生物，会自己活动、吃食物、对周围有反应；玩具狗没有生命，只会靠发条走！快来答一题领小红花吧！';
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
+  if (!('speechSynthesis' in window)) return;
+  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+}
+function welcomeVoiceOnce() {
+  dismissCues();
+  if (voiceWelcomed) return;
+  voiceWelcomed = true;
+}
+
+/* ===================== 标签与发现 ===================== */
+var labelsEl = $('#labels');
+function makeLbl(name, py) {
+  var el = document.createElement('div'); el.className = 'lbl'; el.innerHTML = ruby(name, py);
+  labelsEl.appendChild(el); return el;
+}
+FOODS.forEach(function (fd) { fd.lbl = makeLbl(fd.name, fd.py); });
+var curtLbl = makeLbl('窗帘', 'chuāng lián');
+var bfLbl = makeLbl('蝴蝶', 'hú dié');
+var rDogLbl = makeLbl('真小狗', 'zhēn xiǎo gǒu');
+var tDogLbl = makeLbl('玩具狗', 'wán jù gǒu');
+
+var vtmp = new THREE.Vector3();
+function toScreen(v) { vtmp.copy(v).project(camera); return { x: (vtmp.x + 1) / 2 * window.innerWidth, y: (1 - vtmp.y) / 2 * window.innerHeight }; }
+function floatWord(text, py, worldPos, cls) {
+  var p = toScreen(worldPos), el = document.createElement('div');
+  el.className = 'word' + (cls ? ' ' + cls : ''); el.innerHTML = ruby(text, py);
+  el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
+  labelsEl.appendChild(el); setTimeout(function () { el.remove(); }, 1300);
+}
+
+var found = {}, foundN = 0, kinds = { b: false, d: false, l: false };
+var ms = { butterfly: false, petReal: false, feedReal: false, testToy: false };
+var acted = { curtain: false, feed: false, play: false }, actions = 0;
+var celebrated = false, resetGen = 0, guidePhase = 0, guideTimer = null, voiceCueTimer = 0;
+var guideBarEl = $('#guideBar');
+
+function getGuideInfo() {
+  if (!ms.butterfly) {
+    return {
+      phase: 1,
+      text: '🦋 第1步：先点一点或拉动左边蓝窗帘，再把「花蜜碟」拖过去引出真蝴蝶！',
+      voice: '先点一点或拉动左边的蓝窗帘，再把花蜜碟拖过去引出真蝴蝶！',
+      pulse: 'butterfly'
+    };
+  }
+  if (!ms.petReal && !ms.testToy) {
+    return {
+      phase: 2,
+      text: '🐶 第2步：点一点中间「真小狗」逗逗它，再点右边「玩具狗」背后的发条比一比！',
+      voice: '点一点中间的真小狗逗逗它，再点右边玩具狗背后的发条比一比！',
+      pulse: 'bothDogs'
+    };
+  }
+  if (!ms.petReal) {
+    return {
+      phase: 3,
+      text: '🐶 第2步：再点一点中间的「真小狗」逗逗它，看看它会怎么回应你！',
+      voice: '再点一点中间的真小狗逗逗它，看看它怎么回应你！',
+      pulse: 'realDog'
+    };
+  }
+  if (!ms.testToy) {
+    return {
+      phase: 4,
+      text: '🔑 第2步：再点一点右边「玩具狗」背后的发条（或喂狗粮试试），比比它和真小狗的不同！',
+      voice: '再点一点右边玩具狗背后的发条，比一比它和真小狗有什么不同！',
+      pulse: 'toyDog'
+    };
+  }
+  if (!ms.feedReal) {
+    return {
+      phase: 5,
+      text: '🥣 第3步：把「狗粮碗」分别拖给真小狗和玩具狗，看看谁会吃东西！',
+      voice: '现在把狗粮碗分别拖给真小狗和玩具狗，看看谁会吃东西！',
+      pulse: 'feedDog'
+    };
+  }
+  return {
+    phase: 6,
+    text: '🎉 全部探索完成！快在科学小结论卡片里答对题目领小红花吧！',
+    voice: CONCL_VOICE,
+    pulse: 'done'
+  };
+}
+
+function updateGuide(speakIt, immediate) {
+  var info = getGuideInfo();
+  var changed = info.phase !== guidePhase;
+  guidePhase = info.phase;
+  guideBarEl.textContent = info.text;
+  if (changed) {
+    guideBarEl.classList.remove('flash');
+    void guideBarEl.offsetWidth;
+    guideBarEl.classList.add('flash');
+    setTimeout(function () { guideBarEl.classList.remove('flash'); }, 550);
+  }
+  if (speakIt && (changed || immediate)) {
+    if (guideTimer) { clearTimeout(guideTimer); guideTimer = null; }
+    var gen = resetGen;
+    if (immediate) {
+      speak(info.voice, true);
+    } else if (!celebrated && info.phase < 6) {
+      guideTimer = setTimeout(function () {
+        if (gen !== resetGen || celebrated) return;
+        speak(info.voice);
+      }, 1450);
+    }
+  }
+}
+
+function syncStamps() {
+  var nextB = ms.butterfly;
+  var nextD = ms.petReal && ms.feedReal;
+  var nextL = ms.butterfly && ms.petReal && ms.feedReal && ms.testToy;
+  if (nextB && !kinds.b) { kinds.b = true; $('#stB').classList.add('lit'); }
+  if (nextD && !kinds.d) { kinds.d = true; $('#stD').classList.add('lit'); }
+  if (nextL && !kinds.l) { kinds.l = true; $('#stL').classList.add('lit'); }
+}
+
+function markAct(v) {
+  if (!acted[v]) { acted[v] = true; var el = document.querySelector('.verb[data-v="' + v + '"]'); if (el) el.classList.add('done'); }
+  actions++;
+}
+function launchConfetti() {
+  var box = $('#confetti');
+  var cols = ['#f97316', '#facc15', '#22c55e', '#38bdf8', '#ec4899', '#a855f7'];
+  for (var i = 0; i < 36; i++) {
+    var d = document.createElement('div');
+    d.className = 'conf';
+    d.style.left = (20 + Math.random() * 60) + '%';
+    d.style.top = (14 + Math.random() * 14) + '%';
+    d.style.background = cols[i % cols.length];
+    d.style.setProperty('--dx', ((Math.random() - 0.5) * 340).toFixed(0) + 'px');
+    d.style.setProperty('--dy', (180 + Math.random() * 320).toFixed(0) + 'px');
+    d.style.setProperty('--rot', ((Math.random() - 0.5) * 720).toFixed(0) + 'deg');
+    d.style.animationDelay = (Math.random() * 0.28).toFixed(2) + 's';
+    box.appendChild(d);
+    (function (el) { setTimeout(function () { el.remove(); }, 2500); })(d);
+  }
+}
+function checkComplete() {
+  syncStamps();
+  var allFour = ms.butterfly && ms.petReal && ms.feedReal && ms.testToy;
+  if (allFour && !found['l:bio']) {
+    found['l:bio'] = true; foundN++;
+    var el = document.createElement('div'); el.className = 'stk';
+    el.innerHTML = '<i style="background:#16a34a">🌱</i><span>' + ruby('蝴蝶和小狗是生物', 'hú dié hé xiǎo gǒu shì shēng wù') + '</span>';
+    var list = $('#ntList'); list.insertBefore(el, list.firstChild);
+    $('#ntCount').textContent = foundN;
+  }
+  updateGuide(true, false);
+  if (celebrated) return;
+  if (allFour) {
+    celebrated = true;
+    saveProgress('k1a-06', true);
+    if (guideTimer) { clearTimeout(guideTimer); guideTimer = null; }
+    var gen = resetGen;
+    setTimeout(function () {
+      if (gen !== resetGen) return;
+      sWin();
+      launchConfetti();
+      $('#winToast').classList.add('show');
+      speak('太棒啦！全部探索都完成啦！' + CONCL_VOICE);
+    }, 520);
+  }
+}
+function discover(key, kind, text, py, color) {
+  if (found[key]) return;
+  found[key] = true; foundN++;
+  var el = document.createElement('div'); el.className = 'stk';
+  var icon = kind === 'b' ? '🦋' : kind === 'd' ? '🐶' : '🌱';
+  el.innerHTML = '<i style="background:' + color + '">' + icon + '</i><span>' + ruby(text, py) + '</span>';
+  var list = $('#ntList'); list.insertBefore(el, list.firstChild);
+  while (list.children.length > 12) list.removeChild(list.lastChild);
+  $('#ntCount').textContent = foundN;
+  sDing();
+  speak(text);
+  checkComplete();
+}
+
+/* ===================== 动物与窗帘物理动作 ===================== */
+var curtWave = 0;
+function shakeCurtain() {
+  dismissCues();
+  voiceCueTimer = 0;
+  curtWave = 1.0;
+  sCurtain();
+  markAct('curtain');
+  ms.butterfly = true;
+  if (bfState.mode === 'perch') {
+    bfState.mode = 'circle'; bfState.t = 0;
+    sFlutter();
+    floatWord('受惊会飞!', 'shòu jīng huì fēi', bfPerch.clone().add(new THREE.Vector3(0.2, 0.55, 0)), 'good');
+    discover('b:fly', 'b', '蝴蝶受惊会飞起', 'hú dié shòu jīng huì fēi qǐ', '#f59e0b');
+  } else {
+    checkComplete();
+  }
+}
+
+function feedButterfly(dishPos) {
+  dismissCues();
+  voiceCueTimer = 0;
+  ms.butterfly = true;
+  bfState.mode = 'sip'; bfState.t = 0;
+  bfState.sipTarget = dishPos.clone().add(new THREE.Vector3(0, 0.36, 0));
+  sFlutter();
+  markAct('feed');
+  floatWord('会找食物!', 'huì zhǎo shí wù', dishPos.clone().add(new THREE.Vector3(0, 0.85, 0)), 'good');
+  discover('b:nectar', 'b', '蝴蝶会飞去吃花蜜', 'hú dié huì fēi qù chī huā mì', '#ec4899');
+  checkComplete();
+}
+
+function feedRealDog(bowlPos) {
+  dismissCues();
+  voiceCueTimer = 0;
+  ms.feedReal = true;
+  rDog.munch = 1.8; rDog.wagBoost = 2.4;
+  rDog.target.set(THREE.MathUtils.clamp(bowlPos.x, -0.5, 1.0), BASE + 0.03, THREE.MathUtils.clamp(bowlPos.z - 0.52, -0.9, 0.8));
+  sMunch();
+  markAct('feed');
+  burst(rDog.pos.clone().add(new THREE.Vector3(0, 0.85, 0)));
+  floatWord('真香呀!', 'zhēn xiāng ya', rDog.pos.clone().add(new THREE.Vector3(0, 1.15, 0)), 'good');
+  discover('d:eat', 'd', '真小狗会吃食物', 'zhēn xiǎo gǒu huì chī shí wù', '#16a34a');
+  checkComplete();
+}
+
+function testToyDogFood() {
+  dismissCues();
+  voiceCueTimer = 0;
+  ms.testToy = true;
+  sNope();
+  markAct('feed');
+  floatWord('不吃食物!', 'bù chī shí wù', tDog.pos.clone().add(new THREE.Vector3(0, 1.15, 0)), 'cool');
+  discover('d:toynofood', 'd', '玩具狗不会吃食物', 'wán jù gǒu bù huì chī shí wù', '#64748b');
+  checkComplete();
+}
+
+function petRealDog() {
+  dismissCues();
+  voiceCueTimer = 0;
+  ms.petReal = true;
+  rDog.hop = 1; rDog.wagBoost = 2.2;
+  sBark();
+  markAct('play');
+  burst(rDog.pos.clone().add(new THREE.Vector3(0, 0.9, 0)));
+  floatWord('汪汪!', 'wāng wāng', rDog.pos.clone().add(new THREE.Vector3(0, 1.15, 0)), 'good');
+  discover('d:reply', 'd', '真小狗会回应', 'zhēn xiǎo gǒu huì huí yìng', '#e56d17');
+  checkComplete();
+}
+
+function toggleWindToyDog() {
+  dismissCues();
+  voiceCueTimer = 0;
+  ms.testToy = true;
+  markAct('play');
+  if (tDog.power > 0.2) {
+    tDog.power = 0; sNope();
+    floatWord('停下来了!', 'tíng xià lái le', tDog.pos.clone().add(new THREE.Vector3(0, 1.15, 0)), 'cool');
+  } else {
+    tDog.power = 3.2; sWind();
+    floatWord('上发条才动!', 'shàng fā tiáo cái dòng', tDog.pos.clone().add(new THREE.Vector3(0, 1.15, 0)), 'cool');
+    discover('d:wind', 'd', '玩具狗要上发条才动', 'wán jù gǒu yào shàng fā tiáo cái dòng', '#2563eb');
+  }
+  checkComplete();
+}
+
+/* ===================== 指针拖拽与点击 ===================== */
+var P = null, hovered = null, now = 0;
+var pickables = [curtainM];
+bfG.traverse(function (o) { if (o.isMesh) pickables.push(o); });
+rDog.g.traverse(function (o) { if (o.isMesh && o !== rDogGlow) pickables.push(o); });
+tDog.g.traverse(function (o) { if (o.isMesh && o !== tDogGlow) pickables.push(o); });
+FOODS.forEach(function (fd) { fd.g.traverse(function (o) { if (o.isMesh) pickables.push(o); }); });
+
+var dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), ptmp = new THREE.Vector3();
+function setNDC(e) { ndc.x = (e.clientX / window.innerWidth) * 2 - 1; ndc.y = -(e.clientY / window.innerHeight) * 2 + 1; raycaster.setFromCamera(ndc, camera); }
+function planePoint(e, y) { setNDC(e); dragPlane.constant = -y; return raycaster.ray.intersectPlane(dragPlane, ptmp) ? ptmp.clone() : null; }
+function pick(e) {
+  setNDC(e);
+  var h = raycaster.intersectObjects(pickables, false)[0];
+  if (!h) return null;
+  return { kind: h.object.userData.kind, food: h.object.userData.food || null };
+}
+
+canvas.addEventListener('pointerdown', function (e) {
+  audio(); welcomeVoiceOnce(); stopDemo(); introSkip();
+  var h = pick(e);
+  if (!h) return;
+  P = { kind: h.kind, food: h.food, x: e.clientX, y: e.clientY, mode: 'pending', e: { clientX: e.clientX, clientY: e.clientY } };
+  try { canvas.setPointerCapture(e.pointerId); } catch (er) {}
+});
+
+canvas.addEventListener('pointermove', function (e) {
+  if (P) {
+    var moved = Math.hypot(e.clientX - P.x, e.clientY - P.y);
+    P.e = { clientX: e.clientX, clientY: e.clientY };
+    if (P.mode === 'pending' && moved > 6) {
+      if (P.kind === 'food') { P.mode = 'drag'; P.food.dragging = true; ghost.off = true; }
+      else if (P.kind === 'curtain' || P.kind === 'butterfly') { P.mode = 'done'; ghost.off = true; shakeCurtain(); }
+    }
+    return;
+  }
+  hovered = pick(e);
+  canvas.style.cursor = hovered ? 'pointer' : 'default';
+});
+
+function finishPointer() {
+  if (!P) return;
+  if (P.mode === 'drag') {
+    var fd = P.food; fd.dragging = false;
+    if (fd.id === 'nectar') {
+      if (Math.hypot(fd.cur.x - WIN_POS.x, fd.cur.z - WIN_POS.z) < 2.2) {
+        fd.target.set(WIN_POS.x - 0.1, BASE + 0.05, WIN_POS.z + 1.05);
+        feedButterfly(fd.target);
+      } else {
+        if (Math.hypot(fd.cur.x - rDog.pos.x, fd.cur.z - rDog.pos.z) < 1.35 || Math.hypot(fd.cur.x - tDog.pos.x, fd.cur.z - tDog.pos.z) < 1.35) {
+          sNope();
+          floatWord('蝴蝶爱吃花蜜!', 'hú dié ài chī huā mì', fd.cur.clone().add(new THREE.Vector3(0, 0.7, 0)), 'cool');
+        }
+        fd.target.copy(fd.home);
+      }
+    } else {
+      var dr = Math.hypot(fd.cur.x - rDog.pos.x, fd.cur.z - rDog.pos.z);
+      var dt = Math.hypot(fd.cur.x - tDog.pos.x, fd.cur.z - tDog.pos.z);
+      if (dr < 1.35) { fd.target.set(rDog.pos.x, BASE + 0.05, rDog.pos.z + 0.72); feedRealDog(fd.target); }
+      else if (dt < 1.35) { testToyDogFood(); fd.target.copy(fd.home); }
+      else {
+        if (Math.hypot(fd.cur.x - WIN_POS.x, fd.cur.z - WIN_POS.z) < 2.0) {
+          sNope();
+          floatWord('小狗爱吃狗粮!', 'xiǎo gǒu ài chī gǒu liáng', fd.cur.clone().add(new THREE.Vector3(0, 0.7, 0)), 'cool');
+        }
+        fd.target.copy(fd.home);
+      }
+    }
+  } else if (P.mode === 'pending') {
+    ghost.off = true;
+    if (P.kind === 'curtain' || P.kind === 'butterfly') shakeCurtain();
+    else if (P.kind === 'realDog') petRealDog();
+    else if (P.kind === 'toyDog' || P.kind === 'windKey') toggleWindToyDog();
+    else if (P.kind === 'food') {
+      var f = P.food;
+      if (f.id === 'nectar') {
+        var toN = new THREE.Vector3(WIN_POS.x - 0.1, BASE + 0.05, WIN_POS.z + 1.05);
+        f.flying = { from: f.cur.clone(), to: toN, t: 0, cb: function () { feedButterfly(toN); } };
+      } else {
+        var toB = new THREE.Vector3(RDOG_HOME.x, BASE + 0.05, RDOG_HOME.z + 0.72);
+        f.flying = { from: f.cur.clone(), to: toB, t: 0, cb: function () { feedRealDog(toB); } };
+      }
+    }
+  }
+  P = null;
+}
+canvas.addEventListener('pointerup', finishPointer);
+canvas.addEventListener('pointercancel', finishPointer);
+canvas.addEventListener('pointerleave', function () { if (!P) hovered = null; });
+
+/* ===================== 幽灵手示范（随当前步骤同步指引） ===================== */
+var ghost = { off: false, t: 0 }, handEl = $('#hand');
+function updateGhost(dt) {
+  if (voiceCueTimer > 0) voiceCueTimer = Math.max(0, voiceCueTimer - dt);
+  var showCue = (!ghost.off && intro.t >= 1.5) || voiceCueTimer > 0;
+  if (!showCue || celebrated || demo) { handEl.style.opacity = 0; return; }
+  ghost.t = (ghost.t + dt) % 2.4;
+  var info = getGuideInfo();
+  var a, b, arc = 0;
+  if (info.pulse === 'bothDogs' || info.pulse === 'realDog') {
+    a = toScreen(rDog.pos.clone().add(new THREE.Vector3(0, 0.95, 0)));
+    b = toScreen(rDog.pos.clone().add(new THREE.Vector3(0, 0.55, 0)));
+  } else if (info.pulse === 'toyDog') {
+    a = toScreen(tDog.pos.clone().add(new THREE.Vector3(0, 1.1, 0)));
+    b = toScreen(tDog.pos.clone().add(new THREE.Vector3(0, 0.72, 0)));
+  } else if (info.pulse === 'feedDog') {
+    a = toScreen(FMAP.bowl.home.clone().add(new THREE.Vector3(0, 0.2, 0)));
+    b = toScreen(rDog.pos.clone().add(new THREE.Vector3(0, 0.65, 0)));
+    arc = 52;
+  } else {
+    a = toScreen(new THREE.Vector3(WIN_POS.x - 0.65, BASE + 1.25, WIN_POS.z + 0.25));
+    b = toScreen(new THREE.Vector3(WIN_POS.x + 0.15, BASE + 1.15, WIN_POS.z + 0.25));
+  }
+  var u = Math.min(1, Math.max(0, (ghost.t - 0.35) / 1.25)), e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+  var x = a.x + (b.x - a.x) * e, y = a.y + (b.y - a.y) * e - Math.sin(e * Math.PI) * arc;
+  handEl.style.opacity = ghost.t < 2.05 ? 0.95 : 0;
+  handEl.style.transform = 'translate(' + (x - 20) + 'px,' + (y - 6) + 'px) scale(' + (ghost.t < 0.35 || ghost.t > 1.65 ? 1 : 0.9) + ')';
+}
+
+/* ===================== 老师演示 ===================== */
+var demo = null;
+var DEMO = [
+  ['curtain'], ['wait', 2.2],
+  ['nectar'], ['wait', 2.0],
+  ['petDog'], ['wait', 1.4],
+  ['feedDog'], ['wait', 1.9],
+  ['windToy'], ['wait', 1.8],
+  ['stopToy'], ['wait', 1.0], ['end']
+];
+function startDemo() { resetAll(true); demo = { i: 0, t: 0 }; ghost.off = true; $('#demoBtn').classList.add('on'); $('#demoBtn').textContent = '■ 停止'; }
+function stopDemo() { if (!demo) return; demo = null; $('#demoBtn').classList.remove('on'); $('#demoBtn').textContent = '▶ 演示'; }
+function stepDemo(dt) {
+  if (!demo) return;
+  var s = DEMO[demo.i]; demo.t += dt;
+  if (!s || s[0] === 'end') { stopDemo(); return; }
+  if (s[0] === 'wait') { if (demo.t >= s[1]) { demo.i++; demo.t = 0; } return; }
+  if (s[0] === 'curtain') { shakeCurtain(); demo.i++; demo.t = 0; return; }
+  if (s[0] === 'petDog') { petRealDog(); demo.i++; demo.t = 0; return; }
+  if (s[0] === 'nectar') {
+    var nf = FMAP.nectar, toN = new THREE.Vector3(WIN_POS.x - 0.1, BASE + 0.05, WIN_POS.z + 1.05);
+    nf.flying = { from: nf.cur.clone(), to: toN, t: 0, cb: function () { feedButterfly(toN); } };
+    demo.i++; demo.t = 0; return;
+  }
+  if (s[0] === 'feedDog') {
+    var bf = FMAP.bowl, toB = new THREE.Vector3(RDOG_HOME.x, BASE + 0.05, RDOG_HOME.z + 0.72);
+    bf.flying = { from: bf.cur.clone(), to: toB, t: 0, cb: function () { feedRealDog(toB); } };
+    demo.i++; demo.t = 0; return;
+  }
+  if (s[0] === 'windToy') { tDog.power = 0; toggleWindToyDog(); demo.i++; demo.t = 0; return; }
+  if (s[0] === 'stopToy') { toggleWindToyDog(); testToyDogFood(); demo.i++; demo.t = 0; }
+}
+
+/* ===================== 开场与重来 ===================== */
+var intro = { t: 0, done: false };
+function introSkip() { if (intro.t < 1.5) intro.t = 1.5; }
+function backOut(t) { var c = 1.7; t = Math.min(1, Math.max(0, t)); return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); }
+function updateIntro(dt) {
+  if (intro.done) return;
+  if (!intro.t0) intro.t0 = performance.now();
+  intro.t = Math.max(intro.t + dt, (performance.now() - intro.t0) / 1000 * 1.4);
+  var t = intro.t;
+  var lift = Math.min(1, Math.max(0, (t - 0.2) / 0.65));
+  figCard.position.y = 0.012 + lift * 1.6;
+  figCard.material.opacity = 1 - lift;
+  figCard.visible = lift < 1;
+  board.scale.set(1, Math.max(0.01, backOut((t - 0.3) / 0.5)), 1);
+  var p1 = Math.max(0.01, backOut((t - 0.5) / 0.55));
+  winG.scale.setScalar(p1); bfG.scale.setScalar(p1);
+  rDog.pop = p1; tDog.pop = p1;
+  FOODS.forEach(function (fd, i) { fd.pop = Math.max(0.01, backOut((t - 0.72 - i * 0.1) / 0.48)); });
+  if (t >= 3.4) intro.done = true;
+}
+
+function resetAll(keepDemo) {
+  if (!keepDemo) stopDemo();
+  resetGen++;
+  if (guideTimer) { clearTimeout(guideTimer); guideTimer = null; }
+  celebrated = false;
+  voiceCueTimer = 0;
+  guidePhase = 0;
+  ms = { butterfly: false, petReal: false, feedReal: false, testToy: false };
+  $('#winToast').classList.remove('show');
+  $('#confetti').innerHTML = '';
+  $('#quizFb').textContent = ''; $('#quizFb').className = 'quiz-fb';
+  document.querySelectorAll('#quizOpts .qopt').forEach(function (b) { b.classList.remove('ok', 'err'); });
+  curtWave = 0; bfState.mode = 'perch'; bfState.pos.copy(bfPerch);
+  rDog.target.copy(RDOG_HOME); rDog.munch = 0; rDog.hop = 0; rDog.wagBoost = 0;
+  tDog.power = 0; tDog.phase = 0; tDog.pos.copy(TDOG_HOME);
+  FOODS.forEach(function (fd) { fd.flying = null; fd.dragging = false; fd.target.copy(fd.home); });
+  sparkles.forEach(function (p) { p.life = 0; p.m.visible = false; });
+  found = {}; foundN = 0; kinds = { b: false, d: false, l: false };
+  $('#ntList').innerHTML = ''; $('#ntCount').textContent = '0';
+  document.querySelectorAll('.stamp').forEach(function (s) { s.classList.remove('lit'); });
+  updateGuide(false, false);
+}
+
+/* ===================== 主循环 ===================== */
+var last = performance.now();
+function frame(t) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (t - last) / 1000)); last = t; now = t / 1000;
+  updateIntro(dt);
+  stepDemo(dt);
+
+  // 蓝窗帘波浪摆动
+  if (curtWave > 0) curtWave = Math.max(0, curtWave - dt * 0.65);
+  var cPos = curtGeo.attributes.position;
+  for (var i = 0; i < cPos.count; i++) {
+    var x0 = curtBase[i * 3], y0 = curtBase[i * 3 + 1];
+    var frac = Math.min(1, -y0 / CURT_H);
+    var pleat = Math.sin(x0 * 11) * 0.045;
+    var sway = Math.sin(now * 10 + x0 * 4 - frac * 3) * curtWave * 0.22 * frac + Math.sin(now * 2 + x0 * 3) * 0.025 * frac;
+    cPos.setXYZ(i, x0 + sway * 0.55, y0, pleat + sway);
+  }
+  cPos.needsUpdate = true;
+  curtGeo.computeVertexNormals();
+
+  // 蝴蝶动画（停歇 / 受惊盘旋 / 飞来吸花蜜）
+  if (bfState.mode === 'perch') {
+    bfState.pos.lerp(bfPerch, 0.14);
+    bfG.rotation.set(0.35, 0.2, 0);
+    var slowWing = 0.25 + Math.sin(now * 2.2) * 0.15;
+    wingL.rotation.y = slowWing; wingR.rotation.y = -slowWing;
+  } else if (bfState.mode === 'circle') {
+    bfState.t += dt;
+    var u = bfState.t / 2.6;
+    if (u >= 1) { bfState.mode = 'perch'; }
+    else {
+      var ang = u * Math.PI * 2;
+      bfState.pos.set(
+        WIN_POS.x + Math.sin(ang) * 0.95,
+        BASE + 1.45 + Math.sin(ang * 2) * 0.38,
+        WIN_POS.z + 0.95 - Math.cos(ang) * 0.65
+      );
+      bfG.rotation.set(0, -ang + Math.PI / 2, 0);
+      var flap = Math.sin(now * 34) * 0.95;
+      wingL.rotation.y = flap; wingR.rotation.y = -flap;
+    }
+  } else if (bfState.mode === 'sip') {
+    bfState.t += dt;
+    bfState.pos.lerp(bfState.sipTarget, 1 - Math.exp(-5 * dt));
+    bfState.pos.y += Math.sin(now * 7) * 0.015;
+    bfG.rotation.set(0.15, Math.sin(now * 3) * 0.3, 0);
+    var sFlap = Math.sin(now * 26) * 0.85;
+    wingL.rotation.y = sFlap; wingR.rotation.y = -sFlap;
+    if (bfState.t > 0.7 && !bfState.sparked) { bfState.sparked = true; burst(bfState.sipTarget); }
+    if (bfState.t > 2.8) { bfState.mode = 'perch'; bfState.sparked = false; FMAP.nectar.target.copy(FMAP.nectar.home); }
+  }
+  bfG.position.copy(bfState.pos);
+
+  // 真小狗动画（呼吸、摇尾巴、啃狗粮、欢呼蹦跳）
+  rDog.pos.lerp(rDog.target, 1 - Math.exp(-8 * dt));
+  if (rDog.hop > 0) rDog.hop = Math.max(0, rDog.hop - dt * 2.5);
+  if (rDog.munch > 0) {
+    rDog.munch = Math.max(0, rDog.munch - dt);
+    rdHead.rotation.x = 0.55 + Math.sin(now * 16) * 0.2;
+    if (rDog.munch === 0) { rDog.target.copy(RDOG_HOME); FMAP.bowl.target.copy(FMAP.bowl.home); }
+  } else {
+    rdHead.rotation.x += (0 - rdHead.rotation.x) * 0.2;
+  }
+  if (rDog.wagBoost > 0) rDog.wagBoost = Math.max(0, rDog.wagBoost - dt);
+  var wagSpeed = rDog.wagBoost > 0 ? 18 : 5.5;
+  rdTail.rotation.z = Math.sin(now * wagSpeed) * (rDog.wagBoost > 0 ? 0.65 : 0.25);
+  rDog.g.position.set(rDog.pos.x, rDog.pos.y + Math.sin(rDog.hop * Math.PI) * 0.35, rDog.pos.z);
+  rDog.body.scale.setScalar(rDog.pop * (1 + Math.sin(now * 3) * 0.015));
+
+  // 发条玩具狗动画（发条转动时生硬迈腿走，能量耗尽彻底停死）
+  if (tDog.power > 0) {
+    tDog.power = Math.max(0, tDog.power - dt);
+    tDog.phase += dt * 10;
+    keyG.rotation.y -= dt * 8;
+    tDog.pos.z = TDOG_HOME.z + Math.sin(tDog.phase * 0.35) * 0.38;
+    tdLegs.forEach(function (lg, idx) {
+      lg.rotation.x = Math.sin(tDog.phase + (idx % 2 ? Math.PI : 0)) * 0.45;
+    });
+    if (tDog.power === 0) {
+      tdLegs.forEach(function (lg) { lg.rotation.x = 0; });
+      floatWord('停下来了!', 'tíng xià lái le', tDog.pos.clone().add(new THREE.Vector3(0, 1.15, 0)), 'cool');
+    }
+  } else {
+    tdLegs.forEach(function (lg) { lg.rotation.x *= 0.85; });
+  }
+  tDog.g.position.copy(tDog.pos);
+  tDog.body.scale.setScalar(tDog.pop);
+
+  // 食物更新
+  var nearRD = false, nearTD = false;
+  var curGuide = getGuideInfo();
+  var pulseBob = 0.5 + 0.5 * Math.sin(now * 5.2);
+  var kk = 1 - Math.exp(-16 * dt);
+  FOODS.forEach(function (fd) {
+    if (fd.dragging && P && P.e) {
+      var fp = planePoint(P.e, BASE + 0.65);
+      if (fp) fd.target.set(THREE.MathUtils.clamp(fp.x, BOARD.x0, BOARD.x1), BASE + 0.65, THREE.MathUtils.clamp(fp.z, BOARD.z0, BOARD.z1));
+      if (fd.id === 'bowl') {
+        if (Math.hypot(fd.cur.x - rDog.pos.x, fd.cur.z - rDog.pos.z) < 1.35) nearRD = true;
+        if (Math.hypot(fd.cur.x - tDog.pos.x, fd.cur.z - tDog.pos.z) < 1.35) nearTD = true;
+      }
+    } else if (fd.flying) {
+      fd.flying.t += dt / 0.6;
+      var u = Math.min(1, fd.flying.t), e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+      fd.target.lerpVectors(fd.flying.from, fd.flying.to, e);
+      fd.target.y += Math.sin(u * Math.PI) * 0.65;
+      if (u >= 1) { var cb = fd.flying.cb; fd.flying = null; if (cb) cb(); }
+    }
+    fd.cur.lerp(fd.target, fd.dragging ? 1 - Math.exp(-22 * dt) : kk);
+    var hv = (hovered && hovered.food === fd && !P) ? 1 : 0;
+    fd.hover += (hv - fd.hover) * 0.25;
+    var pulseFd = !celebrated && !fd.dragging && !fd.flying && (
+      (curGuide.pulse === 'butterfly' && fd.id === 'nectar') ||
+      (curGuide.pulse === 'feedDog' && fd.id === 'bowl')
+    );
+    fd.g.position.set(fd.cur.x, fd.cur.y + fd.hover * 0.08 + (pulseFd ? pulseBob * 0.1 : 0), fd.cur.z);
+    fd.body.scale.setScalar(fd.pop * (1 + (pulseFd ? pulseBob * 0.08 : 0)));
+
+    var showL = (intro.t > 0.8 && intro.t < 3.4) || fd.hover > 0.4 || fd.dragging || pulseFd;
+    if (showL) {
+      var p2 = toScreen(fd.cur.clone().add(new THREE.Vector3(0, fd.h + 0.14, 0)));
+      fd.lbl.style.transform = 'translate(' + p2.x + 'px,' + p2.y + 'px) translate(-50%,-100%)';
+    }
+    fd.lbl.classList.toggle('show', !!showL);
+  });
+
+  var pulseRD = !celebrated && (curGuide.pulse === 'bothDogs' || curGuide.pulse === 'realDog' || curGuide.pulse === 'feedDog');
+  var pulseTD = !celebrated && (curGuide.pulse === 'bothDogs' || curGuide.pulse === 'toyDog');
+  rDogGlow.material.opacity += ((nearRD ? 0.85 : (pulseRD ? 0.25 + pulseBob * 0.42 : 0)) - rDogGlow.material.opacity) * 0.25;
+  tDogGlow.material.opacity += ((nearTD ? 0.85 : (pulseTD ? 0.25 + pulseBob * 0.42 : 0)) - tDogGlow.material.opacity) * 0.25;
+
+  // 场景标签（引导阶段清晰标出真小狗和玩具狗，彻底解决不知道怎么区分两只狗）
+  var showIntro = intro.t > 0.8 && intro.t < 3.4;
+  var showC = showIntro || (hovered && hovered.kind === 'curtain') || (!celebrated && curGuide.pulse === 'butterfly');
+  if (showC) {
+    var pc = toScreen(new THREE.Vector3(WIN_POS.x - 0.55, BASE + 2.15, WIN_POS.z + 0.2));
+    curtLbl.style.transform = 'translate(' + pc.x + 'px,' + pc.y + 'px) translate(-50%,-100%)';
+  }
+  curtLbl.classList.toggle('show', !!showC);
+
+  var showBf = showIntro || (hovered && hovered.kind === 'butterfly') || bfState.mode !== 'perch';
+  if (showBf) {
+    var pbf = toScreen(bfState.pos.clone().add(new THREE.Vector3(0, 0.28, 0)));
+    bfLbl.style.transform = 'translate(' + pbf.x + 'px,' + pbf.y + 'px) translate(-50%,-100%)';
+  }
+  bfLbl.classList.toggle('show', !!showBf);
+
+  var showRD = showIntro || nearRD || pulseRD || (hovered && hovered.kind === 'realDog');
+  if (showRD) {
+    var prd = toScreen(rDog.pos.clone().add(new THREE.Vector3(0, 0.98, 0)));
+    rDogLbl.style.transform = 'translate(' + prd.x + 'px,' + prd.y + 'px) translate(-50%,-100%)';
+  }
+  rDogLbl.classList.toggle('show', !!showRD);
+
+  var showTD = showIntro || nearTD || pulseTD || (hovered && (hovered.kind === 'toyDog' || hovered.kind === 'windKey'));
+  if (showTD) {
+    var ptd = toScreen(tDog.pos.clone().add(new THREE.Vector3(0, 1.05, 0)));
+    tDogLbl.style.transform = 'translate(' + ptd.x + 'px,' + ptd.y + 'px) translate(-50%,-100%)';
+  }
+  tDogLbl.classList.toggle('show', !!showTD);
+
+  // 星光粒子
+  sparkles.forEach(function (p) {
+    if (p.life <= 0) { p.m.visible = false; return; }
+    p.life -= dt;
+    p.v.y -= 4.0 * dt;
+    p.m.position.addScaledVector(p.v, dt);
+    p.m.scale.setScalar(Math.max(0.01, p.life * 1.8));
+  });
+
+  updateGhost(dt);
+  $('#verbs').style.opacity = actions > 8 ? 0.35 : 1;
+  renderer.render(scene, camera);
+}
+
+/* ===================== 按钮、小测验与自测钩子 ===================== */
+$('#voiceBtn').addEventListener('click', function () {
+  audio(); dismissCues(); introSkip();
+  voiceOn = true; voiceWelcomed = true;
+  this.classList.add('on'); this.textContent = '🔊 语音';
+  voiceCueTimer = 4.0; ghost.t = 0;
+  updateGuide(true, true);
+});
+$('#ntToggle').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+document.querySelectorAll('#quizOpts .qopt').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    audio();
+    var ok = this.getAttribute('data-ok') === '1';
+    var fb = $('#quizFb');
+    if (ok) {
+      document.querySelectorAll('#quizOpts .qopt').forEach(function (b) { b.classList.remove('err'); });
+      this.classList.add('ok');
+      fb.className = 'quiz-fb ok';
+      fb.textContent = '🌸 太棒了！获得本课小红花！真小狗是生物，会高兴地吃狗粮！';
+      sWin();
+      launchConfetti();
+      saveProgress('k1a-06', true);
+      speak('太棒了！答对啦，获得本课小红花！真小狗是有生命的生物，会高兴地吃狗粮！', true);
+    } else {
+      this.classList.add('err');
+      fb.className = 'quiz-fb err';
+      fb.textContent = '再想想哦～玩具狗没有生命，只会靠发条动，哪一只小狗会吃狗粮呀？';
+      sNope();
+      speak('再想想哦，玩具狗没有生命不会吃食物，哪一只小狗会高兴地吃狗粮呢？', true);
+    }
+  });
+});
+$('#winKeep').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgain').addEventListener('click', function () { resetAll(false); });
+$('#demoBtn').addEventListener('click', function () { audio(); dismissCues(); introSkip(); if (demo) stopDemo(); else startDemo(); });
+$('#resetBtn').addEventListener('click', function () { resetAll(false); });
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () { return { triangles: renderer.info.render.triangles, pixelRatio: renderer.getPixelRatio(), found: foundN, ms: ms }; },
+  startDemo: startDemo
+};
+
+updateGuide(false, false);
+fit();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

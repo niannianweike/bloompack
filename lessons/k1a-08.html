@@ -1,0 +1,1205 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第8课 常见的天气 · 天气小庭院（活页）</title>
+<style>
+:root{--ink:#2a3040;--paper:#fffaf0;--line:#e3d6bd;--accent:#2b7de9}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#d9c19b;color:var(--ink);
+  font-family:"Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+ruby{ruby-align:center}
+rt{font-size:.5em;font-weight:600;color:#8a6d4a;letter-spacing:0}
+body.no-py rt{display:none}
+
+.chip{position:fixed;left:14px;top:12px;z-index:5;display:flex;align-items:center;gap:10px;
+  padding:6px 14px 6px 6px;border-radius:16px;background:rgba(255,250,240,.92);border:1.5px solid var(--line);
+  box-shadow:0 6px 18px rgba(80,55,20,.12)}
+.home{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:var(--ink);font-size:20px;font-weight:800}
+.home:hover{border-color:var(--accent);color:var(--accent)}
+.chip h1{margin:0;font-size:20px;line-height:1.5;font-weight:800}
+.chip small{display:block;font-size:12px;color:#8a7b62;font-weight:700;margin-top:-2px}
+
+.tools{position:fixed;right:14px;top:12px;z-index:7;display:flex;gap:8px}
+.tbtn{position:relative;height:40px;padding:0 14px;border-radius:13px;border:1.5px solid var(--line);background:rgba(255,250,240,.94);
+  font:inherit;font-size:15px;font-weight:800;color:var(--ink);cursor:pointer;box-shadow:0 3px 0 #e2d2b5}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:#1c5eb8;color:#fff;box-shadow:0 3px 0 #1c5eb8}
+.tbtn.attn{animation:btnGlow 1.5s ease-in-out infinite}
+@keyframes btnGlow{0%,100%{box-shadow:0 3px 0 #1c5eb8,0 0 0 0 rgba(43,125,233,.45)}50%{box-shadow:0 3px 0 #1c5eb8,0 0 0 8px rgba(43,125,233,0)}}
+.tbtn:not(.on).attn{animation:btnGlowWarm 1.6s ease-in-out infinite}
+@keyframes btnGlowWarm{0%,100%{box-shadow:0 3px 0 #e2d2b5,0 0 0 0 rgba(245,158,11,.5)}50%{box-shadow:0 3px 0 #e2d2b5,0 0 0 8px rgba(245,158,11,0)}}
+.btn-cue{position:absolute;top:calc(100% + 7px);left:50%;transform:translateX(-50%);white-space:nowrap;pointer-events:none;
+  padding:2px 8px;border-radius:99px;background:#f59e0b;color:#fff;font-size:11px;font-weight:800;line-height:1.4;
+  box-shadow:0 4px 10px rgba(180,90,0,.25);transition:opacity .35s,transform .35s;animation:cueBob 1.5s ease-in-out infinite}
+.btn-cue::before{content:"";position:absolute;bottom:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-bottom-color:#f59e0b}
+.btn-cue.blue{background:#2b7de9;box-shadow:0 4px 10px rgba(29,95,192,.25)}
+.btn-cue.blue::before{border-bottom-color:#2b7de9}
+@keyframes cueBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(3px)}}
+body.cues-off .btn-cue{opacity:0;animation:none;transform:translateX(-50%) translateY(-4px)}
+body.cues-off .tbtn.attn{animation:none}
+
+#guideBar{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:6;
+  max-width:min(460px,calc(100vw - 540px));padding:7px 15px;border-radius:99px;
+  background:rgba(255,250,240,.96);border:2px solid var(--accent);box-shadow:0 6px 18px rgba(43,125,233,.18);
+  display:flex;align-items:center;gap:7px;font-size:14px;font-weight:800;line-height:1.45;color:var(--ink);cursor:pointer;
+  transition:transform .2s,border-color .2s,background .2s}
+#guideBar:hover{transform:translateX(-50%) translateY(-1px)}
+#guideBar .g-ico{font-size:17px;flex:none}
+#guideBar .g-txt{overflow:hidden;text-overflow:ellipsis}
+#guideBar.done{border-color:#16a34a;background:#f0fdf4;color:#166534}
+@media (max-width:1220px){
+  #guideBar{top:64px;max-width:min(480px,calc(100vw - 260px));left:14px;transform:none}
+  #guideBar:hover{transform:translateY(-1px)}
+}
+
+#notes{position:fixed;right:14px;top:86px;z-index:4;width:236px;max-height:calc(100% - 190px);overflow:hidden;
+  padding:9px 10px 10px;border-radius:16px;background:rgba(255,250,240,.92);border:1.5px solid var(--line);
+  box-shadow:0 8px 22px rgba(80,55,20,.12);transition:opacity .3s,top .3s}
+body.cues-off #notes{top:64px;max-height:calc(100% - 170px)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;font-size:15px;font-weight:800;margin-bottom:6px;gap:6px}
+.nt-r{display:flex;align-items:center;gap:6px}
+.nt-tgl{height:24px;padding:0 8px;border-radius:8px;border:1px solid var(--line);background:#fff;
+  font:inherit;font-size:12px;font-weight:800;color:#6e5e46;cursor:pointer}
+.nt-tgl:hover{border-color:var(--accent);color:var(--accent)}
+#notes.collapsed .stamps,#notes.collapsed #ntList{display:none}
+#notes.collapsed .nt-head{margin-bottom:0}
+.stamps{display:flex;gap:4px;margin-bottom:7px}
+.stamp{flex:1;text-align:center;padding:3px 0 2px;border-radius:9px;border:1.5px dashed #d8c7a6;color:#b3a283;font-size:12px;font-weight:800;line-height:1.45}
+.stamp.lit{border-style:solid;border-color:#2b7de9;background:#eaf3ff;color:#1d5fc0;animation:pop .45s cubic-bezier(.2,1.6,.4,1)}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:152px;overflow-y:auto;padding-right:2px}
+.stk{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:11px;background:#fff;border:1.5px solid #e6dcc8;
+  font-size:15px;font-weight:800;line-height:1.65;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+.stk i{font-style:normal;width:24px;height:24px;flex:none;border-radius:7px;display:grid;place-items:center;color:#fff;font-size:13px}
+.stk b{color:#1d5fc0}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:20}
+#winToast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:22;display:none;flex-direction:column;align-items:center;gap:10px;
+  padding:18px 20px;border-radius:22px;background:rgba(255,250,240,.98);border:2.5px solid var(--accent);
+  box-shadow:0 16px 40px rgba(42,48,64,.28);text-align:center;width:min(450px,92vw);max-height:85vh;overflow-y:auto}
+#winToast.show{display:flex;animation:popCenter .45s cubic-bezier(.2,1.5,.4,1)}
+@keyframes popCenter{0%{transform:translate(-50%,-50%) scale(.72);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+#winToast .medal{font-size:40px;line-height:1}
+#winToast .wmsg{font-size:18px;font-weight:900;line-height:1.6;color:var(--ink)}
+.concl-box{width:100%;text-align:left;padding:10px 13px;border-radius:14px;background:#eef6ff;border:1.5px solid #93c5fd;font-size:14px;line-height:1.65;color:#1e3a5f}
+.concl-box .cb-ttl{font-weight:900;color:#1d5fc0;margin-bottom:3px;font-size:14px}
+.quiz-box{width:100%;text-align:left;padding:10px 13px;border-radius:14px;background:#fff8eb;border:1.5px solid #f3c98b}
+.quiz-box .qz-ttl{font-size:14px;font-weight:900;color:#b45309;margin-bottom:5px}
+.quiz-box .qz-q{font-size:14px;font-weight:800;color:var(--ink);margin-bottom:8px;line-height:1.5}
+.quiz-opts{display:flex;flex-direction:column;gap:6px}
+.qopt{width:100%;text-align:left;padding:8px 12px;border-radius:11px;border:1.5px solid #e5d4b3;background:#fff;
+  font:inherit;font-size:14px;font-weight:800;color:var(--ink);cursor:pointer;transition:transform .12s,border-color .15s,background .15s}
+.qopt:hover:not(:disabled){border-color:var(--accent);background:#f5faff;transform:translateX(2px)}
+.qopt.ok{border-color:#16a34a;background:#dcfce7;color:#166534}
+.qopt.no{border-color:#f59e0b;background:#fef3c7;color:#92400e}
+.quiz-fb{margin-top:7px;font-size:13px;font-weight:800;line-height:1.5;min-height:18px}
+.quiz-fb.ok{color:#15803d}
+.quiz-fb.no{color:#b45309}
+#winToast .wacts{display:flex;gap:10px;margin-top:2px}
+#winToast .wact{height:38px;padding:0 16px;border-radius:12px;border:1.5px solid var(--line);background:#fff;
+  font:inherit;font-size:14px;font-weight:800;color:var(--ink);cursor:pointer;box-shadow:0 2px 0 #e2d2b5}
+#winToast .wact.pri{background:var(--accent);border-color:#1c5eb8;color:#fff;box-shadow:0 2px 0 #1c5eb8}
+
+/* 底部 5 天气图标坞 */
+#dock{position:fixed;left:50%;bottom:66px;transform:translateX(-50%);z-index:5;display:flex;gap:8px;
+  padding:6px 10px;border-radius:20px;background:rgba(255,250,240,.94);border:1.5px solid var(--line);
+  box-shadow:0 8px 22px rgba(80,55,20,.16)}
+.wbtn{position:relative;display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:14px;border:1.5px solid transparent;
+  background:#fff;font:inherit;font-size:17px;font-weight:800;line-height:1.5;color:var(--ink);cursor:pointer;
+  box-shadow:0 2px 0 #e6d8be;transition:transform .15s,background .15s,border-color .15s;white-space:nowrap}
+.wbtn svg{width:22px;height:22px;flex:none}
+.wbtn:hover{border-color:#93c5fd;transform:translateY(-2px)}
+.wbtn.on{background:#2b7de9;border-color:#1c5eb8;color:#fff;box-shadow:0 3px 0 #1c5eb8}
+.wbtn.on rt{color:#dbeafe}
+.wbtn.done-dot::after{content:"✓";position:absolute;top:-5px;right:-4px;width:16px;height:16px;border-radius:50%;
+  background:#16a34a;color:#fff;font-size:11px;font-weight:900;display:grid;place-items:center;box-shadow:0 2px 4px rgba(0,0,0,.18)}
+.wbtn.guide-pulse{border-color:#f59e0b;animation:wPulse 1.25s ease-in-out infinite}
+@keyframes wPulse{0%,100%{box-shadow:0 2px 0 #e6d8be,0 0 0 0 rgba(245,158,11,.65);transform:translateY(0)}50%{box-shadow:0 4px 0 #e6d8be,0 0 0 9px rgba(245,158,11,0);transform:translateY(-3px)}}
+
+#verbs{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:4;display:flex;gap:10px;transition:opacity .5s}
+.verb{display:flex;align-items:center;gap:7px;padding:5px 13px;border-radius:99px;background:rgba(255,250,240,.94);
+  border:1.5px solid var(--line);font-size:16px;font-weight:800;box-shadow:0 4px 14px rgba(80,55,20,.12);white-space:nowrap}
+.verb svg{width:20px;height:20px}
+.verb.done{border-color:#16a34a;color:#15803d;background:#effaf2}
+.verb.done::after{content:"✓";font-weight:900;color:#16a34a}
+
+#labels{position:fixed;inset:0;pointer-events:none;z-index:3}
+.lbl{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:2px 10px;border-radius:99px;white-space:nowrap;
+  background:rgba(42,48,64,.88);color:#fff;font-size:16px;font-weight:800;line-height:1.75;opacity:0;transition:opacity .2s}
+.lbl rt{color:#ffe0b8}
+.lbl.show{opacity:1}
+.word{position:absolute;left:0;top:0;transform:translate(-50%,-100%);font-size:26px;font-weight:900;line-height:1.65;white-space:nowrap;
+  color:#1d5fc0;text-shadow:0 2px 0 #fff,0 0 8px #fff;pointer-events:none;animation:floatUp 1.3s ease-out forwards}
+.word.warm{color:#d97706}
+.word.wind{color:#0f766e}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-60%) scale(.6)}20%{opacity:1;transform:translate(-50%,-100%) scale(1.08)}100%{opacity:0;transform:translate(-50%,-190%) scale(1)}}
+
+#hand{position:fixed;left:0;top:0;width:64px;height:64px;z-index:6;pointer-events:none;opacity:0;transition:opacity .3s;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.25))}
+
+@media (max-width:760px){
+  .chip{left:8px;top:8px;padding:4px 8px 4px 4px;max-width:calc(100% - 226px)}
+  .chip h1{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chip small{display:none}
+  .home{width:30px;height:30px;flex:none}
+  .tools{right:8px;top:8px;gap:4px}.tbtn{height:32px;padding:0 8px;font-size:12px}
+  .btn-cue{display:none}
+  #guideBar{top:46px;left:8px;right:8px;max-width:none;transform:none;padding:5px 11px;font-size:12px}
+  #notes,body.cues-off #notes{top:auto;bottom:118px;right:8px;left:8px;width:auto;max-height:106px;padding:7px 10px}
+  #ntList{max-height:52px}
+  .stk{font-size:14px}
+  #dock{bottom:54px;gap:4px;padding:4px 6px;max-width:calc(100% - 12px)}
+  .wbtn{padding:4px 8px;font-size:14px;gap:4px}.wbtn svg{width:17px;height:17px}
+  #verbs{bottom:8px;gap:6px}.verb{font-size:13px;padding:4px 9px}.verb svg{width:16px;height:16px}
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="labels"></div>
+<canvas id="confetti"></canvas>
+<div id="winToast" role="status" aria-live="polite">
+  <div class="medal">🏆</div>
+  <div class="wmsg" id="winMsg"></div>
+  <div class="concl-box">
+    <div class="cb-ttl">✨ 科学小结论</div>
+    <div id="conclTxt">常见的天气有晴、阴、雨、雪、风！晴天太阳亮影子清，阴天云多，雨天起水花，雪天盖白雪，大风会把树吹弯、让风车转得飞快！</div>
+  </div>
+  <div class="quiz-box" id="quizBox">
+    <div class="qz-ttl">💡 考考你 · 答对领小红花 🌸</div>
+    <div class="qz-q">哪种天气里，庭院里的小风车会转得飞快、大树也会被吹弯？</div>
+    <div class="quiz-opts">
+      <button class="qopt" data-ok="1" type="button">💨 大风天</button>
+      <button class="qopt" data-ok="0" data-hint="再想想哦～无风的晴天风很小，风车转得很慢，哪种天气风最大呢？" type="button">☀️ 晴天无风</button>
+      <button class="qopt" data-ok="0" data-hint="再想想哦～阴天主要是云朵多、影子淡，哪种天气会把大树吹弯呢？" type="button">☁️ 阴天</button>
+    </div>
+    <div class="quiz-fb" id="quizFb"></div>
+  </div>
+  <div class="wacts">
+    <button class="wact" id="winClose" type="button">继续玩</button>
+    <button class="wact pri" id="winReplay" type="button">再玩一次</button>
+  </div>
+</div>
+
+<div class="chip">
+  <a class="home" href="../index.html" title="回到书包">‹</a>
+  <div><h1 id="ttl"></h1><small>活页 · 课本第 30 页「天气小庭院」</small></div>
+</div>
+<div id="guideBar" title="点击听当前步骤提示"><span class="g-ico" id="guideIco">🧭</span><span class="g-txt" id="guideTxt"></span></div>
+<div class="tools">
+  <button class="tbtn on attn" id="voiceBtn" type="button"><span id="voiceLbl">🔊 语音</span><span class="btn-cue blue">点我听玩法</span></button>
+  <button class="tbtn attn" id="demoBtn" type="button"><span id="demoLbl">▶ 演示</span><span class="btn-cue">不会玩点演示</span></button>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<aside id="notes">
+  <div class="nt-head"><span id="ntTitle"></span><span class="nt-r"><span id="ntCount" style="color:#1d5fc0">0</span><button class="nt-tgl" id="ntTgl" type="button">收起</button></span></div>
+  <div class="stamps"><span class="stamp" data-k="sun" id="stSUN"></span><span class="stamp" data-k="cloud" id="stCLOUD"></span><span class="stamp" data-k="rain" id="stRAIN"></span><span class="stamp" data-k="snow" id="stSNOW"></span><span class="stamp" data-k="wind" id="stWIND"></span></div>
+  <div id="ntList"></div>
+</aside>
+
+<div id="dock">
+  <button class="wbtn on" data-w="sun" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/></svg><span id="wbSun"></span></button>
+  <button class="wbtn" data-w="cloud" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18h11a4 4 0 0 0 .5-7.97A5.5 5.5 0 0 0 6.8 9.2 3.8 3.8 0 0 0 6 18z"/></svg><span id="wbCloud"></span></button>
+  <button class="wbtn" data-w="rain" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15h11a3.5 3.5 0 0 0 .4-6.97A5 5 0 0 0 7 7.4 3.5 3.5 0 0 0 6 15z"/><path d="M8 18l-1 3M12 18l-1 3M16 18l-1 3"/></svg><span id="wbRain"></span></button>
+  <button class="wbtn" data-w="snow" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3v18M4.5 7.5l15 9M19.5 7.5l-15 9"/></svg><span id="wbSnow"></span></button>
+  <button class="wbtn" data-w="wind" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 9h11a2.5 2.5 0 1 0-2.5-2.5M3 14h15a2.5 2.5 0 1 1-2.5 2.5M3 19h8"/></svg><span id="wbWind"></span></button>
+</div>
+
+<div id="verbs">
+  <span class="verb" data-v="switch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/></svg><span id="vb1"></span></span>
+  <span class="verb" data-v="sky"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 17h11a3.5 3.5 0 0 0 .4-6.97A5 5 0 0 0 7 9.4 3.5 3.5 0 0 0 6 17z"/></svg><span id="vb2"></span></span>
+  <span class="verb" data-v="yard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-6 8 6v9H4z"/></svg><span id="vb3"></span></span>
+</div>
+
+<svg id="hand" viewBox="0 0 64 64"><path d="M26 6c3 0 5 2 5 5v17l3-1c2-6 9-5 9 0 2-3 8-2 8 3 3-1 7 1 7 5v12c0 9-7 15-16 15h-6c-6 0-10-3-13-8L13 41c-2-3 0-7 4-7 2 0 3 1 4 2V11c0-3 2-5 5-5z" fill="#fff" stroke="#2a3040" stroke-width="3" stroke-linejoin="round"/></svg>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js"></script>
+<script src="../vendor/voice.js"></script>
+<script>
+(function () {
+'use strict';
+
+/* ===================== 拼音 ===================== */
+var HAN = /[\u3400-\u9fff]/, pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function ruby(text, py) {
+  var syl = py ? py.trim().split(/\s+/) : [], i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) { var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; } out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>'; }
+    else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+var $ = function (s) { return document.querySelector(s); };
+$('#ttl').innerHTML = ruby('第8课 常见的天气', 'dì kè cháng jiàn de tiān qì');
+$('#ntTitle').innerHTML = ruby('我的发现', 'wǒ de fā xiàn');
+$('#stSUN').innerHTML = ruby('晴', 'qíng');
+$('#stCLOUD').innerHTML = ruby('阴', 'yīn');
+$('#stRAIN').innerHTML = ruby('雨', 'yǔ');
+$('#stSNOW').innerHTML = ruby('雪', 'xuě');
+$('#stWIND').innerHTML = ruby('风', 'fēng');
+$('#wbSun').innerHTML = ruby('晴', 'qíng');
+$('#wbCloud').innerHTML = ruby('阴', 'yīn');
+$('#wbRain').innerHTML = ruby('雨', 'yǔ');
+$('#wbSnow').innerHTML = ruby('雪', 'xuě');
+$('#wbWind').innerHTML = ruby('风', 'fēng');
+$('#vb1').innerHTML = ruby('换天气', 'huàn tiān qì');
+$('#vb2').innerHTML = ruby('点云日', 'diǎn yún rì');
+$('#vb3').innerHTML = ruby('点庭院', 'diǎn tíng yuàn');
+$('#winMsg').innerHTML = '🌟 ' + ruby('太棒啦！全部发现集齐啦！', 'tài bàng la quán bù fā xiàn jí qí la');
+
+/* ===================== Three 基础 ===================== */
+var canvas = $('#c');
+var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera(32, 1, 0.1, 200);
+var raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2();
+
+var hemiLight = new THREE.HemisphereLight(0xfff8ee, 0xcdb08a, 0.42);
+scene.add(hemiLight);
+var dirLight = new THREE.DirectionalLight(0xfff1dc, 0.66);
+dirLight.position.set(-4, 12, 7);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.set(1024, 1024);
+(function (c) { c.left = -7; c.right = 7; c.top = 6; c.bottom = -6; c.near = 1; c.far = 40; })(dirLight.shadow.camera);
+dirLight.shadow.bias = -0.0008;
+scene.add(dirLight);
+
+var ramp = new THREE.DataTexture(new Uint8Array([120, 120, 120, 255, 185, 185, 185, 255, 232, 232, 232, 255, 255, 255, 255, 255]), 4, 1, THREE.RGBAFormat);
+ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+var INK = new THREE.LineBasicMaterial({ color: 0x2a3040, transparent: true, opacity: 0.8 });
+function toon(hex, extra) {
+  var o = { color: new THREE.Color(hex), gradientMap: ramp };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshToonMaterial(o);
+}
+function mesh(geo, mat, ink) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  if (ink !== false) m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), INK));
+  return m;
+}
+function ctex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c);
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+
+/* ===================== 书桌 + 摊开的课本 ===================== */
+var deskTex = ctex(512, 512, function (g, w, h) {
+  g.fillStyle = '#c9a36b'; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 70; i++) { g.fillStyle = 'rgba(120,80,35,' + (Math.random() * 0.05).toFixed(3) + ')'; g.fillRect(0, Math.random() * h, w, 1 + Math.random() * 3); }
+});
+deskTex.wrapS = deskTex.wrapT = THREE.RepeatWrapping; deskTex.repeat.set(3, 3);
+var deskM = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshLambertMaterial({ map: deskTex }));
+deskM.rotation.x = -Math.PI / 2; deskM.position.y = -0.2; deskM.receiveShadow = true;
+scene.add(deskM);
+
+function pageTex(right) {
+  return ctex(512, 640, function (g, w, h) {
+    g.fillStyle = '#fbf6ea'; g.fillRect(0, 0, w, h);
+    var gr = g.createLinearGradient(right ? 0 : w, 0, right ? 60 : w - 60, 0);
+    gr.addColorStop(0, 'rgba(120,90,45,.18)'); gr.addColorStop(1, 'rgba(120,90,45,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#e4d8c2';
+    for (var r = 0; r < 15; r++) { var y = 60 + r * 36; if (r === 5 || r === 11) continue; g.fillRect(50, y, w - 100 - (r % 4) * 40, 8); }
+    g.fillStyle = '#b9a98c'; g.font = 'bold 22px sans-serif'; g.textAlign = right ? 'right' : 'left';
+    g.fillText(right ? '31' : '30', right ? w - 40 : 40, h - 26);
+  });
+}
+var book = new THREE.Group(); scene.add(book);
+[-1, 1].forEach(function (sx) {
+  var pg = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.16, 6.6), [
+    new THREE.MeshLambertMaterial({ color: 0xefe6d2 }), new THREE.MeshLambertMaterial({ color: 0xefe6d2 }),
+    new THREE.MeshLambertMaterial({ map: pageTex(sx > 0) }), new THREE.MeshLambertMaterial({ color: 0xe4d8c0 }),
+    new THREE.MeshLambertMaterial({ color: 0xefe6d2 }), new THREE.MeshLambertMaterial({ color: 0xefe6d2 })
+  ]);
+  pg.position.set(sx * 2.62, -0.08, 0); pg.receiveShadow = true; pg.castShadow = true;
+  book.add(pg);
+});
+var cover = new THREE.Mesh(new THREE.BoxGeometry(10.7, 0.06, 6.9), new THREE.MeshLambertMaterial({ color: 0x2b7de9 }));
+cover.position.y = -0.19; book.add(cover);
+
+/* ===================== 活页庭院底板 ===================== */
+var BASE = 0.1;
+var live = new THREE.Group(); scene.add(live);
+var yardTex = ctex(512, 300, function (g, w, h) {
+  g.fillStyle = '#9fd67a'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#8cc966';
+  for (var i = 0; i < 16; i++) {
+    g.beginPath(); g.arc((i * 73) % w, (i * 47) % h, 22 + (i % 3) * 8, 0, Math.PI * 2); g.fill();
+  }
+  // 庭院小石子路
+  g.fillStyle = '#ede0c4';
+  g.beginPath(); g.moveTo(118, 170); g.quadraticCurveTo(185, 228, 315, 232); g.quadraticCurveTo(375, 232, 410, 188);
+  g.lineTo(385, 162); g.quadraticCurveTo(340, 198, 225, 194); g.quadraticCurveTo(155, 186, 136, 152); g.closePath(); g.fill();
+  g.strokeStyle = '#d3c2a2'; g.lineWidth = 3; g.stroke();
+});
+var boardMatTop = new THREE.MeshToonMaterial({ map: yardTex, gradientMap: ramp, color: 0xffffff });
+var board = mesh(new THREE.BoxGeometry(8.2, BASE, 4.7), [
+  toon('#d9c29a'), toon('#d9c29a'), boardMatTop, toon('#d9c29a'), toon('#d9c29a'), toon('#d9c29a')
+]);
+board.position.y = BASE / 2; board.castShadow = false;
+live.add(board);
+
+// 积雪薄毯（下雪时平滑浮现）
+var snowGroundMat = toon('#f4f9ff', { transparent: true, opacity: 0 });
+var snowGround = new THREE.Mesh(new THREE.PlaneGeometry(7.9, 4.4), snowGroundMat);
+snowGround.rotation.x = -Math.PI / 2; snowGround.position.y = BASE + 0.012; live.add(snowGround);
+
+// 揭起的插图卡片
+var figTex = ctex(512, 300, function (g, w, h) {
+  g.fillStyle = '#fbf3e2'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = '#2b7de9'; g.lineWidth = 6; g.strokeRect(6, 6, w - 12, h - 12);
+  g.fillStyle = '#f59e0b'; g.beginPath(); g.arc(120, 95, 28, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#e25845'; g.beginPath(); g.moveTo(150, 175); g.lineTo(220, 120); g.lineTo(290, 175); g.closePath(); g.fill();
+  g.fillStyle = '#4fb360'; g.beginPath(); g.arc(355, 160, 34, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#6e5e46'; g.font = 'bold 26px sans-serif'; g.textAlign = 'center'; g.fillText('天气小庭院', w / 2, h - 24);
+});
+var figCard = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 4.7), new THREE.MeshBasicMaterial({ map: figTex, transparent: true }));
+figCard.rotation.x = -Math.PI / 2; figCard.position.y = 0.012;
+scene.add(figCard);
+
+/* ===================== 天空背景板（立在底板后方，随天气换色） ===================== */
+var skyBgMat = new THREE.MeshToonMaterial({ color: 0x8ad4ff, gradientMap: ramp, side: THREE.DoubleSide });
+var skyPanel = mesh(new THREE.BoxGeometry(7.9, 2.7, 0.08), skyBgMat);
+skyPanel.position.set(0, BASE + 1.35, -2.26); skyPanel.castShadow = false; live.add(skyPanel);
+
+/* ===================== 可互动场景物件 ===================== */
+var PROPS = [];
+
+/* 1. 红顶小屋 (左) */
+var houseG = new THREE.Group(); houseG.position.set(-2.1, BASE, -0.35); live.add(houseG);
+var hBody = mesh(new THREE.BoxGeometry(1.75, 1.15, 1.35), toon('#fff4de')); hBody.position.y = 0.575; houseG.add(hBody);
+var roofGeo = new THREE.ConeGeometry(1.42, 0.88, 4);
+var roof = mesh(roofGeo, toon('#e35d4b')); roof.rotation.y = Math.PI / 4; roof.scale.set(1.06, 1, 0.88); roof.position.y = 1.58; houseG.add(roof);
+var roofSnowMat = toon('#f8fbff', { transparent: true, opacity: 0 });
+var roofSnow = mesh(new THREE.ConeGeometry(1.45, 0.86, 4), roofSnowMat, false);
+roofSnow.rotation.y = Math.PI / 4; roofSnow.scale.set(1.07, 1, 0.89); roofSnow.position.y = 1.63; houseG.add(roofSnow);
+var chimney = mesh(new THREE.BoxGeometry(0.24, 0.52, 0.24), toon('#c05a46')); chimney.position.set(0.45, 1.68, -0.2); houseG.add(chimney);
+var door = mesh(new THREE.BoxGeometry(0.38, 0.66, 0.06), toon('#a66e3c')); door.position.set(-0.32, 0.33, 0.68); houseG.add(door);
+var winMat = toon('#ffe27a');
+var winM = mesh(new THREE.BoxGeometry(0.44, 0.4, 0.06), winMat); winM.position.set(0.36, 0.64, 0.68); houseG.add(winM);
+var houseP = { id: 'house', name: '小屋', py: 'xiǎo wū', g: houseG, h: 2.05, hop: 0 };
+PROPS.push(houseP);
+
+/* 2. 庭院大树 (中) */
+var treeG = new THREE.Group(); treeG.position.set(0.5, BASE, -0.52); live.add(treeG);
+var treeSway = new THREE.Group(); treeG.add(treeSway);
+var trunk = mesh(new THREE.CylinderGeometry(0.14, 0.21, 1.15, 12), toon('#966337')); trunk.position.y = 0.575; treeSway.add(trunk);
+var crown1 = mesh(new THREE.SphereGeometry(0.66, 16, 14), toon('#4ab558')); crown1.position.set(0, 1.38, 0); treeSway.add(crown1);
+var crown2 = mesh(new THREE.SphereGeometry(0.48, 14, 12), toon('#5cc767')); crown2.position.set(-0.38, 1.24, 0.2); treeSway.add(crown2);
+var crown3 = mesh(new THREE.SphereGeometry(0.46, 14, 12), toon('#41a34d')); crown3.position.set(0.38, 1.22, -0.14); treeSway.add(crown3);
+var treeSnowMat = toon('#f6fbff', { transparent: true, opacity: 0 });
+var treeSnow = mesh(new THREE.SphereGeometry(0.62, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.52), treeSnowMat, false);
+treeSnow.position.set(0, 1.44, 0); treeSway.add(treeSnow);
+// 树下清晰地面影子（晴天浓、阴天淡）
+var treeShadowMat = new THREE.MeshBasicMaterial({ color: 0x2a3b2a, transparent: true, opacity: 0.44 });
+var treeShadow = new THREE.Mesh(new THREE.CircleGeometry(0.86, 26), treeShadowMat);
+treeShadow.rotation.x = -Math.PI / 2; treeShadow.scale.set(1.25, 0.72, 1); treeShadow.position.set(0.55, 0.025, 0.35); treeG.add(treeShadow);
+var treeP = { id: 'tree', name: '大树', py: 'dà shù', g: treeG, h: 2.1, hop: 0 };
+PROPS.push(treeP);
+
+/* 3. 七彩小风车 (右) */
+var wheelG = new THREE.Group(); wheelG.position.set(2.15, BASE, -0.15); live.add(wheelG);
+var wPost = mesh(new THREE.CylinderGeometry(0.055, 0.075, 1.45, 12), toon('#d7a565')); wPost.position.y = 0.725; wheelG.add(wPost);
+var wBase = mesh(new THREE.CylinderGeometry(0.28, 0.34, 0.14, 16), toon('#b9803e')); wBase.position.y = 0.07; wheelG.add(wBase);
+var wHub = new THREE.Group(); wHub.position.set(0, 1.42, 0.12); wheelG.add(wHub);
+wHub.add(mesh(new THREE.SphereGeometry(0.1, 12, 10), toon('#fff3b0')));
+['#ef4444', '#facc15', '#38bdf8', '#22c55e'].forEach(function (col, i) {
+  var bg = new THREE.Group(); bg.rotation.z = i * Math.PI / 2;
+  var bl = mesh(new THREE.BoxGeometry(0.24, 0.54, 0.03), toon(col));
+  bl.position.set(0.08, 0.3, 0); bl.rotation.z = -0.18;
+  bg.add(bl); wHub.add(bg);
+});
+var wheelP = { id: 'wheel', name: '小风车', py: 'xiǎo fēng chē', g: wheelG, h: 2.0, hop: 0, boost: 0 };
+PROPS.push(wheelP);
+
+/* 4. 庭院水洼 (右前) */
+var pudG = new THREE.Group(); pudG.position.set(1.75, BASE, 1.08); live.add(pudG);
+var pudMat = toon('#74c8eb', { transparent: true, opacity: 0.45 });
+var pudM = mesh(new THREE.CylinderGeometry(0.74, 0.74, 0.03, 24), pudMat, false); pudM.scale.set(1.2, 1, 0.72); pudM.position.y = 0.02; pudG.add(pudM);
+var pudRipples = [];
+for (var ri = 0; ri < 4; ri++) {
+  var rp = new THREE.Mesh(new THREE.RingGeometry(0.08, 0.13, 24), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide }));
+  rp.rotation.x = -Math.PI / 2; rp.position.set((ri % 2 ? 0.22 : -0.22), 0.04, (ri > 1 ? 0.12 : -0.1)); pudG.add(rp);
+  pudRipples.push({ m: rp, t: ri * 0.25, active: false });
+}
+var pudP = { id: 'puddle', name: '小水洼', py: 'xiǎo shuǐ wā', g: pudG, h: 0.35, hop: 0 };
+PROPS.push(pudP);
+
+/* 5. 天空小太阳 */
+var skySunG = new THREE.Group(); skySunG.position.set(-2.3, BASE + 2.48, -1.78); live.add(skySunG);
+var skySunCore = mesh(new THREE.SphereGeometry(0.38, 18, 16), toon('#ffd43b')); skySunG.add(skySunCore);
+var skySunRays = new THREE.Group(); skySunG.add(skySunRays);
+for (var sr = 0; sr < 8; sr++) {
+  var ra = sr * Math.PI / 4;
+  var rCone = mesh(new THREE.ConeGeometry(0.085, 0.22, 8), toon('#ff9f1c'));
+  rCone.position.set(Math.cos(ra) * 0.5, Math.sin(ra) * 0.5, 0); rCone.rotation.z = ra - Math.PI / 2;
+  skySunRays.add(rCone);
+}
+var sunP = { id: 'sun', name: '太阳', py: 'tài yáng', g: skySunG, h: -0.25, hop: 0 };
+PROPS.push(sunP);
+
+/* 6. 天空云朵组 (3朵) */
+var cloudsG = new THREE.Group(); cloudsG.position.set(0.3, BASE + 2.46, -1.45); live.add(cloudsG);
+var cloudMat = toon('#ffffff');
+var cloudList = [];
+function makeCloud(x, y, z, s) {
+  var g = new THREE.Group(); g.position.set(x, y, z); g.scale.setScalar(s);
+  [[0, 0, 0, 0.34], [-0.3, -0.06, 0.04, 0.26], [0.3, -0.05, 0.02, 0.27], [0.1, 0.14, -0.02, 0.25]].forEach(function (c) {
+    var sp = mesh(new THREE.SphereGeometry(c[3], 12, 10), cloudMat, false); sp.position.set(c[0], c[1], c[2]); g.add(sp);
+  });
+  cloudsG.add(g); cloudList.push({ g: g, baseX: x, baseY: y, baseS: s });
+}
+makeCloud(-2.0, 0.08, 0.12, 1.05);
+makeCloud(0.0, 0.14, -0.05, 1.2);
+makeCloud(2.05, 0.04, 0.08, 1.0);
+var cloudP = { id: 'cloud', name: '云朵', py: 'yún duǒ', g: cloudsG, h: -0.15, hop: 0 };
+PROPS.push(cloudP);
+
+PROPS.forEach(function (pr) {
+  pr.g.traverse(function (o) { if (o.isMesh) o.userData.prop = pr; });
+});
+
+/* ===================== 天气特效：蝴蝶 / 雨丝 / 雪花 / 风带 ===================== */
+// 晴天蝴蝶 (2只)
+var butterflies = [];
+['#ff7eb3', '#ffd166'].forEach(function (col, i) {
+  var bg = new THREE.Group();
+  var wL = mesh(new THREE.CircleGeometry(0.12, 10), toon(col, { side: THREE.DoubleSide }), false);
+  wL.position.x = -0.08; wL.rotation.x = -Math.PI / 2;
+  var wR = mesh(new THREE.CircleGeometry(0.12, 10), toon(col, { side: THREE.DoubleSide }), false);
+  wR.position.x = 0.08; wR.rotation.x = -Math.PI / 2;
+  bg.add(wL); bg.add(wR); live.add(bg);
+  butterflies.push({ g: bg, wL: wL, wR: wR, ph: i * 3.1 });
+});
+
+// 雨丝 (45)
+var rainDrops = [];
+var rainGeo = new THREE.CylinderGeometry(0.014, 0.014, 0.34, 5);
+var rainMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.82 });
+for (var i = 0; i < 45; i++) {
+  var rm = new THREE.Mesh(rainGeo, rainMat); rm.visible = false;
+  rm.position.set((Math.random() - 0.5) * 7.2, BASE + Math.random() * 2.8, (Math.random() - 0.5) * 3.6);
+  rm.rotation.z = -0.14; live.add(rm);
+  rainDrops.push({ m: rm, sp: 4.5 + Math.random() * 2.2 });
+}
+
+// 雪花 (55)
+var snowFlakes = [];
+var snowGeo = new THREE.OctahedronGeometry(0.055, 0);
+var snowMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+for (var j = 0; j < 55; j++) {
+  var sm = new THREE.Mesh(snowGeo, snowMat); sm.visible = false;
+  sm.position.set((Math.random() - 0.5) * 7.4, BASE + Math.random() * 2.8, (Math.random() - 0.5) * 3.8);
+  live.add(sm);
+  snowFlakes.push({ m: sm, sp: 0.65 + Math.random() * 0.55, ph: Math.random() * 6.28 });
+}
+
+// 风带 (6条)
+var windBands = [];
+var windMat = new THREE.MeshBasicMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.72, side: THREE.DoubleSide });
+for (var k = 0; k < 6; k++) {
+  var wm = new THREE.Mesh(new THREE.BoxGeometry(1.35 + (k % 3) * 0.4, 0.045, 0.045), windMat);
+  wm.visible = false;
+  wm.position.set(-4 + k * 1.4, BASE + 0.65 + (k % 3) * 0.65, -1.2 + (k % 4) * 0.78);
+  live.add(wm);
+  windBands.push({ m: wm, sp: 5.5 + (k % 3) * 1.4, baseY: wm.position.y });
+}
+
+/* ===================== 相机取景 ===================== */
+var portrait = false;
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  portrait = w / h < 0.85;
+  var tgt = new THREE.Vector3(portrait ? 0 : 0.85, 0.82, portrait ? -0.15 : -0.1);
+  var dir = portrait ? new THREE.Vector3(0.14, 0.58, 0.8).normalize() : new THREE.Vector3(0, 0.58, 0.81).normalize();
+  var needW = portrait ? 7.0 : 9.4, needH = portrait ? 9.4 : 6.9;
+  var vf = THREE.MathUtils.degToRad(camera.fov), hf = 2 * Math.atan(Math.tan(vf / 2) * camera.aspect);
+  var d = Math.max(needW / 2 / Math.tan(hf / 2), needH / 2 / Math.tan(vf / 2) * 0.88);
+  camera.position.copy(tgt).addScaledVector(dir, d);
+  camera.lookAt(tgt);
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', fit);
+
+/* ===================== WebAudio 合成声音 ===================== */
+var AC = null;
+function audio() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } } if (AC && AC.state === 'suspended') AC.resume(); return AC; }
+function tone(f, dur, type, vol, f2, delay) {
+  var a = audio(); if (!a) return;
+  var t = a.currentTime + (delay || 0), o = a.createOscillator(), g = a.createGain();
+  o.type = type || 'sine'; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.11, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + 0.02);
+}
+function noiseBand(dur, freq, q, vol) {
+  var a = audio(); if (!a) return;
+  var n = Math.floor(a.sampleRate * dur), b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0);
+  for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * i / n);
+  var s = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+  s.buffer = b; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q; g.gain.value = vol;
+  s.connect(f); f.connect(g); g.connect(a.destination); s.start();
+}
+function sSun() { tone(523, 0.14, 'sine', 0.1); tone(659, 0.18, 'sine', 0.09, null, 0.08); tone(784, 0.24, 'sine', 0.09, null, 0.16); }
+function sCloud() { tone(330, 0.25, 'triangle', 0.09, 280); }
+function sRain() { noiseBand(0.42, 1600, 0.8, 0.14); tone(780, 0.07, 'sine', 0.06, 520, 0.08); }
+function sSnow() { tone(1046, 0.16, 'sine', 0.07); tone(1318, 0.2, 'sine', 0.06, null, 0.1); tone(1568, 0.26, 'sine', 0.05, null, 0.2); }
+function sWind() { noiseBand(0.6, 520, 2.2, 0.2); }
+function sDing() { tone(880, 0.15, 'sine', 0.1); tone(1320, 0.25, 'sine', 0.09, null, 0.09); }
+function sPlop() { tone(440, 0.09, 'sine', 0.1, 680); }
+function sCelebrate() {
+  [523, 659, 784, 1046, 1318].forEach(function (f, i) { tone(f, 0.22 + i * 0.04, 'sine', 0.11, null, i * 0.09); });
+  tone(523, 0.45, 'triangle', 0.06, null, 0.36); tone(784, 0.45, 'triangle', 0.06, null, 0.36);
+}
+
+/* ===================== 进度持久化与入口提示 ===================== */
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem('xk_k1a_progress') || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem('xk_k1a_progress', JSON.stringify(d));
+  } catch (e) {}
+}
+function dismissEntryCues() {
+  document.body.classList.add('cues-off');
+}
+
+/* ===================== 儿童离线语音引导 ===================== */
+var voiceOn = true, greeted = false, guideHandT = 0;
+var CONCL_SPEECH = '太棒啦！全部天气都探索完啦！科学小结论：常见的天气有晴、阴、雨、雪、风！晴天太阳亮影子清，阴天云多，雨天起水花，雪天盖白雪，大风会把树吹弯、让风车转得飞快！快来答对下面的小问题领小红花吧！';
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
+  if (!('speechSynthesis' in window)) return;
+  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+}
+function greetOnce(quietIfSpoken) {
+  if (greeted) return;
+  greeted = true;
+  if (!quietIfSpoken) {
+    var g = getNextGuide();
+    guideHandT = 3.4;
+    speak('小朋友你好！' + g.speakText);
+  }
+}
+
+/* ===================== 通关彩带与勋章奖励 ===================== */
+var confC = $('#confetti'), confCtx = confC.getContext('2d'), confPs = [], confRaf = 0, celebrated = false, completed = false;
+function clearConfetti() {
+  if (confRaf) { cancelAnimationFrame(confRaf); confRaf = 0; }
+  confPs = [];
+  if (confCtx) confCtx.clearRect(0, 0, confC.width, confC.height);
+}
+function hideWinToast() { $('#winToast').classList.remove('show'); }
+function resetQuiz() {
+  $('#quizFb').textContent = '';
+  $('#quizFb').className = 'quiz-fb';
+  document.querySelectorAll('#quizBox .qopt').forEach(function (b) {
+    b.disabled = false; b.classList.remove('ok', 'no');
+  });
+}
+function launchConfetti() {
+  clearConfetti();
+  confC.width = window.innerWidth; confC.height = window.innerHeight;
+  var cols = ['#2b7de9', '#f59e0b', '#38bdf8', '#f43f5e', '#22c55e', '#facc15'];
+  for (var i = 0; i < 72; i++) {
+    confPs.push({
+      x: confC.width * (0.15 + Math.random() * 0.7), y: confC.height * 0.18 + (Math.random() - 0.5) * 60,
+      vx: (Math.random() - 0.5) * 9, vy: -4 - Math.random() * 7,
+      w: 7 + Math.random() * 6, h: 4 + Math.random() * 4,
+      a: Math.random() * 6.28, va: (Math.random() - 0.5) * 0.28,
+      c: cols[i % cols.length], life: 1
+    });
+  }
+  (function tick() {
+    confCtx.clearRect(0, 0, confC.width, confC.height);
+    var alive = 0;
+    confPs.forEach(function (p) {
+      if (p.life <= 0) return;
+      p.vy += 0.24; p.x += p.vx; p.y += p.vy; p.a += p.va; p.life -= 0.009;
+      if (p.y > confC.height + 20 || p.life <= 0) { p.life = 0; return; }
+      alive++;
+      confCtx.save(); confCtx.globalAlpha = Math.min(1, p.life * 1.5);
+      confCtx.translate(p.x, p.y); confCtx.rotate(p.a);
+      confCtx.fillStyle = p.c; confCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      confCtx.restore();
+    });
+    if (alive > 0) confRaf = requestAnimationFrame(tick); else confRaf = 0;
+  })();
+}
+function checkComplete() {
+  if (celebrated) return;
+  if (triedW.sun && triedW.cloud && triedW.rain && triedW.snow && triedW.wind && yardTouched) {
+    celebrated = true; completed = true;
+    saveProgress('k1a-08', true);
+    updateGuide(false);
+    sCelebrate(); launchConfetti();
+    $('#winToast').classList.add('show');
+    setTimeout(function () { if (celebrated) speak(CONCL_SPEECH); }, 320);
+  }
+}
+
+/* ===================== 标签与飘字 ===================== */
+var labelsEl = $('#labels');
+PROPS.forEach(function (pr) {
+  var el = document.createElement('div'); el.className = 'lbl'; el.innerHTML = ruby(pr.name, pr.py);
+  labelsEl.appendChild(el); pr.lbl = el;
+});
+var vtmp = new THREE.Vector3();
+function toScreen(v) { vtmp.copy(v).project(camera); return { x: (vtmp.x + 1) / 2 * window.innerWidth, y: (1 - vtmp.y) / 2 * window.innerHeight }; }
+function floatWord(text, py, worldPos, cls) {
+  var p = toScreen(worldPos), el = document.createElement('div');
+  el.className = 'word' + (cls ? ' ' + cls : ''); el.innerHTML = ruby(text, py);
+  el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
+  labelsEl.appendChild(el); setTimeout(function () { el.remove(); }, 1320);
+}
+
+/* ===================== 我的发现与动态分步引导 ===================== */
+var found = {}, foundN = 0;
+var triedW = { sun: false, cloud: false, rain: false, snow: false, wind: false };
+var kinds = triedW;
+var yardTouched = false;
+var acted = { switch: false, sky: false, yard: false }, actions = 0;
+function markAct(v) {
+  if (!acted[v]) { acted[v] = true; var el = document.querySelector('.verb[data-v="' + v + '"]'); if (el) el.classList.add('done'); }
+  actions++;
+}
+function getNextGuide() {
+  if (!triedW.sun) {
+    return {
+      ico: '☀️', targetW: 'sun', targetProp: null, shortNext: '再点底下「晴」按钮看晴天影子吧！',
+      text: '第1步：点底下「☀️ 晴」按钮（或点天空太阳），看晴天大树的影子！',
+      speakText: '先点底下发光的晴天按钮，或者点天空里的太阳，看看晴天庭院和大树的影子！'
+    };
+  }
+  if (!triedW.cloud) {
+    return {
+      ico: '☁️', targetW: 'cloud', targetProp: null, shortNext: '接下来点底下「阴」按钮看云朵变多吧！',
+      text: '第2步：点底下「☁️ 阴」按钮（或点云朵），看看云多时影子怎么变！',
+      speakText: '请点底下发光的阴天按钮，或者点天空云朵，看看云变多以后影子有什么变化！'
+    };
+  }
+  if (!triedW.rain) {
+    return {
+      ico: '🌧️', targetW: 'rain', targetProp: null, shortNext: '接下来点底下「雨」按钮看水花吧！',
+      text: '第3步：点底下「🌧️ 雨」按钮看落雨起水花，再试「❄️ 雪」和「💨 风」！',
+      speakText: '现在点底下发光的雨天按钮，看看雨水落进小水洼溅起的水花吧！'
+    };
+  }
+  if (!triedW.snow) {
+    return {
+      ico: '❄️', targetW: 'snow', targetProp: null, shortNext: '接下来快点底下「雪」按钮看白雪飘落吧！',
+      text: '第4步：快点底下发光的「❄️ 雪」按钮，看屋顶和大树盖满白雪！',
+      speakText: '棒极了！快点底下发光的雪天按钮，看看雪花飘落、屋顶盖满白雪！'
+    };
+  }
+  if (!triedW.wind) {
+    return {
+      ico: '💨', targetW: 'wind', targetProp: null, shortNext: '最后点底下「风」按钮看小风车狂转吧！',
+      text: '第5步：快点底下发光的「💨 风」按钮，看大树吹弯、小风车狂转！',
+      speakText: '还差最后一种天气！快点底下发光的风天按钮，看看大风把树吹弯、让小风车呼呼转！'
+    };
+  }
+  if (!yardTouched) {
+    return {
+      ico: '🎡', targetW: null, targetProp: wheelP, shortNext: '再点一点庭院里的小风车或大树就完成啦！',
+      text: '最后一步：点一点庭院里的「小风车 / 大树 / 小屋 / 水洼」互动观察吧！',
+      speakText: '五种天气都试过啦！再点一点庭院里的小风车、大树、小屋或小水洼，就能集齐全部发现啦！'
+    };
+  }
+  return {
+    ico: '🌟', targetW: null, targetProp: null, shortNext: '',
+    text: '5种常见天气都探索完啦！可以继续自由切换天气和点庭院玩哦～',
+    speakText: '太棒啦！晴、阴、雨、雪、风五种天气你都已经全部体验过啦，可以继续自由玩哦！'
+  };
+}
+function updateGuide(speakIt) {
+  var g = getNextGuide();
+  $('#guideIco').textContent = g.ico;
+  $('#guideTxt').textContent = g.text;
+  $('#guideBar').classList.toggle('done', celebrated);
+  document.querySelectorAll('.wbtn').forEach(function (b) {
+    var w = b.dataset.w;
+    b.classList.toggle('done-dot', !!triedW[w]);
+    b.classList.toggle('guide-pulse', g.targetW === w);
+  });
+  if (speakIt) {
+    guideHandT = 3.5;
+    speak(g.speakText);
+  }
+}
+function discover(key, kind, html, color, spoken, appendNext) {
+  if (found[key]) return false;
+  found[key] = true; foundN++;
+  var el = document.createElement('div'); el.className = 'stk';
+  var icoMap = { sun: '☀', cloud: '☁', rain: '🌧', snow: '❄', wind: '💨', yard: '🎡' };
+  el.innerHTML = '<i style="background:' + color + '">' + (icoMap[kind] || '✨') + '</i><span>' + html + '</span>';
+  var list = $('#ntList'); list.insertBefore(el, list.firstChild);
+  while (list.children.length > 8) list.removeChild(list.lastChild);
+  $('#ntCount').textContent = foundN;
+  if (kind in triedW && !triedW[kind]) {
+    triedW[kind] = true;
+    var stEl = $('#st' + kind.toUpperCase());
+    if (stEl) stEl.classList.add('lit');
+  }
+  sDing();
+  updateGuide(false);
+  var willFinish = !celebrated && triedW.sun && triedW.cloud && triedW.rain && triedW.snow && triedW.wind && yardTouched;
+  if (spoken && !willFinish) {
+    greeted = true;
+    var g = getNextGuide();
+    speak(appendNext && g.shortNext ? (spoken + ' ' + g.shortNext) : spoken);
+  }
+  checkComplete();
+  return true;
+}
+
+/* ===================== 5 种天气状态 ===================== */
+var weather = 'sun';
+var snowCover = 0, wetCover = 0, windAmt = 0.15;
+var WCFG = {
+  sun:   { sky: 0x7fd0ff, clCol: 0xffffff, hemi: 0.45, dir: 0.72, shOp: 0.46, wPos: new THREE.Vector3(0.5, 2.3, -0.3), text: '晴天有清楚影子!', py: 'qíng tiān yǒu qīng chu yǐng zi', cls: 'warm', kind: 'sun', col: '#d97706', stk: ruby('晴天太阳亮', 'qíng tiān tài yáng liàng') + '<b>' + ruby('影子清', 'yǐng zi qīng') + '</b>' },
+  cloud: { sky: 0xb6c5d6, clCol: 0xd0d7e2, hemi: 0.36, dir: 0.34, shOp: 0.06, wPos: new THREE.Vector3(0.2, 2.4, -0.4), text: '阴天云多影变淡!', py: 'yīn tiān yún duō yǐng biàn dàn', cls: '', kind: 'cloud', col: '#64748b', stk: ruby('阴天云多', 'yīn tiān yún duō') + '<b>' + ruby('影子淡', 'yǐng zi dàn') + '</b>' },
+  rain:  { sky: 0x7b93ad, clCol: 0x6b7c93, hemi: 0.32, dir: 0.28, shOp: 0.04, wPos: new THREE.Vector3(1.5, 1.5, 0.6), text: '雨天落雨起水花!', py: 'yǔ tiān luò yǔ qǐ shuǐ huā', cls: '', kind: 'rain', col: '#2b7de9', stk: ruby('雨天落雨', 'yǔ tiān luò yǔ') + '<b>' + ruby('起水花', 'qǐ shuǐ huā') + '</b>' },
+  snow:  { sky: 0xcbe0f5, clCol: 0xe6eff8, hemi: 0.42, dir: 0.42, shOp: 0.08, wPos: new THREE.Vector3(-1.5, 2.3, -0.2), text: '雪天雪花飘满屋!', py: 'xuě tiān xuě huā piāo mǎn wū', cls: '', kind: 'snow', col: '#0284c7', stk: ruby('雪天雪花', 'xuě tiān xuě huā') + '<b>' + ruby('落满屋', 'luò mǎn wū') + '</b>' },
+  wind:  { sky: 0x9bd6e6, clCol: 0xedf5fc, hemi: 0.40, dir: 0.56, shOp: 0.26, wPos: new THREE.Vector3(1.4, 2.1, -0.2), text: '风天树摇风车转!', py: 'fēng tiān shù yáo fēng chē zhuàn', cls: 'wind', kind: 'wind', col: '#0f766e', stk: ruby('风天树摇', 'fēng tiān shù yáo') + '<b>' + ruby('风车转', 'fēng chē zhuàn') + '</b>' }
+};
+
+function setWeather(w, silent) {
+  weather = w;
+  document.querySelectorAll('.wbtn').forEach(function (b) { b.classList.toggle('on', b.dataset.w === w); });
+  var cfg = WCFG[w];
+  if (!silent) {
+    dismissEntryCues();
+    greeted = true;
+    if (w === 'sun') sSun(); else if (w === 'cloud') sCloud(); else if (w === 'rain') sRain(); else if (w === 'snow') sSnow(); else sWind();
+    floatWord(cfg.text, cfg.py, cfg.wPos, cfg.cls);
+    var isNew = discover('w:' + w, cfg.kind, cfg.stk, cfg.col, cfg.text, !demo);
+    if (!isNew) {
+      var g = getNextGuide();
+      speak(g.shortNext && !demo ? (cfg.text + ' ' + g.shortNext) : cfg.text);
+    }
+    markAct('switch');
+  }
+}
+
+document.querySelectorAll('.wbtn').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    audio(); stopDemo(); introSkip(); ghost.off = true; guideHandT = 0;
+    setWeather(btn.dataset.w, false);
+  });
+});
+
+/* ===================== 3D 点击互动 ===================== */
+var hoveredProp = null, now = 0;
+var propMeshes = []; PROPS.forEach(function (pr) { pr.g.traverse(function (o) { if (o.isMesh) propMeshes.push(o); }); });
+function pickProp(e) {
+  ndc.x = (e.clientX / window.innerWidth) * 2 - 1; ndc.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(ndc, camera);
+  var h = raycaster.intersectObjects(propMeshes, false)[0];
+  return h ? h.object.userData.prop : null;
+}
+
+canvas.addEventListener('pointermove', function (e) {
+  hoveredProp = pickProp(e);
+  canvas.style.cursor = hoveredProp ? 'pointer' : 'default';
+});
+canvas.addEventListener('pointerdown', function (e) {
+  audio(); stopDemo(); introSkip();
+  var pr = pickProp(e);
+  if (!pr) { greetOnce(false); return; }
+  dismissEntryCues();
+  greetOnce(true);
+  ghost.off = true; guideHandT = 0;
+  pr.hop = 1;
+  var pos = pr.g.position.clone().add(new THREE.Vector3(0, pr.h + 0.12, 0));
+  if (pr.id === 'sun') {
+    markAct('sky');
+    setWeather('sun', false);
+  } else if (pr.id === 'cloud') {
+    markAct('sky');
+    var order = ['cloud', 'rain', 'snow', 'wind'];
+    var next = null;
+    for (var ci = 0; ci < order.length; ci++) { if (!triedW[order[ci]]) { next = order[ci]; break; } }
+    if (!next) {
+      var idx = order.indexOf(weather);
+      next = order[(idx + 1) % order.length];
+    }
+    setWeather(next, false);
+  } else if (pr.id === 'wheel') {
+    markAct('yard'); yardTouched = true;
+    var wasDone = celebrated;
+    if (weather === 'wind') {
+      wheelP.boost = 1.6; sWind();
+      floatWord('风好大转得快!', 'fēng hǎo dà zhuàn de kuài', pos, 'wind');
+      var isNewW = discover('yard-wheel', 'yard', ruby('风吹风车', 'fēng chuī fēng chē') + '<b>' + ruby('呼呼转', 'hū hū zhuàn') + '</b>', '#0f766e', '大风吹得小风车呼呼转！', true);
+      if (!isNewW && !(!wasDone && celebrated)) speak('风好大，小风车转得真快！');
+    } else {
+      wheelP.boost = 0.55; sPlop();
+      floatWord('轻轻转一转，换大风试试!', 'qīng qīng zhuàn yī zhuàn huàn dà fēng shì shi', pos, 'wind');
+      updateGuide(false); checkComplete();
+      if (!(!wasDone && celebrated)) speak('现在风很小，点底下风天按钮看看小风车怎么狂转吧！');
+    }
+  } else if (pr.id === 'puddle') {
+    markAct('yard'); yardTouched = true;
+    var wasDoneP = celebrated;
+    sPlop();
+    pudRipples.forEach(function (r) { r.active = true; r.t = 0; });
+    updateGuide(false); checkComplete();
+    if (!(!wasDoneP && celebrated)) {
+      var gP = getNextGuide(), tailP = gP.shortNext ? (' ' + gP.shortNext) : '';
+      if (weather === 'rain') { floatWord('雨滴溅起水花!', 'yǔ dī jiàn qǐ shuǐ huā', pos); speak('雨滴落进小水洼，溅起一圈圈水花！' + tailP); }
+      else if (weather === 'snow') { floatWord('水洼好冰凉!', 'shuǐ wā hǎo bīng liáng', pos); speak('下雪天，小水洼变得好冰凉！' + tailP); }
+      else { floatWord('踩踩小水洼!', 'cǎi cai xiǎo shuǐ wā', pos); speak('小水洼泛起一圈波纹！' + tailP); }
+    }
+  } else if (pr.id === 'tree') {
+    markAct('yard'); yardTouched = true;
+    var wasDoneT = celebrated;
+    updateGuide(false); checkComplete();
+    if (!(!wasDoneT && celebrated)) {
+      var gT = getNextGuide(), tailT = gT.shortNext ? (' ' + gT.shortNext) : '';
+      if (weather === 'sun') { sSun(); floatWord('大树影子好清楚!', 'dà shù yǐng zi hǎo qīng chu', pos, 'warm'); speak('晴天阳光照着大树，地面影子好清楚！' + tailT); }
+      else if (weather === 'wind') { sWind(); floatWord('大风把树吹弯了!', 'dà fēng bǎ shù chuī wān le', pos, 'wind'); speak('刮大风了，大树被吹得摇摇晃晃！' + tailT); }
+      else if (weather === 'snow') { sSnow(); floatWord('树顶积满白雪!', 'shù dǐng jī mǎn bái xuě', pos); speak('下雪啦，大树顶上积满白雪！' + tailT); }
+      else if (weather === 'rain') { sRain(); floatWord('雨水淋湿树叶啦!', 'yǔ shuǐ lín shī shù yè la', pos); speak('下雨啦，雨水把树叶洗得亮晶晶！' + tailT); }
+      else { sCloud(); floatWord('阴天树下影子淡!', 'yīn tiān shù xià yǐng zi dàn', pos); speak('阴天云多，大树下面的影子变淡啦！' + tailT); }
+    }
+  } else if (pr.id === 'house') {
+    markAct('yard'); yardTouched = true;
+    var wasDoneH = celebrated;
+    updateGuide(false); checkComplete();
+    if (!(!wasDoneH && celebrated)) {
+      var gH = getNextGuide(), tailH = gH.shortNext ? (' ' + gH.shortNext) : '';
+      if (weather === 'snow') { sSnow(); floatWord('屋顶盖满白雪!', 'wū dǐng gài mǎn bái xuě', pos); speak('屋顶盖满了厚厚的白雪！' + tailH); }
+      else if (weather === 'rain') { sRain(); floatWord('躲进小屋不怕雨!', 'duǒ jìn xiǎo wū bú pà yǔ', pos); speak('下雨啦，躲进暖暖的小屋就不怕淋湿啦！' + tailH); }
+      else if (weather === 'wind') { sWind(); floatWord('关好门窗挡大风!', 'guān hǎo mén chuāng dǎng dà fēng', pos, 'wind'); speak('刮大风啦，关好门窗挡住大风！' + tailH); }
+      else if (weather === 'cloud') { sCloud(); floatWord('阴天小屋点亮灯!', 'yīn tiān xiǎo wū diǎn liàng dēng', pos, 'warm'); speak('阴天光线暗下来，小屋点亮了暖暖的灯光！' + tailH); }
+      else { sSun(); floatWord('暖暖的小屋!', 'nuǎn nuǎn de xiǎo wū', pos, 'warm'); speak('晴天阳光照在红屋顶上真暖和！' + tailH); }
+    }
+  }
+});
+
+/* ===================== 幽灵手（动态指向当前未探索的目标！） ===================== */
+var ghost = { off: false, t: 0 }, handEl = $('#hand');
+function updateGhost(dt) {
+  if (guideHandT > 0) guideHandT = Math.max(0, guideHandT - dt);
+  var show = (!ghost.off && intro.t >= 1.5) || guideHandT > 0;
+  if (!show || celebrated) { handEl.style.opacity = 0; return; }
+  ghost.t = (ghost.t + dt) % 2.0;
+  var g = getNextGuide();
+  var bob = Math.sin(ghost.t * Math.PI * 2 / 2.0) * 8;
+  if (g.targetW) {
+    var btn = document.querySelector('.wbtn[data-w="' + g.targetW + '"]');
+    if (!btn) { handEl.style.opacity = 0; return; }
+    var r = btn.getBoundingClientRect();
+    handEl.style.opacity = 0.96;
+    handEl.style.transform = 'translate(' + (r.left + r.width / 2 - 20) + 'px,' + (r.top + r.height / 2 + 4 + bob) + 'px)';
+  } else if (g.targetProp) {
+    var sp = toScreen(g.targetProp.g.position.clone().add(new THREE.Vector3(0, 1.35, 0)));
+    handEl.style.opacity = 0.96;
+    handEl.style.transform = 'translate(' + (sp.x - 16) + 'px,' + (sp.y + bob) + 'px)';
+  } else {
+    handEl.style.opacity = 0;
+  }
+}
+
+/* ===================== 老师演示 ===================== */
+var demo = null;
+var DEMO = [
+  ['w', 'sun', 2.0],
+  ['w', 'cloud', 2.0],
+  ['w', 'rain', 2.2],
+  ['w', 'snow', 2.3],
+  ['w', 'wind', 2.0],
+  ['wheel', 1.8],
+  ['end']
+];
+function startDemo() {
+  dismissEntryCues();
+  resetAll(true); demo = { i: 0, t: 0, started: false }; ghost.off = true; guideHandT = 0;
+  $('#demoBtn').classList.add('on'); $('#demoLbl').textContent = '■ 停止';
+}
+function stopDemo() {
+  if (!demo) return; demo = null;
+  $('#demoBtn').classList.remove('on'); $('#demoLbl').textContent = '▶ 演示';
+}
+function stepDemo(dt) {
+  if (!demo) return;
+  var s = DEMO[demo.i]; demo.t += dt;
+  if (!s || s[0] === 'end') { stopDemo(); return; }
+  if (!demo.started) {
+    demo.started = true;
+    if (s[0] === 'w') {
+      setWeather(s[1], false);
+      if (s[1] === 'wind') wheelP.boost = 1.2;
+    } else if (s[0] === 'wheel') {
+      wheelP.hop = 1; wheelP.boost = 1.8; yardTouched = true; markAct('yard'); sWind();
+      floatWord('风好大转得快!', 'fēng hǎo dà zhuàn de kuài', wheelP.g.position.clone().add(new THREE.Vector3(0, 2.1, 0)), 'wind');
+      discover('yard-wheel', 'yard', ruby('风吹风车', 'fēng chuī fēng chē') + '<b>' + ruby('呼呼转', 'hū hū zhuàn') + '</b>', '#0f766e', '大风吹得小风车呼呼转！', false);
+    }
+  }
+  if (demo.t >= (s[0] === 'w' ? s[2] : s[1])) { demo.started = false; demo.i++; demo.t = 0; }
+}
+
+/* ===================== 开场动画 ===================== */
+var intro = { t: 0, done: false };
+function introSkip() { if (intro.t < 1.45) intro.t = 1.45; }
+function backOut(t) { var c = 1.7; t = Math.min(1, Math.max(0, t)); return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); }
+function updateIntro(dt) {
+  if (intro.done) return;
+  if (!intro.t0) intro.t0 = performance.now();
+  intro.t = Math.max(intro.t + dt, (performance.now() - intro.t0) / 1000 * 1.4);
+  var t = intro.t;
+  var lift = Math.min(1, Math.max(0, (t - 0.2) / 0.65));
+  figCard.position.y = 0.012 + lift * 1.6;
+  figCard.material.opacity = 1 - lift;
+  figCard.visible = lift < 1;
+  board.scale.set(1, Math.max(0.01, backOut((t - 0.3) / 0.5)), 1);
+  skyPanel.scale.set(1, Math.max(0.01, backOut((t - 0.4) / 0.55)), 1);
+  PROPS.forEach(function (pr, i) { pr.g.scale.setScalar(Math.max(0.001, backOut((t - 0.5 - i * 0.06) / 0.5))); });
+  if (t > 0.9 && t < 3.5) PROPS.forEach(function (pr) { pr.introLbl = true; });
+  if (t >= 3.5) {
+    PROPS.forEach(function (pr) { pr.introLbl = false; pr.g.scale.setScalar(1); });
+    board.scale.set(1, 1, 1); skyPanel.scale.set(1, 1, 1);
+    intro.done = true;
+  }
+}
+
+/* ===================== 重来 ===================== */
+function resetAll(keepDemo) {
+  if (!keepDemo) stopDemo();
+  setWeather('sun', true);
+  snowCover = 0; wetCover = 0; windAmt = 0.08; wheelP.boost = 0;
+  pudRipples.forEach(function (r) { r.active = false; r.t = 0; r.m.material.opacity = 0; });
+  labelsEl.querySelectorAll('.word').forEach(function (w) { w.remove(); });
+  found = {}; foundN = 0;
+  triedW.sun = triedW.cloud = triedW.rain = triedW.snow = triedW.wind = false;
+  yardTouched = false;
+  acted = { switch: false, sky: false, yard: false }; actions = 0;
+  celebrated = false; completed = false; hideWinToast(); clearConfetti(); resetQuiz();
+  $('#ntList').innerHTML = ''; $('#ntCount').textContent = '0';
+  document.querySelectorAll('.stamp').forEach(function (s) { s.classList.remove('lit'); });
+  document.querySelectorAll('.verb').forEach(function (v) { v.classList.remove('done'); });
+  updateGuide(false);
+}
+
+/* ===================== 主循环 ===================== */
+var last = performance.now(), skyColTmp = new THREE.Color(), clColTmp = new THREE.Color(), lastAmb = 0;
+function frame(t) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (t - last) / 1000)); last = t; now = t / 1000;
+  updateIntro(dt);
+  stepDemo(dt);
+
+  var cfg = WCFG[weather];
+  // 平滑过渡天空色、云色、灯光、影子
+  skyColTmp.setHex(cfg.sky); skyBgMat.color.lerp(skyColTmp, dt * 4);
+  clColTmp.setHex(cfg.clCol); cloudMat.color.lerp(clColTmp, dt * 4);
+  hemiLight.intensity += (cfg.hemi - hemiLight.intensity) * dt * 4;
+  dirLight.intensity += (cfg.dir - dirLight.intensity) * dt * 4;
+  treeShadowMat.opacity += (cfg.shOp - treeShadowMat.opacity) * dt * 5;
+
+  // 太阳位置（晴/风高挂，阴/雨/雪躲在云后）
+  var sunVis = (weather === 'sun' || weather === 'wind');
+  var sunGoalY = sunVis ? BASE + 2.48 : BASE + 1.85;
+  skySunG.position.y += (sunGoalY - skySunG.position.y) * dt * 4;
+  skySunRays.rotation.z += dt * (weather === 'sun' ? 1.1 : 0.4);
+
+  // 云朵聚散
+  cloudList.forEach(function (c, i) {
+    var goalX = weather === 'sun' ? (i === 0 ? -3.0 : i === 1 ? 1.2 : 1.9) :
+                weather === 'wind' ? c.baseX * 0.85 + Math.sin(now * 2.5 + i) * 0.45 :
+                c.baseX * 0.72 + Math.sin(now * 0.7 + i * 2) * 0.16;
+    var goalS = weather === 'sun' ? c.baseS * 0.58 : c.baseS * 1.12;
+    c.g.position.x += (goalX - c.g.position.x) * dt * 3;
+    c.g.scale.x += (goalS - c.g.scale.x) * dt * 3;
+    c.g.scale.y = c.g.scale.z = c.g.scale.x;
+  });
+
+  // 积雪与水洼
+  snowCover += ((weather === 'snow' ? 1 : 0) - snowCover) * dt * 1.6;
+  roofSnowMat.opacity = snowCover * 0.95;
+  treeSnowMat.opacity = snowCover * 0.92;
+  snowGroundMat.opacity = snowCover * 0.58;
+
+  wetCover += ((weather === 'rain' ? 1 : 0.25) - wetCover) * dt * 2.2;
+  pudMat.opacity = 0.22 + wetCover * 0.65;
+  pudM.scale.set(0.85 + wetCover * 0.42, 1, 0.52 + wetCover * 0.25);
+
+  // 树木摇摆与风车旋转
+  var targetWind = weather === 'wind' ? 1 : weather === 'rain' ? 0.35 : 0.08;
+  windAmt += (targetWind - windAmt) * dt * 4;
+  treeSway.rotation.z = -windAmt * 0.26 + Math.sin(now * (weather === 'wind' ? 7.5 : 2.2)) * (0.02 + windAmt * 0.11);
+
+  if (wheelP.boost > 0) wheelP.boost = Math.max(0, wheelP.boost - dt * 0.9);
+  wHub.rotation.z -= dt * (0.7 + windAmt * 9.5 + wheelP.boost * 9);
+
+  // 小屋暖窗
+  winMat.color.setHex(weather === 'rain' || weather === 'snow' || weather === 'cloud' ? 0xffd15c : 0xa5e4ff);
+
+  // 晴天蝴蝶
+  butterflies.forEach(function (bf, idx) {
+    bf.g.visible = weather === 'sun';
+    if (!bf.g.visible) return;
+    var a = now * 1.3 + bf.ph;
+    bf.g.position.set(0.5 + Math.cos(a) * (1.2 + idx * 0.4), BASE + 1.15 + Math.sin(a * 2.4) * 0.25, 0.25 + Math.sin(a) * 0.85);
+    bf.g.rotation.y = -a;
+    var flap = Math.sin(now * 22 + bf.ph) * 0.65;
+    bf.wL.rotation.z = flap; bf.wR.rotation.z = -flap;
+  });
+
+  // 雨丝 & 水洼涟漪
+  var isRain = weather === 'rain';
+  rainDrops.forEach(function (r) {
+    r.m.visible = isRain;
+    if (!isRain) return;
+    r.m.position.y -= r.sp * dt;
+    r.m.position.x -= 0.45 * dt;
+    if (r.m.position.y < BASE + 0.05) {
+      r.m.position.y = BASE + 2.6 + Math.random() * 0.5;
+      r.m.position.x = (Math.random() - 0.5) * 7.2;
+    }
+  });
+  pudRipples.forEach(function (rp) {
+    if (isRain) rp.active = true;
+    if (!rp.active) return;
+    rp.t += dt * 1.6;
+    if (rp.t >= 1) { rp.t = 0; if (!isRain) { rp.active = false; rp.m.material.opacity = 0; return; } }
+    rp.m.scale.setScalar(0.6 + rp.t * 3.4);
+    rp.m.material.opacity = (1 - rp.t) * 0.78;
+  });
+
+  // 雪花
+  var isSnow = weather === 'snow';
+  snowFlakes.forEach(function (s) {
+    s.m.visible = isSnow;
+    if (!isSnow) return;
+    s.m.position.y -= s.sp * dt;
+    s.m.position.x += Math.sin(now * 1.8 + s.ph) * 0.35 * dt;
+    s.m.rotation.y += dt * 2.2;
+    if (s.m.position.y < BASE + 0.05) {
+      s.m.position.y = BASE + 2.6 + Math.random() * 0.5;
+      s.m.position.x = (Math.random() - 0.5) * 7.4;
+    }
+  });
+
+  // 风带
+  var isWind = weather === 'wind';
+  windBands.forEach(function (wb, idx) {
+    wb.m.visible = isWind;
+    if (!isWind) return;
+    wb.m.position.x += wb.sp * dt;
+    wb.m.position.y = wb.baseY + Math.sin(now * 6 + idx) * 0.14;
+    if (wb.m.position.x > 4.2) wb.m.position.x = -4.2;
+  });
+
+  // 轻微环境音效（仅在雨/风激活后节制触发）
+  if ((isRain || isWind) && now - lastAmb > 2.2 && AC && AC.state === 'running') {
+    lastAmb = now;
+    if (isRain) noiseBand(0.35, 1700, 0.8, 0.06);
+    else noiseBand(0.45, 500, 2.0, 0.08);
+  }
+
+  // 物件小跳与标签
+  PROPS.forEach(function (pr) {
+    if (pr.hop > 0) {
+      pr.hop = Math.max(0, pr.hop - dt * 3.5);
+      if (pr.id !== 'sun' && pr.id !== 'cloud') pr.g.position.y = BASE + Math.sin(pr.hop * Math.PI) * 0.2 * pr.hop;
+    } else if (pr.id !== 'sun' && pr.id !== 'cloud') {
+      pr.g.position.y = BASE;
+    }
+    var showL = pr.introLbl || hoveredProp === pr;
+    if (showL) {
+      var sp = toScreen(pr.g.position.clone().add(new THREE.Vector3(0, pr.h + 0.12, 0)));
+      pr.lbl.style.transform = 'translate(' + sp.x + 'px,' + sp.y + 'px) translate(-50%,-100%)';
+    }
+    pr.lbl.classList.toggle('show', !!showL);
+  });
+
+  updateGhost(dt);
+  $('#verbs').style.opacity = actions > 8 ? 0.45 : 1;
+  renderer.render(scene, camera);
+}
+
+/* ===================== 按钮、小测验与自检 ===================== */
+$('#voiceBtn').addEventListener('click', function () {
+  audio(); dismissEntryCues(); introSkip();
+  if (!greeted) {
+    voiceOn = true; greeted = true;
+    this.classList.add('on'); $('#voiceLbl').textContent = '🔊 语音';
+    updateGuide(true);
+    return;
+  }
+  voiceOn = !voiceOn;
+  this.classList.toggle('on', voiceOn);
+  $('#voiceLbl').textContent = voiceOn ? '🔊 语音' : '🔇 静音';
+  if (voiceOn) updateGuide(true);
+  else if (window.speechSynthesis) { try { (window.__xkVoice ? window.__xkVoice.stop() : window.speechSynthesis.cancel()); } catch (e) {} }
+});
+$('#guideBar').addEventListener('click', function () {
+  audio(); dismissEntryCues(); introSkip();
+  voiceOn = true; greeted = true;
+  $('#voiceBtn').classList.add('on'); $('#voiceLbl').textContent = '🔊 语音';
+  updateGuide(true);
+});
+document.querySelectorAll('#quizBox .qopt').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    audio();
+    var ok = btn.dataset.ok === '1';
+    var fb = $('#quizFb');
+    if (ok) {
+      btn.classList.add('ok');
+      document.querySelectorAll('#quizBox .qopt').forEach(function (b) { b.disabled = true; });
+      fb.className = 'quiz-fb ok';
+      fb.textContent = '🌸 太棒了！获得本课小红花！刮大风时风力很大，会把树吹弯、让风车转得飞快！';
+      sCelebrate();
+      saveProgress('k1a-08', true);
+      speak('太棒了！答对啦！获得本课小红花！刮大风时风力很大，会把树吹弯、让小风车转得飞快！');
+    } else {
+      btn.classList.add('no');
+      fb.className = 'quiz-fb no';
+      fb.textContent = '💡 ' + (btn.dataset.hint || '再想想哦，你可以再试一次！');
+      sPlop();
+      speak(btn.dataset.hint || '再想想哦，再试一次吧！');
+    }
+  });
+});
+$('#ntTgl').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+$('#winClose').addEventListener('click', hideWinToast);
+$('#winReplay').addEventListener('click', function () { resetAll(false); });
+$('#demoBtn').addEventListener('click', function () { audio(); dismissEntryCues(); introSkip(); if (demo) stopDemo(); else startDemo(); });
+$('#resetBtn').addEventListener('click', function () { resetAll(false); });
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () { return { triangles: renderer.info.render.triangles, pixelRatio: renderer.getPixelRatio(), found: foundN, kinds: kinds, triedW: triedW, yardTouched: yardTouched, celebrated: celebrated }; },
+  startDemo: startDemo
+};
+
+updateGuide(false);
+fit();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

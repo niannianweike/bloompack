@@ -1,0 +1,1513 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第7课 植物是生物 · 花圃浇水看生长（活页）</title>
+<style>
+:root{--ink:#2a3040;--paper:#fffaf0;--line:#e3d6bd;--accent:#2f9e5b}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#d9c19b;color:var(--ink);
+  font-family:"Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+ruby{ruby-align:center}
+rt{font-size:.5em;font-weight:600;color:#8a6d4a;letter-spacing:0}
+body.no-py rt{display:none}
+
+.chip{position:fixed;left:14px;top:12px;z-index:5;display:flex;align-items:center;gap:10px;
+  padding:6px 14px 6px 6px;border-radius:16px;background:rgba(255,250,240,.92);border:1.5px solid var(--line);
+  box-shadow:0 6px 18px rgba(80,55,20,.12)}
+.home{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:var(--ink);font-size:20px;font-weight:800}
+.home:hover{border-color:var(--accent);color:var(--accent)}
+.chip h1{margin:0;font-size:20px;line-height:1.5;font-weight:800}
+.chip small{display:block;font-size:12px;color:#8a7b62;font-weight:700;margin-top:-2px}
+
+.tools{position:fixed;right:14px;top:12px;z-index:5;display:flex;gap:8px;align-items:flex-start}
+.tbtn-wrap{position:relative;display:inline-flex;flex-direction:column;align-items:center}
+.tbtn{height:40px;padding:0 14px;border-radius:13px;border:1.5px solid var(--line);background:rgba(255,250,240,.94);
+  font:inherit;font-size:15px;font-weight:800;color:var(--ink);cursor:pointer;box-shadow:0 3px 0 #e2d2b5;white-space:nowrap}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:#207542;color:#fff;box-shadow:0 3px 0 #207542}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#dcfce7;border:1.5px solid #2f9e5b;color:#166534;font-size:10.5px;font-weight:900;white-space:nowrap;
+  box-shadow:0 3px 8px rgba(47,158,91,.25);pointer-events:none;z-index:6;
+  animation:cueFloat 1.5s ease-in-out infinite;transition:opacity .35s,transform .35s}
+.entry-cue::before{display:none}
+body.interacted .entry-cue{opacity:0;pointer-events:none;animation:none}
+body:not(.interacted) #voiceBtn{animation:btnPulse 1.8s ease-in-out infinite}
+@keyframes cueFloat{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(4px)}}
+@keyframes btnPulse{0%,100%{box-shadow:0 3px 0 #207542,0 0 0 0 rgba(47,158,91,.45)}50%{box-shadow:0 3px 0 #207542,0 0 0 8px rgba(47,158,91,0)}}
+
+#guideBar{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:5;
+  max-width:min(460px,calc(100vw - 520px));padding:8px 16px;border-radius:16px;
+  background:rgba(255,250,240,.95);border:2px solid #2f9e5b;box-shadow:0 6px 20px rgba(30,90,50,.15);
+  font-size:14px;font-weight:800;line-height:1.45;color:#14532d;text-align:center;
+  transition:transform .25s,box-shadow .25s}
+#guideBar.flash{transform:translateX(-50%) scale(1.04);box-shadow:0 8px 26px rgba(47,158,91,.32)}
+
+#notes{position:fixed;right:14px;top:64px;z-index:4;width:226px;max-height:calc(100% - 140px);overflow:hidden;
+  padding:9px 10px 10px;border-radius:16px;background:rgba(255,250,240,.92);border:1.5px solid var(--line);
+  box-shadow:0 8px 22px rgba(80,55,20,.12);transition:opacity .3s}
+.nt-head{display:flex;align-items:center;justify-content:space-between;font-size:15px;font-weight:800;margin-bottom:6px;gap:6px}
+.nt-r{display:flex;align-items:center;gap:6px}
+.nt-tgl{height:24px;padding:0 8px;border-radius:8px;border:1px solid var(--line);background:#fff;
+  font:inherit;font-size:12px;font-weight:800;color:#6e5e46;cursor:pointer}
+.nt-tgl:hover{border-color:var(--accent);color:var(--accent)}
+#notes.collapsed .stamps,#notes.collapsed #ntList{display:none}
+#notes.collapsed .nt-head{margin-bottom:0}
+.stamps{display:flex;gap:5px;margin-bottom:7px}
+.stamp{flex:1;text-align:center;padding:3px 0 2px;border-radius:10px;border:1.5px dashed #d8c7a6;color:#b3a283;font-size:13px;font-weight:800;line-height:1.5}
+.stamp.lit{border-style:solid;border-color:#2f9e5b;background:#eafaf0;color:#1f7a43;animation:pop .45s cubic-bezier(.2,1.6,.4,1)}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:152px;overflow-y:auto;padding-right:2px}
+.stk{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:11px;background:#fff;border:1.5px solid #e6dcc8;
+  font-size:15px;font-weight:800;line-height:1.65;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+.stk i{font-style:normal;width:24px;height:24px;flex:none;border-radius:7px;display:grid;place-items:center;color:#fff;font-size:13px}
+.stk b{color:#1f7a43}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:20}
+#winToast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.86);z-index:21;
+  width:min(450px,92vw);max-height:85vh;overflow-y:auto;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  padding:18px 20px;border-radius:22px;background:rgba(255,250,240,.98);border:2.5px solid var(--accent);
+  box-shadow:0 16px 40px rgba(40,80,50,.28);text-align:center;
+  opacity:0;pointer-events:none;transition:opacity .32s,transform .35s cubic-bezier(.2,1.5,.4,1)}
+#winToast.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+#winToast .medal{font-size:40px;line-height:1}
+#winToast .wmsg{font-size:20px;font-weight:900;line-height:1.5;color:#166534}
+.win-concl{width:100%;padding:10px 13px;border-radius:14px;background:#ecfdf3;border:1.5px solid #86efac;text-align:left}
+.win-concl-t{font-size:13px;font-weight:900;color:#15803d;margin-bottom:4px}
+.win-concl-b{font-size:14px;font-weight:800;color:#1e3a28;line-height:1.6}
+.win-quiz{width:100%;padding:11px 13px;border-radius:14px;background:#fff;border:1.5px solid #d9e6d6;text-align:left}
+.win-quiz-t{font-size:13px;font-weight:900;color:#2f9e5b;margin-bottom:5px}
+.win-quiz-q{font-size:15px;font-weight:900;color:var(--ink);margin-bottom:8px;line-height:1.45}
+.quiz-opts{display:flex;flex-direction:column;gap:7px}
+.qopt{width:100%;text-align:left;padding:9px 12px;border-radius:12px;border:1.5px solid #e3d6bd;background:#fffdf8;
+  font:inherit;font-size:14.5px;font-weight:800;color:var(--ink);cursor:pointer;transition:transform .12s,border-color .15s,background .15s}
+.qopt:hover{border-color:#2f9e5b;background:#f0fdf4}
+.qopt:active{transform:scale(.98)}
+.qopt.ok{border-color:#16a34a;background:#dcfce7;color:#14532d}
+.qopt.err{border-color:#f97316;background:#ffedd5;color:#9a3412}
+.quiz-fb{margin-top:8px;font-size:13.5px;font-weight:800;line-height:1.5;min-height:20px}
+.quiz-fb.ok{color:#15803d}
+.quiz-fb.err{color:#c2410c}
+#winToast .wacts{display:flex;gap:10px;margin-top:2px}
+#winToast .wact{height:38px;padding:0 18px;border-radius:12px;border:1.5px solid var(--line);background:#fff;
+  font:inherit;font-size:14px;font-weight:800;color:var(--ink);cursor:pointer;box-shadow:0 2px 0 #e2d2b5}
+#winToast .wact.pri{background:var(--accent);border-color:#207542;color:#fff;box-shadow:0 2px 0 #207542}
+
+#verbs{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:4;display:flex;gap:10px;transition:opacity .5s}
+.verb{display:flex;align-items:center;gap:7px;padding:6px 14px;border-radius:99px;background:rgba(255,250,240,.94);
+  border:1.5px solid var(--line);font-size:17px;font-weight:800;box-shadow:0 4px 14px rgba(80,55,20,.12);white-space:nowrap}
+.verb svg{width:22px;height:22px}
+.verb.done{border-color:#16a34a;color:#15803d;background:#effaf2}
+.verb.done::after{content:"✓";font-weight:900;color:#16a34a}
+
+#labels{position:fixed;inset:0;pointer-events:none;z-index:3}
+.lbl{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:2px 10px;border-radius:99px;white-space:nowrap;
+  background:rgba(42,48,64,.88);color:#fff;font-size:16px;font-weight:800;line-height:1.75;opacity:0;transition:opacity .2s}
+.lbl rt{color:#ffe0b8}
+.lbl.show{opacity:1}
+.word{position:absolute;left:0;top:0;transform:translate(-50%,-100%);font-size:26px;font-weight:900;line-height:1.65;white-space:nowrap;
+  color:#1f7a43;text-shadow:0 2px 0 #fff,0 0 8px #fff;pointer-events:none;animation:floatUp 1.25s ease-out forwards}
+.word.warm{color:#d97706}
+.word.cool{color:#2f5fa8}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-60%) scale(.6)}20%{opacity:1;transform:translate(-50%,-100%) scale(1.08)}100%{opacity:0;transform:translate(-50%,-190%) scale(1)}}
+
+#hand{position:fixed;left:0;top:0;width:64px;height:64px;z-index:6;pointer-events:none;opacity:0;transition:opacity .3s;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.25))}
+
+@media (max-width:960px){
+  #guideBar{top:62px;max-width:min(440px,calc(100vw - 280px));font-size:13px;padding:6px 12px}
+}
+@media (max-width:760px){
+  .chip{left:8px;top:8px;padding:4px 8px 4px 4px;max-width:calc(100% - 226px)}
+  .chip h1{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chip small{display:none}
+  .home{width:30px;height:30px;flex:none}
+  .tools{right:8px;top:8px;gap:4px}.tbtn{height:32px;padding:0 8px;font-size:12px}
+  .entry-cue{top:36px;font-size:10.5px;padding:2px 6px}
+  #guideBar{top:48px;left:8px;right:8px;transform:none;max-width:none;font-size:12.5px;padding:5px 10px}
+  #guideBar.flash{transform:scale(1.02)}
+  #notes{top:auto;bottom:62px;right:8px;left:8px;width:auto;max-height:112px;padding:8px 10px}
+  #ntList{max-height:56px}
+  .stk{font-size:14px}
+  #verbs{bottom:10px;gap:6px}.verb{font-size:13px;padding:4px 10px}.verb svg{width:17px;height:17px}
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="labels"></div>
+<canvas id="confetti"></canvas>
+<div id="winToast" role="status" aria-live="polite">
+  <div class="medal">🏆</div>
+  <div class="wmsg" id="winMsg"></div>
+  <div class="win-concl">
+    <div class="win-concl-t">✨ 科学小结论</div>
+    <div class="win-concl-b">真花和睡莲都是植物，属于生物，需要水和阳光才能发芽开花；塑料花不是生物，怎么浇水晒太阳都不会长！</div>
+  </div>
+  <div class="win-quiz">
+    <div class="win-quiz-t">💡 考考你 · 答对领小红花 🌸</div>
+    <div class="win-quiz-q">要想让真花盆里的幼苗发芽开花，它需要什么？</div>
+    <div class="quiz-opts" id="quizOpts">
+      <button class="qopt" data-ok="1" type="button">💧 水和 ☀️ 阳光</button>
+      <button class="qopt" data-ok="0" type="button">🪨 盖上小石头</button>
+      <button class="qopt" data-ok="0" type="button">🎀 换成塑料花瓣</button>
+    </div>
+    <div class="quiz-fb" id="quizFb"></div>
+  </div>
+  <div class="wacts">
+    <button class="wact pri" id="winClose" type="button">继续玩</button>
+    <button class="wact" id="winReplay" type="button">再玩一次</button>
+  </div>
+</div>
+
+<div class="chip">
+  <a class="home" href="../index.html" title="回到书包">‹</a>
+  <div><h1 id="ttl"></h1><small>活页 · 课本第 26 页「花圃浇水看生长」</small></div>
+</div>
+<div class="tools">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+<div id="guideBar" aria-live="polite"></div>
+
+<aside id="notes">
+  <div class="nt-head"><span id="ntTitle"></span><span class="nt-r"><span id="ntCount" style="color:#1f7a43">0</span><button class="nt-tgl" id="ntTgl" type="button">收起</button></span></div>
+  <div class="stamps"><span class="stamp" data-k="w" id="stW"></span><span class="stamp" data-k="s" id="stS"></span><span class="stamp" data-k="f" id="stF"></span></div>
+  <div id="ntList"></div>
+</aside>
+
+<div id="verbs">
+  <span class="verb" data-v="water"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.8 6 11a6 6 0 1 1-12 0c0-4.2 6-11 6-11z"/></svg><span id="vb1"></span></span>
+  <span class="verb" data-v="sun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/></svg><span id="vb2"></span></span>
+  <span class="verb" data-v="cmp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M12 13c-3 0-5-2-5-5 3 0 5 2 5 5z"/><path d="M12 11c3 0 5-2 5-5-3 0-5 2-5 5z"/></svg><span id="vb3"></span></span>
+</div>
+
+<svg id="hand" viewBox="0 0 64 64"><path d="M26 6c3 0 5 2 5 5v17l3-1c2-6 9-5 9 0 2-3 8-2 8 3 3-1 7 1 7 5v12c0 9-7 15-16 15h-6c-6 0-10-3-13-8L13 41c-2-3 0-7 4-7 2 0 3 1 4 2V11c0-3 2-5 5-5z" fill="#fff" stroke="#2a3040" stroke-width="3" stroke-linejoin="round"/></svg>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js"></script>
+<script src="../vendor/voice.js"></script>
+<script>
+(function () {
+'use strict';
+
+/* ===================== 拼音 ===================== */
+var HAN = /[\u3400-\u9fff]/, pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function ruby(text, py) {
+  var syl = py ? py.trim().split(/\s+/) : [], i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) { var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; } out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>'; }
+    else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+var $ = function (s) { return document.querySelector(s); };
+$('#ttl').innerHTML = ruby('第7课 植物是生物', 'dì kè zhí wù shì shēng wù');
+$('#ntTitle').innerHTML = ruby('我的发现', 'wǒ de fā xiàn');
+$('#stW').innerHTML = ruby('浇水', 'jiāo shuǐ');
+$('#stS').innerHTML = ruby('光照', 'guāng zhào');
+$('#stF').innerHTML = ruby('真假花', 'zhēn jiǎ huā');
+$('#vb1').innerHTML = ruby('浇浇水', 'jiāo jiao shuǐ');
+$('#vb2').innerHTML = ruby('晒太阳', 'shài tài yáng');
+$('#vb3').innerHTML = ruby('看生长', 'kàn shēng zhǎng');
+$('#winMsg').innerHTML = '🌟 ' + ruby('太棒啦！全部发现集齐啦！', 'tài bàng la quán bù fā xiàn jí qí la');
+
+/* ===================== Three 基础 ===================== */
+var canvas = $('#c');
+var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera(32, 1, 0.1, 200);
+var raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2();
+
+scene.add(new THREE.HemisphereLight(0xfff8ee, 0xcdb08a, 0.42));
+var sunLight = new THREE.DirectionalLight(0xfff1dc, 0.66);
+sunLight.position.set(-4, 12, 7);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.set(1024, 1024);
+(function (c) { c.left = -7; c.right = 7; c.top = 6; c.bottom = -6; c.near = 1; c.far = 40; })(sunLight.shadow.camera);
+sunLight.shadow.bias = -0.0008;
+scene.add(sunLight);
+
+var ramp = new THREE.DataTexture(new Uint8Array([120, 120, 120, 255, 185, 185, 185, 255, 232, 232, 232, 255, 255, 255, 255, 255]), 4, 1, THREE.RGBAFormat);
+ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+var INK = new THREE.LineBasicMaterial({ color: 0x2a3040, transparent: true, opacity: 0.8 });
+function toon(hex, extra) {
+  var o = { color: new THREE.Color(hex), gradientMap: ramp };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshToonMaterial(o);
+}
+function mesh(geo, mat, ink) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  if (ink !== false) m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), INK));
+  return m;
+}
+function ctex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c);
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+
+/* ===================== 书桌 + 摊开的课本 ===================== */
+var deskTex = ctex(512, 512, function (g, w, h) {
+  g.fillStyle = '#c9a36b'; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 70; i++) { g.fillStyle = 'rgba(120,80,35,' + (Math.random() * 0.05).toFixed(3) + ')'; g.fillRect(0, Math.random() * h, w, 1 + Math.random() * 3); }
+});
+deskTex.wrapS = deskTex.wrapT = THREE.RepeatWrapping; deskTex.repeat.set(3, 3);
+var deskM = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshLambertMaterial({ map: deskTex }));
+deskM.rotation.x = -Math.PI / 2; deskM.position.y = -0.2; deskM.receiveShadow = true;
+scene.add(deskM);
+
+function pageTex(right) {
+  return ctex(512, 640, function (g, w, h) {
+    g.fillStyle = '#fbf6ea'; g.fillRect(0, 0, w, h);
+    var gr = g.createLinearGradient(right ? 0 : w, 0, right ? 60 : w - 60, 0);
+    gr.addColorStop(0, 'rgba(120,90,45,.18)'); gr.addColorStop(1, 'rgba(120,90,45,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#e4d8c2';
+    for (var r = 0; r < 15; r++) { var y = 60 + r * 36; if (r === 5 || r === 11) continue; g.fillRect(50, y, w - 100 - (r % 4) * 40, 8); }
+    g.fillStyle = '#b9a98c'; g.font = 'bold 22px sans-serif'; g.textAlign = right ? 'right' : 'left';
+    g.fillText(right ? '27' : '26', right ? w - 40 : 40, h - 26);
+  });
+}
+var book = new THREE.Group(); scene.add(book);
+[-1, 1].forEach(function (sx) {
+  var pg = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.16, 6.6), [
+    new THREE.MeshLambertMaterial({ color: 0xefe6d2 }), new THREE.MeshLambertMaterial({ color: 0xefe6d2 }),
+    new THREE.MeshLambertMaterial({ map: pageTex(sx > 0) }), new THREE.MeshLambertMaterial({ color: 0xe4d8c0 }),
+    new THREE.MeshLambertMaterial({ color: 0xefe6d2 }), new THREE.MeshLambertMaterial({ color: 0xefe6d2 })
+  ]);
+  pg.position.set(sx * 2.62, -0.08, 0); pg.receiveShadow = true; pg.castShadow = true;
+  book.add(pg);
+});
+var cover = new THREE.Mesh(new THREE.BoxGeometry(10.7, 0.06, 6.9), new THREE.MeshLambertMaterial({ color: 0x2f9e5b }));
+cover.position.y = -0.19; book.add(cover);
+
+/* ===================== 活页花圃底板 ===================== */
+var BASE = 0.1;
+var BOARD = { x0: -4.1, x1: 4.1, z0: -2.35, z1: 2.35 };
+var live = new THREE.Group(); scene.add(live);
+var boardTex = ctex(512, 300, function (g, w, h) {
+  g.fillStyle = '#f8f0dc'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#b9e09b'; g.fillRect(14, 14, w - 28, 178);
+  g.strokeStyle = '#99c478'; g.lineWidth = 4; g.strokeRect(14, 14, w - 28, 178);
+  g.fillStyle = '#e8d7b7';
+  for (var i = 0; i < 6; i++) {
+    g.beginPath(); g.ellipse(64 + i * 76, 238, 28, 16, 0, 0, Math.PI * 2); g.fill();
+  }
+  g.strokeStyle = 'rgba(130,175,90,.35)'; g.lineWidth = 2;
+  for (var k = 0; k < 28; k++) {
+    var gx = 30 + (k * 37) % (w - 60), gy = 30 + (k * 53) % 148;
+    g.beginPath(); g.moveTo(gx, gy); g.lineTo(gx - 4, gy - 8); g.moveTo(gx, gy); g.lineTo(gx + 4, gy - 7); g.stroke();
+  }
+});
+var board = mesh(new THREE.BoxGeometry(8.2, BASE, 4.7), [
+  toon('#dfc89d'), toon('#dfc89d'), new THREE.MeshToonMaterial({ map: boardTex, gradientMap: ramp }), toon('#dfc89d'), toon('#dfc89d'), toon('#dfc89d')
+]);
+board.position.y = BASE / 2; board.castShadow = false;
+live.add(board);
+
+// 低矮木栅栏装饰（花圃后缘）
+var fenceG = new THREE.Group(); live.add(fenceG);
+var woodMat = toon('#d7a565'), woodDark = toon('#b9803e');
+for (var fi = -3.7; fi <= 3.71; fi += 0.74) {
+  var picket = mesh(new THREE.BoxGeometry(0.14, 0.56, 0.08), woodMat);
+  picket.position.set(fi, BASE + 0.28, -2.18); fenceG.add(picket);
+}
+var rail1 = mesh(new THREE.BoxGeometry(7.7, 0.08, 0.06), woodDark); rail1.position.set(0, BASE + 0.42, -2.13); fenceG.add(rail1);
+var rail2 = mesh(new THREE.BoxGeometry(7.7, 0.08, 0.06), woodDark); rail2.position.set(0, BASE + 0.18, -2.13); fenceG.add(rail2);
+
+// 揭起的插图卡片
+var figTex = ctex(512, 300, function (g, w, h) {
+  g.fillStyle = '#fbf3e2'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = '#2f9e5b'; g.lineWidth = 6; g.strokeRect(6, 6, w - 12, h - 12);
+  g.fillStyle = '#5eb062'; g.beginPath(); g.arc(140, 145, 36, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#e76fa3'; g.beginPath(); g.arc(256, 145, 34, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#6ec6e8'; g.beginPath(); g.ellipse(372, 150, 48, 28, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#6e5e46'; g.font = 'bold 26px sans-serif'; g.textAlign = 'center'; g.fillText('花圃浇水看生长', w / 2, h - 24);
+});
+var figCard = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 4.7), new THREE.MeshBasicMaterial({ map: figTex, transparent: true }));
+figCard.rotation.x = -Math.PI / 2; figCard.position.y = 0.012;
+scene.add(figCard);
+
+/* ===================== 场景目标：真花盆 / 塑料花盆 / 小池塘睡莲 / 石头 ===================== */
+var TARGETS = [];
+function makeGlowRing(r1, r2, color) {
+  var m = new THREE.Mesh(new THREE.RingGeometry(r1, r2, 36), new THREE.MeshBasicMaterial({ color: color || 0x4fc3f7, transparent: true, opacity: 0, side: THREE.DoubleSide }));
+  m.rotation.x = -Math.PI / 2; m.position.y = 0.025;
+  return m;
+}
+
+/* 1. 真花盆 (左) */
+var realG = new THREE.Group(); realG.position.set(-2.65, BASE, -0.58); live.add(realG);
+var potMat = toon('#d97642'), potRimMat = toon('#c56332');
+var realPot = mesh(new THREE.CylinderGeometry(0.56, 0.42, 0.62, 22), potMat); realPot.position.y = 0.31; realG.add(realPot);
+var realRim = mesh(new THREE.CylinderGeometry(0.62, 0.58, 0.14, 22), potRimMat); realRim.position.y = 0.62; realG.add(realRim);
+var soilMat = toon('#a37b52');
+var realSoil = mesh(new THREE.CylinderGeometry(0.52, 0.52, 0.05, 22), soilMat, false); realSoil.position.y = 0.65; realG.add(realSoil);
+var realGlow = makeGlowRing(0.66, 0.84, 0x38bdf8); realG.add(realGlow);
+
+// 真植物（随 growth 0 -> 1 生长开花）
+var plantG = new THREE.Group(); plantG.position.y = 0.66; realG.add(plantG);
+var stemMat = toon('#41a84e'), leafMat = toon('#56c25b');
+var stemM = mesh(new THREE.CylinderGeometry(0.036, 0.048, 1.0, 10), stemMat); stemM.position.y = 0.5; plantG.add(stemM);
+function makeLeaf() {
+  var g = new THREE.Group();
+  var lf = mesh(new THREE.SphereGeometry(0.24, 12, 10), leafMat);
+  lf.scale.set(1.25, 0.22, 0.65); lf.position.set(0.24, 0, 0);
+  g.add(lf); return g;
+}
+var leaves = [];
+for (var li = 0; li < 4; li++) {
+  var lf = makeLeaf();
+  lf.rotation.y = li * Math.PI / 2 + (li >= 2 ? 0.5 : 0);
+  plantG.add(lf); leaves.push(lf);
+}
+var realFlowerG = new THREE.Group(); plantG.add(realFlowerG);
+var realCenter = mesh(new THREE.SphereGeometry(0.15, 14, 12), toon('#ffd13b')); realCenter.scale.set(1, 0.65, 1); realFlowerG.add(realCenter);
+var realPetals = [];
+for (var pi = 0; pi < 8; pi++) {
+  var pg = new THREE.Group(); pg.rotation.y = pi * Math.PI * 2 / 8;
+  var pt = mesh(new THREE.SphereGeometry(0.15, 10, 8), toon('#ff6f59'));
+  pt.scale.set(1.25, 0.34, 0.68); pt.position.set(0.21, 0, 0);
+  pg.add(pt); realFlowerG.add(pg); realPetals.push(pg);
+}
+var realState = { growth: 0.08, goal: 0.08, wet: 0, sunBoost: 0, hop: 0, watered: false, sunned: false, bloomed: false };
+var realT = { id: 'real', name: '真花盆', py: 'zhēn huā pén', g: realG, glow: realGlow, r: 0.95, h: 1.8, st: realState };
+TARGETS.push(realT);
+
+/* 2. 塑料花盆 (中) */
+var fakeG = new THREE.Group(); fakeG.position.set(-0.45, BASE, -0.58); live.add(fakeG);
+var fakePot = mesh(new THREE.CylinderGeometry(0.52, 0.4, 0.6, 20), toon('#f06292')); fakePot.position.y = 0.3; fakeG.add(fakePot);
+var fakeRim = mesh(new THREE.CylinderGeometry(0.58, 0.54, 0.13, 20), toon('#fff4f8')); fakeRim.position.y = 0.6; fakeG.add(fakeRim);
+var foam = mesh(new THREE.CylinderGeometry(0.48, 0.48, 0.06, 18), toon('#e2e8f0'), false); foam.position.y = 0.64; fakeG.add(foam);
+var fakeGlow = makeGlowRing(0.64, 0.82, 0x38bdf8); fakeG.add(fakeGlow);
+
+// 僵硬发亮的塑料花
+var fakeFlowerG = new THREE.Group(); fakeFlowerG.position.y = 0.66; fakeG.add(fakeFlowerG);
+var fakeStem = mesh(new THREE.CylinderGeometry(0.032, 0.035, 0.85, 8), toon('#16a34a')); fakeStem.position.y = 0.425; fakeFlowerG.add(fakeStem);
+[-1, 1].forEach(function (sx) {
+  var fl = mesh(new THREE.BoxGeometry(0.36, 0.04, 0.16), toon('#22c55e'));
+  fl.position.set(sx * 0.19, 0.38, 0); fl.rotation.z = sx * 0.35; fakeFlowerG.add(fl);
+});
+var fakeHead = new THREE.Group(); fakeHead.position.set(0, 0.88, 0); fakeHead.rotation.x = 0.35; fakeFlowerG.add(fakeHead);
+fakeHead.add(mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.06, 12), toon('#fde047')));
+for (var fp = 0; fp < 6; fp++) {
+  var fpt = mesh(new THREE.BoxGeometry(0.22, 0.045, 0.14), toon('#c084fc'));
+  var ang = fp * Math.PI / 3;
+  fpt.position.set(Math.cos(ang) * 0.19, 0, Math.sin(ang) * 0.19);
+  fpt.rotation.y = -ang; fakeHead.add(fpt);
+}
+var fakeState = { wobble: 0, hop: 0, watered: false, sunned: false };
+var fakeT = { id: 'fake', name: '塑料花', py: 'sù liào huā', g: fakeG, glow: fakeGlow, r: 0.92, h: 1.65, st: fakeState };
+TARGETS.push(fakeT);
+
+/* 3. 小池塘与精致绘本风睡莲 (右后 - U6 重建) */
+var pondG = new THREE.Group(); pondG.position.set(1.9, BASE, -0.52); live.add(pondG);
+var pondRim = mesh(new THREE.CylinderGeometry(1.18, 1.24, 0.14, 28), toon('#b9b1a3')); pondRim.scale.set(1.12, 1, 0.84); pondRim.position.y = 0.07; pondG.add(pondRim);
+var waterTex = ctex(256, 256, function (g, w, h) {
+  var gr = g.createRadialGradient(w * 0.45, h * 0.45, 16, w * 0.5, h * 0.5, w * 0.52);
+  gr.addColorStop(0, '#6bd8f7'); gr.addColorStop(0.65, '#46bde6'); gr.addColorStop(1, '#2fa4d4');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(255,255,255,.22)'; g.lineWidth = 3;
+  g.beginPath(); g.arc(w * 0.44, h * 0.52, 54, 0, Math.PI * 2); g.stroke();
+  g.beginPath(); g.arc(w * 0.44, h * 0.52, 82, 0.4, Math.PI * 1.7); g.stroke();
+});
+var waterMat = new THREE.MeshToonMaterial({ map: waterTex, gradientMap: ramp, transparent: true, opacity: 0.94 });
+var pondWater = mesh(new THREE.CylinderGeometry(1.06, 1.06, 0.15, 28), waterMat, false); pondWater.scale.set(1.12, 1, 0.84); pondWater.position.y = 0.078; pondG.add(pondWater);
+var pondGlow = makeGlowRing(1.16, 1.34, 0x38bdf8); pondGlow.scale.set(1.1, 0.86, 1); pondG.add(pondGlow);
+
+// 池边小鹅卵石
+[[-1.12, 0.35, 0.16], [-0.92, 0.65, 0.13], [1.14, -0.3, 0.15], [0.85, -0.74, 0.14], [-0.45, -0.82, 0.14]].forEach(function (p) {
+  var st = mesh(new THREE.DodecahedronGeometry(p[2], 0), toon('#9ca3af'));
+  st.scale.set(1.2, 0.65, 1); st.position.set(p[0], 0.12, p[1]); pondG.add(st);
+});
+
+// 精致缺口荷叶纹理（翠绿渐变 + 浅绿放射叶脉 + 水珠高光）
+var lilyPadTex = ctex(256, 256, function (g, w, h) {
+  var cx = w / 2, cy = h / 2, r = w * 0.48;
+  var gr = g.createRadialGradient(cx, cy, 8, cx, cy, r);
+  gr.addColorStop(0, '#2a9d4e');
+  gr.addColorStop(0.55, '#46c665');
+  gr.addColorStop(0.92, '#62d973');
+  gr.addColorStop(1, '#2f9e52');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  // 放射状叶脉与分叉
+  g.strokeStyle = 'rgba(182, 248, 178, 0.72)';
+  g.lineCap = 'round';
+  for (var i = 0; i < 13; i++) {
+    var a = (i / 13) * Math.PI * 2 + 0.18;
+    g.lineWidth = 2.6;
+    g.beginPath(); g.moveTo(cx, cy);
+    g.lineTo(cx + Math.cos(a) * r * 0.88, cy + Math.sin(a) * r * 0.88);
+    g.stroke();
+    g.lineWidth = 1.6;
+    var mx = cx + Math.cos(a) * r * 0.56, my = cy + Math.sin(a) * r * 0.56;
+    g.beginPath();
+    g.moveTo(mx, my); g.lineTo(cx + Math.cos(a + 0.14) * r * 0.82, cy + Math.sin(a + 0.14) * r * 0.82);
+    g.moveTo(mx, my); g.lineTo(cx + Math.cos(a - 0.14) * r * 0.82, cy + Math.sin(a - 0.14) * r * 0.82);
+    g.stroke();
+  }
+  // 中心浅绿叶脐与小水珠
+  g.fillStyle = '#a8f29e'; g.beginPath(); g.arc(cx, cy, 8, 0, Math.PI * 2); g.fill();
+  g.fillStyle = 'rgba(225, 250, 255, 0.85)';
+  g.beginPath(); g.arc(cx - 42, cy - 36, 7, 0, Math.PI * 2); g.fill();
+  g.beginPath(); g.arc(cx + 36, cy + 48, 5, 0, Math.PI * 2); g.fill();
+});
+var lilyPadMat = new THREE.MeshToonMaterial({ map: lilyPadTex, gradientMap: ramp });
+
+function makeLilyPad(radius, rotY) {
+  var notch = 0.28;
+  var shp = new THREE.Shape();
+  shp.moveTo(0, 0);
+  shp.absarc(0, 0, radius, notch, Math.PI * 2 - notch, false);
+  shp.closePath();
+  var geo = new THREE.ExtrudeGeometry(shp, {
+    depth: 0.024, bevelEnabled: true, bevelThickness: 0.008, bevelSize: 0.01, bevelSegments: 2, curveSegments: 28
+  });
+  var pos = geo.attributes.position, uv = geo.attributes.uv;
+  for (var i = 0; i < pos.count; i++) {
+    uv.setXY(i, pos.getX(i) / (2 * radius) + 0.5, pos.getY(i) / (2 * radius) + 0.5);
+  }
+  uv.needsUpdate = true;
+  geo.rotateX(-Math.PI / 2);
+  var m = mesh(geo, lilyPadMat, false);
+  m.rotation.y = rotY;
+  return m;
+}
+var lilyPads = [];
+var pad1 = makeLilyPad(0.55, 0.55); pad1.position.set(-0.14, 0.16, 0.06); pondG.add(pad1); lilyPads.push(pad1);
+var pad2 = makeLilyPad(0.36, 2.35); pad2.position.set(0.58, 0.16, -0.2); pondG.add(pad2); lilyPads.push(pad2);
+var pad3 = makeLilyPad(0.27, -1.2); pad3.position.set(-0.7, 0.16, -0.32); pondG.add(pad3); lilyPads.push(pad3);
+
+// 精致尖瓣弧面睡莲花瓣几何体与渐变绘本贴图
+function makeLotusPetalGeo(w, len, cup) {
+  var geo = new THREE.PlaneGeometry(1, 1, 6, 10);
+  var pos = geo.attributes.position;
+  for (var i = 0; i < pos.count; i++) {
+    var u = pos.getX(i) * 2;        // -1 .. 1
+    var v = pos.getY(i) + 0.5;      // 0 (底端) .. 1 (花尖)
+    var halfW = Math.sin(Math.pow(v, 0.72) * Math.PI) * (w * 0.5);
+    var zCup = (1 - u * u) * cup * Math.sin(v * Math.PI);
+    var zArch = Math.sin(v * Math.PI * 0.88) * (len * 0.17) - Math.pow(v, 2.1) * (len * 0.06);
+    pos.setXYZ(i, u * halfW, v * len, zCup + zArch);
+  }
+  geo.computeVertexNormals();
+  return geo;
+}
+function makePetalTex(c0, c1, c2) {
+  return ctex(128, 256, function (g, w, h) {
+    var gr = g.createLinearGradient(0, h, 0, 0);
+    gr.addColorStop(0, c0);
+    gr.addColorStop(0.52, c1);
+    gr.addColorStop(1, c2);
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(255, 255, 255, 0.28)'; g.lineWidth = 2;
+    for (var k = -2; k <= 2; k++) {
+      g.beginPath(); g.moveTo(w / 2, h); g.quadraticCurveTo(w / 2 + k * 20, h * 0.5, w / 2 + k * 8, 8); g.stroke();
+    }
+  });
+}
+var petalMatOuter = new THREE.MeshToonMaterial({ map: makePetalTex('#fff7f0', '#ffc4dc', '#ff74ad'), gradientMap: ramp, side: THREE.DoubleSide });
+var petalMatMid   = new THREE.MeshToonMaterial({ map: makePetalTex('#fff6e8', '#ffa6ca', '#ff5b9c'), gradientMap: ramp, side: THREE.DoubleSide });
+var petalMatInner = new THREE.MeshToonMaterial({ map: makePetalTex('#fff5cc', '#ffc2dc', '#ff85b7'), gradientMap: ramp, side: THREE.DoubleSide });
+var sepalMat      = toon('#33a854', { side: THREE.DoubleSide });
+
+// 主睡莲花（3层同心花瓣 + 绿色花萼 + 明亮金黄圆顶花蕊与花粉粒）
+var lotusG = new THREE.Group(); lotusG.position.set(-0.14, 0.195, 0.06); pondG.add(lotusG);
+var sepalGeo = makeLotusPetalGeo(0.18, 0.3, 0.025);
+for (var sp = 0; sp < 5; sp++) {
+  var sg = new THREE.Group(); sg.rotation.y = sp * Math.PI * 2 / 5 + 0.2;
+  var sm = mesh(sepalGeo, sepalMat, false);
+  sm.position.set(0, 0, 0.08); sm.rotation.x = 1.32;
+  sg.add(sm); lotusG.add(sg);
+}
+var lotusOuter = [], lotusMid = [], lotusInner = [];
+function buildLotusRing(count, radius, w, len, cup, mat, phase, store) {
+  var pGeo = makeLotusPetalGeo(w, len, cup);
+  for (var i = 0; i < count; i++) {
+    var rotG = new THREE.Group();
+    rotG.rotation.y = i * Math.PI * 2 / count + phase;
+    var piv = new THREE.Group();
+    piv.position.set(0, 0.01, radius);
+    var pm = mesh(pGeo, mat, false);
+    piv.add(pm); rotG.add(piv); lotusG.add(rotG);
+    store.push(piv);
+  }
+}
+buildLotusRing(6, 0.075, 0.25, 0.44, 0.048, petalMatOuter, 0.0, lotusOuter);
+buildLotusRing(6, 0.056, 0.21, 0.39, 0.042, petalMatMid,   Math.PI / 6, lotusMid);
+buildLotusRing(5, 0.038, 0.17, 0.32, 0.034, petalMatInner, 0.34, lotusInner);
+
+// 金黄圆顶花蕊 + 一圈可爱小花粉点
+var lotusStamenG = new THREE.Group(); lotusStamenG.position.y = 0.02; lotusG.add(lotusStamenG);
+var lotusCore = mesh(new THREE.SphereGeometry(0.11, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.65), toon('#ffd23f'), false);
+lotusCore.scale.set(1, 0.85, 1); lotusStamenG.add(lotusCore);
+var lotusCrown = mesh(new THREE.CylinderGeometry(0.068, 0.085, 0.035, 14), toon('#f59e0b'), false);
+lotusCrown.position.y = 0.078; lotusStamenG.add(lotusCrown);
+var pollenMat = toon('#fff176');
+for (var pk = 0; pk < 12; pk++) {
+  var pa = pk * Math.PI * 2 / 12;
+  var pDot = mesh(new THREE.SphereGeometry(0.019, 8, 6), pollenMat, false);
+  pDot.position.set(Math.cos(pa) * 0.115, 0.095 + (pk % 2) * 0.02, Math.sin(pa) * 0.115);
+  lotusStamenG.add(pDot);
+}
+
+// 伴生小花苞（点缀在第二片荷叶旁，增加池塘生机）
+var babyBudG = new THREE.Group(); babyBudG.position.set(0.56, 0.19, -0.2); pondG.add(babyBudG);
+var budGeo = makeLotusPetalGeo(0.11, 0.2, 0.028);
+for (var bp = 0; bp < 5; bp++) {
+  var bg = new THREE.Group(); bg.rotation.y = bp * Math.PI * 2 / 5;
+  var bm = mesh(budGeo, petalMatMid, false);
+  bm.position.set(0, 0, 0.02); bm.rotation.x = 0.14;
+  bg.add(bm); babyBudG.add(bg);
+}
+
+// 池塘轻柔常驻水波纹 + 浇水涟漪
+var ambientRipples = [];
+for (var ar = 0; ar < 2; ar++) {
+  var arp = new THREE.Mesh(new THREE.RingGeometry(0.58 + ar * 0.14, 0.62 + ar * 0.14, 36),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.25, side: THREE.DoubleSide }));
+  arp.rotation.x = -Math.PI / 2; arp.position.set(-0.14, 0.158, 0.06); pondG.add(arp);
+  ambientRipples.push(arp);
+}
+var ripples = [];
+for (var ri = 0; ri < 3; ri++) {
+  var rp = new THREE.Mesh(new THREE.RingGeometry(0.15, 0.21, 28), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide }));
+  rp.rotation.x = -Math.PI / 2; rp.position.set(-0.14, 0.164, 0.06); pondG.add(rp);
+  ripples.push({ m: rp, t: 0, active: false });
+}
+var pondState = { bloom: 0.08, goal: 0.08, hop: 0, watered: false, sunned: false, bloomed: false };
+var pondT = { id: 'pond', name: '池塘睡莲', py: 'chí táng shuì lián', g: pondG, glow: pondGlow, r: 1.2, h: 0.95, st: pondState };
+TARGETS.push(pondT);
+
+/* 4. 池畔大石头（右前，浇水不变大） */
+var stoneG = new THREE.Group(); stoneG.position.set(2.45, BASE, 0.92); live.add(stoneG);
+var stoneM = mesh(new THREE.DodecahedronGeometry(0.38, 0), toon('#8f99a8'));
+stoneM.scale.set(1.25, 0.78, 0.95); stoneM.position.y = 0.25; stoneG.add(stoneM);
+var stoneGlow = makeGlowRing(0.46, 0.62, 0x38bdf8); stoneG.add(stoneGlow);
+var stoneState = { hop: 0, watered: false };
+var stoneT = { id: 'stone', name: '小石头', py: 'xiǎo shí tou', g: stoneG, glow: stoneGlow, r: 0.62, h: 0.65, st: stoneState };
+TARGETS.push(stoneT);
+
+TARGETS.forEach(function (tg) {
+  tg.g.traverse(function (o) { if (o.isMesh) o.userData.target = tg; });
+});
+
+/* ===================== 两个可拖拽 3D 工具：蓝色浇水壶 & 暖黄小太阳 ===================== */
+var TOOLS = [];
+
+// 工具 1：蓝色浇水壶
+var canG = new THREE.Group(), canBody = new THREE.Group(); canG.add(canBody);
+var canMat = toon('#3b9ae1'), canRimMat = toon('#277bbd'), roseMat = toon('#ffd15c');
+var canCyl = mesh(new THREE.CylinderGeometry(0.34, 0.38, 0.56, 20), canMat); canCyl.position.y = 0.28; canBody.add(canCyl);
+var canTop = mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.06, 20), canRimMat); canTop.position.y = 0.56; canBody.add(canTop);
+var canSpout = mesh(new THREE.CylinderGeometry(0.055, 0.09, 0.62, 12), canMat);
+canSpout.position.set(-0.46, 0.42, 0); canSpout.rotation.z = 0.85; canBody.add(canSpout);
+var canRose = mesh(new THREE.CylinderGeometry(0.13, 0.06, 0.1, 14), roseMat);
+canRose.position.set(-0.7, 0.62, 0); canRose.rotation.z = 0.85; canBody.add(canRose);
+var canHandle = mesh(new THREE.TorusGeometry(0.24, 0.045, 10, 20, Math.PI * 1.25), canRimMat);
+canHandle.position.set(0.33, 0.34, 0); canHandle.rotation.z = -1.6; canBody.add(canHandle);
+var canTool = {
+  id: 'can', name: '浇水壶', py: 'jiāo shuǐ hú', g: canG, body: canBody,
+  home: new THREE.Vector3(-1.65, BASE, 1.42), cur: new THREE.Vector3(-1.65, BASE, 1.42),
+  target: new THREE.Vector3(-1.65, BASE, 1.42), h: 0.72, tilt: 0, hop: 0, hover: 0, pop: 0.001, dragging: false, flying: null
+};
+live.add(canG); TOOLS.push(canTool);
+
+// 工具 2：暖黄小太阳
+var sunG = new THREE.Group(), sunBody = new THREE.Group(); sunG.add(sunBody);
+var sunStand = mesh(new THREE.CylinderGeometry(0.26, 0.34, 0.1, 18), toon('#f59e0b')); sunStand.position.y = 0.05; sunBody.add(sunStand);
+var sunCore = mesh(new THREE.SphereGeometry(0.34, 18, 16), toon('#ffd43b')); sunCore.position.y = 0.54; sunBody.add(sunCore);
+var sunRaysG = new THREE.Group(); sunRaysG.position.y = 0.54; sunBody.add(sunRaysG);
+for (var sr = 0; sr < 8; sr++) {
+  var ra = sr * Math.PI / 4;
+  var ray = mesh(new THREE.ConeGeometry(0.085, 0.24, 8), toon('#ff9f1c'));
+  ray.position.set(Math.cos(ra) * 0.44, Math.sin(ra) * 0.44, 0);
+  ray.rotation.z = ra - Math.PI / 2;
+  sunRaysG.add(ray);
+}
+// 太阳笑脸
+[-0.1, 0.1].forEach(function (ex) {
+  var eye = mesh(new THREE.SphereGeometry(0.036, 8, 8), toon('#2a3040'), false);
+  eye.position.set(ex, 0.58, 0.31); sunBody.add(eye);
+});
+var sunBeam = new THREE.Mesh(new THREE.ConeGeometry(0.92, 1.55, 22, 1, true),
+  new THREE.MeshBasicMaterial({ color: 0xffe066, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
+sunBeam.position.set(0, -0.35, 0); sunBody.add(sunBeam);
+var sunTool = {
+  id: 'sun', name: '小太阳', py: 'xiǎo tài yáng', g: sunG, body: sunBody,
+  home: new THREE.Vector3(0.75, BASE, 1.42), cur: new THREE.Vector3(0.75, BASE, 1.42),
+  target: new THREE.Vector3(0.75, BASE, 1.42), h: 0.92, tilt: 0, hop: 0, hover: 0, pop: 0.001, dragging: false, flying: null
+};
+live.add(sunG); TOOLS.push(sunTool);
+
+TOOLS.forEach(function (tl) {
+  tl.g.position.copy(tl.cur);
+  tl.g.traverse(function (o) { if (o.isMesh) o.userData.tool = tl; });
+});
+
+/* ===================== 3D 水滴 & 闪光粒子 ===================== */
+var drops = [];
+var dropGeo = new THREE.SphereGeometry(0.052, 8, 8);
+var dropMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+var sparkGeo = new THREE.OctahedronGeometry(0.075, 0);
+var sparkMat = new THREE.MeshBasicMaterial({ color: 0xffd43b });
+for (var di = 0; di < 36; di++) {
+  var dm = new THREE.Mesh(dropGeo, dropMat); dm.visible = false; live.add(dm);
+  drops.push({ m: dm, v: new THREE.Vector3(), life: 0, bounce: false });
+}
+var sparks = [];
+for (var si = 0; si < 18; si++) {
+  var sm = new THREE.Mesh(sparkGeo, sparkMat); sm.visible = false; live.add(sm);
+  sparks.push({ m: sm, v: new THREE.Vector3(), life: 0 });
+}
+var dropIdx = 0, sparkIdx = 0;
+function spawnDrop(pos, vx, vy, vz, bounce) {
+  var d = drops[dropIdx++ % drops.length];
+  d.m.position.copy(pos); d.v.set(vx, vy, vz); d.life = 0.65; d.bounce = !!bounce; d.m.visible = true;
+}
+function spawnSparks(pos, count) {
+  for (var i = 0; i < (count || 8); i++) {
+    var s = sparks[sparkIdx++ % sparks.length];
+    var a = Math.random() * Math.PI * 2;
+    s.m.position.set(pos.x, pos.y, pos.z);
+    s.v.set(Math.cos(a) * (0.6 + Math.random() * 0.7), 1.1 + Math.random() * 0.9, Math.sin(a) * (0.6 + Math.random() * 0.7));
+    s.life = 0.85; s.m.visible = true;
+  }
+}
+function triggerRipple() {
+  for (var i = 0; i < ripples.length; i++) {
+    if (!ripples[i].active) { ripples[i].active = true; ripples[i].t = 0; return; }
+  }
+}
+
+/* ===================== 相机取景 ===================== */
+var portrait = false;
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  portrait = w / h < 0.85;
+  var tgt = new THREE.Vector3(portrait ? 0 : 0.85, 0.55, portrait ? 0.05 : 0.05);
+  var dir = portrait ? new THREE.Vector3(0.18, 0.74, 0.65).normalize() : new THREE.Vector3(0, 0.72, 0.69).normalize();
+  var needW = portrait ? 6.8 : 9.4, needH = portrait ? 9.0 : 6.6;
+  var vf = THREE.MathUtils.degToRad(camera.fov), hf = 2 * Math.atan(Math.tan(vf / 2) * camera.aspect);
+  var d = Math.max(needW / 2 / Math.tan(hf / 2), needH / 2 / Math.tan(vf / 2) * 0.86);
+  camera.position.copy(tgt).addScaledVector(dir, d);
+  camera.lookAt(tgt);
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', fit);
+
+/* ===================== WebAudio 合成声音 ===================== */
+var AC = null;
+function audio() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } } if (AC && AC.state === 'suspended') AC.resume(); return AC; }
+function tone(f, dur, type, vol, f2, delay) {
+  var a = audio(); if (!a) return;
+  var t = a.currentTime + (delay || 0), o = a.createOscillator(), g = a.createGain();
+  o.type = type || 'sine'; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.12, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + 0.02);
+}
+function sWaterTick() { tone(540 + Math.random() * 260, 0.06, 'sine', 0.045, 760 + Math.random() * 200); }
+function sBounce() { tone(360, 0.08, 'triangle', 0.07, 520); }
+function sSunHum() { tone(523, 0.22, 'sine', 0.06); tone(659, 0.26, 'sine', 0.05, null, 0.06); }
+function sBloom() { tone(523, 0.14, 'sine', 0.11); tone(659, 0.16, 'sine', 0.1, null, 0.09); tone(784, 0.22, 'sine', 0.11, null, 0.18); tone(1046, 0.34, 'sine', 0.1, null, 0.27); }
+function sDing() { tone(880, 0.16, 'sine', 0.11); tone(1320, 0.26, 'sine', 0.09, null, 0.1); }
+function sPop() { tone(310, 0.09, 'triangle', 0.11, 440); }
+function sCelebrate() {
+  [523, 659, 784, 1046, 1318].forEach(function (f, i) { tone(f, 0.22 + i * 0.04, 'sine', 0.11, null, i * 0.09); });
+  tone(523, 0.45, 'triangle', 0.06, null, 0.36); tone(784, 0.45, 'triangle', 0.06, null, 0.36);
+}
+
+/* ===================== 进度持久化与儿童离线语音引导 ===================== */
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem('xk_k1a_progress') || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem('xk_k1a_progress', JSON.stringify(d));
+  } catch (e) {}
+}
+function dismissCues() {
+  document.body.classList.add('interacted');
+}
+
+var voiceOn = true, greeted = false;
+var CONCL_VOICE = '真花和睡莲都是植物，属于生物，需要水和阳光才能发芽开花；塑料花不是生物，怎么浇水晒太阳都不会长！快来答一题领小红花吧！';
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
+  if (!('speechSynthesis' in window)) return;
+  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+}
+function greetOnce(quietIfSpoken) {
+  dismissCues();
+  if (greeted) return;
+  greeted = true;
+}
+
+/* ===================== 通关彩带、分步教练与严格通关判定 ===================== */
+var confC = $('#confetti'), confCtx = confC.getContext('2d'), confPs = [], confRaf = 0, celebrated = false, resetGen = 0;
+var ms = { waterReal: false, realBloom: false, pondBloom: false, testFake: false };
+var guidePhase = 0, guideTimer = null, voiceCueTimer = 0;
+var guideBarEl = $('#guideBar');
+
+function clearConfetti() {
+  if (confRaf) { cancelAnimationFrame(confRaf); confRaf = 0; }
+  confPs = [];
+  if (confCtx) confCtx.clearRect(0, 0, confC.width, confC.height);
+}
+function hideWinToast() { $('#winToast').classList.remove('show'); }
+function launchConfetti() {
+  clearConfetti();
+  confC.width = window.innerWidth; confC.height = window.innerHeight;
+  var cols = ['#2f9e5b', '#f59e0b', '#38bdf8', '#f43f5e', '#a855f7', '#facc15'];
+  for (var i = 0; i < 72; i++) {
+    confPs.push({
+      x: confC.width * (0.15 + Math.random() * 0.7), y: confC.height * 0.18 + (Math.random() - 0.5) * 60,
+      vx: (Math.random() - 0.5) * 9, vy: -4 - Math.random() * 7,
+      w: 7 + Math.random() * 6, h: 4 + Math.random() * 4,
+      a: Math.random() * 6.28, va: (Math.random() - 0.5) * 0.28,
+      c: cols[i % cols.length], life: 1
+    });
+  }
+  (function tick() {
+    confCtx.clearRect(0, 0, confC.width, confC.height);
+    var alive = 0;
+    confPs.forEach(function (p) {
+      if (p.life <= 0) return;
+      p.vy += 0.24; p.x += p.vx; p.y += p.vy; p.a += p.va; p.life -= 0.009;
+      if (p.y > confC.height + 20 || p.life <= 0) { p.life = 0; return; }
+      alive++;
+      confCtx.save(); confCtx.globalAlpha = Math.min(1, p.life * 1.5);
+      confCtx.translate(p.x, p.y); confCtx.rotate(p.a);
+      confCtx.fillStyle = p.c; confCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      confCtx.restore();
+    });
+    if (alive > 0) confRaf = requestAnimationFrame(tick); else confRaf = 0;
+  })();
+}
+
+function getGuideInfo() {
+  if (!ms.waterReal) {
+    return {
+      phase: 1,
+      text: '💧 第1步：把蓝色「浇水壶」拖到左边「真花盆」上浇浇水，看它发芽长高！',
+      voice: '把蓝色浇水壶拖到左边的真花盆上浇浇水，看看幼苗怎么发芽长高！',
+      tool: 'can', target: 'real'
+    };
+  }
+  if (!ms.realBloom) {
+    return {
+      phase: 2,
+      text: '☀️ 第2步：把「小太阳」拖到真花盆和池塘睡莲上空照一照，看花朵绽放！',
+      voice: '真棒！把黄澄澄的小太阳拖到真花盆和池塘睡莲上空照一照，看花朵绽放吧！',
+      tool: 'sun', target: 'real'
+    };
+  }
+  if (!ms.pondBloom) {
+    return {
+      phase: 3,
+      text: '☀️ 第2步：真花开啦！再把「小太阳」拖到右边「池塘睡莲」上空，看睡莲盛开！',
+      voice: '真花开啦！再把小太阳拖到右边的池塘睡莲上空照一照，看看睡莲绽放吧！',
+      tool: 'sun', target: 'pond'
+    };
+  }
+  if (!ms.testFake) {
+    return {
+      phase: 4,
+      text: '🎀 第3步：再用水壶或小太阳试试中间的「塑料花」，看看它会和真花一样长大吗？',
+      voice: '花朵都盛开啦！再用水壶或小太阳试试中间的塑料花，看看它会和真花一样长大吗？',
+      tool: 'can', target: 'fake'
+    };
+  }
+  return {
+    phase: 5,
+    text: '🎉 全部探索完成！快在科学小结论卡片里答对题目领小红花吧！',
+    voice: CONCL_VOICE,
+    tool: null, target: null
+  };
+}
+
+function updateGuide(speakIt, immediate) {
+  var info = getGuideInfo();
+  var changed = info.phase !== guidePhase;
+  guidePhase = info.phase;
+  guideBarEl.textContent = info.text;
+  if (changed) {
+    guideBarEl.classList.remove('flash');
+    void guideBarEl.offsetWidth;
+    guideBarEl.classList.add('flash');
+    setTimeout(function () { guideBarEl.classList.remove('flash'); }, 550);
+  }
+  if (speakIt && (changed || immediate)) {
+    if (guideTimer) { clearTimeout(guideTimer); guideTimer = null; }
+    var gen = resetGen;
+    if (immediate) {
+      speak(info.voice, true);
+    } else if (!celebrated && info.phase < 5) {
+      guideTimer = setTimeout(function () {
+        if (gen !== resetGen || celebrated) return;
+        speak(info.voice);
+      }, 1550);
+    }
+  }
+}
+
+function syncStamps() {
+  var nextW = ms.waterReal;
+  var nextS = ms.realBloom && ms.pondBloom;
+  var nextF = ms.testFake;
+  if (nextW && !kinds.w) { kinds.w = true; $('#stW').classList.add('lit'); }
+  if (nextS && !kinds.s) { kinds.s = true; $('#stS').classList.add('lit'); }
+  if (nextF && !kinds.f) { kinds.f = true; $('#stF').classList.add('lit'); }
+}
+
+function checkComplete() {
+  syncStamps();
+  updateGuide(true, false);
+  if (celebrated) return;
+  if (ms.waterReal && ms.realBloom && ms.pondBloom && ms.testFake) {
+    celebrated = true;
+    saveProgress('k1a-07', true);
+    if (guideTimer) { clearTimeout(guideTimer); guideTimer = null; }
+    var gen = resetGen;
+    setTimeout(function () {
+      if (gen !== resetGen) return;
+      sCelebrate(); launchConfetti();
+      $('#winToast').classList.add('show');
+      speak('太棒啦！全部探索都完成啦！' + CONCL_VOICE);
+    }, 480);
+  }
+}
+
+/* ===================== 标签与飘字 ===================== */
+var labelsEl = $('#labels');
+function makeLbl(obj) {
+  var el = document.createElement('div'); el.className = 'lbl'; el.innerHTML = ruby(obj.name, obj.py);
+  labelsEl.appendChild(el); obj.lbl = el;
+}
+TARGETS.forEach(makeLbl);
+TOOLS.forEach(makeLbl);
+var vtmp = new THREE.Vector3();
+function toScreen(v) { vtmp.copy(v).project(camera); return { x: (vtmp.x + 1) / 2 * window.innerWidth, y: (1 - vtmp.y) / 2 * window.innerHeight }; }
+function floatWord(text, py, worldPos, cls) {
+  var p = toScreen(worldPos), el = document.createElement('div');
+  el.className = 'word' + (cls ? ' ' + cls : ''); el.innerHTML = ruby(text, py);
+  el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
+  labelsEl.appendChild(el); setTimeout(function () { el.remove(); }, 1280);
+}
+
+/* ===================== 我的发现 ===================== */
+var found = {}, foundN = 0, kinds = { w: false, s: false, f: false };
+var acted = { water: false, sun: false, cmp: false }, actions = 0;
+function markAct(v) {
+  if (!acted[v]) { acted[v] = true; var el = document.querySelector('.verb[data-v="' + v + '"]'); if (el) el.classList.add('done'); }
+  actions++;
+}
+function discover(key, kind, html, color, spoken) {
+  if (found[key]) return;
+  found[key] = true; foundN++;
+  var el = document.createElement('div'); el.className = 'stk';
+  var icon = kind === 'w' ? '💧' : kind === 's' ? '☀' : kind === 'stone' ? '🪨' : '🌱';
+  el.innerHTML = '<i style="background:' + color + '">' + icon + '</i><span>' + html + '</span>';
+  var list = $('#ntList'); list.insertBefore(el, list.firstChild);
+  while (list.children.length > 8) list.removeChild(list.lastChild);
+  $('#ntCount').textContent = foundN;
+  sDing();
+  if (spoken) { greeted = true; speak(spoken); }
+  checkComplete();
+}
+
+/* ===================== 工具作用在目标上的物理反应 ===================== */
+var lastSnd = 0, lastWordAt = {};
+function sayOnce(id, text, py, pos, cls, gap) {
+  if (now - (lastWordAt[id] || 0) < (gap || 1.7)) return;
+  lastWordAt[id] = now;
+  floatWord(text, py, pos, cls);
+}
+
+function targetUnder(tool) {
+  // 浇水壶壶嘴在左边偏一点，小太阳正下方
+  var px = tool.cur.x + (tool.id === 'can' ? -0.58 : 0);
+  var pz = tool.cur.z;
+  var best = null, bd = 99;
+  TARGETS.forEach(function (tg) {
+    var d = Math.hypot(px - tg.g.position.x, pz - tg.g.position.z);
+    if (d < tg.r + 0.32 && d < bd) { bd = d; best = tg; }
+  });
+  return best;
+}
+
+function applyTool(tool, tg, dt) {
+  if (!tg) return;
+  var topPos = tg.g.position.clone().add(new THREE.Vector3(0, tg.h + 0.15, 0));
+
+  if (tool.id === 'can') {
+    markAct('water');
+    // 壶嘴滴落水滴
+    if (Math.random() < dt * 28) {
+      var sp = new THREE.Vector3(tool.cur.x - 0.62, tool.cur.y + 0.52, tool.cur.z);
+      var bounce = (tg.id === 'fake' || tg.id === 'stone');
+      spawnDrop(sp, (Math.random() - 0.5) * 0.35, -0.5, (Math.random() - 0.5) * 0.35, bounce);
+    }
+    if (now - lastSnd > 0.11) {
+      lastSnd = now;
+      if (tg.id === 'fake' || tg.id === 'stone') sBounce(); else sWaterTick();
+    }
+    if (tg.id === 'real') {
+      realState.wet = Math.min(1, realState.wet + dt * 0.9);
+      realState.goal = Math.min(1, realState.goal + dt * 0.36);
+      if (!realState.watered && realState.goal > 0.32) {
+        realState.watered = true;
+        ms.waterReal = true;
+        sayOnce('realW', '真花浇水会长大!', 'zhēn huā jiāo shuǐ huì zhǎng dà', topPos);
+        discover('real-w', 'w', ruby('真花浇水会', 'zhēn huā jiāo shuǐ huì') + '<b>' + ruby('长大', 'zhǎng dà') + '</b>', '#2f9e5b', '真花浇水会长大！');
+        markAct('cmp');
+        checkComplete();
+      }
+      if (!realState.bloomed && realState.growth > 0.86) {
+        realState.bloomed = true;
+        ms.realBloom = true;
+        sBloom();
+        spawnSparks(topPos.clone().setY(BASE + 1.85), 14);
+        sayOnce('realB', '真花开花了!', 'zhēn huā kāi huā le', topPos);
+        discover('real-b', 'w', ruby('真花会长叶', 'zhēn huā huì zhǎng yè') + '<b>' + ruby('开花', 'kāi huā') + '</b>', '#e56d17', '真花长出新叶，开花了！');
+        checkComplete();
+      }
+    } else if (tg.id === 'pond') {
+      pondState.goal = Math.min(1, pondState.goal + dt * 0.38);
+      if (Math.random() < dt * 4.5) triggerRipple();
+      if (!pondState.watered && pondState.goal > 0.4) {
+        pondState.watered = true;
+        sayOnce('pondW', '睡莲会开花!', 'shuì lián huì kāi huā', topPos);
+        discover('pond-w', 'w', ruby('睡莲浇水会', 'shuì lián jiāo shuǐ huì') + '<b>' + ruby('开花', 'kāi huā') + '</b>', '#0284c7', '池塘睡莲浇水会开花！');
+      }
+      if (!pondState.bloomed && pondState.bloom > 0.84) {
+        pondState.bloomed = true; sBloom();
+        spawnSparks(pondG.position.clone().add(new THREE.Vector3(-0.14, 0.55, 0.06)), 14);
+        if (pondState.sunned) { ms.pondBloom = true; checkComplete(); }
+      }
+    } else if (tg.id === 'fake') {
+      fakeState.wobble = 1;
+      if (!fakeState.watered) {
+        fakeState.watered = true;
+        ms.testFake = true;
+        sayOnce('fakeW', '塑料花不会长!', 'sù liào huā bù huì zhǎng', topPos, 'cool');
+        discover('fake-w', 'f', ruby('塑料花浇水', 'sù liào huā jiāo shuǐ') + '<b>' + ruby('不会长', 'bù huì zhǎng') + '</b>', '#db2777', '塑料花不是植物，浇水不会长！');
+        markAct('cmp');
+        checkComplete();
+      } else {
+        sayOnce('fakeW2', '塑料花不会长!', 'sù liào huā bù huì zhǎng', topPos, 'cool', 2.2);
+      }
+    } else if (tg.id === 'stone') {
+      stoneState.hop = 0.4;
+      if (!stoneState.watered) {
+        stoneState.watered = true;
+        sayOnce('stoneW', '石头不会长!', 'shí tou bù huì zhǎng', topPos, 'cool');
+        discover('stone-w', 'stone', ruby('石头不是植物', 'shí tou bú shì zhí wù') + '<b>' + ruby('不会长', 'bù huì zhǎng') + '</b>', '#64748b', '石头不是生物，浇水不会长！');
+      } else {
+        sayOnce('stoneW2', '石头不会长!', 'shí tou bù huì zhǎng', topPos, 'cool', 2.2);
+      }
+    }
+  } else if (tool.id === 'sun') {
+    markAct('sun');
+    if (now - lastSnd > 0.55) { lastSnd = now; sSunHum(); }
+    if (tg.id === 'real') {
+      realState.goal = Math.min(1, realState.goal + dt * (realState.wet > 0.15 ? 0.55 : 0.34));
+      if (Math.random() < dt * 7) spawnSparks(topPos.clone().add(new THREE.Vector3((Math.random() - 0.5) * 0.4, -0.3, 0)), 1);
+      if (!realState.sunned) {
+        realState.sunned = true;
+        sayOnce('realS', '晒太阳长得快!', 'shài tài yáng zhǎng de kuài', topPos, 'warm');
+        discover('real-s', 's', ruby('真花晒太阳', 'zhēn huā shài tài yáng') + '<b>' + ruby('长得快', 'zhǎng de kuài') + '</b>', '#d97706', '真花晒太阳长得快！');
+      }
+      if (!realState.bloomed && realState.growth > 0.86) {
+        realState.bloomed = true;
+        ms.realBloom = true;
+        sBloom();
+        spawnSparks(topPos.clone().setY(BASE + 1.85), 14);
+        sayOnce('realB', '真花开花了!', 'zhēn huā kāi huā le', topPos);
+        discover('real-b', 's', ruby('真花会长叶', 'zhēn huā huì zhǎng yè') + '<b>' + ruby('开花', 'kāi huā') + '</b>', '#e56d17', '真花长出新叶，开花了！');
+        checkComplete();
+      }
+    } else if (tg.id === 'pond') {
+      pondState.goal = Math.min(1, pondState.goal + dt * 0.58);
+      if (Math.random() < dt * 6) spawnSparks(pondG.position.clone().add(new THREE.Vector3(-0.14, 0.48, 0.06)), 1);
+      if (!pondState.sunned) {
+        pondState.sunned = true;
+        sayOnce('pondS', '晒太阳睡莲开!', 'shài tài yáng shuì lián kāi', topPos, 'warm');
+        discover('pond-s', 's', ruby('睡莲晒太阳', 'shuì lián shài tài yáng') + '<b>' + ruby('开得大', 'kāi de dà') + '</b>', '#f59e0b', '睡莲晒太阳开得更大！');
+      }
+      if (!pondState.bloomed && pondState.bloom > 0.82) {
+        pondState.bloomed = true;
+        ms.pondBloom = true;
+        sBloom();
+        spawnSparks(pondG.position.clone().add(new THREE.Vector3(-0.14, 0.55, 0.06)), 14);
+        checkComplete();
+      } else if (pondState.bloomed && !ms.pondBloom) {
+        ms.pondBloom = true;
+        checkComplete();
+      }
+    } else if (tg.id === 'fake') {
+      if (!fakeState.sunned) {
+        fakeState.sunned = true;
+        ms.testFake = true;
+        sayOnce('fakeS', '塑料花不会长!', 'sù liào huā bù huì zhǎng', topPos, 'cool');
+        discover('fake-s', 'f', ruby('塑料花晒太阳也', 'sù liào huā shài tài yáng yě') + '<b>' + ruby('不变', 'bú biàn') + '</b>', '#db2777', '塑料花晒太阳也不会变！');
+        markAct('cmp');
+        checkComplete();
+      } else {
+        sayOnce('fakeS2', '塑料花不会长!', 'sù liào huā bù huì zhǎng', topPos, 'cool', 2.2);
+      }
+    } else if (tg.id === 'stone') {
+      sayOnce('stoneS', '石头晒太阳也不会长!', 'shí tou shài tài yáng yě bù huì zhǎng', topPos, 'warm', 2.2);
+      discover('stone-s', 'stone', ruby('石头晒太阳也', 'shí tou shài tài yáng yě') + '<b>' + ruby('不会长', 'bù huì zhǎng') + '</b>', '#64748b', '石头不是生物，晒太阳也不会长！');
+    }
+  }
+}
+
+/* ===================== 指针拖拽与点按 ===================== */
+var P = null, hoveredTool = null, hoveredTarget = null, now = 0;
+function setNDC(e) { ndc.x = (e.clientX / window.innerWidth) * 2 - 1; ndc.y = -(e.clientY / window.innerHeight) * 2 + 1; raycaster.setFromCamera(ndc, camera); }
+var toolMeshes = []; TOOLS.forEach(function (tl) { tl.g.traverse(function (o) { if (o.isMesh) toolMeshes.push(o); }); });
+var targetMeshes = []; TARGETS.forEach(function (tg) { tg.g.traverse(function (o) { if (o.isMesh) targetMeshes.push(o); }); });
+
+function pickTool(e) {
+  setNDC(e); var h = raycaster.intersectObjects(toolMeshes, false)[0];
+  if (h) return h.object.userData.tool;
+  var best = null, bd = 48;
+  TOOLS.forEach(function (tl) {
+    var p = toScreen(tl.cur.clone().add(new THREE.Vector3(0, tl.h * 0.5, 0)));
+    var d = Math.hypot(e.clientX - p.x, e.clientY - p.y);
+    if (d < bd) { bd = d; best = tl; }
+  });
+  return best;
+}
+function pickTarget(e) {
+  setNDC(e); var h = raycaster.intersectObjects(targetMeshes, false)[0];
+  return h ? h.object.userData.target : null;
+}
+var plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), ptmp = new THREE.Vector3();
+function planePoint(e, y) { setNDC(e); plane.constant = -y; return raycaster.ray.intersectPlane(plane, ptmp) ? ptmp.clone() : null; }
+
+canvas.addEventListener('pointerdown', function (e) {
+  audio(); stopDemo(); introSkip();
+  var tl = pickTool(e);
+  if (tl) {
+    greetOnce(false);
+    voiceCueTimer = 0;
+    P = { tool: tl, x: e.clientX, y: e.clientY, maxMove: 0, mode: 'drag', e: { clientX: e.clientX, clientY: e.clientY } };
+    tl.dragging = true; ghost.off = true;
+    try { canvas.setPointerCapture(e.pointerId); } catch (er) {}
+    return;
+  }
+  var tg = pickTarget(e);
+  if (tg) {
+    greetOnce(true);
+    ghost.off = true; tg.st.hop = 1; sPop();
+    var p = tg.g.position.clone().add(new THREE.Vector3(0, tg.h + 0.15, 0));
+    if (tg.id === 'real') {
+      var rMsg = realState.growth > 0.7 ? '真花长高啦!' : '给真花浇水吧!';
+      floatWord(rMsg, realState.growth > 0.7 ? 'zhēn huā zhǎng gāo la' : 'gěi zhēn huā jiāo shuǐ ba', p);
+      speak(realState.growth > 0.7 ? '真花长高啦！' : '拖浇水壶来给真花浇水吧！');
+    } else if (tg.id === 'fake') {
+      floatWord('这是塑料花!', 'zhè shì sù liào huā', p, 'cool');
+      speak('这是塑料花，浇水试试看吧！');
+    } else if (tg.id === 'pond') {
+      var pMsg = pondState.bloom > 0.7 ? '睡莲真漂亮!' : '睡莲有花苞!';
+      floatWord(pMsg, pondState.bloom > 0.7 ? 'shuì lián zhēn piào liang' : 'shuì lián yǒu huā bāo', p);
+      speak(pondState.bloom > 0.7 ? '睡莲开得真漂亮！' : '睡莲有花苞，浇水晒太阳看看吧！');
+    } else {
+      floatWord('硬硬的小石头', 'yìng yìng de xiǎo shí tou', p, 'cool');
+      speak('这是硬硬的小石头，浇水试试看它会不会长！');
+    }
+    return;
+  }
+  greetOnce(false);
+});
+
+canvas.addEventListener('pointermove', function (e) {
+  if (P && P.mode === 'drag') {
+    P.maxMove = Math.max(P.maxMove, Math.hypot(e.clientX - P.x, e.clientY - P.y));
+    P.e = { clientX: e.clientX, clientY: e.clientY };
+    return;
+  }
+  hoveredTool = pickTool(e);
+  hoveredTarget = hoveredTool ? null : pickTarget(e);
+  canvas.style.cursor = hoveredTool ? 'grab' : hoveredTarget ? 'pointer' : 'default';
+});
+
+function finishPointer() {
+  if (!P) return;
+  if (P.tool) {
+    if (P.maxMove < 10) {
+      var hp = P.tool.home.clone().add(new THREE.Vector3(0, P.tool.h + 0.25, 0));
+      if (P.tool.id === 'can') floatWord('拖到花盆上方浇水!', 'tuō dào huā pén shàng fāng jiāo shuǐ', hp);
+      else floatWord('拖到花盆上方晒太阳!', 'tuō dào huā pén shàng fāng shài tài yáng', hp, 'warm');
+    }
+    P.tool.dragging = false;
+    P.tool.target.copy(P.tool.home);
+  }
+  P = null;
+}
+canvas.addEventListener('pointerup', finishPointer);
+canvas.addEventListener('pointercancel', finishPointer);
+
+/* ===================== 幽灵手（与语音播报同步演示拖拽动作） ===================== */
+var ghost = { off: false, t: 0 }, handEl = $('#hand');
+function updateGhost(dt) {
+  if (voiceCueTimer > 0) voiceCueTimer = Math.max(0, voiceCueTimer - dt);
+  var showCue = (!ghost.off && intro.t >= 1.5) || voiceCueTimer > 0;
+  if (!showCue || celebrated || demo) { handEl.style.opacity = 0; return; }
+  ghost.t = (ghost.t + dt) % 2.5;
+  var info = getGuideInfo();
+  var srcTool = info.tool === 'sun' ? sunTool : canTool;
+  var dstObj = info.target === 'pond' ? pondG : info.target === 'fake' ? fakeG : realG;
+  var a = toScreen(srcTool.home.clone().add(new THREE.Vector3(0, 0.4, 0)));
+  var b = toScreen(dstObj.position.clone().add(new THREE.Vector3(info.tool === 'sun' ? 0 : 0.48, info.target === 'pond' ? 1.15 : 1.35, 0)));
+  var u = Math.min(1, Math.max(0, (ghost.t - 0.35) / 1.4)), e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+  var x = a.x + (b.x - a.x) * e, y = a.y + (b.y - a.y) * e - Math.sin(e * Math.PI) * 58;
+  handEl.style.opacity = ghost.t < 2.15 ? 0.96 : 0;
+  handEl.style.transform = 'translate(' + (x - 20) + 'px,' + (y - 6) + 'px) scale(' + (ghost.t < 0.35 || ghost.t > 1.8 ? 1 : 0.88) + ')';
+}
+
+/* ===================== 老师演示 ===================== */
+var demo = null;
+var DEMO = [
+  ['move', 'can', -2.07, 1.48, -0.55, 0.75],
+  ['hold', 'can', 'real', 2.0],
+  ['move', 'can', 0.13, 1.48, -0.55, 0.75],
+  ['hold', 'can', 'fake', 1.3],
+  ['home', 'can', 0.55],
+  ['move', 'sun', -2.65, 1.85, -0.58, 0.75],
+  ['hold', 'sun', 'real', 1.6],
+  ['move', 'sun', 1.9, 1.85, -0.52, 0.8],
+  ['hold', 'sun', 'pond', 2.3],
+  ['home', 'sun', 0.55],
+  ['end']
+];
+function getTool(id) { return id === 'can' ? canTool : sunTool; }
+function getTarget(id) { return TARGETS.find(function (t) { return t.id === id; }); }
+function startDemo() {
+  resetAll(true); demo = { i: 0, t: 0 }; ghost.off = true;
+  $('#demoBtn').classList.add('on'); $('#demoBtn').textContent = '■ 停止';
+}
+function stopDemo() {
+  if (!demo) return;
+  demo = null;
+  TOOLS.forEach(function (tl) { tl.flying = null; tl.target.copy(tl.home); });
+  $('#demoBtn').classList.remove('on'); $('#demoBtn').textContent = '▶ 演示';
+}
+function stepDemo(dt) {
+  if (!demo) return;
+  var s = DEMO[demo.i]; demo.t += dt;
+  if (!s || s[0] === 'end') { stopDemo(); return; }
+  var tl = getTool(s[1]);
+  if (s[0] === 'move' || s[0] === 'home') {
+    var dur = s[0] === 'move' ? s[5] : s[2];
+    var dest = s[0] === 'move' ? new THREE.Vector3(s[2], BASE + s[3], s[4]) : tl.home.clone();
+    if (!demo.from) demo.from = tl.cur.clone();
+    var u = Math.min(1, demo.t / dur), e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+    tl.target.lerpVectors(demo.from, dest, e);
+    tl.flying = true;
+    if (u >= 1) { demo.from = null; demo.i++; demo.t = 0; }
+  } else if (s[0] === 'hold') {
+    tl.flying = true;
+    applyTool(tl, getTarget(s[2]), dt);
+    if (demo.t >= s[3]) { tl.flying = false; demo.i++; demo.t = 0; }
+  }
+}
+
+/* ===================== 开场动画 ===================== */
+var intro = { t: 0, done: false };
+function introSkip() {
+  if (intro.t < 1.45) intro.t = 1.45;
+}
+function backOut(t) { var c = 1.7; t = Math.min(1, Math.max(0, t)); return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); }
+function updateIntro(dt) {
+  if (intro.done) return;
+  if (!intro.t0) intro.t0 = performance.now();
+  intro.t = Math.max(intro.t + dt, (performance.now() - intro.t0) / 1000 * 1.4);
+  var t = intro.t;
+  var lift = Math.min(1, Math.max(0, (t - 0.2) / 0.65));
+  figCard.position.y = 0.012 + lift * 1.6;
+  figCard.material.opacity = 1 - lift;
+  figCard.visible = lift < 1;
+  board.scale.set(1, Math.max(0.01, backOut((t - 0.3) / 0.5)), 1);
+  fenceG.scale.setScalar(Math.max(0.001, backOut((t - 0.45) / 0.5)));
+  TARGETS.forEach(function (tg, i) { tg.g.scale.setScalar(Math.max(0.001, backOut((t - 0.5 - i * 0.08) / 0.5))); });
+  TOOLS.forEach(function (tl, i) { tl.pop = Math.max(0.001, backOut((t - 0.72 - i * 0.1) / 0.5)); });
+  if (t > 0.9 && t < 3.6) { TARGETS.forEach(function (tg) { tg.introLbl = true; }); TOOLS.forEach(function (tl) { tl.introLbl = true; }); }
+  if (t >= 3.6) {
+    TARGETS.forEach(function (tg) { tg.introLbl = false; tg.g.scale.setScalar(1); });
+    TOOLS.forEach(function (tl) { tl.introLbl = false; tl.pop = 1; });
+    fenceG.scale.setScalar(1); board.scale.set(1, 1, 1);
+    intro.done = true;
+  }
+}
+
+/* ===================== 重来 ===================== */
+function resetAll(keepDemo) {
+  if (!keepDemo) stopDemo();
+  resetGen++;
+  if (guideTimer) { clearTimeout(guideTimer); guideTimer = null; }
+  celebrated = false;
+  voiceCueTimer = 0;
+  guidePhase = 0;
+  ms = { waterReal: false, realBloom: false, pondBloom: false, testFake: false };
+  $('#quizFb').textContent = ''; $('#quizFb').className = 'quiz-fb';
+  document.querySelectorAll('#quizOpts .qopt').forEach(function (b) { b.classList.remove('ok', 'err'); });
+  realState.growth = 0.08; realState.goal = 0.08; realState.wet = 0; realState.watered = false; realState.sunned = false; realState.bloomed = false;
+  pondState.bloom = 0.08; pondState.goal = 0.08; pondState.watered = false; pondState.sunned = false; pondState.bloomed = false;
+  fakeState.wobble = 0; fakeState.watered = false; fakeState.sunned = false;
+  stoneState.watered = false;
+  drops.forEach(function (d) { d.life = 0; d.m.visible = false; });
+  sparks.forEach(function (s) { s.life = 0; s.m.visible = false; });
+  ripples.forEach(function (r) { r.active = false; r.t = 0; r.m.material.opacity = 0; });
+  labelsEl.querySelectorAll('.word').forEach(function (w) { w.remove(); });
+  TOOLS.forEach(function (tl) { tl.dragging = false; tl.flying = null; tl.target.copy(tl.home); });
+  found = {}; foundN = 0; kinds = { w: false, s: false, f: false }; lastWordAt = {};
+  hideWinToast(); clearConfetti();
+  $('#ntList').innerHTML = ''; $('#ntCount').textContent = '0';
+  document.querySelectorAll('.stamp').forEach(function (s) { s.classList.remove('lit'); });
+  updateGuide(false, false);
+}
+
+/* ===================== 更新植物生长与动画 ===================== */
+var dryColor = new THREE.Color('#a37b52'), wetColor = new THREE.Color('#53351d');
+function updatePlants(dt) {
+  // 1. 真花生长曲线
+  realState.growth += (realState.goal - realState.growth) * Math.min(1, dt * 3.5);
+  var g = realState.growth;
+  soilMat.color.copy(dryColor).lerp(wetColor, realState.wet);
+  var stemH = 0.22 + g * 0.95;
+  stemM.scale.set(0.75 + g * 0.35, stemH, 0.75 + g * 0.35);
+  stemM.position.y = stemH * 0.5;
+  plantG.rotation.z = Math.sin(now * 2.1) * (0.03 + g * 0.04);
+
+  leaves.forEach(function (lf, idx) {
+    var thr = idx < 2 ? 0.06 : 0.38;
+    var u = Math.min(1, Math.max(0, (g - thr) / 0.42));
+    lf.scale.setScalar(0.15 + u * 0.85);
+    lf.position.y = stemH * (idx < 2 ? 0.36 : 0.68);
+    lf.rotation.z = 0.95 - u * 0.75;
+  });
+
+  realFlowerG.position.y = stemH + 0.04;
+  var fu = Math.min(1, Math.max(0, (g - 0.52) / 0.48));
+  realFlowerG.scale.setScalar(0.12 + fu * 0.96);
+  realFlowerG.rotation.y = now * 0.35;
+  realPetals.forEach(function (pg) {
+    pg.rotation.z = 1.15 - fu * 1.05;
+  });
+
+  // 2. 精致3层睡莲绽放动画（花苞 → 层层舒展盛放 + 金黄花蕊 + 轻柔水波）
+  pondState.bloom += (pondState.goal - pondState.bloom) * Math.min(1, dt * 3.4);
+  var b = pondState.bloom;
+  lotusG.position.y = 0.195 + Math.sin(now * 2.1) * 0.012;
+  lotusG.rotation.y = Math.sin(now * 0.7) * 0.08;
+  lotusOuter.forEach(function (piv) { piv.rotation.x = 0.22 + b * 1.12; });
+  lotusMid.forEach(function (piv)   { piv.rotation.x = 0.13 + b * 0.82; });
+  lotusInner.forEach(function (piv) { piv.rotation.x = 0.05 + b * 0.50; });
+  lotusStamenG.scale.setScalar(0.65 + b * 0.5);
+  babyBudG.position.y = 0.19 + Math.sin(now * 2.4 + 1.2) * 0.008;
+  lilyPads.forEach(function (pd, idx) {
+    pd.position.y = 0.16 + Math.sin(now * 1.9 + idx * 1.4) * 0.006;
+  });
+  ambientRipples.forEach(function (arp, idx) {
+    var ph = (now * 0.45 + idx * 0.5) % 1;
+    arp.scale.setScalar(0.88 + ph * 0.42);
+    arp.material.opacity = Math.sin(ph * Math.PI) * 0.24;
+  });
+
+  // 3. 塑料花抖动（浇水弹开效果）
+  if (fakeState.wobble > 0) {
+    fakeState.wobble = Math.max(0, fakeState.wobble - dt * 3.8);
+    fakeFlowerG.rotation.z = Math.sin(now * 38) * 0.11 * fakeState.wobble;
+  } else fakeFlowerG.rotation.z = 0;
+
+  // 4. 点按小跳
+  TARGETS.forEach(function (tg) {
+    if (tg.st.hop > 0) {
+      tg.st.hop = Math.max(0, tg.st.hop - dt * 3.4);
+      tg.g.position.y = BASE + Math.sin(tg.st.hop * Math.PI) * 0.22 * tg.st.hop;
+    } else tg.g.position.y = BASE;
+  });
+
+  // 5. 水波纹
+  ripples.forEach(function (rp) {
+    if (!rp.active) return;
+    rp.t += dt * 1.35;
+    if (rp.t >= 1) { rp.active = false; rp.m.material.opacity = 0; return; }
+    rp.m.scale.setScalar(1 + rp.t * 3.6);
+    rp.m.material.opacity = (1 - rp.t) * 0.72;
+  });
+
+  // 6. 水滴与闪光粒子
+  drops.forEach(function (d) {
+    if (d.life <= 0) return;
+    d.life -= dt;
+    d.v.y -= 9.5 * dt;
+    d.m.position.addScaledVector(d.v, dt);
+    if (d.bounce && d.m.position.y < BASE + 1.05 && d.v.y < 0) {
+      d.v.y = 2.4; d.v.x = (Math.random() - 0.5) * 2.6; d.v.z = (Math.random() - 0.5) * 2.6; d.bounce = false;
+    }
+    if (d.life <= 0 || d.m.position.y < BASE) { d.life = 0; d.m.visible = false; }
+  });
+  sparks.forEach(function (s) {
+    if (s.life <= 0) return;
+    s.life -= dt;
+    s.m.position.addScaledVector(s.v, dt);
+    s.m.rotation.y += dt * 6;
+    s.m.scale.setScalar(Math.max(0.01, s.life));
+    if (s.life <= 0) s.m.visible = false;
+  });
+}
+
+/* ===================== 主循环 ===================== */
+var last = performance.now();
+function frame(t) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (t - last) / 1000)); last = t; now = t / 1000;
+  updateIntro(dt);
+  stepDemo(dt);
+
+  var activeTool = null, activeTarget = null;
+  if (P && P.mode === 'drag') {
+    activeTool = P.tool;
+    var liftY = BASE + (activeTool.id === 'can' ? 1.48 : 1.85);
+    var pp = planePoint(P.e, liftY);
+    if (pp) {
+      activeTool.target.set(
+        THREE.MathUtils.clamp(pp.x, BOARD.x0 - 0.2, BOARD.x1 + 0.6),
+        liftY,
+        THREE.MathUtils.clamp(pp.z, BOARD.z0 - 0.2, BOARD.z1 + 0.4)
+      );
+    }
+    activeTarget = targetUnder(activeTool);
+    applyTool(activeTool, activeTarget, dt);
+  } else if (demo) {
+    TOOLS.forEach(function (tl) { if (tl.flying) { activeTool = tl; activeTarget = targetUnder(tl); } });
+  }
+
+  // 高亮目标圆环（结合分步引导脉冲）
+  var curGuide = getGuideInfo();
+  var pulseBob = 0.5 + 0.5 * Math.sin(now * 5.2);
+  TARGETS.forEach(function (tg) {
+    var lit = activeTarget === tg;
+    var guideLit = !celebrated && curGuide.target === tg.id;
+    var isSunCue = (activeTool && activeTool.id === 'sun') || (!activeTool && curGuide.tool === 'sun');
+    tg.glow.material.color.setHex(isSunCue ? 0xfbbf24 : 0x38bdf8);
+    var targetOp = lit ? 0.85 : (guideLit ? 0.22 + pulseBob * 0.36 : 0);
+    tg.glow.material.opacity += (targetOp - tg.glow.material.opacity) * 0.22;
+    var showL = tg.introLbl || hoveredTarget === tg || lit || (voiceCueTimer > 0 && guideLit);
+    if (showL) {
+      var sp = toScreen(tg.g.position.clone().add(new THREE.Vector3(0, tg.h + 0.12, 0)));
+      tg.lbl.style.transform = 'translate(' + sp.x + 'px,' + sp.y + 'px) translate(-50%,-100%)';
+    }
+    tg.lbl.classList.toggle('show', !!showL);
+  });
+
+  // 更新工具位置、倾斜、太阳光线（引导工具轻微浮动提示）
+  var kk = 1 - Math.exp(-16 * dt);
+  TOOLS.forEach(function (tl) {
+    tl.cur.lerp(tl.target, tl.dragging ? 1 - Math.exp(-24 * dt) : kk);
+    var hv = (hoveredTool === tl && !P) ? 1 : 0;
+    tl.hover += (hv - tl.hover) * 0.22;
+    var pulseTl = !celebrated && !tl.dragging && !tl.flying && curGuide.tool === tl.id;
+    tl.g.position.set(tl.cur.x, tl.cur.y + tl.hover * 0.08 + (pulseTl ? pulseBob * 0.1 : 0), tl.cur.z);
+    var s = tl.pop * (1 + (pulseTl ? pulseBob * 0.06 : 0));
+    tl.body.scale.setScalar(s);
+
+    var pouring = (activeTool === tl && activeTarget);
+    if (tl.id === 'can') {
+      var goalTilt = pouring ? 0.56 : (tl.dragging ? 0.14 : 0);
+      tl.tilt += (goalTilt - tl.tilt) * 0.18;
+      tl.body.rotation.z = tl.tilt;
+    } else {
+      sunRaysG.rotation.z += dt * (pouring ? 2.8 : 0.7);
+      sunBeam.material.opacity += ((pouring ? 0.34 : 0) - sunBeam.material.opacity) * 0.15;
+    }
+
+    var showL = tl.introLbl || (hoveredTool === tl && !P) || (voiceCueTimer > 0 && pulseTl);
+    if (showL) {
+      var sp = toScreen(tl.cur.clone().add(new THREE.Vector3(0, tl.h + 0.22, 0)));
+      tl.lbl.style.transform = 'translate(' + sp.x + 'px,' + sp.y + 'px) translate(-50%,-100%)';
+    }
+    tl.lbl.classList.toggle('show', !!showL);
+  });
+
+  updatePlants(dt);
+  updateGhost(dt);
+  $('#verbs').style.opacity = actions > 8 ? 0.45 : 1;
+  renderer.render(scene, camera);
+}
+
+/* ===================== 按钮、小测验与自检 ===================== */
+$('#voiceBtn').addEventListener('click', function () {
+  audio(); dismissCues(); introSkip();
+  voiceOn = true; greeted = true;
+  this.classList.add('on'); this.textContent = '🔊 语音';
+  // 与语音播报同步：浮现手势拖拽演示动画 + 高亮目标！
+  voiceCueTimer = 4.6; ghost.t = 0;
+  updateGuide(true, true);
+});
+$('#ntTgl').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+document.querySelectorAll('#quizOpts .qopt').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    audio();
+    var ok = this.getAttribute('data-ok') === '1';
+    var fb = $('#quizFb');
+    if (ok) {
+      document.querySelectorAll('#quizOpts .qopt').forEach(function (b) { b.classList.remove('err'); });
+      this.classList.add('ok');
+      fb.className = 'quiz-fb ok';
+      fb.textContent = '🌸 太棒了！获得本课小红花！真花和睡莲都是植物，需要水和阳光才能发芽开花！';
+      sCelebrate();
+      launchConfetti();
+      saveProgress('k1a-07', true);
+      speak('太棒了！答对啦，获得本课小红花！真花和睡莲都是有生命的植物，需要水和阳光才能发芽开花！', true);
+    } else {
+      this.classList.add('err');
+      fb.className = 'quiz-fb err';
+      fb.textContent = '再想想哦～刚才我们用哪两件宝贝照顾真花盆，它才发芽开花的？';
+      sBounce();
+      speak('再想想哦，刚才我们用哪两件宝贝照顾真花盆，它才发芽开花的？', true);
+    }
+  });
+});
+$('#winClose').addEventListener('click', hideWinToast);
+$('#winReplay').addEventListener('click', function () { resetAll(false); });
+$('#demoBtn').addEventListener('click', function () { audio(); dismissCues(); introSkip(); if (demo) stopDemo(); else startDemo(); });
+$('#resetBtn').addEventListener('click', function () { resetAll(false); });
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () { return { triangles: renderer.info.render.triangles, pixelRatio: renderer.getPixelRatio(), found: foundN, kinds: kinds, ms: ms }; },
+  startDemo: startDemo
+};
+
+updateGuide(false, false);
+fit();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

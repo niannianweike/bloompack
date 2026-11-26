@@ -1,0 +1,1346 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第5课 认识我自己 · 我会慢慢长大（活页）</title>
+<style>
+:root{--ink:#2a3040;--paper:#fffaf0;--line:#e3d6bd;--accent:#e56d17}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#d9c19b;color:var(--ink);
+  font-family:"Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+ruby{ruby-align:center}
+rt{font-size:.5em;font-weight:600;color:#8a6d4a;letter-spacing:0}
+body.no-py rt{display:none}
+
+.chip{position:fixed;left:14px;top:12px;z-index:5;display:flex;align-items:center;gap:10px;
+  padding:6px 14px 6px 6px;border-radius:16px;background:rgba(255,250,240,.92);border:1.5px solid var(--line);
+  box-shadow:0 6px 18px rgba(80,55,20,.12)}
+.home{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:var(--ink);font-size:20px;font-weight:800}
+.home:hover{border-color:var(--accent);color:var(--accent)}
+.chip h1{margin:0;font-size:20px;line-height:1.5;font-weight:800}
+.chip small{display:block;font-size:12px;color:#8a7b62;font-weight:700;margin-top:-2px}
+
+.tools{position:fixed;right:14px;top:12px;z-index:5;display:flex;gap:8px;align-items:flex-start}
+.tbtn-wrap{position:relative;display:inline-flex;flex-direction:column;align-items:center}
+.tbtn{height:40px;padding:0 14px;border-radius:13px;border:1.5px solid var(--line);background:rgba(255,250,240,.94);
+  font:inherit;font-size:15px;font-weight:800;color:var(--ink);cursor:pointer;box-shadow:0 3px 0 #e2d2b5;white-space:nowrap}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:#bf5409;color:#fff;box-shadow:0 3px 0 #bf5409}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#ffedd5;border:1.5px solid #e56d17;color:#b44908;font-size:10.5px;font-weight:900;white-space:nowrap;
+  box-shadow:0 3px 8px rgba(229,109,23,.25);pointer-events:none;z-index:6;
+  animation:cueFloat 1.5s ease-in-out infinite;transition:opacity .35s,transform .35s}
+.entry-cue::before{display:none}
+body.interacted .entry-cue{opacity:0;pointer-events:none;animation:none}
+body:not(.interacted) #voiceBtn{animation:btnPulse 1.8s ease-in-out infinite}
+@keyframes cueFloat{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(4px)}}
+@keyframes btnPulse{0%,100%{box-shadow:0 3px 0 #bf5409,0 0 0 0 rgba(229,109,23,.45)}50%{box-shadow:0 3px 0 #bf5409,0 0 0 8px rgba(229,109,23,0)}}
+
+#guideBar{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:5;
+  max-width:min(460px,calc(100vw - 520px));padding:8px 16px;border-radius:16px;
+  background:rgba(255,250,240,.95);border:2px solid #f59e0b;box-shadow:0 6px 20px rgba(120,70,10,.15);
+  font-size:14px;font-weight:800;line-height:1.45;color:#7c3a0b;text-align:center;
+  transition:transform .25s,box-shadow .25s}
+#guideBar.flash{transform:translateX(-50%) scale(1.04);box-shadow:0 8px 26px rgba(229,109,23,.32)}
+.guide-pulse{animation:guideRing 1.2s ease-in-out infinite !important}
+@keyframes guideRing{0%,100%{box-shadow:0 6px 20px rgba(80,55,20,.16),0 0 0 0 rgba(229,109,23,.55)}50%{box-shadow:0 6px 20px rgba(80,55,20,.16),0 0 0 10px rgba(229,109,23,0)}}
+
+#notes{position:fixed;right:14px;top:64px;z-index:4;width:244px;overflow:hidden;
+  padding:8px 10px 10px;border-radius:16px;background:rgba(255,250,240,.92);border:1.5px solid var(--line);
+  box-shadow:0 8px 22px rgba(80,55,20,.12);transition:opacity .3s}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:15px;font-weight:800;margin-bottom:6px}
+.nt-right{display:flex;align-items:center;gap:6px}
+#ntToggle{border:1px solid var(--line);background:#fff;color:#8a6d4a;border-radius:8px;padding:1px 7px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+#ntToggle:hover{border-color:var(--accent);color:var(--accent)}
+.stamps{display:flex;gap:5px;margin-bottom:6px}
+.stamp{flex:1;text-align:center;padding:3px 0 2px;border-radius:10px;border:1.5px dashed #d8c7a6;color:#b3a283;font-size:13px;font-weight:800;line-height:1.5}
+.stamp.lit{border-style:solid;border-color:#e56d17;background:#fff3e2;color:#c2560c;animation:pop .45s cubic-bezier(.2,1.6,.4,1)}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:158px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList{display:none}
+#notes.collapsed .stamps{margin-bottom:0}
+.stk{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:11px;background:#fff;border:1.5px solid #f0dcc0;
+  font-size:14px;font-weight:800;line-height:1.6;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+.stk i{font-style:normal;width:24px;height:24px;flex:none;border-radius:7px;display:grid;place-items:center;color:#fff;font-size:13px}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:9;overflow:hidden}
+.conf{position:absolute;width:10px;height:14px;border-radius:3px;opacity:0;animation:confFall 2.1s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes confFall{0%{opacity:1;transform:translate(0,0) rotate(0deg) scale(.8)}15%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--rot)) scale(1)}}
+#winToast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.86);z-index:12;
+  width:min(450px,92vw);max-height:85vh;overflow-y:auto;
+  display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 20px;border-radius:22px;
+  background:rgba(255,250,240,.98);border:2.5px solid #f59e0b;box-shadow:0 16px 40px rgba(100,55,10,.28);
+  opacity:0;pointer-events:none;transition:opacity .32s,transform .35s cubic-bezier(.2,1.5,.4,1)}
+#winToast.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.win-trophy{font-size:40px;line-height:1}
+#winMsg{font-size:20px;font-weight:900;color:#c2560c;line-height:1.5;text-align:center}
+.win-concl{width:100%;padding:10px 13px;border-radius:14px;background:#fff7e6;border:1.5px solid #f6c478;text-align:left}
+.win-concl-t{font-size:13px;font-weight:900;color:#b45309;margin-bottom:4px}
+.win-concl-b{font-size:14px;font-weight:800;color:#4a3520;line-height:1.6}
+.win-quiz{width:100%;padding:11px 13px;border-radius:14px;background:#fff;border:1.5px solid #e9d9bd;text-align:left}
+.win-quiz-t{font-size:13px;font-weight:900;color:#e56d17;margin-bottom:5px}
+.win-quiz-q{font-size:15px;font-weight:900;color:var(--ink);margin-bottom:8px;line-height:1.45}
+.quiz-opts{display:flex;flex-direction:column;gap:7px}
+.qopt{width:100%;text-align:left;padding:9px 12px;border-radius:12px;border:1.5px solid #e3d6bd;background:#fffdf8;
+  font:inherit;font-size:14px;font-weight:800;color:var(--ink);cursor:pointer;transition:transform .12s,border-color .15s,background .15s}
+.qopt:hover{border-color:#e56d17;background:#fff6eb}
+.qopt:active{transform:scale(.98)}
+.qopt.ok{border-color:#16a34a;background:#dcfce7;color:#14532d}
+.qopt.err{border-color:#f97316;background:#ffedd5;color:#9a3412}
+.quiz-fb{margin-top:8px;font-size:13.5px;font-weight:800;line-height:1.5;min-height:20px}
+.quiz-fb.ok{color:#15803d}
+.quiz-fb.err{color:#c2410c}
+.win-btns{display:flex;gap:10px;margin-top:2px}
+.wbtn{height:38px;padding:0 18px;border-radius:12px;border:1.5px solid var(--line);background:#fff;color:var(--ink);font:inherit;font-size:14px;font-weight:800;cursor:pointer}
+.wbtn.pri{background:#e56d17;border-color:#bf5409;color:#fff}
+.wbtn:hover{filter:brightness(.96)}
+
+/* 时光滑杆（1岁→7岁） */
+#ageBar{position:fixed;left:50%;bottom:66px;transform:translateX(-50%);z-index:5;
+  display:flex;align-items:center;gap:12px;padding:7px 16px;border-radius:99px;
+  background:rgba(255,250,240,.95);border:2px solid #e5b878;box-shadow:0 6px 20px rgba(80,55,20,.16)}
+#ageBar .tag{font-size:16px;font-weight:900;color:#8a6234;white-space:nowrap}
+#ageVal{min-width:54px;text-align:center;padding:2px 8px;border-radius:10px;background:#fff0d8;color:#c2560c;font-size:18px;font-weight:900}
+#ageSlider{width:200px;height:10px;-webkit-appearance:none;appearance:none;border-radius:99px;background:#f0d9b5;outline:none;cursor:pointer}
+#ageSlider::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#e56d17;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.28);cursor:pointer}
+#ageSlider::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#e56d17;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.28);cursor:pointer}
+
+#verbs{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:4;display:flex;gap:10px;transition:opacity .5s}
+.verb{display:flex;align-items:center;gap:7px;padding:6px 14px;border-radius:99px;background:rgba(255,250,240,.94);
+  border:1.5px solid var(--line);font-size:17px;font-weight:800;box-shadow:0 4px 14px rgba(80,55,20,.12)}
+.verb svg{width:22px;height:22px}
+.verb.done{border-color:#16a34a;color:#15803d;background:#effaf2}
+.verb.done::after{content:"✓";font-weight:900;color:#16a34a}
+
+#labels{position:fixed;inset:0;pointer-events:none;z-index:3}
+.lbl{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:2px 10px;border-radius:99px;white-space:nowrap;
+  background:rgba(42,48,64,.88);color:#fff;font-size:15px;font-weight:800;line-height:1.75;opacity:0;transition:opacity .2s}
+.lbl rt{color:#ffe0b8}
+.lbl.show{opacity:1}
+.word{position:absolute;left:0;top:0;transform:translate(-50%,-100%);font-size:27px;font-weight:900;line-height:1.6;
+  color:#c2560c;text-shadow:0 2px 0 #fff,0 0 8px #fff;pointer-events:none;animation:floatUp 1.25s ease-out forwards;white-space:nowrap}
+.word.cool{color:#2f5fa8}
+.word.good{color:#15803d}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-60%) scale(.6)}18%{opacity:1;transform:translate(-50%,-100%) scale(1.08)}100%{opacity:0;transform:translate(-50%,-190%) scale(1)}}
+
+#hand{position:fixed;left:0;top:0;width:64px;height:64px;z-index:6;pointer-events:none;opacity:0;transition:opacity .3s;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.25))}
+
+@media (max-width:960px){
+  #guideBar{top:62px;max-width:min(440px,calc(100vw - 280px));font-size:13px;padding:6px 12px}
+}
+@media (max-width:760px){
+  .chip{left:8px;top:8px;padding:4px 10px 4px 4px}
+  .chip h1{font-size:16px}.chip small{display:none}
+  .home{width:32px;height:32px}
+  .tools{right:8px;top:8px;gap:6px}.tbtn{height:34px;padding:0 10px;font-size:13px}
+  .entry-cue{top:38px;font-size:11px;padding:2px 7px}
+  #guideBar{top:50px;left:8px;right:8px;transform:none;max-width:none;font-size:12.5px;padding:5px 10px}
+  #guideBar.flash{transform:scale(1.02)}
+  #notes{top:auto;bottom:106px;right:8px;left:8px;width:auto;max-height:92px;padding:6px 10px}
+  #ntList .stk:nth-child(n+2){display:none}
+  .stk{font-size:13px;padding:4px 8px}
+  #ageBar{bottom:52px;padding:5px 12px;gap:8px}
+  #ageSlider{width:130px}
+  #ageBar .tag,#ageVal{font-size:14px}
+  #verbs{bottom:8px;gap:6px}.verb{font-size:13px;padding:4px 10px}.verb svg{width:17px;height:17px}
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="labels"></div>
+
+<div class="chip">
+  <a class="home" href="../index.html" title="回到书包">‹</a>
+  <div><h1 id="ttl"></h1><small>活页 · 课本第 20 页「我会慢慢长大」</small></div>
+</div>
+<div class="tools">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button" title="语音引导">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+<div id="guideBar" aria-live="polite"></div>
+
+<aside id="notes">
+  <div class="nt-head"><span id="ntTitle"></span><span class="nt-right"><span id="ntCount" style="color:#c2560c">0</span><button id="ntToggle" type="button">收起</button></span></div>
+  <div class="stamps"><span class="stamp" id="stG"></span><span class="stamp" id="stN"></span><span class="stamp" id="stL"></span></div>
+  <div id="ntList"></div>
+</aside>
+
+<div id="confetti"></div>
+<div id="winToast" role="status" aria-live="polite">
+  <div class="win-trophy">🏆</div>
+  <div id="winMsg"></div>
+  <div class="win-concl">
+    <div class="win-concl-t">✨ 科学小结论</div>
+    <div class="win-concl-b">人是有生命的生物，需要吃食物、喝水，还会慢慢长高长大；机器人不是生物，不会自己长高！</div>
+  </div>
+  <div class="win-quiz">
+    <div class="win-quiz-t">💡 考考你 · 答对领小红花 🌸</div>
+    <div class="win-quiz-q">小朋友从 1 岁长到 7 岁，会发生什么变化？</div>
+    <div class="quiz-opts" id="quizOpts">
+      <button class="qopt" data-ok="1" type="button">📏 身高变高，小时候的衣服穿不下了</button>
+      <button class="qopt" data-ok="0" type="button">🤖 像机器人一样身高一直不变</button>
+      <button class="qopt" data-ok="0" type="button">🔋 装上干电池就能长高</button>
+    </div>
+    <div class="quiz-fb" id="quizFb"></div>
+  </div>
+  <div class="win-btns">
+    <button class="wbtn pri" id="winKeep" type="button">继续玩</button>
+    <button class="wbtn" id="winAgain" type="button">再玩一次</button>
+  </div>
+</div>
+
+<div id="ageBar">
+  <span class="tag" id="ageMin"></span>
+  <input id="ageSlider" type="range" min="1" max="7" step="0.05" value="1">
+  <span class="tag" id="ageMax"></span>
+  <span id="ageVal">1岁</span>
+</div>
+
+<div id="verbs">
+  <span class="verb" data-v="grow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg><span id="vb1"></span></span>
+  <span class="verb" data-v="feed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="14" r="7"/><path d="M12 7c0-2 1.5-4 4-4"/></svg><span id="vb2"></span></span>
+  <span class="verb" data-v="cmp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M7 20V8M17 20v-7"/></svg><span id="vb3"></span></span>
+</div>
+
+<svg id="hand" viewBox="0 0 64 64"><path d="M26 6c3 0 5 2 5 5v17l3-1c2-6 9-5 9 0 2-3 8-2 8 3 3-1 7 1 7 5v12c0 9-7 15-16 15h-6c-6 0-10-3-13-8L13 41c-2-3 0-7 4-7 2 0 3 1 4 2V11c0-3 2-5 5-5z" fill="#fff" stroke="#2a3040" stroke-width="3" stroke-linejoin="round"/></svg>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js"></script>
+<script src="../vendor/voice.js"></script>
+<script>
+(function () {
+'use strict';
+
+/* ===================== 拼音 ===================== */
+var HAN = /[\u3400-\u9fff]/, pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function ruby(text, py) {
+  var syl = py ? py.trim().split(/\s+/) : [], i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) { var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; } out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>'; }
+    else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+var $ = function (s) { return document.querySelector(s); };
+$('#ttl').innerHTML = ruby('第5课 认识我自己', 'dì kè rèn shi wǒ zì jǐ');
+$('#ntTitle').innerHTML = ruby('我的发现', 'wǒ de fā xiàn');
+$('#stG').innerHTML = ruby('长高', 'zhǎng gāo');
+$('#stN').innerHTML = ruby('营养', 'yíng yǎng');
+$('#stL').innerHTML = ruby('生物', 'shēng wù');
+$('#vb1').innerHTML = ruby('滑时光', 'huá shí guāng');
+$('#vb2').innerHTML = ruby('喂一喂', 'wèi yi wèi');
+$('#vb3').innerHTML = ruby('比身高', 'bǐ shēn gāo');
+$('#ageMin').innerHTML = ruby('1岁', 'suì');
+$('#ageMax').innerHTML = ruby('7岁', 'suì');
+$('#winMsg').innerHTML = '🌟 ' + ruby('太棒啦！全部发现集齐啦！', 'tài bàng la quán bù fā xiàn jí qí la');
+
+/* ===================== Three 基础 ===================== */
+var canvas = $('#c');
+var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera(32, 1, 0.1, 200);
+var raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2();
+
+scene.add(new THREE.HemisphereLight(0xfff8ee, 0xcdb08a, 0.42));
+var sun = new THREE.DirectionalLight(0xfff1dc, 0.66);
+sun.position.set(-4, 12, 7);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+(function (c) { c.left = -7; c.right = 7; c.top = 6; c.bottom = -6; c.near = 1; c.far = 40; })(sun.shadow.camera);
+sun.shadow.bias = -0.0008;
+scene.add(sun);
+
+var ramp = new THREE.DataTexture(new Uint8Array([120, 120, 120, 255, 185, 185, 185, 255, 232, 232, 232, 255, 255, 255, 255, 255]), 4, 1, THREE.RGBAFormat);
+ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+var INK = new THREE.LineBasicMaterial({ color: 0x2a3040, transparent: true, opacity: 0.8 });
+function toon(hex, extra) {
+  var o = { color: new THREE.Color(hex), gradientMap: ramp };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshToonMaterial(o);
+}
+function mesh(geo, mat, ink) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  if (ink !== false) m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), INK));
+  return m;
+}
+function ctex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c);
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+
+/* ===================== 书桌 + 摊开的课本 ===================== */
+var deskTex = ctex(512, 512, function (g, w, h) {
+  g.fillStyle = '#c9a36b'; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 70; i++) { g.fillStyle = 'rgba(120,80,35,' + (Math.random() * 0.05).toFixed(3) + ')'; g.fillRect(0, Math.random() * h, w, 1 + Math.random() * 3); }
+});
+deskTex.wrapS = deskTex.wrapT = THREE.RepeatWrapping; deskTex.repeat.set(3, 3);
+var deskM = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshLambertMaterial({ map: deskTex }));
+deskM.rotation.x = -Math.PI / 2; deskM.position.y = -0.2; deskM.receiveShadow = true;
+scene.add(deskM);
+
+function pageTex(right) {
+  return ctex(512, 640, function (g, w, h) {
+    g.fillStyle = '#fbf6ea'; g.fillRect(0, 0, w, h);
+    var gr = g.createLinearGradient(right ? 0 : w, 0, right ? 60 : w - 60, 0);
+    gr.addColorStop(0, 'rgba(120,90,45,.18)'); gr.addColorStop(1, 'rgba(120,90,45,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#e4d8c2';
+    for (var r = 0; r < 15; r++) { var y = 60 + r * 36; if (r === 5 || r === 11) continue; g.fillRect(50, y, w - 100 - (r % 4) * 40, 8); }
+    g.fillStyle = '#b9a98c'; g.font = 'bold 22px sans-serif'; g.textAlign = right ? 'right' : 'left';
+    g.fillText(right ? '21' : '20', right ? w - 40 : 40, h - 26);
+  });
+}
+var baseBook = new THREE.Group(); scene.add(baseBook);
+[-1, 1].forEach(function (sx) {
+  var pg = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.16, 6.6), [
+    new THREE.MeshLambertMaterial({ color: 0xefe6d2 }), new THREE.MeshLambertMaterial({ color: 0xefe6d2 }),
+    new THREE.MeshLambertMaterial({ map: pageTex(sx > 0) }), new THREE.MeshLambertMaterial({ color: 0xe4d8c0 }),
+    new THREE.MeshLambertMaterial({ color: 0xefe6d2 }), new THREE.MeshLambertMaterial({ color: 0xefe6d2 })
+  ]);
+  pg.position.set(sx * 2.62, -0.08, 0); pg.receiveShadow = true; pg.castShadow = true;
+  baseBook.add(pg);
+});
+var coverM = new THREE.Mesh(new THREE.BoxGeometry(10.7, 0.06, 6.9), new THREE.MeshLambertMaterial({ color: 0xe56d17 }));
+coverM.position.y = -0.19; baseBook.add(coverM);
+
+/* ===================== 活页底板 ===================== */
+var BASE = 0.1;
+var BOARD = { x0: -4.1, x1: 4.1, z0: -2.35, z1: 2.35 };
+var live = new THREE.Group(); scene.add(live);
+var boardTex = ctex(512, 300, function (g, w, h) {
+  g.fillStyle = '#fffaf0'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(214,196,160,.55)'; g.lineWidth = 1;
+  for (var x = 0; x < w; x += 16) { g.beginPath(); g.moveTo(x + .5, 0); g.lineTo(x + .5, h); g.stroke(); }
+  for (var y = 0; y < h; y += 16) { g.beginPath(); g.moveTo(0, y + .5); g.lineTo(w, y + .5); g.stroke(); }
+});
+var board = mesh(new THREE.BoxGeometry(8.2, BASE, 4.7), [
+  toon('#ead6b0'), toon('#ead6b0'), new THREE.MeshToonMaterial({ map: boardTex, gradientMap: ramp, color: 0xf6ead2 }), toon('#ead6b0'), toon('#ead6b0'), toon('#ead6b0')
+]);
+board.position.y = BASE / 2; board.castShadow = false;
+live.add(board);
+
+var figTex = ctex(512, 300, function (g, w, h) {
+  g.fillStyle = '#fbf3e2'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = '#e56d17'; g.lineWidth = 6; g.strokeRect(6, 6, w - 12, h - 12);
+  g.strokeStyle = '#8a7b62'; g.lineWidth = 4;
+  g.beginPath(); g.arc(165, 95, 26, 0, Math.PI * 2); g.stroke();
+  g.strokeRect(145, 125, 40, 65);
+  g.strokeRect(320, 95, 52, 95);
+  g.fillStyle = '#8a7b62'; g.font = 'bold 26px sans-serif'; g.textAlign = 'center'; g.fillText('我会慢慢长大', w / 2, h - 20);
+});
+var figCard = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 4.7), new THREE.MeshBasicMaterial({ map: figTex, transparent: true }));
+figCard.rotation.x = -Math.PI / 2; figCard.position.y = 0.012;
+scene.add(figCard);
+
+// 左右分区底垫（整体微向左让位，保证右侧身高尺完全避开发现面板）
+var leftPad = mesh(new THREE.BoxGeometry(3.35, 0.03, 2.35), toon('#fff0d8'));
+leftPad.position.set(-2.05, BASE + 0.015, -0.45); live.add(leftPad);
+var rightPad = mesh(new THREE.BoxGeometry(2.65, 0.03, 2.35), toon('#dff0fb'));
+rightPad.position.set(1.35, BASE + 0.015, -0.45); live.add(rightPad);
+
+/* ===================== 身高尺构造 ===================== */
+function makeRuler(x, z, arrowColor) {
+  var g = new THREE.Group(); g.position.set(x, BASE, z);
+  var rTex = ctex(128, 512, function (q, w, h) {
+    q.fillStyle = '#f0cc8c'; q.fillRect(0, 0, w, h);
+    q.fillStyle = '#4a3520'; q.font = 'bold 22px sans-serif';
+    for (var i = 0; i <= 24; i++) {
+      var y = h - 20 - i * (h - 40) / 24;
+      q.fillRect(0, y, i % 4 === 0 ? 46 : 24, 4);
+      if (i % 4 === 0) q.fillText(String(60 + i * 3), 54, y + 8);
+    }
+  });
+  var post = mesh(new THREE.BoxGeometry(0.28, 2.45, 0.08), [
+    toon('#d9a95c'), toon('#d9a95c'), toon('#d9a95c'), toon('#d9a95c'),
+    new THREE.MeshToonMaterial({ map: rTex, gradientMap: ramp }), toon('#d9a95c')
+  ]);
+  post.position.y = 1.225; g.add(post);
+  var foot = mesh(new THREE.BoxGeometry(0.5, 0.08, 0.38), toon('#b9803e'));
+  foot.position.y = 0.04; g.add(foot);
+  var arrow = mesh(new THREE.ConeGeometry(0.11, 0.28, 4), toon(arrowColor));
+  arrow.rotation.z = -Math.PI / 2; arrow.position.set(0.25, 1.1, 0.06);
+  g.add(arrow);
+  live.add(g);
+  return { g: g, arrow: arrow };
+}
+var kidRuler = makeRuler(-2.35, -1.05, '#e56d17');
+var robRuler = makeRuler(1.85, -1.05, '#2563eb');
+robRuler.arrow.rotation.z = Math.PI / 2;
+robRuler.arrow.position.x = -0.25;
+
+/* ===================== 左侧：可交互的婴儿小衣服和小鞋 ===================== */
+var rackG = new THREE.Group();
+rackG.position.set(-3.35, BASE, -0.35);
+live.add(rackG);
+var rackStand = mesh(new THREE.CylinderGeometry(0.04, 0.05, 1.55, 10), toon('#b9803e'));
+rackStand.position.y = 0.775; rackG.add(rackStand);
+var rackBase = mesh(new THREE.CylinderGeometry(0.26, 0.3, 0.07, 16), toon('#a06c32'));
+rackBase.position.y = 0.035; rackG.add(rackBase);
+var rackBar = mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.65, 10), toon('#d9a95c'));
+rackBar.rotation.z = Math.PI / 2; rackBar.position.set(0.22, 1.48, 0); rackG.add(rackBar);
+
+// 1岁婴儿小T恤（永远保持小小尺寸，可拖到小朋友身上或点击试穿对比！）
+var shirtG = new THREE.Group();
+var shirtBody = new THREE.Group(); shirtG.add(shirtBody);
+var sBody = mesh(new THREE.BoxGeometry(0.34, 0.38, 0.1), toon('#ff9ab2')); shirtBody.add(sBody);
+[-1, 1].forEach(function (sx) {
+  var slv = mesh(new THREE.BoxGeometry(0.14, 0.14, 0.09), toon('#ff9ab2'));
+  slv.position.set(sx * 0.21, 0.1, 0); slv.rotation.z = -sx * 0.4; shirtBody.add(slv);
+});
+var sStar = mesh(new THREE.CircleGeometry(0.07, 12), toon('#ffe46b'), false);
+sStar.position.set(0, 0.02, 0.055); shirtBody.add(sStar);
+var babyWear = {
+  g: shirtG, body: shirtBody,
+  home: new THREE.Vector3(-3.03, BASE + 1.2, -0.35),
+  cur: new THREE.Vector3(-3.03, BASE + 1.2, -0.35),
+  target: new THREE.Vector3(-3.03, BASE + 1.2, -0.35),
+  pop: 0.01, hover: 0, dragging: false, flying: null, tryTimer: 0, tryTooSmall: false
+};
+shirtG.position.copy(babyWear.cur);
+shirtG.traverse(function (o) { if (o.isMesh) o.userData.kind = 'clothes'; });
+live.add(shirtG);
+
+// 1岁婴儿小鞋子（点击也可触发小衣服试穿对比）
+var bShoe = mesh(new THREE.BoxGeometry(0.16, 0.1, 0.24), toon('#6ec4f5'));
+bShoe.position.set(0.28, 0.08, 0.22);
+bShoe.userData.kind = 'clothes';
+rackG.add(bShoe);
+
+/* ===================== 左侧：会长大的 3D 卡通小朋友 ===================== */
+var KID_POS = new THREE.Vector3(-1.55, BASE + 0.03, -0.4);
+var kidG = new THREE.Group(); kidG.position.copy(KID_POS); live.add(kidG);
+var kidBody = new THREE.Group(); kidG.add(kidBody);
+
+// 脚印垫（随长大变大）
+var footMat = new THREE.MeshBasicMaterial({ color: 0xf4a261, transparent: true, opacity: 0.55 });
+var footPrint = new THREE.Mesh(new THREE.CircleGeometry(0.28, 24), footMat);
+footPrint.rotation.x = -Math.PI / 2; footPrint.position.set(0, 0.015, 0.35);
+kidG.add(footPrint);
+
+var kidGlow = new THREE.Mesh(
+  new THREE.RingGeometry(0.62, 0.78, 36),
+  new THREE.MeshBasicMaterial({ color: 0xffb23c, transparent: true, opacity: 0, side: THREE.DoubleSide })
+);
+kidGlow.rotation.x = -Math.PI / 2; kidGlow.position.y = 0.02; kidG.add(kidGlow);
+
+// 小朋友各部位（动态随 age 拉伸成长）
+var skinMat = toon('#ffd5b3'), hairMat = toon('#3a2e2a'), shirtMat = toon('#ff6f4e'), pantsMat = toon('#3c78c8'), shoeMat = toon('#f4b426');
+var kLegs = new THREE.Group(); kidBody.add(kLegs);
+[-0.12, 0.12].forEach(function (lx) {
+  var leg = mesh(new THREE.CylinderGeometry(0.075, 0.07, 0.42, 12), pantsMat);
+  leg.position.set(lx, 0.24, 0); kLegs.add(leg);
+  var shoe = mesh(new THREE.BoxGeometry(0.16, 0.1, 0.24), shoeMat);
+  shoe.position.set(lx, 0.05, 0.05); kLegs.add(shoe);
+});
+var kTorso = mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.48, 16), shirtMat);
+kTorso.position.y = 0.68; kidBody.add(kTorso);
+var kBelt = mesh(new THREE.CylinderGeometry(0.225, 0.225, 0.08, 16), toon('#ffe066'), false);
+kBelt.position.y = 0.55; kidBody.add(kBelt);
+
+var kArms = new THREE.Group(); kidBody.add(kArms);
+var kArmMeshes = [];
+[-1, 1].forEach(function (sx) {
+  var arm = mesh(new THREE.CapsuleGeometry(0.06, 0.28, 6, 10), skinMat);
+  arm.position.set(sx * 0.28, 0.7, 0); arm.rotation.z = sx * 0.28; kArms.add(arm);
+  kArmMeshes.push(arm);
+});
+
+var kHead = new THREE.Group(); kHead.position.y = 1.15; kidBody.add(kHead);
+var headSphere = mesh(new THREE.SphereGeometry(0.27, 20, 16), skinMat); kHead.add(headSphere);
+var hairCap = mesh(new THREE.SphereGeometry(0.28, 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.55), hairMat);
+hairCap.position.y = 0.03; kHead.add(hairCap);
+var tuft = mesh(new THREE.ConeGeometry(0.07, 0.16, 8), hairMat);
+tuft.position.set(0.04, 0.33, 0.04); tuft.rotation.z = -0.3; kHead.add(tuft);
+[-0.09, 0.09].forEach(function (ex) {
+  var eye = mesh(new THREE.SphereGeometry(0.03, 10, 8), toon('#2a3040'), false);
+  eye.position.set(ex, 0.02, 0.24); kHead.add(eye);
+  var cheek = mesh(new THREE.CircleGeometry(0.045, 12), toon('#ff98a4'), false);
+  cheek.position.set(ex * 1.55, -0.04, 0.235); kHead.add(cheek);
+});
+var smile = mesh(new THREE.TorusGeometry(0.05, 0.012, 8, 14, Math.PI), toon('#b84238'), false);
+smile.rotation.z = Math.PI; smile.position.set(0, -0.06, 0.245); kHead.add(smile);
+
+kidG.traverse(function (o) { if (o.isMesh && o !== kidGlow && o !== footPrint) o.userData.kind = 'kid'; });
+
+/* ===================== 右侧：固定身高的 3D 玩具机器人 ===================== */
+var ROB_POS = new THREE.Vector3(0.95, BASE + 0.03, -0.4);
+var robG = new THREE.Group(); robG.position.copy(ROB_POS); live.add(robG);
+var robBody = new THREE.Group(); robG.add(robBody);
+
+var robGlow = new THREE.Mesh(
+  new THREE.RingGeometry(0.62, 0.78, 36),
+  new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0, side: THREE.DoubleSide })
+);
+robGlow.rotation.x = -Math.PI / 2; robGlow.position.y = 0.02; robG.add(robGlow);
+
+var rMetal = toon('#88c7e0'), rDark = toon('#4f7396'), rCoreMat = toon('#7088a0');
+[-0.14, 0.14].forEach(function (rx) {
+  var rl = mesh(new THREE.BoxGeometry(0.14, 0.36, 0.16), rDark); rl.position.set(rx, 0.2, 0); robBody.add(rl);
+  var rf = mesh(new THREE.BoxGeometry(0.18, 0.09, 0.26), rMetal); rf.position.set(rx, 0.045, 0.04); robBody.add(rf);
+});
+var rTorso = mesh(new THREE.BoxGeometry(0.52, 0.5, 0.34), rMetal);
+rTorso.position.y = 0.62; robBody.add(rTorso);
+var rCore = mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.05, 16), rCoreMat);
+rCore.rotation.x = Math.PI / 2; rCore.position.set(0, 0.64, 0.17); robBody.add(rCore);
+[-1, 1].forEach(function (sx) {
+  var ra = mesh(new THREE.BoxGeometry(0.12, 0.38, 0.12), rDark);
+  ra.position.set(sx * 0.35, 0.62, 0); robBody.add(ra);
+});
+var rHead = new THREE.Group(); rHead.position.y = 1.07; robBody.add(rHead);
+var rHeadBox = mesh(new THREE.BoxGeometry(0.46, 0.34, 0.36), rMetal); rHead.add(rHeadBox);
+var rVisor = mesh(new THREE.BoxGeometry(0.36, 0.14, 0.04), toon('#263242'), false);
+rVisor.position.set(0, 0.02, 0.18); rHead.add(rVisor);
+var rEyeMat = toon('#4ef0ff');
+[-0.09, 0.09].forEach(function (ex) {
+  var re = mesh(new THREE.CircleGeometry(0.038, 12), rEyeMat, false);
+  re.position.set(ex, 0.02, 0.205); rHead.add(re);
+});
+var rAnt = mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.18, 8), rDark);
+rAnt.position.y = 0.26; rHead.add(rAnt);
+var rBall = mesh(new THREE.SphereGeometry(0.055, 10, 8), toon('#ef4444'));
+rBall.position.y = 0.37; rHead.add(rBall);
+
+robG.traverse(function (o) { if (o.isMesh && o !== robGlow) o.userData.kind = 'robot'; });
+
+/* ===================== 前排 3 件供给品：红苹果、清水杯、干电池 ===================== */
+var ITEMS = [
+  { id: 'apple',   name: '红苹果', py: 'hóng píng guǒ', x: -1.85, z: 1.48 },
+  { id: 'water',   name: '清水杯', py: 'qīng shuǐ bēi', x: 0.0,   z: 1.48 },
+  { id: 'battery', name: '干电池', py: 'gān diàn chí',  x: 1.85,  z: 1.48 }
+];
+var IMAP = {}; ITEMS.forEach(function (it) { IMAP[it.id] = it; });
+
+ITEMS.forEach(function (it) {
+  var pad = mesh(new THREE.CylinderGeometry(0.48, 0.52, 0.05, 24), toon('#e2c79a'));
+  pad.position.set(it.x, BASE + 0.025, it.z); live.add(pad);
+
+  var g = new THREE.Group(), body = new THREE.Group(); g.add(body);
+  if (it.id === 'apple') {
+    var ap = mesh(new THREE.SphereGeometry(0.24, 18, 14), toon('#e83c38'));
+    ap.scale.set(1.06, 0.94, 1.06); ap.position.y = 0.22; body.add(ap);
+    var st = mesh(new THREE.CylinderGeometry(0.022, 0.025, 0.14, 8), toon('#6e421d'));
+    st.position.set(0, 0.46, 0); body.add(st);
+    var lf = mesh(new THREE.SphereGeometry(0.09, 10, 8), toon('#44b549'));
+    lf.scale.set(1.4, 0.35, 0.75); lf.position.set(0.09, 0.46, 0); lf.rotation.z = 0.45; body.add(lf);
+    it.h = 0.54;
+  } else if (it.id === 'water') {
+    var glass = mesh(new THREE.CylinderGeometry(0.22, 0.18, 0.48, 18), toon('#d8f3ff', { transparent: true, opacity: 0.65 }));
+    glass.position.y = 0.24; body.add(glass);
+    var liq = mesh(new THREE.CylinderGeometry(0.19, 0.16, 0.34, 16), toon('#47baf2'), false);
+    liq.position.y = 0.19; body.add(liq);
+    it.h = 0.52;
+  } else {
+    var bTop = mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.26, 16), toon('#f5c02e'));
+    bTop.position.y = 0.35; body.add(bTop);
+    var bBot = mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.22, 16), toon('#343b4a'));
+    bBot.position.y = 0.11; body.add(bBot);
+    var nub = mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.06, 12), toon('#d8dfe8'));
+    nub.position.y = 0.51; body.add(nub);
+    it.h = 0.56;
+  }
+
+  it.g = g; it.body = body;
+  it.home = new THREE.Vector3(it.x, BASE + 0.05, it.z);
+  it.cur = it.home.clone(); it.target = it.home.clone();
+  it.pop = 0.01; it.hover = 0; it.dragging = false; it.flying = null;
+  g.traverse(function (o) { if (o.isMesh) { o.userData.kind = 'item'; o.userData.item = it; } });
+  g.position.copy(it.cur);
+  live.add(g);
+});
+
+// 欢呼星光粒子
+var sparkles = [];
+for (var pi = 0; pi < 16; pi++) {
+  var pm = new THREE.Mesh(new THREE.OctahedronGeometry(0.06, 0), new THREE.MeshBasicMaterial({ color: pi % 2 ? 0xffe45e : 0x5eead4 }));
+  pm.visible = false; live.add(pm);
+  sparkles.push({ m: pm, v: new THREE.Vector3(), life: 0 });
+}
+function burst(pos) {
+  sparkles.forEach(function (p) {
+    p.m.visible = true; p.m.position.copy(pos);
+    p.v.set((Math.random() - 0.5) * 2.2, 1.4 + Math.random() * 1.4, (Math.random() - 0.5) * 1.8);
+    p.life = 0.55 + Math.random() * 0.3;
+  });
+}
+
+/* ===================== 相机取景 ===================== */
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  var portrait = w / h < 0.85;
+  var tgt = new THREE.Vector3(portrait ? 0 : 0.25, 0.72, portrait ? 0.15 : 0.05);
+  var dir = portrait ? new THREE.Vector3(0.28, 0.72, 0.64).normalize() : new THREE.Vector3(0, 0.62, 0.78).normalize();
+  var needW = portrait ? 6.4 : 8.7, needH = portrait ? 9.5 : 6.1;
+  var vf = THREE.MathUtils.degToRad(camera.fov), hf = 2 * Math.atan(Math.tan(vf / 2) * camera.aspect);
+  var d = Math.max(needW / 2 / Math.tan(hf / 2), needH / 2 / Math.tan(vf / 2) * 0.84);
+  camera.position.copy(tgt).addScaledVector(dir, d);
+  camera.lookAt(tgt);
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', fit);
+
+/* ===================== WebAudio 音效 ===================== */
+var AC = null;
+function audio() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } } if (AC && AC.state === 'suspended') AC.resume(); return AC; }
+function tone(f, dur, type, vol, f2, delay) {
+  var a = audio(); if (!a) return;
+  var t = a.currentTime + (delay || 0), o = a.createOscillator(), g = a.createGain();
+  o.type = type || 'sine'; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.14, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + 0.02);
+}
+function sHappy() { tone(523, 0.11, 'sine', 0.13); tone(659, 0.11, 'sine', 0.13, null, 0.09); tone(784, 0.22, 'sine', 0.14, null, 0.18); }
+function sNope() { tone(260, 0.12, 'triangle', 0.15, 180); tone(190, 0.15, 'triangle', 0.13, 140, 0.11); }
+function sPower() { tone(440, 0.09, 'square', 0.06, 660); tone(660, 0.09, 'square', 0.06, 990, 0.08); tone(990, 0.18, 'sine', 0.11, 1320, 0.16); }
+function sDing() { tone(880, 0.14, 'sine', 0.11); tone(1320, 0.24, 'sine', 0.09, null, 0.09); }
+function sWin() {
+  tone(523, 0.14, 'sine', 0.13, null, 0);
+  tone(659, 0.14, 'sine', 0.13, null, 0.11);
+  tone(784, 0.16, 'sine', 0.14, null, 0.22);
+  tone(1046, 0.36, 'sine', 0.15, null, 0.34);
+  tone(784, 0.32, 'triangle', 0.07, null, 0.34);
+}
+
+/* ===================== 进度持久化与儿童离线语音引导 ===================== */
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem('xk_k1a_progress') || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem('xk_k1a_progress', JSON.stringify(d));
+  } catch (e) {}
+}
+function dismissCues() {
+  document.body.classList.add('interacted');
+}
+
+var voiceOn = true, voiceWelcomed = false;
+var CONCL_VOICE = '人是有生命的生物，需要吃食物、喝水，还会慢慢长高长大；机器人不是生物，不会自己长高！快来答一题赢小红花吧！';
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
+  if (!('speechSynthesis' in window)) return;
+  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+}
+function welcomeVoiceOnce() {
+  dismissCues();
+  if (voiceWelcomed) return;
+  voiceWelcomed = true;
+}
+
+/* ===================== 标签与发现 ===================== */
+var labelsEl = $('#labels');
+function makeLbl(name, py) {
+  var el = document.createElement('div'); el.className = 'lbl'; el.innerHTML = ruby(name, py);
+  labelsEl.appendChild(el); return el;
+}
+ITEMS.forEach(function (it) { it.lbl = makeLbl(it.name, it.py); });
+var kidLbl = makeLbl('小朋友', 'xiǎo péng you');
+var robLbl = makeLbl('机器人', 'jī qì rén');
+var shirtLbl = makeLbl('小衣服', 'xiǎo yī fu');
+
+var vtmp = new THREE.Vector3();
+function toScreen(v) { vtmp.copy(v).project(camera); return { x: (vtmp.x + 1) / 2 * window.innerWidth, y: (1 - vtmp.y) / 2 * window.innerHeight }; }
+function floatWord(text, py, worldPos, cls) {
+  var p = toScreen(worldPos), el = document.createElement('div');
+  el.className = 'word' + (cls ? ' ' + cls : ''); el.innerHTML = ruby(text, py);
+  el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
+  labelsEl.appendChild(el); setTimeout(function () { el.remove(); }, 1300);
+}
+
+var found = {}, foundN = 0, kinds = { g: false, n: false, l: false };
+var ms = { fed: false, slid: false, clothes: false, robot: false };
+var slidBySlider = false;
+var acted = { grow: false, feed: false, cmp: false }, actions = 0;
+var celebrated = false, resetGen = 0, guidePhase = 0, guideTimer = null, voiceCueTimer = 0;
+var guideBarEl = $('#guideBar'), ageBarEl = $('#ageBar');
+
+function getGuideInfo() {
+  if (!ms.fed) {
+    return {
+      phase: 1,
+      text: '🍎 第1步：把红苹果或清水杯拖给小朋友，看看需要什么才能长高！',
+      voice: '把红苹果或清水杯拖给小朋友，看看小朋友需要什么才能长高！',
+      pulse: 'feed'
+    };
+  }
+  if (!ms.slid) {
+    return {
+      phase: 2,
+      text: '🎚️ 第2步：真棒！拉一拉底下的「时光滑块」到 7 岁，看看谁长高了！',
+      voice: '真棒！小朋友补充营养啦！现在试着拉一拉底下的时光滑块到7岁，看看小朋友和机器人谁长高了！',
+      pulse: 'slider'
+    };
+  }
+  if (!ms.clothes && !ms.robot) {
+    return {
+      phase: 3,
+      text: '👕 第3步：把左边小衣服拖给小朋友试穿，再给机器人喂电池比一比！',
+      voice: '哇，小朋友长高啦！把左边的小衣服拖到小朋友身上试试，再给机器人喂个电池比一比！',
+      pulse: 'clothes_robot'
+    };
+  }
+  if (!ms.clothes) {
+    return {
+      phase: 4,
+      text: '👕 最后一步：把左边「小衣服」拖到小朋友身上试试，长大后还穿得下吗？',
+      voice: '把左边的小衣服拖到小朋友身上试试，看看长大后还穿得下吗！',
+      pulse: 'clothes'
+    };
+  }
+  if (!ms.robot) {
+    return {
+      phase: 5,
+      text: '🤖 最后一步：给右边机器人喂干电池或点一点它，比比它会自己长高吗？',
+      voice: '再给右边的机器人喂个干电池或点一点它，比一比它会不会长高！',
+      pulse: 'robot'
+    };
+  }
+  return {
+    phase: 6,
+    text: '🎉 全部探索完成！快在科学小结论卡片里答对题目领小红花吧！',
+    voice: CONCL_VOICE,
+    pulse: 'done'
+  };
+}
+
+function updateGuide(speakIt, immediate) {
+  var info = getGuideInfo();
+  var changed = info.phase !== guidePhase;
+  guidePhase = info.phase;
+  guideBarEl.textContent = info.text;
+  ageBarEl.classList.toggle('guide-pulse', info.pulse === 'slider');
+  if (changed) {
+    guideBarEl.classList.remove('flash');
+    void guideBarEl.offsetWidth;
+    guideBarEl.classList.add('flash');
+    setTimeout(function () { guideBarEl.classList.remove('flash'); }, 550);
+  }
+  if (speakIt && (changed || immediate)) {
+    if (guideTimer) { clearTimeout(guideTimer); guideTimer = null; }
+    var gen = resetGen;
+    if (immediate) {
+      speak(info.voice, true);
+    } else if (!celebrated && info.phase < 6) {
+      guideTimer = setTimeout(function () {
+        if (gen !== resetGen || celebrated) return;
+        speak(info.voice);
+      }, 1350);
+    }
+  }
+}
+
+function syncStamps() {
+  var nextN = ms.fed;
+  var nextG = ms.slid && ms.clothes;
+  var nextL = ms.robot && ms.slid;
+  if (nextN && !kinds.n) { kinds.n = true; $('#stN').classList.add('lit'); }
+  if (nextG && !kinds.g) { kinds.g = true; $('#stG').classList.add('lit'); }
+  if (nextL && !kinds.l) { kinds.l = true; $('#stL').classList.add('lit'); }
+}
+
+function markAct(v) {
+  if (!acted[v]) { acted[v] = true; var el = document.querySelector('.verb[data-v="' + v + '"]'); if (el) el.classList.add('done'); }
+  actions++;
+}
+function launchConfetti() {
+  var box = $('#confetti');
+  var cols = ['#f97316', '#facc15', '#22c55e', '#38bdf8', '#ec4899', '#a855f7'];
+  for (var i = 0; i < 36; i++) {
+    var d = document.createElement('div');
+    d.className = 'conf';
+    d.style.left = (20 + Math.random() * 60) + '%';
+    d.style.top = (14 + Math.random() * 14) + '%';
+    d.style.background = cols[i % cols.length];
+    d.style.setProperty('--dx', ((Math.random() - 0.5) * 340).toFixed(0) + 'px');
+    d.style.setProperty('--dy', (180 + Math.random() * 320).toFixed(0) + 'px');
+    d.style.setProperty('--rot', ((Math.random() - 0.5) * 720).toFixed(0) + 'deg');
+    d.style.animationDelay = (Math.random() * 0.28).toFixed(2) + 's';
+    box.appendChild(d);
+    (function (el) { setTimeout(function () { el.remove(); }, 2500); })(d);
+  }
+}
+function checkComplete() {
+  syncStamps();
+  updateGuide(true, false);
+  if (celebrated) return;
+  if (ms.fed && ms.slid && ms.clothes && ms.robot) {
+    celebrated = true;
+    saveProgress('k1a-05', true);
+    if (guideTimer) { clearTimeout(guideTimer); guideTimer = null; }
+    var gen = resetGen;
+    setTimeout(function () {
+      if (gen !== resetGen) return;
+      sWin();
+      launchConfetti();
+      $('#winToast').classList.add('show');
+      speak('太棒啦！全部探索都完成啦！' + CONCL_VOICE);
+    }, 520);
+  }
+}
+function discover(key, kind, text, py, color) {
+  if (found[key]) return;
+  found[key] = true; foundN++;
+  var el = document.createElement('div'); el.className = 'stk';
+  var icon = kind === 'g' ? '📏' : kind === 'n' ? '🍎' : '🌱';
+  el.innerHTML = '<i style="background:' + color + '">' + icon + '</i><span>' + ruby(text, py) + '</span>';
+  var list = $('#ntList'); list.insertBefore(el, list.firstChild);
+  while (list.children.length > 12) list.removeChild(list.lastChild);
+  $('#ntCount').textContent = foundN;
+  sDing();
+  speak(text.replace(/·/g, '，'));
+  checkComplete();
+}
+
+/* ===================== 年龄成长 & 喂食/充电/小衣服试穿逻辑 ===================== */
+var age = 1, ageGoal = 1;
+var kidHop = 0, kidWave = 0, kidShake = 0, robSpin = 0, robShake = 0, robCharge = 0;
+var ageSlider = $('#ageSlider'), ageValEl = $('#ageVal');
+
+function setAgeGoal(v, fromSlider) {
+  ageGoal = THREE.MathUtils.clamp(v, 1, 7);
+  ageSlider.value = ageGoal.toFixed(2);
+  ageValEl.textContent = Math.round(ageGoal) + '岁';
+  if (fromSlider) {
+    slidBySlider = true;
+    voiceCueTimer = 0;
+    if (ageGoal > 2.2) {
+      ghost.off = true;
+      markAct('grow');
+      if (ageGoal >= 5.0 && !ms.slid) {
+        ms.slid = true;
+        discover('g:grow', 'g', '小朋友会慢慢长高', 'xiǎo péng you huì màn màn zhǎng gāo', '#e56d17');
+        checkComplete();
+      }
+      if (ageGoal >= 6.0) {
+        markAct('cmp');
+        discover('l:rob', 'l', '机器人不会长大', 'jī qì rén bù huì zhǎng dà', '#2563eb');
+      }
+    }
+  }
+}
+
+ageSlider.addEventListener('input', function () {
+  audio(); welcomeVoiceOnce(); stopDemo(); introSkip();
+  setAgeGoal(parseFloat(ageSlider.value), true);
+});
+
+var fedFood = false, fedWater = false;
+function giveItem(it, who) {
+  dismissCues();
+  ghost.off = true;
+  voiceCueTimer = 0;
+  markAct('feed');
+  if (who === 'kid') {
+    if (it.id === 'apple' || it.id === 'water') {
+      kidHop = 1; sHappy();
+      ms.fed = true;
+      burst(KID_POS.clone().add(new THREE.Vector3(0, 1.35, 0)));
+      if (it.id === 'apple') {
+        fedFood = true;
+        floatWord('真好吃!', 'zhēn hǎo chī', KID_POS.clone().add(new THREE.Vector3(0, 1.85, 0)), 'good');
+        discover('n:food', 'n', '人需要吃食物', 'rén xū yào chī shí wù', '#16a34a');
+      } else {
+        fedWater = true;
+        floatWord('真解渴!', 'zhēn jiě kě', KID_POS.clone().add(new THREE.Vector3(0, 1.85, 0)), 'good');
+        discover('n:water', 'n', '人需要喝水', 'rén xū yào hē shuǐ', '#0ea5e9');
+      }
+      // 喂营养让小朋友明显长高一点，同时留出空间引导小朋友去拉时光滑块到7岁！
+      if (ageGoal < 4.2) setAgeGoal(Math.min(4.2, ageGoal + 1.4), false);
+      if (fedFood && fedWater) discover('l:human', 'l', '人是有生命的生物', 'rén shì yǒu shēng mìng de shēng wù', '#e56d17');
+      checkComplete();
+    } else {
+      kidShake = 1; sNope();
+      floatWord('我不要电池!', 'wǒ bù yào diàn chí', KID_POS.clone().add(new THREE.Vector3(0, 1.75, 0)), 'cool');
+      speak('小朋友不要电池，要吃食物和喝水哦！');
+    }
+  } else {
+    ms.robot = true;
+    if (it.id === 'battery') {
+      robSpin = 1; robCharge = 1; sPower();
+      burst(ROB_POS.clone().add(new THREE.Vector3(0, 1.15, 0)));
+      floatWord('充好电啦!', 'chōng hǎo diàn la', ROB_POS.clone().add(new THREE.Vector3(0, 1.65, 0)), 'good');
+      discover('n:rob', 'n', '机器人需要充电', 'jī qì rén xū yào chōng diàn', '#0891b2');
+      markAct('cmp');
+    } else {
+      robShake = 1; sNope();
+      floatWord('我不吃东西!', 'wǒ bù chī dōng xi', ROB_POS.clone().add(new THREE.Vector3(0, 1.65, 0)), 'cool');
+      discover('l:robnofood', 'l', '机器人不吃东西', 'jī qì rén bù chī dōng xi', '#64748b');
+      markAct('cmp');
+    }
+    checkComplete();
+  }
+}
+
+function kidChestPos() {
+  var g = (age - 1) / 6;
+  var legS = 0.65 + g * 0.85, torsoS = 0.72 + g * 0.62;
+  return new THREE.Vector3(KID_POS.x, KID_POS.y + 0.44 * legS + 0.24 * torsoS, KID_POS.z + 0.32);
+}
+
+function tryBabyClothes(who) {
+  dismissCues();
+  ghost.off = true;
+  voiceCueTimer = 0;
+  if (who === 'robot') {
+    ms.robot = true;
+    robShake = 1; sNope();
+    floatWord('我不用穿衣服!', 'wǒ bù yòng chuān yī fu', ROB_POS.clone().add(new THREE.Vector3(0, 1.65, 0)), 'cool');
+    speak('机器人不用穿小衣服哦！拖给小朋友试试吧！');
+    babyWear.target.copy(babyWear.home);
+    checkComplete();
+    return;
+  }
+  babyWear.tryTimer = 1.45;
+  if (age < 2.8) {
+    babyWear.tryTooSmall = false;
+    kidHop = 1; sHappy();
+    burst(KID_POS.clone().add(new THREE.Vector3(0, 1.15, 0)));
+    floatWord('小时候刚好合身!', 'xiǎo shí hou gāng hǎo hé shēn', KID_POS.clone().add(new THREE.Vector3(0, 1.75, 0)), 'good');
+    if (found['g:fit']) speak('小时候，这件小衣服刚好合身！拉时光滑块长大以后再试试看吧！');
+    discover('g:fit', 'g', '小时候小衣服刚好合身', 'xiǎo shí hou xiǎo yī fu gāng hǎo hé shēn', '#ec4899');
+  } else if (age < 4.0) {
+    babyWear.tryTooSmall = true;
+    kidShake = 0.7; sNope();
+    floatWord('有点紧啦!', 'yǒu diǎn jǐn la', KID_POS.clone().add(new THREE.Vector3(0, 1.85, 0)), '');
+    speak('长高了一点，小衣服已经有点紧啦！拉时光滑块到7岁再试试看！');
+  } else {
+    babyWear.tryTooSmall = true;
+    ms.clothes = true;
+    kidShake = 1; sNope();
+    markAct('cmp');
+    floatWord('穿不下啦! 太小了!', 'chuān bu xià la tài xiǎo le', KID_POS.clone().add(new THREE.Vector3(0, 2.0, 0)), 'cool');
+    if (found['g:shirt']) speak('哈哈，小朋友长大长高啦，小时候的小衣服穿不下啦！');
+    discover('g:shirt', 'g', '长大了·小衣服穿不下啦', 'zhǎng dà le xiǎo yī fu chuān bu xià la', '#ec4899');
+    checkComplete();
+  }
+}
+
+/* ===================== 指针拖拽交互 ===================== */
+var P = null, hovered = null, now = 0;
+var pickables = [];
+ITEMS.forEach(function (it) { it.g.traverse(function (o) { if (o.isMesh) pickables.push(o); }); });
+kidG.traverse(function (o) { if (o.isMesh && o !== kidGlow && o !== footPrint) pickables.push(o); });
+robG.traverse(function (o) { if (o.isMesh && o !== robGlow) pickables.push(o); });
+shirtG.traverse(function (o) { if (o.isMesh) pickables.push(o); });
+pickables.push(bShoe);
+
+var dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), ptmp = new THREE.Vector3();
+function setNDC(e) { ndc.x = (e.clientX / window.innerWidth) * 2 - 1; ndc.y = -(e.clientY / window.innerHeight) * 2 + 1; raycaster.setFromCamera(ndc, camera); }
+function planePoint(e, y) { setNDC(e); dragPlane.constant = -y; return raycaster.ray.intersectPlane(dragPlane, ptmp) ? ptmp.clone() : null; }
+function pick(e) {
+  setNDC(e);
+  var h = raycaster.intersectObjects(pickables, false)[0];
+  if (!h) return null;
+  return { kind: h.object.userData.kind, item: h.object.userData.item || null };
+}
+
+canvas.addEventListener('pointerdown', function (e) {
+  audio(); welcomeVoiceOnce(); stopDemo(); introSkip();
+  var h = pick(e);
+  if (!h) return;
+  P = { kind: h.kind, item: h.item, x: e.clientX, y: e.clientY, mode: 'pending', e: { clientX: e.clientX, clientY: e.clientY } };
+  try { canvas.setPointerCapture(e.pointerId); } catch (er) {}
+});
+
+canvas.addEventListener('pointermove', function (e) {
+  if (P) {
+    var moved = Math.hypot(e.clientX - P.x, e.clientY - P.y);
+    P.e = { clientX: e.clientX, clientY: e.clientY };
+    if (P.mode === 'pending' && moved > 6) {
+      if (P.kind === 'item') { P.mode = 'drag'; P.item.dragging = true; ghost.off = true; }
+      else if (P.kind === 'clothes') { P.mode = 'dragClothes'; babyWear.dragging = true; babyWear.flying = null; babyWear.tryTimer = 0; ghost.off = true; }
+    }
+    return;
+  }
+  hovered = pick(e);
+  canvas.style.cursor = hovered ? (hovered.kind === 'item' || hovered.kind === 'clothes' ? 'grab' : 'pointer') : 'default';
+});
+
+function finishPointer() {
+  if (!P) return;
+  if (P.mode === 'drag') {
+    var it = P.item; it.dragging = false;
+    var dk = Math.hypot(it.cur.x - KID_POS.x, it.cur.z - KID_POS.z);
+    var dr = Math.hypot(it.cur.x - ROB_POS.x, it.cur.z - ROB_POS.z);
+    if (dk < 1.35) giveItem(it, 'kid');
+    else if (dr < 1.35) giveItem(it, 'robot');
+    it.target.copy(it.home);
+  } else if (P.mode === 'dragClothes') {
+    babyWear.dragging = false;
+    var dck = Math.hypot(babyWear.cur.x - KID_POS.x, babyWear.cur.z - KID_POS.z);
+    var dcr = Math.hypot(babyWear.cur.x - ROB_POS.x, babyWear.cur.z - ROB_POS.z);
+    if (dck < 1.4) tryBabyClothes('kid');
+    else if (dcr < 1.4) tryBabyClothes('robot');
+    else babyWear.target.copy(babyWear.home);
+  } else if (P.mode === 'pending') {
+    ghost.off = true;
+    if (P.kind === 'kid') {
+      // 点击小朋友只打招呼挥手，不会无故长大！只有吃食物、喝水或滑时光才会长大
+      kidHop = 0.85; kidWave = 1; sHappy();
+      if (ageGoal < 6.8) {
+        floatWord('喂我吃苹果或喝水吧!', 'wèi wǒ chī píng guǒ huò hē shuǐ ba', KID_POS.clone().add(new THREE.Vector3(0, 1.85, 0)), '');
+        speak('喂我吃苹果或喝水吧！');
+      } else {
+        floatWord('我长成大孩子啦!', 'wǒ zhǎng chéng dà hái zi la', KID_POS.clone().add(new THREE.Vector3(0, 2.05, 0)), 'good');
+        speak('我长成大孩子啦！快拿小时候的小衣服给我试试看吧！');
+      }
+    } else if (P.kind === 'robot') {
+      ms.robot = true;
+      robSpin = 0.6; sPower();
+      floatWord('给我装电池吧!', 'gěi wǒ zhuāng diàn chí ba', ROB_POS.clone().add(new THREE.Vector3(0, 1.65, 0)), 'cool');
+      speak('我是玩具机器人，给我装电池就能亮起来，但我不会长大哦！');
+      discover('l:robnogrow', 'l', '机器人不会自己长高', 'jī qì rén bù huì zì jǐ zhǎng gāo', '#2563eb');
+      markAct('cmp');
+      checkComplete();
+    } else if (P.kind === 'clothes') {
+      babyWear.tryTimer = 0;
+      babyWear.flying = { from: babyWear.cur.clone(), to: kidChestPos(), t: 0 };
+    } else if (P.kind === 'item') {
+      var targetWho = P.item.id === 'battery' ? 'robot' : 'kid';
+      var toPos = targetWho === 'kid' ? KID_POS.clone().add(new THREE.Vector3(0, 1.1, 0)) : ROB_POS.clone().add(new THREE.Vector3(0, 0.9, 0));
+      P.item.flying = { from: P.item.cur.clone(), to: toPos, who: targetWho, t: 0 };
+    }
+  }
+  P = null;
+}
+canvas.addEventListener('pointerup', finishPointer);
+canvas.addEventListener('pointercancel', finishPointer);
+canvas.addEventListener('pointerleave', function () { if (!P) hovered = null; });
+
+/* ===================== 幽灵手示范（随当前步骤同步指引） ===================== */
+var ghost = { off: false, t: 0 }, handEl = $('#hand');
+function updateGhost(dt) {
+  if (voiceCueTimer > 0) voiceCueTimer = Math.max(0, voiceCueTimer - dt);
+  var showCue = (!ghost.off && intro.t >= 1.5) || voiceCueTimer > 0;
+  if (!showCue || celebrated || demo) { handEl.style.opacity = 0; return; }
+  ghost.t = (ghost.t + dt) % 2.4;
+  var info = getGuideInfo();
+  var a, b;
+  if (info.pulse === 'slider') {
+    var sr = ageSlider.getBoundingClientRect();
+    a = { x: sr.left + sr.width * 0.12, y: sr.top + sr.height * 0.5 };
+    b = { x: sr.left + sr.width * 0.9, y: sr.top + sr.height * 0.5 };
+  } else if (info.pulse === 'clothes' || info.pulse === 'clothes_robot') {
+    a = toScreen(babyWear.home.clone().add(new THREE.Vector3(0, 0.1, 0)));
+    b = toScreen(KID_POS.clone().add(new THREE.Vector3(0, 1.15, 0)));
+  } else if (info.pulse === 'robot') {
+    a = toScreen(IMAP.battery.home.clone().add(new THREE.Vector3(0, 0.25, 0)));
+    b = toScreen(ROB_POS.clone().add(new THREE.Vector3(0, 0.9, 0)));
+  } else {
+    a = toScreen(IMAP.apple.home.clone().add(new THREE.Vector3(0, 0.25, 0)));
+    b = toScreen(KID_POS.clone().add(new THREE.Vector3(0, 0.85, 0)));
+  }
+  var u = Math.min(1, Math.max(0, (ghost.t - 0.35) / 1.35)), e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+  var x = a.x + (b.x - a.x) * e, y = a.y + (b.y - a.y) * e - (info.pulse === 'slider' ? 0 : Math.sin(e * Math.PI) * 50);
+  handEl.style.opacity = ghost.t < 2.1 ? 0.95 : 0;
+  handEl.style.transform = 'translate(' + (x - 20) + 'px,' + (y - 6) + 'px) scale(' + (ghost.t < 0.35 || ghost.t > 1.75 ? 1 : 0.9) + ')';
+}
+
+/* ===================== 老师演示 ===================== */
+var demo = null;
+var DEMO = [
+  ['fly', 'apple', 'kid'], ['wait', 0.9],
+  ['fly', 'water', 'kid'], ['wait', 0.9],
+  ['slide', 7, 1.6], ['wait', 0.6],
+  ['clothes'], ['wait', 1.6],
+  ['fly', 'battery', 'robot'], ['wait', 1.2], ['end']
+];
+function startDemo() { resetAll(true); demo = { i: 0, t: 0 }; ghost.off = true; $('#demoBtn').classList.add('on'); $('#demoBtn').textContent = '■ 停止'; }
+function stopDemo() { if (!demo) return; demo = null; $('#demoBtn').classList.remove('on'); $('#demoBtn').textContent = '▶ 演示'; }
+function stepDemo(dt) {
+  if (!demo) return;
+  var s = DEMO[demo.i]; demo.t += dt;
+  if (!s || s[0] === 'end') { stopDemo(); return; }
+  if (s[0] === 'wait') { if (demo.t >= s[1]) { demo.i++; demo.t = 0; } return; }
+  if (s[0] === 'fly') {
+    var it = IMAP[s[1]];
+    if (!demo.started) {
+      demo.started = true;
+      var to = s[2] === 'kid' ? KID_POS.clone().add(new THREE.Vector3(0, 1.1, 0)) : ROB_POS.clone().add(new THREE.Vector3(0, 0.95, 0));
+      it.flying = { from: it.cur.clone(), to: to, who: s[2], t: 0 };
+    }
+    if (!it.flying) { demo.started = false; demo.i++; demo.t = 0; }
+    return;
+  }
+  if (s[0] === 'clothes') {
+    if (!demo.started) {
+      demo.started = true;
+      babyWear.flying = { from: babyWear.cur.clone(), to: kidChestPos(), t: 0 };
+    }
+    if (!babyWear.flying) { demo.started = false; demo.i++; demo.t = 0; }
+    return;
+  }
+  if (s[0] === 'slide') {
+    if (!demo.started) { demo.started = true; demo.a0 = ageGoal; }
+    var u = Math.min(1, demo.t / s[2]);
+    setAgeGoal(demo.a0 + (s[1] - demo.a0) * u, true);
+    if (u >= 1) { demo.started = false; demo.i++; demo.t = 0; }
+  }
+}
+
+/* ===================== 开场与重来 ===================== */
+var intro = { t: 0, done: false };
+function introSkip() { if (intro.t < 1.5) intro.t = 1.5; }
+function backOut(t) { var c = 1.7; t = Math.min(1, Math.max(0, t)); return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); }
+function updateIntro(dt) {
+  if (intro.done) return;
+  if (!intro.t0) intro.t0 = performance.now();
+  intro.t = Math.max(intro.t + dt, (performance.now() - intro.t0) / 1000 * 1.4);
+  var t = intro.t;
+  var lift = Math.min(1, Math.max(0, (t - 0.2) / 0.65));
+  figCard.position.y = 0.012 + lift * 1.6;
+  figCard.material.opacity = 1 - lift;
+  figCard.visible = lift < 1;
+  board.scale.set(1, Math.max(0.01, backOut((t - 0.3) / 0.5)), 1);
+  var p1 = Math.max(0.01, backOut((t - 0.5) / 0.55));
+  kidG.scale.setScalar(p1); robG.scale.setScalar(p1);
+  kidRuler.g.scale.setScalar(p1); robRuler.g.scale.setScalar(p1); rackG.scale.setScalar(p1);
+  babyWear.pop = p1;
+  ITEMS.forEach(function (it, i) { it.pop = Math.max(0.01, backOut((t - 0.7 - i * 0.08) / 0.48)); });
+  if (t >= 3.4) intro.done = true;
+}
+
+function resetAll(keepDemo) {
+  if (!keepDemo) stopDemo();
+  resetGen++;
+  if (guideTimer) { clearTimeout(guideTimer); guideTimer = null; }
+  celebrated = false;
+  voiceCueTimer = 0;
+  guidePhase = 0;
+  ms = { fed: false, slid: false, clothes: false, robot: false };
+  slidBySlider = false;
+  $('#winToast').classList.remove('show');
+  $('#confetti').innerHTML = '';
+  $('#quizFb').textContent = ''; $('#quizFb').className = 'quiz-fb';
+  document.querySelectorAll('#quizOpts .qopt').forEach(function (b) { b.classList.remove('ok', 'err'); });
+  setAgeGoal(1, false); age = 1;
+  fedFood = fedWater = false; robCharge = 0; kidWave = 0;
+  babyWear.dragging = false; babyWear.flying = null; babyWear.tryTimer = 0; babyWear.target.copy(babyWear.home);
+  ITEMS.forEach(function (it) { it.flying = null; it.dragging = false; it.target.copy(it.home); });
+  sparkles.forEach(function (p) { p.life = 0; p.m.visible = false; });
+  found = {}; foundN = 0; kinds = { g: false, n: false, l: false };
+  $('#ntList').innerHTML = ''; $('#ntCount').textContent = '0';
+  document.querySelectorAll('.stamp').forEach(function (s) { s.classList.remove('lit'); });
+  updateGuide(false, false);
+}
+
+/* ===================== 主循环 ===================== */
+var last = performance.now();
+function frame(t) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (t - last) / 1000)); last = t; now = t / 1000;
+  updateIntro(dt);
+  stepDemo(dt);
+
+  // 小朋友成长形变（1岁 → 7岁：腿拉长、躯干长高、头略微长、脚印变大）
+  age += (ageGoal - age) * (1 - Math.exp(-9 * dt));
+  var g = (age - 1) / 6; // 0..1
+  var legS = 0.65 + g * 0.85;
+  var torsoS = 0.72 + g * 0.62;
+  var headS = 0.86 + g * 0.22;
+  kLegs.scale.set(0.85 + g * 0.25, legS, 0.85 + g * 0.25);
+  var hipY = 0.44 * legS;
+  kTorso.scale.set(0.86 + g * 0.28, torsoS, 0.86 + g * 0.25);
+  kTorso.position.y = hipY + 0.24 * torsoS;
+  kBelt.scale.set(0.86 + g * 0.28, 1, 0.86 + g * 0.25);
+  kBelt.position.y = hipY + 0.1 * torsoS;
+  kArms.position.y = hipY + 0.26 * torsoS - 0.7;
+  kArms.scale.set(0.85 + g * 0.28, 0.75 + g * 0.45, 0.85 + g * 0.25);
+  kHead.scale.setScalar(headS);
+  kHead.position.y = hipY + 0.48 * torsoS + 0.26 * headS;
+  footPrint.scale.setScalar(0.65 + g * 0.8);
+
+  var kidTopY = kHead.position.y + 0.32 * headS;
+  kidRuler.arrow.position.y = kidTopY;
+  robRuler.arrow.position.y = 1.44; // 机器人身高始终不变
+
+  // 小朋友欢呼跳 / 挥手打招呼 / 摇头
+  if (kidHop > 0) kidHop = Math.max(0, kidHop - dt * 2.4);
+  if (kidWave > 0) kidWave = Math.max(0, kidWave - dt * 1.5);
+  if (kidShake > 0) kidShake = Math.max(0, kidShake - dt * 2.5);
+  kidBody.position.y = Math.sin(kidHop * Math.PI) * 0.36;
+  kHead.rotation.y = Math.sin(kidShake * Math.PI * 5) * 0.48;
+  kArmMeshes[1].rotation.z = 0.28 + (kidWave > 0 ? 1.5 + Math.sin(now * 20) * 0.45 : 0);
+
+  // 机器人旋转 / 充电发光 / 摇头
+  if (robSpin > 0) robSpin = Math.max(0, robSpin - dt * 1.4);
+  if (robShake > 0) robShake = Math.max(0, robShake - dt * 2.5);
+  robCharge = Math.max(0, robCharge - dt * 0.15);
+  robBody.rotation.y = Math.sin(robSpin * Math.PI) * Math.PI * 2;
+  rHead.rotation.y = Math.sin(robShake * Math.PI * 5) * 0.45;
+  rCoreMat.color.set(robCharge > 0.1 ? (Math.sin(now * 16) > 0 ? '#ffe45e' : '#38f2ff') : '#7088a0');
+
+  // 婴儿小衣服拖拽/试穿/挂回动画
+  var nearKid = false, nearRob = false;
+  var kk = 1 - Math.exp(-16 * dt);
+  if (babyWear.dragging && P && P.e) {
+    var cp = planePoint(P.e, BASE + 1.05);
+    if (cp) babyWear.target.set(THREE.MathUtils.clamp(cp.x, BOARD.x0, BOARD.x1), BASE + 1.05, THREE.MathUtils.clamp(cp.z, BOARD.z0, BOARD.z1));
+    if (Math.hypot(babyWear.cur.x - KID_POS.x, babyWear.cur.z - KID_POS.z) < 1.4) nearKid = true;
+    if (Math.hypot(babyWear.cur.x - ROB_POS.x, babyWear.cur.z - ROB_POS.z) < 1.4) nearRob = true;
+  } else if (babyWear.flying) {
+    babyWear.flying.t += dt / 0.55;
+    var fu = Math.min(1, babyWear.flying.t), fe = fu < 0.5 ? 2 * fu * fu : 1 - Math.pow(-2 * fu + 2, 2) / 2;
+    babyWear.target.lerpVectors(babyWear.flying.from, babyWear.flying.to, fe);
+    babyWear.target.y += Math.sin(fu * Math.PI) * 0.45;
+    if (fu >= 1) { babyWear.flying = null; tryBabyClothes('kid'); }
+  } else if (babyWear.tryTimer > 0) {
+    babyWear.tryTimer = Math.max(0, babyWear.tryTimer - dt);
+    babyWear.target.copy(kidChestPos());
+    if (babyWear.tryTimer === 0) babyWear.target.copy(babyWear.home);
+  }
+  babyWear.cur.lerp(babyWear.target, babyWear.dragging ? 1 - Math.exp(-22 * dt) : kk);
+  var chv = (hovered && hovered.kind === 'clothes' && !P) ? 1 : 0;
+  babyWear.hover += (chv - babyWear.hover) * 0.25;
+  var curGuide = getGuideInfo();
+  var pulseBob = 0.5 + 0.5 * Math.sin(now * 5.2);
+  var pulseClothes = !celebrated && !babyWear.dragging && (curGuide.pulse === 'clothes' || curGuide.pulse === 'clothes_robot');
+  shirtG.position.set(babyWear.cur.x, babyWear.cur.y + babyWear.hover * 0.07 + (pulseClothes ? pulseBob * 0.09 : 0), babyWear.cur.z);
+  shirtBody.scale.setScalar(babyWear.pop * (1 + babyWear.hover * 0.08 + (pulseClothes ? pulseBob * 0.08 : 0)));
+  shirtBody.rotation.z = babyWear.tryTimer > 0 && babyWear.tryTooSmall ? Math.sin(now * 28) * 0.16 : Math.sin(now * 2.2) * 0.05;
+
+  // 供给品更新
+  ITEMS.forEach(function (it) {
+    if (it.dragging && P && P.e) {
+      var ip = planePoint(P.e, BASE + 0.85);
+      if (ip) it.target.set(THREE.MathUtils.clamp(ip.x, BOARD.x0, BOARD.x1), BASE + 0.85, THREE.MathUtils.clamp(ip.z, BOARD.z0, BOARD.z1));
+      if (Math.hypot(it.cur.x - KID_POS.x, it.cur.z - KID_POS.z) < 1.35) nearKid = true;
+      if (Math.hypot(it.cur.x - ROB_POS.x, it.cur.z - ROB_POS.z) < 1.35) nearRob = true;
+    } else if (it.flying) {
+      it.flying.t += dt / 0.6;
+      var u = Math.min(1, it.flying.t), e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+      it.target.lerpVectors(it.flying.from, it.flying.to, e);
+      it.target.y += Math.sin(u * Math.PI) * 0.7;
+      if (u >= 1) { var w = it.flying.who; it.flying = null; giveItem(it, w); it.target.copy(it.home); }
+    }
+    it.cur.lerp(it.target, it.dragging ? 1 - Math.exp(-22 * dt) : kk);
+    var hv = (hovered && hovered.item === it && !P) ? 1 : 0;
+    it.hover += (hv - it.hover) * 0.25;
+    var pulseIt = !celebrated && !it.dragging && !it.flying && (
+      (curGuide.pulse === 'feed' && (it.id === 'apple' || it.id === 'water')) ||
+      ((curGuide.pulse === 'robot' || curGuide.pulse === 'clothes_robot') && it.id === 'battery')
+    );
+    it.g.position.set(it.cur.x, it.cur.y + it.hover * 0.08 + (pulseIt ? pulseBob * 0.1 : 0), it.cur.z);
+    it.body.scale.setScalar(it.pop * (1 + (pulseIt ? pulseBob * 0.08 : 0)));
+
+    var showL = (intro.t > 0.8 && intro.t < 3.4) || it.hover > 0.4 || it.dragging || (voiceCueTimer > 0 && pulseIt);
+    if (showL) {
+      var p2 = toScreen(it.cur.clone().add(new THREE.Vector3(0, it.h + 0.14, 0)));
+      it.lbl.style.transform = 'translate(' + p2.x + 'px,' + p2.y + 'px) translate(-50%,-100%)';
+    }
+    it.lbl.classList.toggle('show', !!showL);
+  });
+
+  var pulseRobGlow = !celebrated && (curGuide.pulse === 'robot' || curGuide.pulse === 'clothes_robot') ? (0.28 + pulseBob * 0.35) : 0;
+  kidGlow.material.opacity += ((nearKid ? 0.85 : 0) - kidGlow.material.opacity) * 0.25;
+  robGlow.material.opacity += ((nearRob ? 0.85 : pulseRobGlow) - robGlow.material.opacity) * 0.25;
+
+  // 角色标签
+  var showIntro = intro.t > 0.8 && intro.t < 3.4;
+  var showK = showIntro || nearKid || (hovered && hovered.kind === 'kid');
+  if (showK) {
+    var pk = toScreen(KID_POS.clone().add(new THREE.Vector3(0, kidTopY + 0.18, 0)));
+    kidLbl.style.transform = 'translate(' + pk.x + 'px,' + pk.y + 'px) translate(-50%,-100%)';
+  }
+  kidLbl.classList.toggle('show', !!showK);
+
+  var showR = showIntro || nearRob || (hovered && hovered.kind === 'robot');
+  if (showR) {
+    var pr = toScreen(ROB_POS.clone().add(new THREE.Vector3(0, 1.62, 0)));
+    robLbl.style.transform = 'translate(' + pr.x + 'px,' + pr.y + 'px) translate(-50%,-100%)';
+  }
+  robLbl.classList.toggle('show', !!showR);
+
+  var showS = showIntro || babyWear.hover > 0.4 || babyWear.dragging;
+  if (showS) {
+    var ps = toScreen(babyWear.cur.clone().add(new THREE.Vector3(0, 0.36, 0)));
+    shirtLbl.style.transform = 'translate(' + ps.x + 'px,' + ps.y + 'px) translate(-50%,-100%)';
+  }
+  shirtLbl.classList.toggle('show', !!showS);
+
+  // 星光粒子
+  sparkles.forEach(function (p) {
+    if (p.life <= 0) { p.m.visible = false; return; }
+    p.life -= dt;
+    p.v.y -= 4.2 * dt;
+    p.m.position.addScaledVector(p.v, dt);
+    p.m.rotation.y += dt * 6;
+    p.m.scale.setScalar(Math.max(0.01, p.life * 1.8));
+  });
+
+  updateGhost(dt);
+  $('#verbs').style.opacity = actions > 8 ? 0.35 : 1;
+  renderer.render(scene, camera);
+}
+
+/* ===================== 按钮、小测验与自测钩子 ===================== */
+$('#voiceBtn').addEventListener('click', function () {
+  audio(); dismissCues(); introSkip();
+  voiceOn = true; voiceWelcomed = true;
+  this.classList.add('on'); this.textContent = '🔊 语音';
+  voiceCueTimer = 4.0; ghost.t = 0;
+  updateGuide(true, true);
+});
+$('#ntToggle').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+document.querySelectorAll('#quizOpts .qopt').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    audio();
+    var ok = this.getAttribute('data-ok') === '1';
+    var fb = $('#quizFb');
+    if (ok) {
+      document.querySelectorAll('#quizOpts .qopt').forEach(function (b) { b.classList.remove('err'); });
+      this.classList.add('ok');
+      fb.className = 'quiz-fb ok';
+      fb.textContent = '🌸 太棒了！获得本课小红花！小朋友是有生命的生物，会慢慢长高，小时候的衣服穿不下了！';
+      sWin();
+      launchConfetti();
+      saveProgress('k1a-05', true);
+      speak('太棒了！答对啦，获得本课小红花！小朋友是有生命的生物，会慢慢长高，小时候的衣服就穿不下了！', true);
+    } else {
+      this.classList.add('err');
+      fb.className = 'quiz-fb err';
+      fb.textContent = '再想想哦～刚才把时光滑块拉到 7 岁时，小朋友和小衣服发生了什么变化呀？';
+      sNope();
+      speak('再想想哦，刚才把时光滑块拉到7岁时，小朋友和小衣服发生了什么变化？', true);
+    }
+  });
+});
+$('#winKeep').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgain').addEventListener('click', function () { resetAll(false); });
+$('#demoBtn').addEventListener('click', function () { audio(); dismissCues(); introSkip(); if (demo) stopDemo(); else startDemo(); });
+$('#resetBtn').addEventListener('click', function () { resetAll(false); });
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () { return { triangles: renderer.info.render.triangles, pixelRatio: renderer.getPixelRatio(), found: foundN, age: ageGoal, ms: ms }; },
+  startDemo: startDemo
+};
+
+updateGuide(false, false);
+fit();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第5课 观察植物 · 月季桌面3D工具观察台</title>
+<style>
+:root{--accent:#db2777;--accent-dark:#9d174d;--ink:#2a2218;--line:#e4d5ba;--card:rgba(255,253,248,.94)}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#c59b6d;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas#cv.grabbing{cursor:grabbing}
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.46em;color:#7a6a52;font-weight:600}
+body.no-py rt{display:none}
+
+/* 左上标题 */
+#hudTL{position:fixed;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:10px;
+  padding:7px 14px 7px 9px;border-radius:16px;background:var(--card);border:1.5px solid var(--line);
+  box-shadow:0 4px 16px rgba(60,36,12,.14)}
+#backBtn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:#5c4b34;font-size:19px;font-weight:900}
+#backBtn:hover{border-color:var(--accent);color:var(--accent)}
+.hd-t{font-size:16px;font-weight:900;line-height:1.5}
+.hd-sub{font-size:11.5px;color:#7b6c56;font-weight:700}
+
+/* 顶部中央分步小助手 */
+#guideBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:6;
+  max-width:min(460px,calc(100vw - 630px));display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:15px;background:rgba(255,250,245,.96);
+  border:2px solid var(--accent);box-shadow:0 6px 18px rgba(157,23,77,.15);
+  font-size:13.5px;font-weight:800;color:#831843;cursor:pointer;line-height:1.38;transition:transform .2s}
+#guideBar.flash{transform:translateX(-50%) scale(1.04)}
+
+/* 右上工具条 */
+#hudTR{position:fixed;top:12px;right:12px;z-index:7;display:flex;align-items:center;gap:6px}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:38px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);
+  background:var(--card);font-size:13.5px;font-weight:800;color:#4a3c28;cursor:pointer;
+  box-shadow:0 3px 0 #d9c8ab;transition:all .14s;white-space:nowrap}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:var(--accent-dark);color:#fff;box-shadow:0 3px 0 var(--accent-dark)}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#fce7f3;border:1.5px solid var(--accent);color:#9d174d;font-size:10.5px;font-weight:900;
+  white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(219,39,119,.24);
+  animation:cuePop 1.6s ease-in-out infinite;transition:opacity .25s}
+body.interacted .entry-cue{opacity:0;animation:none}
+@keyframes cuePop{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+
+/* 右上可收起发现栏（D3） */
+#notes{position:fixed;top:60px;right:12px;z-index:6;width:224px;padding:9px 11px;border-radius:15px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 6px 18px rgba(60,36,12,.12)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+.nt-title{font-size:13.5px;font-weight:900}
+.nt-cnt{font-size:12.5px;font-weight:900;color:var(--accent)}
+.nt-tog{padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:11px;font-weight:800;color:#6c5c45;cursor:pointer}
+.stamps{display:flex;gap:4px;margin-bottom:6px}
+.st{flex:1;text-align:center;padding:3px 2px;border-radius:8px;font-size:11px;font-weight:800;
+  border:1.5px dashed #d7c5a4;color:#9b8a70;background:#faf4e8;transition:all .2s;line-height:1.4}
+.st.lit{border-style:solid;border-color:var(--accent);background:#fdf2f8;color:#9d174d}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList,#notes.collapsed .stamps{display:none}
+#notes.collapsed .nt-head{margin-bottom:0}
+.stk{padding:5px 8px;border-radius:10px;background:#fff;border:1px solid #ece0c9;font-size:12px;font-weight:700;line-height:1.4}
+.stk b{color:#9d174d}
+
+/* 左侧 5x 圆形放大镜实时距离特写镜框（绝不遮挡右上 #notes） */
+#lensWrap{position:fixed;left:18px;top:92px;z-index:7;display:none;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+#lensWrap.show{display:flex}
+.lens-ring{position:relative;width:214px;height:214px;border-radius:50%;padding:7px;
+  background:linear-gradient(135deg,#eab308,#ca8a04,#fde047);box-shadow:0 12px 30px rgba(45,28,8,.32);transition:box-shadow .18s}
+.lens-ring.sharp{background:linear-gradient(135deg,#22c55e,#16a34a,#86efac);box-shadow:0 12px 34px rgba(22,163,74,.45)}
+.lens-inner{position:relative;width:200px;height:200px;border-radius:50%;overflow:hidden;background:#f8fafc;border:3px solid #fff}
+canvas#lensCv{width:200px;height:200px;display:block;transition:filter .06s linear}
+.lens-tag{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:99px;
+  background:rgba(30,41,59,.86);color:#fff;font-size:11.5px;font-weight:800;white-space:nowrap}
+.lens-tag.sharp{background:rgba(22,163,74,.95)}
+.lens-caption{padding:4px 11px;border-radius:99px;background:rgba(255,253,248,.95);border:1.5px solid var(--line);
+  font-size:12px;font-weight:800;color:#5c4427;box-shadow:0 4px 10px rgba(0,0,0,.1)}
+
+/* 安全红线徽章（点击或拖向花盆时亮起） */
+#safetyBanner{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:8;display:none;
+  align-items:center;gap:10px;max-width:min(450px,calc(100vw - 24px));padding:11px 15px;border-radius:16px;
+  background:#fff5f5;border:2.5px solid #e11d48;box-shadow:0 12px 28px rgba(190,18,60,.24);color:#881337;pointer-events:none}
+#safetyBanner.show{display:flex;animation:popIn .28s ease-out}
+@keyframes popIn{0%{opacity:0;transform:translateX(-50%) scale(.86)}100%{opacity:1;transform:translateX(-50%) scale(1)}}
+.sf-ico{font-size:30px;flex:none}
+.sf-txt{font-size:13px;font-weight:800;line-height:1.45}
+
+/* 3D 桌面道具轻量提示签（非按钮、不挡操作） */
+#toolTags{position:fixed;inset:0;pointer-events:none;z-index:3}
+.ttag{position:absolute;transform:translate(-50%,-100%);padding:2px 9px;border-radius:99px;
+  background:rgba(42,34,24,.78);color:#fff;font-size:11.5px;font-weight:800;white-space:nowrap;
+  box-shadow:0 2px 8px rgba(0,0,0,.16);transition:background .2s,transform .2s}
+.ttag.done{background:rgba(22,163,74,.9)}
+.ttag.pulse{background:rgba(219,39,119,.92);animation:tagBob 1.3s ease-in-out infinite}
+@keyframes tagBob{0%,100%{transform:translate(-50%,-100%)}50%{transform:translate(-50%,-118%)}}
+
+/* 3D 浮动反馈标签 + 单焦点跳动提示气泡 */
+#labels{position:fixed;inset:0;pointer-events:none;z-index:5}
+.cue3d{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:4px 12px;border-radius:99px;
+  background:#fff7ed;border:2px solid #ea580c;color:#9a3412;font-size:13px;font-weight:900;white-space:nowrap;
+  box-shadow:0 4px 14px rgba(234,88,12,.28);animation:cueBob 1.3s ease-in-out infinite;display:none;pointer-events:none}
+.cue3d.show{display:block}
+@keyframes cueBob{0%,100%{transform:translate(-50%,-100%) translateY(0)}50%{transform:translate(-50%,-100%) translateY(-6px)}}
+.popword{position:absolute;transform:translate(-50%,-100%);padding:4px 11px;border-radius:99px;
+  background:rgba(131,24,67,.9);color:#fff;font-size:13.5px;font-weight:800;white-space:nowrap;
+  box-shadow:0 4px 12px rgba(0,0,0,.18);animation:popFloat 1.55s ease-out forwards}
+.popword.warn{background:rgba(190,18,60,.95)}
+.popword.good{background:rgba(21,128,61,.95)}
+@keyframes popFloat{0%{opacity:0;transform:translate(-50%,-70%) scale(.75)}18%{opacity:1;transform:translate(-50%,-110%) scale(1.04)}82%{opacity:1;transform:translate(-50%,-140%) scale(1)}100%{opacity:0;transform:translate(-50%,-175%) scale(.96)}}
+
+/* 通关弹窗 */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+#winToast{position:fixed;inset:0;z-index:35;display:none;place-items:center;background:rgba(36,24,10,.34);padding:16px}
+#winToast.show{display:grid}
+.win-card{width:min(450px,100%);max-height:85vh;overflow-y:auto;background:#fffdf8;
+  border:2.5px solid var(--accent);border-radius:22px;padding:18px 20px;text-align:center;
+  box-shadow:0 20px 50px rgba(40,22,4,.28)}
+.win-concl{margin:10px 0;padding:10px 12px;border-radius:13px;background:#fdf2f8;border:1.5px solid #f9a8d4;
+  text-align:left;font-size:13.5px;line-height:1.58;color:#831843}
+.win-quiz{margin:10px 0;padding:10px 12px;border-radius:13px;background:#f8fafc;border:1.5px solid #d9e2ec;text-align:left}
+.win-quiz h4{margin:0 0 8px;font-size:13.5px;color:#9d174d}
+.qopts{display:flex;flex-direction:column;gap:7px}
+.qopt{padding:8px 11px;border-radius:11px;border:1.5px solid #d9d0be;background:#fff;
+  font-size:13.5px;font-weight:800;text-align:left;cursor:pointer;transition:all .14s}
+.qopt:hover{border-color:var(--accent);background:#fdf2f8}
+.qopt.ok{border-color:#16a34a;background:#dcfce7;color:#14532d}
+.qopt.bad{border-color:#e03131;background:#fff5f5;color:#c92a2a}
+.qfb{margin-top:7px;font-size:12.5px;font-weight:800;min-height:18px;color:#166534}
+.win-acts{display:flex;justify-content:center;gap:10px;margin-top:12px}
+
+@media (max-width:960px){
+  #guideBar{top:58px;max-width:min(420px,calc(100vw - 260px));font-size:12.5px}
+}
+@media (max-width:740px){
+  #guideBar{top:54px;left:10px;right:10px;transform:none;max-width:none}
+  #lensWrap{top:102px;left:8px;transform:scale(.82);transform-origin:top left}
+}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="toolTags"></div>
+<div id="labels"><div id="targetCue" class="cue3d">👆 点月季花盆看一看</div></div>
+<canvas id="confetti"></canvas>
+
+<div id="hudTL">
+  <a id="backBtn" href="../index.html" title="返回书包">‹</a>
+  <div>
+    <div class="hd-t" data-py="dì kè guān chá zhí wù">第5课 观察植物</div>
+    <div class="hd-sub">活页 · 课本第 22 页「月季桌面 3D 观察工具台」</div>
+  </div>
+</div>
+
+<div id="guideBar" title="点我重听当前步骤">
+  <span id="guideIco">🌹</span>
+  <span id="guideTxt">第1步：直接点一点月季花盆或枝叶，用眼睛看一看它的高矮和颜色！</span>
+</div>
+
+<div id="hudTR">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<aside id="notes">
+  <div class="nt-head">
+    <span class="nt-title" data-py="wǒ de fā xiàn">我的发现</span>
+    <span class="nt-cnt" id="ntCnt">0</span>
+    <button class="nt-tog" id="ntTog" type="button">收起</button>
+  </div>
+  <div class="stamps">
+    <span class="st" id="st1" data-py="kàn yi kàn">看一看</span>
+    <span class="st" id="st2" data-py="mō yǔ wén">摸与闻</span>
+    <span class="st" id="st3" data-py="fàng dà guān chá">放大观察</span>
+  </div>
+  <div id="ntList"></div>
+</aside>
+
+<!-- 5x 放大镜实时距离特写镜框 -->
+<div id="lensWrap">
+  <div class="lens-ring" id="lensRing">
+    <div class="lens-inner">
+      <canvas id="lensCv" width="240" height="240"></canvas>
+      <div class="lens-tag" id="lensTag">慢慢靠近叶片或花蕊…</div>
+    </div>
+  </div>
+  <div class="lens-caption" id="lensCap">🔍 5× 放大镜 · 移动距离实时对焦</div>
+</div>
+
+<!-- 🚫 禁尝警示安全红线徽章 -->
+<div id="safetyBanner">
+  <span class="sf-ico">🛡️</span>
+  <div class="sf-txt"><b>科学安全红线：绝不随意尝植物！</b><br>不要随意尝植物！科学观察时绝不能随便放进嘴里哦！</div>
+</div>
+
+<div id="winToast">
+  <div class="win-card">
+    <div style="font-size:38px">🏆</div>
+    <h3 style="margin:4px 0;color:#831843">太棒啦！学会用多种方法观察植物啦！</h3>
+    <div class="win-concl">
+      <b>✨ 科学小结论：</b>用看、摸、扇闻和放大镜多种方法观察植物，能发现叶脉、锯齿等更多细节；观察时要爱护植物，绝不随意品尝。
+    </div>
+    <div class="win-quiz">
+      <h4>💡 考考你 · 答对领小红花 🌸</h4>
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:8px">使用放大镜观察月季叶片时，怎样才能看得最清楚？</div>
+      <div class="qopts" id="qOpts">
+        <button class="qopt" type="button" data-ok="1">🔍 眼睛和叶片保持不动，慢慢调整放大镜的距离直到清晰</button>
+        <button class="qopt" type="button" data-hint="科学观察植物时绝对不能随便放进嘴里尝哦！">🚫 把叶子摘下来放进嘴里尝一尝</button>
+        <button class="qopt" type="button" data-hint="放大镜离太远或贴太死都会模糊，要在合适焦距段才最清晰哦！">📏 把放大镜举到离植物很远的地方</button>
+      </div>
+      <div class="qfb" id="qFb"></div>
+    </div>
+    <div class="win-acts">
+      <button class="tbtn" id="winKeepBtn" type="button">继续玩</button>
+      <button class="tbtn on" id="winAgainBtn" type="button">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js"></script>
+<script src="../vendor/voice.js"></script>
+<script>
+(function () {
+'use strict';
+
+try { sessionStorage.setItem('xk_last_vol', 'k1b'); } catch (e) {}
+
+var LESSON_ID = 'k1b-05';
+var BOOK_PROGRESS_KEY = 'xk_k1b_progress';
+var $ = function (s) { return document.querySelector(s); };
+var $$ = function (s) { return document.querySelectorAll(s); };
+
+/* ===== 拼音标注（1对1精确校验） ===== */
+var HAN = /[\u3400-\u9fff]/;
+var pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function ruby(text, py) {
+  if (!py) return esc(text);
+  var syl = py.trim().split(/\s+/), i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) {
+      var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; }
+      out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>';
+    } else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+$$('[data-py]').forEach(function (el) { el.innerHTML = ruby(el.textContent, el.dataset.py); });
+
+/* ===== 音效 + 语音 ===== */
+var actx = null;
+function beep(freqs, dur) {
+  try {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    var t = actx.currentTime;
+    freqs.forEach(function (f, idx) {
+      var o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'triangle'; o.frequency.setValueAtTime(f, t + idx * 0.08);
+      g.gain.setValueAtTime(0.001, t + idx * 0.08);
+      g.gain.exponentialRampToValueAtTime(0.11, t + idx * 0.08 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.08 + (dur || 0.2));
+      o.connect(g); g.connect(actx.destination);
+      o.start(t + idx * 0.08); o.stop(t + idx * 0.08 + (dur || 0.22));
+    });
+  } catch (e) {}
+}
+
+var voiceOn = true;
+function stopVoice() {
+  if (window.__xkVoice) window.__xkVoice.stop();
+  else if (window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
+}
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
+  if (!('speechSynthesis' in window)) return;
+  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+}
+
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem(BOOK_PROGRESS_KEY) || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem(BOOK_PROGRESS_KEY, JSON.stringify(d));
+  } catch (e) {}
+}
+
+/* ===== 彩带 ===== */
+var cfCanvas = $('#confetti'), cfCtx = cfCanvas.getContext('2d'), cfParts = [], cfOn = false;
+function fireConfetti() {
+  cfCanvas.width = window.innerWidth; cfCanvas.height = window.innerHeight;
+  cfParts = [];
+  var cols = ['#db2777', '#f472b6', '#facc15', '#34d399', '#38bdf8', '#fb923c'];
+  for (var i = 0; i < 88; i++) {
+    cfParts.push({
+      x: cfCanvas.width * (0.15 + Math.random() * 0.7), y: -15 - Math.random() * 110,
+      vx: (Math.random() - 0.5) * 200, vy: 120 + Math.random() * 190,
+      r: 5 + Math.random() * 5, a: Math.random() * 6.28, va: (Math.random() - 0.5) * 9,
+      c: cols[i % cols.length]
+    });
+  }
+  cfOn = true;
+}
+
+/* ===== Three.js 场景（陶盆月季居中偏左 + 桌面 4 件实体 3D 观察道具） ===== */
+var cv = $('#cv');
+var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color('#c8a274');
+var camera = new THREE.PerspectiveCamera(35, 16 / 9, 0.1, 80);
+camera.position.set(0.15, 3.65, 7.15);
+camera.lookAt(-0.15, 1.18, 0.1);
+
+scene.add(new THREE.HemisphereLight('#fff8ee', '#9a7a56', 0.74));
+var sunL = new THREE.DirectionalLight('#fff5e2', 0.78);
+sunL.position.set(-4, 10, 6);
+sunL.castShadow = true;
+sunL.shadow.mapSize.set(1024, 1024);
+sunL.shadow.camera.left = -7; sunL.shadow.camera.right = 7;
+sunL.shadow.camera.top = 7; sunL.shadow.camera.bottom = -7;
+sunL.shadow.bias = -0.0008;
+scene.add(sunL);
+
+var ramp = new THREE.DataTexture(new Uint8Array([125,125,125,255, 190,190,190,255, 236,236,236,255, 255,255,255,255]), 4, 1, THREE.RGBAFormat);
+ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+
+function toon(hex, extra) {
+  var o = { color: new THREE.Color(hex), gradientMap: ramp };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshToonMaterial(o);
+}
+function mesh(geo, mat) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+function ctex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c);
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+
+// 暖木桌面 + 浅米观察桌垫
+var deskTex = ctex(512, 512, function (g, w, h) {
+  g.fillStyle = '#c8a06b'; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 65; i++) {
+    g.fillStyle = 'rgba(110,70,28,' + (Math.random() * 0.05).toFixed(3) + ')';
+    g.fillRect(0, Math.random() * h, w, 1 + Math.random() * 3);
+  }
+});
+deskTex.wrapS = deskTex.wrapT = THREE.RepeatWrapping; deskTex.repeat.set(3, 3);
+var deskFloor = new THREE.Mesh(new THREE.PlaneGeometry(50, 50), new THREE.MeshLambertMaterial({ map: deskTex }));
+deskFloor.rotation.x = -Math.PI / 2; deskFloor.position.y = -0.18; deskFloor.receiveShadow = true;
+scene.add(deskFloor);
+
+var live = new THREE.Group();
+scene.add(live);
+
+var padBoard = mesh(new THREE.BoxGeometry(8.6, 0.12, 4.9), toon('#ead6b6'));
+padBoard.position.set(-0.25, -0.06, 0.25); padBoard.castShadow = false;
+live.add(padBoard);
+
+/* ===== 精致 3D 陶盆盛开粉红月季 ===== */
+var ROSE_X = -0.25, ROSE_Z = -0.18;
+var roseRoot = new THREE.Group();
+roseRoot.position.set(ROSE_X, 0, ROSE_Z);
+live.add(roseRoot);
+
+var roseHitTargets = [];
+var HIT_MAT = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.001, depthWrite: false });
+function addHitVolume(parent, geo, x, y, z) {
+  var h = new THREE.Mesh(geo, HIT_MAT);
+  h.position.set(x || 0, y || 0, z || 0);
+  h.castShadow = false; h.receiveShadow = false;
+  parent.add(h);
+  return h;
+}
+function registerRoseHit(obj, part) {
+  obj.traverse(function (ch) {
+    if (ch.isMesh) { ch.userData.rosePart = part; roseHitTargets.push(ch); }
+  });
+}
+// 整株月季宽松透明碰撞体（第1步随手一点花盆/枝叶/花朵都能 100% 响应！）
+var roseWholeHit = addHitVolume(roseRoot, new THREE.CylinderGeometry(1.12, 1.05, 2.85, 16), 0, 1.44, 0);
+roseWholeHit.userData.rosePart = 'whole';
+roseHitTargets.push(roseWholeHit);
+
+// 1. 陶土花盆 + 盆土
+var potG = new THREE.Group(); roseRoot.add(potG);
+var potBody = mesh(new THREE.CylinderGeometry(0.76, 0.56, 0.86, 28), toon('#d47344'));
+potBody.position.y = 0.43; potG.add(potBody);
+var potRim = mesh(new THREE.CylinderGeometry(0.84, 0.80, 0.17, 28), toon('#bf6236'));
+potRim.position.y = 0.86; potG.add(potRim);
+var soil = mesh(new THREE.CylinderGeometry(0.72, 0.72, 0.06, 24), toon('#6e4b30'));
+soil.position.y = 0.89; potG.add(soil);
+registerRoseHit(potG, 'pot');
+
+// 2. 带细小软刺的绿色茎秆
+var stemG = new THREE.Group(); roseRoot.add(stemG);
+var stemMat = toon('#338a42');
+var mainStem = mesh(new THREE.CylinderGeometry(0.055, 0.072, 1.56, 12), stemMat);
+mainStem.position.set(0, 1.66, 0); stemG.add(mainStem);
+var sideStemL = mesh(new THREE.CylinderGeometry(0.036, 0.048, 0.92, 10), stemMat);
+sideStemL.position.set(-0.38, 1.72, 0.08); sideStemL.rotation.z = 0.58; stemG.add(sideStemL);
+var sideStemR = mesh(new THREE.CylinderGeometry(0.036, 0.048, 0.82, 10), stemMat);
+sideStemR.position.set(0.36, 1.62, -0.06); sideStemR.rotation.z = -0.62; stemG.add(sideStemR);
+
+var thornMat = toon('#a3613c');
+var thornSpots = [
+  [0.06, 1.18, 0.03, 0, -1.15], [-0.06, 1.38, 0.04, 0, 1.15],
+  [0.05, 1.58, -0.04, -0.5, -1.1], [-0.05, 1.78, 0.05, 0.3, 1.1],
+  [0.05, 1.96, 0.04, 0.2, -1.15], [-0.26, 1.56, 0.1, 0.2, 1.4], [0.24, 1.52, 0.02, -0.2, -1.4]
+];
+thornSpots.forEach(function (th) {
+  var cone = mesh(new THREE.ConeGeometry(0.032, 0.13, 6), thornMat);
+  cone.position.set(th[0], th[1], th[2]);
+  cone.rotation.x = th[3]; cone.rotation.z = th[4];
+  stemG.add(cone);
+});
+registerRoseHit(stemG, 'stem');
+
+// 3. 绿色锯齿状复叶
+var leafTex = ctex(256, 256, function (g, w, h) {
+  var gr = g.createLinearGradient(0, h, 0, 0);
+  gr.addColorStop(0, '#1e7a37'); gr.addColorStop(0.55, '#2f9e4c'); gr.addColorStop(1, '#44ba60');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(195,250,185,.72)'; g.lineWidth = 4;
+  g.beginPath(); g.moveTo(w/2, h); g.lineTo(w/2, 14); g.stroke();
+  g.lineWidth = 2.2;
+  for (var i = 1; i <= 6; i++) {
+    var y = h - i * 34;
+    g.beginPath(); g.moveTo(w/2, y); g.lineTo(24, y - 26); g.stroke();
+    g.beginPath(); g.moveTo(w/2, y); g.lineTo(w - 24, y - 26); g.stroke();
+  }
+});
+var roseLeafMat = new THREE.MeshToonMaterial({ map: leafTex, gradientMap: ramp, side: THREE.DoubleSide });
+
+function makeSerratedLeafGeo(len, wid) {
+  var shp = new THREE.Shape();
+  shp.moveTo(0, 0);
+  var teeth = 6;
+  for (var i = 1; i <= teeth; i++) {
+    var t0 = (i - 0.5) / teeth, t1 = i / teeth;
+    var w0 = Math.sin(t0 * Math.PI) * wid * 0.5;
+    var w1 = Math.sin(t1 * Math.PI) * wid * 0.42;
+    shp.lineTo(-w0 * 1.15, t0 * len);
+    shp.lineTo(-w1, t1 * len);
+  }
+  shp.lineTo(0, len * 1.06);
+  for (var j = teeth; j >= 1; j--) {
+    var s0 = (j - 0.5) / teeth, s1 = (j - 1) / teeth;
+    var rw0 = Math.sin(s0 * Math.PI) * wid * 0.5;
+    var rw1 = Math.sin(s1 * Math.PI) * wid * 0.42;
+    shp.lineTo(rw0 * 1.15, s0 * len);
+    shp.lineTo(rw1, s1 * len);
+  }
+  shp.closePath();
+  var geo = new THREE.ExtrudeGeometry(shp, { depth: 0.015, bevelEnabled: false });
+  var pos = geo.attributes.position, uv = geo.attributes.uv;
+  for (var k = 0; k < pos.count; k++) uv.setXY(k, pos.getX(k)/wid + 0.5, pos.getY(k)/len);
+  uv.needsUpdate = true;
+  geo.rotateX(-Math.PI / 2);
+  return geo;
+}
+var sLeafGeo = makeSerratedLeafGeo(0.56, 0.34);
+
+var leavesG = new THREE.Group(); roseRoot.add(leavesG);
+function addLeafCluster(x, y, z, rotY, tiltZ, sc) {
+  var cg = new THREE.Group(); cg.position.set(x, y, z); cg.rotation.y = rotY; cg.rotation.z = tiltZ; cg.scale.setScalar(sc || 1);
+  var mid = mesh(sLeafGeo, roseLeafMat); mid.position.set(0, 0, -0.14); mid.rotation.x = 0.16; cg.add(mid);
+  var lft = mesh(sLeafGeo, roseLeafMat); lft.scale.setScalar(0.76); lft.position.set(-0.08, 0, 0.02); lft.rotation.y = 0.85; lft.rotation.x = 0.14; cg.add(lft);
+  var rgt = mesh(sLeafGeo, roseLeafMat); rgt.scale.setScalar(0.76); rgt.position.set(0.08, 0, 0.02); rgt.rotation.y = -0.85; rgt.rotation.x = 0.14; cg.add(rgt);
+  leavesG.add(cg);
+}
+addLeafCluster(-0.18, 1.38, 0.16, 0.9, 0.25, 1.05);
+addLeafCluster(0.24, 1.54, 0.16, -1.0, -0.22, 1.06);
+addLeafCluster(-0.48, 1.82, 0.12, 1.35, 0.18, 0.92);
+addLeafCluster(0.42, 1.72, -0.12, -2.0, -0.2, 0.92);
+addLeafCluster(0.04, 1.24, -0.22, 3.0, 0.15, 0.88);
+registerRoseHit(leavesG, 'leaf');
+
+// 4. 多层卷曲粉红盛开月季 + 侧枝花苞
+function makeRosePetalGeo(w, len, cup) {
+  var geo = new THREE.PlaneGeometry(1, 1, 7, 10);
+  var pos = geo.attributes.position;
+  for (var i = 0; i < pos.count; i++) {
+    var u = pos.getX(i) * 2;
+    var v = pos.getY(i) + 0.5;
+    var halfW = Math.sin(Math.pow(v, 0.65) * Math.PI * 0.95) * (w * 0.52);
+    var zCup = (1 - u * u) * cup * Math.sin(v * Math.PI);
+    var zCurl = Math.sin(v * Math.PI * 0.82) * (len * 0.22) - Math.pow(Math.max(0, v - 0.55), 2) * (len * 0.34);
+    pos.setXYZ(i, u * halfW, v * len, zCup + zCurl);
+  }
+  geo.computeVertexNormals();
+  return geo;
+}
+function makePinkTex(c0, c1, c2) {
+  return ctex(128, 256, function (g, w, h) {
+    var gr = g.createLinearGradient(0, h, 0, 0);
+    gr.addColorStop(0, c0); gr.addColorStop(0.5, c1); gr.addColorStop(1, c2);
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(255,255,255,.22)'; g.lineWidth = 2;
+    for (var k = -2; k <= 2; k++) {
+      g.beginPath(); g.moveTo(w/2, h); g.quadraticCurveTo(w/2 + k*18, h*0.5, w/2 + k*10, 10); g.stroke();
+    }
+  });
+}
+
+var flowerG = new THREE.Group();
+flowerG.position.set(0, 2.42, 0);
+roseRoot.add(flowerG);
+
+var sepGeo = makeRosePetalGeo(0.16, 0.32, 0.02);
+var sepMat = toon('#2f9e44', { side: THREE.DoubleSide });
+for (var s = 0; s < 5; s++) {
+  var sg = new THREE.Group(); sg.rotation.y = s * Math.PI * 2 / 5;
+  var sm = mesh(sepGeo, sepMat); sm.position.set(0, -0.02, 0.08); sm.rotation.x = 1.48;
+  sg.add(sm); flowerG.add(sg);
+}
+
+var rMat1 = new THREE.MeshToonMaterial({ map: makePinkTex('#fbcfe8', '#f472b6', '#ec4899'), gradientMap: ramp, side: THREE.DoubleSide });
+var rMat2 = new THREE.MeshToonMaterial({ map: makePinkTex('#fce7f3', '#f9a8d4', '#f472b6'), gradientMap: ramp, side: THREE.DoubleSide });
+var rMat3 = new THREE.MeshToonMaterial({ map: makePinkTex('#fef08a', '#f9a8d4', '#ec4899'), gradientMap: ramp, side: THREE.DoubleSide });
+
+var roseRings = [
+  { cnt: 7, r: 0.12, w: 0.42, len: 0.54, cup: 0.09, tilt: 1.08, mat: rMat1, ph: 0 },
+  { cnt: 6, r: 0.09, w: 0.36, len: 0.48, cup: 0.085, tilt: 0.72, mat: rMat2, ph: 0.42 },
+  { cnt: 5, r: 0.065, w: 0.28, len: 0.40, cup: 0.075, tilt: 0.42, mat: rMat1, ph: 0.88 },
+  { cnt: 4, r: 0.04, w: 0.22, len: 0.30, cup: 0.065, tilt: 0.20, mat: rMat3, ph: 1.25 }
+];
+roseRings.forEach(function (rk) {
+  var geo = makeRosePetalGeo(rk.w, rk.len, rk.cup);
+  for (var i = 0; i < rk.cnt; i++) {
+    var rg = new THREE.Group(); rg.rotation.y = i * Math.PI * 2 / rk.cnt + rk.ph;
+    var pm = mesh(geo, rk.mat); pm.position.set(0, 0, rk.r); pm.rotation.x = rk.tilt;
+    rg.add(pm); flowerG.add(rg);
+  }
+});
+
+var stamenCenter = mesh(new THREE.SphereGeometry(0.1, 12, 10), toon('#eab308'));
+stamenCenter.position.y = 0.09; flowerG.add(stamenCenter);
+for (var st = 0; st < 12; st++) {
+  var sa = st * Math.PI * 2 / 12, sr = 0.08 + (st % 2) * 0.03;
+  var dot = mesh(new THREE.SphereGeometry(0.022, 6, 6), toon('#fde047'));
+  dot.position.set(Math.cos(sa) * sr, 0.16 + (st % 2) * 0.03, Math.sin(sa) * sr);
+  flowerG.add(dot);
+}
+registerRoseHit(flowerG, 'flower');
+
+var budG = new THREE.Group(); budG.position.set(-0.68, 2.08, 0.1); budG.rotation.z = 0.35; roseRoot.add(budG);
+var budGeo = makeRosePetalGeo(0.22, 0.34, 0.07);
+for (var b = 0; b < 5; b++) {
+  var bg = new THREE.Group(); bg.rotation.y = b * Math.PI * 2 / 5;
+  var bm = mesh(budGeo, rMat1); bm.position.set(0, 0, 0.03); bm.rotation.x = 0.28;
+  bg.add(bm); budG.add(bg);
+}
+registerRoseHit(budG, 'flower');
+
+// 测量高度 3D 小木尺（点击月季植株时升起）
+var rulerG = new THREE.Group(); rulerG.position.set(ROSE_X - 1.05, 0, ROSE_Z); rulerG.visible = false; live.add(rulerG);
+var rulerTex = ctex(64, 256, function (g, w, h) {
+  g.fillStyle = '#f6d38b'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#6b4214';
+  for (var i = 0; i < 16; i++) {
+    var y = h - 10 - i * 15;
+    g.fillRect(w - (i % 2 === 0 ? 28 : 16), y, 30, 3);
+  }
+});
+var rulerBar = mesh(new THREE.BoxGeometry(0.22, 2.75, 0.08), new THREE.MeshToonMaterial({ map: rulerTex, gradientMap: ramp }));
+rulerBar.position.y = 1.38; rulerG.add(rulerBar);
+
+// 3D 目标呼吸光圈（明确提示花盆/花瓣/带刺绿茎/锯齿叶片的互动区域）
+var potHalo = new THREE.Mesh(new THREE.RingGeometry(0.86, 1.04, 32),
+  new THREE.MeshBasicMaterial({ color: 0xf472b6, side: THREE.DoubleSide, transparent: true, opacity: 0.65 }));
+potHalo.rotation.x = -Math.PI / 2; potHalo.position.set(ROSE_X, 0.03, ROSE_Z);
+live.add(potHalo);
+
+var petalHalo = new THREE.Mesh(new THREE.RingGeometry(0.56, 0.72, 28),
+  new THREE.MeshBasicMaterial({ color: 0xf43f5e, side: THREE.DoubleSide, transparent: true, opacity: 0.78 }));
+petalHalo.position.set(ROSE_X, 2.46, ROSE_Z + 0.16); petalHalo.visible = false;
+live.add(petalHalo);
+
+var stemHalo = new THREE.Mesh(new THREE.RingGeometry(0.46, 0.62, 28),
+  new THREE.MeshBasicMaterial({ color: 0xf97316, side: THREE.DoubleSide, transparent: true, opacity: 0.78 }));
+stemHalo.position.set(ROSE_X, 1.50, ROSE_Z + 0.16); stemHalo.visible = false;
+live.add(stemHalo);
+
+var leafHalo = new THREE.Mesh(new THREE.RingGeometry(0.50, 0.66, 28),
+  new THREE.MeshBasicMaterial({ color: 0x22c55e, side: THREE.DoubleSide, transparent: true, opacity: 0.82 }));
+leafHalo.position.set(ROSE_X + 0.28, 1.50, ROSE_Z + 0.18); leafHalo.visible = false;
+live.add(leafHalo);
+
+/* ===== 4 件桌面实体可拖拽 3D 科学观察工具（全部摆在花盆周边桌面，避让右上 #notes） ===== */
+var TOOLS = {};
+var toolHitMeshes = [];
+
+function makeCoaster(x, z, col) {
+  var c = mesh(new THREE.CylinderGeometry(0.48, 0.52, 0.05, 24), toon(col));
+  c.position.set(x, 0.025, z); c.castShadow = false;
+  live.add(c);
+  var ring = new THREE.Mesh(new THREE.RingGeometry(0.54, 0.68, 28),
+    new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.28, side: THREE.DoubleSide }));
+  ring.rotation.x = -Math.PI / 2; ring.position.set(x, 0.032, z);
+  live.add(ring);
+  return { coaster: c, ring: ring };
+}
+
+function registerTool(id, g, homePos, label, tagYOffset, coasterPair, hitCy) {
+  g.position.copy(homePos);
+  live.add(g);
+  // 超大宽松透明拾取球（绝不会因为手指细、镜框细而点不中！）
+  addHitVolume(g, new THREE.SphereGeometry(0.74, 14, 12), 0, hitCy || 0.34, 0);
+  var tag = document.createElement('div');
+  tag.className = 'ttag';
+  tag.textContent = label;
+  $('#toolTags').appendChild(tag);
+  var rec = {
+    id: id, g: g, home: homePos.clone(), goal: homePos.clone(),
+    label: label, tagEl: tag, tagYOffset: tagYOffset || 0.72,
+    glowRing: coasterPair ? coasterPair.ring : null,
+    animT: 0, autoTarget: null, recoilT: 0, shakeT: 0
+  };
+  g.traverse(function (ch) {
+    if (ch.isMesh) { ch.userData.toolId = id; toolHitMeshes.push(ch); }
+  });
+  if (coasterPair && coasterPair.coaster) {
+    coasterPair.coaster.userData.toolId = id;
+    toolHitMeshes.push(coasterPair.coaster);
+  }
+  TOOLS[id] = rec;
+  return rec;
+}
+
+function buildHandMesh(skinHex, cuffHex) {
+  var hg = new THREE.Group();
+  var sm = toon(skinHex);
+  var palm = mesh(new THREE.BoxGeometry(0.32, 0.34, 0.11), sm);
+  palm.position.y = 0.18; hg.add(palm);
+  for (var hf = 0; hf < 4; hf++) {
+    var fgr = mesh(new THREE.CylinderGeometry(0.036, 0.036, 0.27, 8), sm);
+    fgr.position.set(-0.105 + hf * 0.07, 0.46, 0); hg.add(fgr);
+  }
+  var th = mesh(new THREE.CylinderGeometry(0.038, 0.038, 0.22, 8), sm);
+  th.position.set(-0.21, 0.22, 0.02); th.rotation.z = 0.74; hg.add(th);
+  var cuff = mesh(new THREE.CylinderGeometry(0.14, 0.16, 0.14, 12), toon(cuffHex));
+  cuff.position.y = 0.02; hg.add(cuff);
+  return hg;
+}
+
+// 1. 🖐️ 3D 暖色小手（花盆左前方桌面）
+(function () {
+  var home = new THREE.Vector3(-1.55, 0.12, 1.32);
+  var cp = makeCoaster(home.x, home.z, '#fde68a');
+  var g = buildHandMesh('#ffbe88', '#f59e0b');
+  g.rotation.y = 0.35;
+  registerTool('hand', g, home, '🖐️ 拖/点摸花瓣与茎', 0.76, cp, 0.34);
+})();
+
+// 2. 🌬️ 3D 扇闻手势道具（带淡蓝风纹波浪标志，花盆左中桌面）
+(function () {
+  var home = new THREE.Vector3(-2.82, 0.12, -0.22);
+  var cp = makeCoaster(home.x, home.z, '#bae6fd');
+  var g = buildHandMesh('#ffca99', '#38bdf8');
+  g.rotation.y = 0.45;
+  // 淡蓝风纹波浪弧线徽章
+  var windMat = toon('#0ea5e9');
+  for (var w = 0; w < 3; w++) {
+    var arc = mesh(new THREE.TorusGeometry(0.15 + w * 0.07, 0.024, 8, 18, Math.PI * 0.75), windMat);
+    arc.position.set(0.24, 0.36 + (w - 1) * 0.09, 0.04);
+    arc.rotation.z = -0.5;
+    g.add(arc);
+  }
+  registerTool('fan', g, home, '🌬️ 拖/点到花旁扇闻', 0.84, cp, 0.34);
+})();
+
+// 3. 🔍 3D 手持放大镜（真实木柄+金圈+透亮镜片，桌右前方偏下避让 #notes）
+(function () {
+  var home = new THREE.Vector3(1.78, 0.36, 1.18);
+  var cp = makeCoaster(home.x, home.z, '#fef08a');
+  var g = new THREE.Group();
+  var ring = mesh(new THREE.TorusGeometry(0.36, 0.052, 12, 32), toon('#eab308'));
+  ring.position.y = 0.28; g.add(ring);
+  var glass = new THREE.Mesh(new THREE.CircleGeometry(0.34, 28),
+    new THREE.MeshBasicMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.44, side: THREE.DoubleSide }));
+  glass.position.y = 0.28; g.add(glass);
+  // 高光反光条
+  var glint = new THREE.Mesh(new THREE.RingGeometry(0.20, 0.26, 16, 1, 0.6, 1.1),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.65, side: THREE.DoubleSide }));
+  glint.position.set(0, 0.28, 0.02); g.add(glint);
+  var handle = mesh(new THREE.CylinderGeometry(0.058, 0.072, 0.62, 12), toon('#8b4513'));
+  handle.position.set(0.28, -0.22, 0); handle.rotation.z = 0.52; g.add(handle);
+  g.rotation.y = -0.35;
+  registerTool('mag', g, home, '🔍 拖/点看叶片花蕊', 0.85, cp, 0.22);
+})();
+
+// 4. 🚫 3D 禁尝小嘴警示牌（圆盾牌+带红斜叉小嘴图标，正朝镜头，摆在桌前缘）
+(function () {
+  var home = new THREE.Vector3(0.28, 0.06, 1.54);
+  var cp = makeCoaster(home.x, home.z, '#fecdd3');
+  var g = new THREE.Group();
+  var stand = mesh(new THREE.CylinderGeometry(0.18, 0.26, 0.14, 16), toon('#9f1239'));
+  stand.position.y = 0.07; g.add(stand);
+  var post = mesh(new THREE.CylinderGeometry(0.045, 0.05, 0.22, 10), toon('#be123c'));
+  post.position.y = 0.22; g.add(post);
+
+  var signTex = ctex(256, 256, function (c, w, h) {
+    c.fillStyle = '#fff5f7'; c.fillRect(0, 0, w, h);
+    c.save();
+    c.translate(w / 2, h / 2);
+    c.rotate(-Math.PI / 2);
+    c.translate(-w / 2, -h / 2);
+    // 卡通小嘴
+    c.fillStyle = '#fb7185';
+    c.beginPath(); c.ellipse(w/2, h/2 + 8, 56, 32, 0, 0, Math.PI*2); c.fill();
+    c.fillStyle = '#ffffff';
+    c.fillRect(w/2 - 32, h/2 - 12, 64, 15);
+    c.fillStyle = '#fda4af';
+    c.beginPath(); c.ellipse(w/2, h/2 + 24, 28, 14, 0, 0, Math.PI*2); c.fill();
+    // 红色禁令外圈与斜杠
+    c.strokeStyle = '#e11d48'; c.lineWidth = 22;
+    c.beginPath(); c.arc(w/2, h/2, 108, 0, Math.PI*2); c.stroke();
+    c.beginPath(); c.moveTo(52, 52); c.lineTo(w - 52, h - 52); c.stroke();
+    c.restore();
+  });
+  var shield = mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.07, 28), [
+    toon('#e11d48'),
+    new THREE.MeshToonMaterial({ map: signTex, gradientMap: ramp }),
+    toon('#e11d48')
+  ]);
+  shield.rotation.x = Math.PI / 2;
+  shield.position.y = 0.56;
+  g.add(shield);
+  registerTool('safety', g, home, '🚫 禁尝警示牌', 1.05, cp, 0.45);
+})();
+
+// 粉白渐变香雾圆环 + 飘逸小花香粒子（扇闻时从花心层层飘出）
+var aromaParts = [];
+var aromaRingColors = [0xf472b6, 0xfbcfe8, 0xfff1f2];
+var aromaDotColors = [0xf9a8d4, 0xffffff, 0xfef08a, 0xfce7f3];
+for (var ap = 0; ap < 24; ap++) {
+  var isRing = ap < 12;
+  var aGeo = isRing
+    ? new THREE.TorusGeometry(0.085 + (ap % 3) * 0.032, 0.017, 8, 22)
+    : new THREE.SphereGeometry(0.042 + (ap % 3) * 0.016, 10, 8);
+  var aCol = isRing ? aromaRingColors[ap % aromaRingColors.length] : aromaDotColors[ap % aromaDotColors.length];
+  var am = new THREE.Mesh(aGeo, new THREE.MeshBasicMaterial({ color: aCol, transparent: true, opacity: 0 }));
+  am.visible = false; live.add(am);
+  aromaParts.push({ m: am, t: 0, ph: ap * 0.38, isRing: isRing, drift: ((ap % 5) - 2) * 0.14 });
+}
+
+/* ===== 5× 放大镜超清 2D 微观画布（叶片锯齿叶脉 / 金色花蕊花粉粒） ===== */
+var lensCv = $('#lensCv'), lCtx = lensCv.getContext('2d');
+var curLensTarget = '';
+
+function drawMagnifierDetail(target) {
+  if (curLensTarget === target) return;
+  curLensTarget = target;
+  var w = lensCv.width, h = lensCv.height, g = lCtx;
+  g.clearRect(0, 0, w, h);
+  if (target === 'leaf') {
+    g.fillStyle = '#f2fae9'; g.fillRect(0, 0, w, h);
+    g.save();
+    g.beginPath();
+    g.moveTo(22, h - 18);
+    var teeth = 7;
+    for (var i = 0; i < teeth; i++) {
+      var x1 = 26 + i * 27, y1 = 178 - i * 24;
+      g.lineTo(x1 + 8, y1 - 20);
+      g.lineTo(x1 + 24, y1 - 8);
+    }
+    g.lineTo(w - 14, 20);
+    g.lineTo(w - 10, h - 10);
+    g.closePath();
+    var gr = g.createLinearGradient(0, h, w, 0);
+    gr.addColorStop(0, '#1e7a37'); gr.addColorStop(0.55, '#34a853'); gr.addColorStop(1, '#58c96b');
+    g.fillStyle = gr; g.fill();
+    g.strokeStyle = '#14532d'; g.lineWidth = 3; g.stroke();
+    g.strokeStyle = '#d9f99d'; g.lineWidth = 5; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(26, h - 22); g.lineTo(w - 22, 26); g.stroke();
+    g.lineWidth = 2.6;
+    for (var v = 1; v <= 6; v++) {
+      var mx = 34 + v * 28, my = h - 30 - v * 28;
+      g.beginPath(); g.moveTo(mx, my); g.lineTo(mx - 22, my - 46); g.stroke();
+      g.beginPath(); g.moveTo(mx, my); g.lineTo(mx + 48, my + 16); g.stroke();
+      g.lineWidth = 1.2;
+      g.beginPath(); g.moveTo(mx - 10, my - 22); g.lineTo(mx + 8, my - 34); g.stroke();
+      g.lineWidth = 2.6;
+    }
+    g.fillStyle = '#fef08a';
+    g.beginPath(); g.arc(118, 86, 5, 0, Math.PI * 2); g.fill();
+    g.restore();
+  } else {
+    var bg = g.createRadialGradient(w/2, h/2, 16, w/2, h/2, w*0.56);
+    bg.addColorStop(0, '#fef9c3'); bg.addColorStop(0.42, '#f9a8d4'); bg.addColorStop(1, '#db2777');
+    g.fillStyle = bg; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(255,255,255,.45)'; g.lineWidth = 4;
+    for (var p = 0; p < 8; p++) {
+      var a = p * Math.PI / 4;
+      g.beginPath(); g.arc(w/2 + Math.cos(a)*76, h/2 + Math.sin(a)*76, 58, 0, Math.PI*2); g.stroke();
+    }
+    for (var s = 0; s < 28; s++) {
+      var sa = (s / 28) * Math.PI * 2 + (s % 2) * 0.1;
+      var sr = 36 + (s % 3) * 16;
+      var sx = w/2 + Math.cos(sa) * sr, sy = h/2 + Math.sin(sa) * sr;
+      g.strokeStyle = '#d97706'; g.lineWidth = 2.6;
+      g.beginPath(); g.moveTo(w/2, h/2); g.lineTo(sx, sy); g.stroke();
+      g.fillStyle = '#facc15';
+      g.beginPath(); g.arc(sx, sy, 6.5, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = '#b45309'; g.lineWidth = 1.4; g.stroke();
+    }
+    g.fillStyle = '#f59e0b';
+    g.beginPath(); g.arc(w/2, h/2, 18, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#fef08a';
+    for (var d = 0; d < 18; d++) {
+      var da = d * 1.9, dr = 20 + (d % 5) * 15;
+      g.beginPath(); g.arc(w/2 + Math.cos(da)*dr, h/2 + Math.sin(da)*dr, 2.5, 0, Math.PI*2); g.fill();
+    }
+  }
+}
+
+/* ===== 状态与 1对1 发现记录 ===== */
+var doneLook = false, doneTouchPetal = false, doneTouchStem = false, doneSmell = false;
+var doneMagLeaf = false, doneMagStamen = false, doneSafety = false;
+var found = {}, stamps = { s1: false, s2: false, s3: false }, celebrated = false, demo = false;
+var resetGen = 0;
+var flowerFlexT = 0, aromaAnimT = 0, lensHoldTimer = 0;
+var curGuideSpeech = '第1步：直接点一点月季花盆或枝叶，用眼睛看一看它的高矮和颜色！';
+
+function markInteracted() { document.body.classList.add('interacted'); }
+
+function popLabelAt3D(worldPos, text, cls) {
+  var v = worldPos.clone().project(camera);
+  var x = (v.x * 0.5 + 0.5) * window.innerWidth;
+  var y = (-v.y * 0.5 + 0.5) * window.innerHeight;
+  var el = document.createElement('div');
+  el.className = 'popword' + (cls ? ' ' + cls : '');
+  el.textContent = text;
+  el.style.left = Math.max(90, Math.min(window.innerWidth - 90, x)) + 'px';
+  el.style.top = Math.max(70, Math.min(window.innerHeight - 110, y - 16)) + 'px';
+  $('#labels').appendChild(el);
+  setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1600);
+}
+
+function addDiscovery(key, html, spoken) {
+  if (!found[key]) {
+    found[key] = true;
+    var el = document.createElement('div');
+    el.className = 'stk';
+    el.innerHTML = html;
+    $('#ntList').prepend(el);
+    $('#ntCnt').textContent = Object.keys(found).length;
+  }
+  checkStamps();
+  if (spoken && !demo) speak(spoken);
+}
+
+function lightStamp(id, key) {
+  if (!stamps[key]) {
+    stamps[key] = true;
+    var el = $('#' + id);
+    if (el) el.classList.add('lit');
+    beep([523, 659, 784], 0.22);
+  }
+}
+
+function syncToolTags() {
+  TOOLS.hand.tagEl.classList.toggle('done', doneTouchPetal && doneTouchStem);
+  TOOLS.fan.tagEl.classList.toggle('done', doneSmell);
+  TOOLS.mag.tagEl.classList.toggle('done', doneMagLeaf && doneMagStamen);
+  TOOLS.safety.tagEl.classList.toggle('done', doneSafety);
+
+  Object.keys(TOOLS).forEach(function (k) { TOOLS[k].tagEl.classList.remove('pulse'); });
+  if (doneLook && (!doneTouchPetal || !doneTouchStem)) TOOLS.hand.tagEl.classList.add('pulse');
+  else if (doneLook && doneTouchPetal && doneTouchStem && !doneSmell) TOOLS.fan.tagEl.classList.add('pulse');
+  else if (doneLook && doneTouchPetal && doneTouchStem && doneSmell && (!doneMagLeaf || !doneMagStamen)) TOOLS.mag.tagEl.classList.add('pulse');
+}
+
+function checkStamps() {
+  if (doneLook) lightStamp('st1', 's1');
+  if (doneTouchPetal && doneTouchStem && doneSmell) lightStamp('st2', 's2');
+  if (doneMagLeaf && doneMagStamen) lightStamp('st3', 's3');
+  syncToolTags();
+  updateGuide(false);
+
+  if (!demo && !celebrated && stamps.s1 && stamps.s2 && stamps.s3) {
+    celebrated = true;
+    saveProgress(LESSON_ID, true);
+    fireConfetti();
+    beep([523, 659, 784, 1046], 0.28);
+    var g = resetGen;
+    setTimeout(function () {
+      if (g !== resetGen) return;
+      $('#winToast').classList.add('show');
+      speak('太棒啦！看、摸、扇闻和放大镜观察月季全部完成啦，快来看看科学小结论并领小红花吧！', true);
+    }, 650);
+  }
+}
+
+function updateGuide(speakIt) {
+  if (!doneLook) {
+    curGuideSpeech = '第1步：直接点一点月季花盆或枝叶，拉出小木尺看一看它的高矮和颜色！';
+  } else if (!doneTouchPetal || !doneTouchStem) {
+    if (!doneTouchPetal) curGuideSpeech = '第2步：拖起桌面左前的暖色小手，去轻轻摸一摸粉红花瓣吧！';
+    else curGuideSpeech = '第2步：再拖着暖色小手碰一碰带刺的绿色茎秆，对比一下手感！';
+  } else if (!doneSmell) {
+    curGuideSpeech = '第3步：拖起桌左带风纹的扇闻手势道具，移到月季花旁轻轻扇闻花香！';
+  } else if (!doneMagLeaf || !doneMagStamen) {
+    if (!doneMagLeaf) curGuideSpeech = '第4步：拖起桌右前的 3D 放大镜凑近月季叶片，找准清晰焦距看叶脉锯齿！';
+    else curGuideSpeech = '第4步：再拖着 3D 放大镜凑近粉红花心，看清金黄花蕊和花粉粒！';
+  } else {
+    curGuideSpeech = '太棒啦！全部观察任务已完成，也可以点一点桌前禁尝警示牌牢记安全红线！';
+  }
+  $('#guideTxt').textContent = curGuideSpeech;
+  $('#guideBar').classList.remove('flash');
+  void $('#guideBar').offsetWidth;
+  $('#guideBar').classList.add('flash');
+  if (speakIt) speak(curGuideSpeech, true);
+}
+
+/* ===== 各项科学观察触发函数 ===== */
+function triggerLookRose() {
+  markInteracted();
+  beep([523, 659], 0.16);
+  rulerG.visible = true;
+  flowerFlexT = 0.7;
+  doneLook = true;
+  popLabelAt3D(new THREE.Vector3(ROSE_X, 2.75, ROSE_Z), '🌸 粉红多层花瓣', 'good');
+  popLabelAt3D(new THREE.Vector3(ROSE_X + 0.58, 1.58, ROSE_Z), '🍃 深绿锯齿叶片', 'good');
+  addDiscovery('look_rose', '👀 <b>看一看</b>：植株挺立、粉红花瓣、深绿锯齿叶',
+    '用眼睛看一看！小木尺量出月季挺拔有枝干，盛开着粉红色的多层花瓣，周围是深绿色的锯齿叶片！');
+}
+
+function triggerTouchPetal() {
+  markInteracted();
+  beep([587, 740], 0.16);
+  flowerFlexT = 1.0;
+  doneTouchPetal = true;
+  popLabelAt3D(new THREE.Vector3(ROSE_X, 2.72, ROSE_Z + 0.2), '🌸 花瓣软软的、滑滑的！', 'good');
+  addDiscovery('touch_petal', '🖐️ <b>摸花瓣</b>：软软的、滑滑的，轻压会回弹',
+    '花瓣摸起来软软的、滑滑的！再拖着小手碰一碰带刺的绿色茎秆对比一下吧！');
+}
+
+function triggerTouchStem() {
+  markInteracted();
+  beep([370, 290], 0.18);
+  TOOLS.hand.recoilT = 0.9;
+  doneTouchStem = true;
+  popLabelAt3D(new THREE.Vector3(ROSE_X, 1.68, ROSE_Z + 0.2), '⚠️ 哎呀！茎上有尖刺扎手！', 'warn');
+  addDiscovery('touch_stem', '🖐️ <b>摸茎秆</b>：硬硬的、长着尖尖小刺有点扎手',
+    '哎呀！茎上有尖尖的小刺，摸起来硬硬的、有点扎手！观察带刺植物一定要保护小手哦！');
+}
+
+function triggerFanSmell() {
+  markInteracted();
+  beep([440, 587, 740], 0.18);
+  aromaAnimT = 3.2;
+  flowerFlexT = 0.65;
+  aromaParts.forEach(function (ap, idx) { ap.m.visible = true; ap.t = idx * 0.11; });
+  doneSmell = true;
+  popLabelAt3D(new THREE.Vector3(ROSE_X, 2.74, ROSE_Z + 0.2), '🌬️ 轻轻扇风 · 淡雅月季香，不凑近更安全！', 'good');
+  addDiscovery('smell_rose', '🌬️ <b>扇闻法</b>：轻轻扇风闻到淡雅月季香，不凑近鼻子更安全',
+    '轻轻扇风闻到淡雅月季香，不凑近鼻子更安全！');
+}
+
+function triggerSafetyShield() {
+  markInteracted();
+  beep([330, 260], 0.22);
+  TOOLS.safety.shakeT = 1.1;
+  doneSafety = true;
+  $('#safetyBanner').classList.add('show');
+  popLabelAt3D(TOOLS.safety.g.position.clone().add(new THREE.Vector3(0, 0.9, 0)), '🚫 绝不随意尝植物！', 'warn');
+  addDiscovery('no_taste', '🚫 <b>禁尝警示</b>：科学观察绝不随意尝植物',
+    '不要随意尝植物！科学观察时绝不能随便放进嘴里哦！');
+  var g = resetGen;
+  setTimeout(function () { if (g === resetGen) $('#safetyBanner').classList.remove('show'); }, 4200);
+}
+
+/* ===== 放大镜基于真实竖直平面距离的丝滑调焦（左右叶片和金色花蕊都能稳稳看清并自动记录！） ===== */
+var LEAF_WORLD = new THREE.Vector3(ROSE_X + 0.28, 1.50, ROSE_Z + 0.16);
+var LEAF_WORLD_L = new THREE.Vector3(ROSE_X - 0.34, 1.54, ROSE_Z + 0.16);
+var STAMEN_WORLD = new THREE.Vector3(ROSE_X, 2.46, ROSE_Z + 0.02);
+var STEM_WORLD = new THREE.Vector3(ROSE_X, 1.48, ROSE_Z + 0.08);
+
+function evaluateMagnifierBy3DDistance(magPos, allowRecord, forceTarget) {
+  // 以镜片中心 (magPos.y + 0.28) 的竖直 XY 平面距离计算，避免 Z 轴误差卡死孩子！
+  var lx = magPos.x, ly = magPos.y + 0.28;
+  var dLeaf = Math.min(
+    Math.hypot(lx - LEAF_WORLD.x, ly - LEAF_WORLD.y),
+    Math.hypot(lx - LEAF_WORLD_L.x, ly - LEAF_WORLD_L.y)
+  );
+  var dStamen = Math.hypot(lx - STAMEN_WORLD.x, ly - STAMEN_WORLD.y);
+  var target = forceTarget || (dStamen < dLeaf ? 'stamen' : 'leaf');
+  if (!forceTarget && !doneMagLeaf && dLeaf < 0.92 && dLeaf <= dStamen + 0.18) target = 'leaf';
+  else if (!forceTarget && !doneMagStamen && dStamen < 0.92 && dStamen <= dLeaf + 0.18) target = 'stamen';
+  var d = target === 'stamen' ? dStamen : dLeaf;
+
+  if (d > 1.95) {
+    if (lensHoldTimer <= 0) $('#lensWrap').classList.remove('show');
+    return;
+  }
+  drawMagnifierDetail(target);
+  $('#lensWrap').classList.add('show');
+
+  // 丝滑对焦：距离 <= 0.86 即超清晰并自动记录；> 0.86 渐进微糊引导靠近，绝不设置苛刻“贴太近就卡死”的死区！
+  var blurPx = 0;
+  var isSharp = false;
+  var tag = $('#lensTag');
+  if (d <= 0.86) {
+    blurPx = 0;
+    isSharp = true;
+    tag.className = 'lens-tag sharp';
+    tag.textContent = target === 'leaf' ? '✨ 超清晰·锯齿叶' : '✨ 超清晰·金花蕊';
+  } else {
+    blurPx = Math.min(7.5, (d - 0.86) * 6.8);
+    tag.className = 'lens-tag';
+    tag.textContent = '再靠近一点 →';
+  }
+  lensCv.style.filter = 'blur(' + blurPx.toFixed(1) + 'px)';
+  $('#lensRing').classList.toggle('sharp', isSharp);
+  $('#lensCap').textContent = target === 'leaf'
+    ? '🔍 5× 叶片特写 · 锯齿与叶脉'
+    : '🔍 5× 花蕊特写 · 金色花粉粒';
+
+  if (isSharp && allowRecord) {
+    if (target === 'leaf' && !doneMagLeaf) {
+      doneMagLeaf = true;
+      lensHoldTimer = 2.4;
+      beep([587, 784, 988], 0.2);
+      popLabelAt3D(LEAF_WORLD, '🔍 看清锯齿叶脉啦！', 'good');
+      addDiscovery('mag_leaf', '🔍 <b>放大看叶片</b>：边缘有锯齿，叶脉细密清晰',
+        '焦距刚刚好，超清楚！放大镜下可以看到月季叶片边缘像小锯齿，叶脉密密麻麻的！再移到粉红花蕊看看吧！');
+    } else if (target === 'stamen' && !doneMagStamen) {
+      doneMagStamen = true;
+      lensHoldTimer = 2.4;
+      beep([587, 784, 988], 0.2);
+      popLabelAt3D(STAMEN_WORLD, '🔍 看清金色花粉粒啦！', 'good');
+      addDiscovery('mag_stamen', '🔍 <b>放大看花蕊</b>：金色花蕊与饱满花粉粒',
+        '哇，调得超清晰！月季花中心有好多金黄色的花蕊和圆滚滚的小花粉粒！');
+    }
+  }
+}
+
+/* ===== 指针直接拖拽（竖直穿花平面）+ 轻点自动飞过去互动（双通道零卡壳！） ===== */
+var ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+// 竖直拖拽平面正穿过月季花盆前侧 (z = ROSE_Z + 0.16)，工具可以自由举高直接贴到花瓣、茎秆和叶片上！
+var dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -(ROSE_Z + 0.16));
+var dragPt = new THREE.Vector3();
+var draggingTool = null, downX = 0, downY = 0, didDrag = false;
+var fanWaveAccum = 0, lastFanX = 0, handTouchedThisDrag = '';
+var handTapToggle = false, magTapToggle = false;
+
+function getNDC(e) {
+  var r = cv.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+}
+
+cv.addEventListener('pointerdown', function (e) {
+  markInteracted();
+  if (demo) return;
+  getNDC(e);
+  ray.setFromCamera(ptr, camera);
+
+  // 1. 优先检测 4 件桌面 3D 道具（含宽松透明拾取球与底座）
+  var tHits = ray.intersectObjects(toolHitMeshes, false);
+  if (tHits.length) {
+    var tid = tHits[0].object.userData.toolId;
+    draggingTool = TOOLS[tid];
+    draggingTool.animT = 0;
+    draggingTool.autoTarget = null;
+    downX = e.clientX; downY = e.clientY; didDrag = false;
+    fanWaveAccum = 0; lastFanX = e.clientX; handTouchedThisDrag = '';
+    cv.classList.add('grabbing');
+    // 所有工具均沿穿过花盆中心的竖直平面自由举高拖拽，所见即所得！
+    dragPlane.set(new THREE.Vector3(0, 0, 1), -(ROSE_Z + 0.16));
+    beep([480], 0.08);
+    return;
+  }
+
+  // 2. 未拿道具时直接点击月季花朵/枝叶/花盆 -> 看一看（升起木尺）
+  var rHits = ray.intersectObjects(roseHitTargets, false);
+  if (rHits.length) {
+    triggerLookRose();
+  }
+});
+
+window.addEventListener('pointermove', function (e) {
+  if (!draggingTool) return;
+  if (Math.hypot(e.clientX - downX, e.clientY - downY) > 7) didDrag = true;
+  if (!didDrag) return;
+  getNDC(e);
+  ray.setFromCamera(ptr, camera);
+  if (!ray.ray.intersectPlane(dragPlane, dragPt)) return;
+
+  var gx = Math.max(-3.1, Math.min(2.6, dragPt.x));
+  var gy = Math.max(0.18, Math.min(3.15, dragPt.y));
+  var gz = ROSE_Z + 0.16;
+  draggingTool.goal.set(gx, gy, gz);
+
+  // 实时互动检测（按指尖/镜片真实位置与花瓣/茎秆/叶片 XY 平面距离判定，丝滑准确！）
+  if (draggingTool.id === 'hand') {
+    var tipY = gy + 0.36;
+    var dFlower = Math.hypot(gx - STAMEN_WORLD.x, tipY - STAMEN_WORLD.y);
+    var dStem = Math.hypot(gx - STEM_WORLD.x, tipY - STEM_WORLD.y);
+    if (dFlower < 0.96 && (tipY >= 1.92 || dFlower <= dStem) && handTouchedThisDrag !== 'petal') {
+      handTouchedThisDrag = 'petal';
+      triggerTouchPetal();
+    } else if (dStem < 0.96 && tipY < 2.02 && handTouchedThisDrag !== 'stem') {
+      handTouchedThisDrag = 'stem';
+      triggerTouchStem();
+      // 惊跳缩回一点点提示有刺
+      draggingTool.goal.set(gx - 0.55, gy + 0.12, gz + 0.25);
+    }
+  } else if (draggingTool.id === 'fan') {
+    var dF = Math.hypot(gx - STAMEN_WORLD.x, (gy + 0.36) - STAMEN_WORLD.y);
+    if (dF < 1.95) {
+      fanWaveAccum += Math.abs(e.clientX - lastFanX) + Math.abs(e.clientY - downY) * 0.25;
+      lastFanX = e.clientX;
+      draggingTool.g.rotation.y = 0.35 + Math.sin(performance.now() * 0.022) * 0.52;
+      if (fanWaveAccum > 14 && aromaAnimT < 1.2) {
+        triggerFanSmell();
+      }
+    }
+  } else if (draggingTool.id === 'mag') {
+    evaluateMagnifierBy3DDistance(draggingTool.goal, true);
+  } else if (draggingTool.id === 'safety') {
+    var dRose = Math.hypot(gx - ROSE_X, (gy + 0.4) - 1.65);
+    if (dRose < 1.65 && TOOLS.safety.shakeT <= 0) {
+      triggerSafetyShield();
+    }
+  }
+});
+
+window.addEventListener('pointerup', function () {
+  if (!draggingTool) return;
+  var tool = draggingTool;
+  draggingTool = null;
+  cv.classList.remove('grabbing');
+
+  if (!didDrag) {
+    // 轻点任意工具也能自动飞到月季对应部位完成演示互动（拖、点双友好，6 岁小朋友 100% 玩懂！）
+    if (tool.id === 'safety') {
+      triggerSafetyShield();
+    } else if (tool.id === 'fan') {
+      tool.autoTarget = new THREE.Vector3(ROSE_X - 0.92, 2.18, ROSE_Z + 0.22);
+      tool.animT = 2.0;
+      triggerFanSmell();
+    } else if (tool.id === 'hand') {
+      var wantPetal = !doneTouchPetal || (doneTouchStem && !handTapToggle);
+      handTapToggle = !handTapToggle;
+      if (wantPetal) {
+        tool.autoTarget = new THREE.Vector3(ROSE_X - 0.24, 2.12, ROSE_Z + 0.22);
+        tool.animT = 1.45;
+        triggerTouchPetal();
+      } else {
+        tool.autoTarget = new THREE.Vector3(ROSE_X - 0.30, 1.22, ROSE_Z + 0.24);
+        tool.animT = 1.35;
+        triggerTouchStem();
+      }
+    } else if (tool.id === 'mag') {
+      var wantLeaf = !doneMagLeaf || (doneMagStamen && !magTapToggle);
+      magTapToggle = !magTapToggle;
+      lensHoldTimer = 2.6;
+      if (wantLeaf) {
+        tool.autoTarget = new THREE.Vector3(LEAF_WORLD.x + 0.08, LEAF_WORLD.y - 0.26, ROSE_Z + 0.22);
+        tool.animT = 2.1;
+        evaluateMagnifierBy3DDistance(tool.autoTarget, true, 'leaf');
+      } else {
+        tool.autoTarget = new THREE.Vector3(STAMEN_WORLD.x + 0.04, STAMEN_WORLD.y - 0.26, ROSE_Z + 0.22);
+        tool.animT = 2.1;
+        evaluateMagnifierBy3DDistance(tool.autoTarget, true, 'stamen');
+      }
+    }
+  } else {
+    // 拖完松手：若已停在花旁则贴心触发，随后平滑归回桌面原位（D4 无残留）
+    if (tool.id === 'fan' && Math.hypot(tool.goal.x - STAMEN_WORLD.x, (tool.goal.y + 0.36) - STAMEN_WORLD.y) < 2.1 && !doneSmell) {
+      triggerFanSmell();
+    } else if (tool.id === 'hand' && !handTouchedThisDrag) {
+      var ty = tool.goal.y + 0.36;
+      if (Math.hypot(tool.goal.x - STAMEN_WORLD.x, ty - STAMEN_WORLD.y) < 1.15) triggerTouchPetal();
+      else if (Math.hypot(tool.goal.x - STEM_WORLD.x, ty - STEM_WORLD.y) < 1.15) triggerTouchStem();
+    } else if (tool.id === 'mag') {
+      evaluateMagnifierBy3DDistance(tool.goal, true);
+    }
+    tool.goal.copy(tool.home);
+    if (tool.id === 'mag' && lensHoldTimer <= 0) {
+      $('#lensWrap').classList.remove('show');
+    }
+  }
+});
+
+/* ===== 顶部 HUD 与弹窗事件 ===== */
+$('#backBtn').addEventListener('click', function () {
+  try { sessionStorage.setItem('xk_last_vol', 'k1b'); } catch (e) {}
+});
+$('#voiceBtn').addEventListener('click', function () {
+  markInteracted();
+  voiceOn = !voiceOn;
+  this.classList.toggle('on', voiceOn);
+  if (voiceOn) updateGuide(true); else stopVoice();
+});
+$('#guideBar').addEventListener('click', function () { markInteracted(); updateGuide(true); });
+$('#resetBtn').addEventListener('click', resetAll);
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+$('#winKeepBtn').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgainBtn').addEventListener('click', resetAll);
+$('#qOpts').addEventListener('click', function (e) {
+  var b = e.target.closest('.qopt'); if (!b) return;
+  if (b.dataset.ok === '1') {
+    b.classList.add('ok');
+    $('#qFb').textContent = '🌸 答对啦！获得本课小红花！';
+    saveProgress(LESSON_ID, true);
+    beep([523, 659, 784, 1046], 0.24);
+    speak('答对啦！眼睛和叶片不动，调整放大镜距离就能看清细节，获得本课小红花！', true);
+  } else {
+    b.classList.add('bad');
+    beep([260, 220], 0.16);
+    var h = b.dataset.hint || '再想想哦！';
+    $('#qFb').textContent = '💡 ' + h;
+    speak(h, true);
+  }
+});
+
+/* ===== 演示模式（展示 3D 道具真实移动观察，不触发通关） ===== */
+function startDemo() {
+  markInteracted();
+  resetAll();
+  demo = true;
+  $('#demoBtn').classList.add('on');
+  var g = resetGen;
+  var steps = [
+    function () {
+      triggerLookRose();
+      speak('演示开始！第1步直接点月季植株，拉出小木尺看一看高矮、粉红花瓣和绿叶。', true);
+    },
+    function () {
+      TOOLS.hand.goal.set(ROSE_X - 0.35, 2.38, 0.28);
+      triggerTouchPetal();
+      speak('第2步拖起暖色小手摸粉红花瓣，软软滑滑的！再碰绿色茎秆小心尖刺！', true);
+    },
+    function () {
+      TOOLS.hand.goal.set(ROSE_X - 0.42, 1.56, 0.34);
+      triggerTouchStem();
+    },
+    function () {
+      TOOLS.hand.goal.copy(TOOLS.hand.home);
+      TOOLS.fan.goal.set(ROSE_X - 0.92, 2.32, 0.42);
+      triggerFanSmell();
+      speak('第3步拖起扇闻手到花旁轻轻扇动，闻到淡雅花香！绝不能随意品尝植物哦！', true);
+    },
+    function () {
+      TOOLS.fan.goal.copy(TOOLS.fan.home);
+      TOOLS.mag.goal.set(LEAF_WORLD.x + 0.48, LEAF_WORLD.y + 0.08, LEAF_WORLD.z + 0.36);
+      evaluateMagnifierBy3DDistance(TOOLS.mag.goal, false);
+      speak('第4步拖着放大镜凑近叶片和花蕊，找准焦距看清叶脉和花粉粒就通关啦！轮到你试试！', true);
+    },
+    function () { demo = false; $('#demoBtn').classList.remove('on'); resetAll(); }
+  ];
+  var times = [0, 2700, 4800, 6600, 9200, 12600];
+  steps.forEach(function (fn, i) {
+    setTimeout(function () { if (g === resetGen) fn(); }, times[i]);
+  });
+}
+$('#demoBtn').addEventListener('click', startDemo);
+
+function resetAll() {
+  resetGen++;
+  stopVoice();
+  demo = false;
+  $('#demoBtn').classList.remove('on');
+  doneLook = false; doneTouchPetal = false; doneTouchStem = false; doneSmell = false;
+  doneMagLeaf = false; doneMagStamen = false; doneSafety = false;
+  found = {}; stamps = { s1: false, s2: false, s3: false }; celebrated = false;
+  draggingTool = null; cv.classList.remove('grabbing');
+  flowerFlexT = 0; aromaAnimT = 0; lensHoldTimer = 0; curLensTarget = '';
+  rulerG.visible = false;
+  aromaParts.forEach(function (ap) { ap.m.visible = false; });
+  Object.keys(TOOLS).forEach(function (k) {
+    var t = TOOLS[k];
+    t.goal.copy(t.home); t.g.position.copy(t.home);
+    t.animT = 0; t.autoTarget = null; t.recoilT = 0; t.shakeT = 0;
+  });
+  handTapToggle = false; magTapToggle = false;
+  petalHalo.visible = false; stemHalo.visible = false; leafHalo.visible = false;
+  $('#lensWrap').classList.remove('show');
+  $('#safetyBanner').classList.remove('show');
+  $('#ntList').innerHTML = ''; $('#ntCnt').textContent = '0';
+  $$('.st').forEach(function (s) { s.classList.remove('lit'); });
+  $('#winToast').classList.remove('show');
+  $('#qFb').textContent = '';
+  $$('.qopt').forEach(function (b) { b.classList.remove('ok', 'bad'); });
+  syncToolTags();
+  updateGuide(false);
+}
+
+/* ===== 帧循环 ===== */
+var introT0 = performance.now(), lastT = performance.now();
+var projV = new THREE.Vector3();
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', fit);
+fit();
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (now - lastT) / 1000));
+  lastT = now;
+  var tSec = now * 0.001;
+
+  var pop = Math.min(1, (performance.now() - introT0) / 680);
+  live.scale.setScalar(0.01 + 0.99 * (1 - Math.pow(1 - pop, 3)));
+
+  // 月季微风轻摆 + 扇闻时柔和摇曳 + 花瓣弹压微凹回弹
+  var breezeAmt = aromaAnimT > 0 ? Math.min(1, aromaAnimT * 0.7) : 0;
+  roseRoot.rotation.y = Math.sin(tSec * 0.45) * 0.12 + Math.sin(tSec * 6.5) * 0.06 * breezeAmt;
+  roseRoot.rotation.z = Math.sin(tSec * 8.2) * 0.055 * breezeAmt;
+  flowerG.rotation.z = Math.sin(tSec * 9.5 + 0.6) * 0.11 * breezeAmt;
+  flowerG.rotation.x = Math.cos(tSec * 7.8) * 0.07 * breezeAmt;
+  if (flowerFlexT > 0) {
+    flowerFlexT = Math.max(0, flowerFlexT - dt * 1.5);
+    var sq = Math.sin(flowerFlexT * Math.PI * 3) * 0.10 * flowerFlexT;
+    flowerG.scale.set(1 + sq, 1 - sq * 1.5, 1 + sq);
+  } else {
+    flowerG.scale.set(1, 1, 1);
+  }
+
+  // 3D 目标呼吸光圈（提示花盆、花瓣、带刺绿茎、锯齿叶片）
+  potHalo.visible = !doneLook && !demo;
+  if (potHalo.visible) {
+    potHalo.scale.setScalar(1.0 + Math.sin(tSec * 4.5) * 0.12);
+    potHalo.material.opacity = 0.48 + Math.sin(tSec * 4.5) * 0.30;
+  }
+  var showPetalHalo = !demo && ((draggingTool && draggingTool.id === 'hand' && !doneTouchPetal) || (draggingTool && draggingTool.id === 'mag' && doneMagLeaf && !doneMagStamen));
+  var showStemHalo = !demo && (draggingTool && draggingTool.id === 'hand' && doneTouchPetal && !doneTouchStem);
+  var showLeafHalo = !demo && (draggingTool && draggingTool.id === 'mag' && !doneMagLeaf);
+  petalHalo.visible = !!showPetalHalo;
+  stemHalo.visible = !!showStemHalo;
+  leafHalo.visible = !!showLeafHalo;
+  if (petalHalo.visible) { petalHalo.lookAt(camera.position); petalHalo.scale.setScalar(1 + Math.sin(tSec * 6) * 0.14); }
+  if (stemHalo.visible) { stemHalo.lookAt(camera.position); stemHalo.scale.setScalar(1 + Math.sin(tSec * 6) * 0.14); }
+  if (leafHalo.visible) { leafHalo.lookAt(camera.position); leafHalo.scale.setScalar(1 + Math.sin(tSec * 6) * 0.14); }
+
+  // 决定当前单焦点跳动气泡 #targetCue（绝不与右上 #notes 或工具标签重叠！）
+  var cueEl = $('#targetCue');
+  var notesRect = $('#notes').getBoundingClientRect();
+  var cueToolId = '';
+  function placeCueSafe(sx, sy, txt) {
+    cueEl.textContent = txt;
+    var x = Math.max(108, Math.min(window.innerWidth - 110, sx));
+    var y = Math.max(82, Math.min(window.innerHeight - 60, sy));
+    if (x + 100 > notesRect.left && y - 34 < notesRect.bottom + 8) {
+      x = Math.min(x, notesRect.left - 110);
+    }
+    cueEl.style.left = x + 'px';
+    cueEl.style.top = y + 'px';
+    cueEl.classList.add('show');
+  }
+
+  if (demo || celebrated) {
+    cueEl.classList.remove('show');
+  } else if (draggingTool) {
+    if (draggingTool.id === 'hand') {
+      var hPos = !doneTouchPetal ? STAMEN_WORLD : STEM_WORLD;
+      projV.set(hPos.x, hPos.y + 0.52, hPos.z).project(camera);
+      placeCueSafe((projV.x * 0.5 + 0.5) * window.innerWidth, (-projV.y * 0.5 + 0.5) * window.innerHeight,
+        !doneTouchPetal ? '🌸 移到这里摸粉红花瓣' : '🌿 移到这里碰带刺绿茎');
+    } else if (draggingTool.id === 'fan') {
+      projV.set(STAMEN_WORLD.x, STAMEN_WORLD.y + 0.55, STAMEN_WORLD.z).project(camera);
+      placeCueSafe((projV.x * 0.5 + 0.5) * window.innerWidth, (-projV.y * 0.5 + 0.5) * window.innerHeight, '🌬️ 在花旁轻轻扇一扇');
+    } else if (draggingTool.id === 'mag') {
+      var mPos = !doneMagLeaf ? LEAF_WORLD : STAMEN_WORLD;
+      projV.set(mPos.x, mPos.y + 0.48, mPos.z).project(camera);
+      placeCueSafe((projV.x * 0.5 + 0.5) * window.innerWidth, (-projV.y * 0.5 + 0.5) * window.innerHeight,
+        !doneMagLeaf ? '🔍 对准锯齿绿叶看细节' : '🔍 对准金色花蕊看花粉');
+    } else {
+      cueEl.classList.remove('show');
+    }
+  } else if (!doneLook) {
+    projV.set(ROSE_X, 2.86, ROSE_Z).project(camera);
+    placeCueSafe((projV.x * 0.5 + 0.5) * window.innerWidth, (-projV.y * 0.5 + 0.5) * window.innerHeight, '👆 点月季花盆看一看');
+  } else if (!doneTouchPetal || !doneTouchStem) {
+    cueToolId = 'hand';
+    var hp = TOOLS.hand.g.position;
+    projV.set(hp.x, hp.y + 0.88, hp.z).project(camera);
+    placeCueSafe((projV.x * 0.5 + 0.5) * window.innerWidth, (-projV.y * 0.5 + 0.5) * window.innerHeight,
+      !doneTouchPetal ? '👆 拖或点小手摸粉红花瓣' : '👆 再拖或点小手碰绿茎');
+  } else if (!doneSmell) {
+    cueToolId = 'fan';
+    var fp = TOOLS.fan.g.position;
+    projV.set(fp.x, fp.y + 0.94, fp.z).project(camera);
+    placeCueSafe((projV.x * 0.5 + 0.5) * window.innerWidth, (-projV.y * 0.5 + 0.5) * window.innerHeight, '👆 拖或点扇闻手到花旁');
+  } else if (!doneMagLeaf || !doneMagStamen) {
+    cueToolId = 'mag';
+    var mp = TOOLS.mag.g.position;
+    projV.set(mp.x, mp.y + 0.96, mp.z).project(camera);
+    placeCueSafe((projV.x * 0.5 + 0.5) * window.innerWidth, (-projV.y * 0.5 + 0.5) * window.innerHeight,
+      !doneMagLeaf ? '👆 拖或点放大镜看叶片' : '👆 再拖或点放大镜看花蕊');
+  } else {
+    cueEl.classList.remove('show');
+  }
+
+  // 4 件桌面 3D 道具平滑插值与物理动画
+  Object.keys(TOOLS).forEach(function (k) {
+    var tl = TOOLS[k];
+    if (tl.animT > 0) {
+      tl.animT -= dt;
+      if (tl.autoTarget) tl.goal.copy(tl.autoTarget);
+      if (k === 'fan') tl.g.rotation.y = 0.35 + Math.sin(tSec * 16) * 0.55;
+      if (tl.animT <= 0) {
+        tl.autoTarget = null;
+        tl.goal.copy(tl.home);
+        if (k === 'fan') tl.g.rotation.y = 0.45;
+      }
+    }
+    if (k === 'hand' && tl.recoilT > 0) {
+      tl.recoilT -= dt;
+      tl.g.rotation.z = Math.sin(tl.recoilT * 24) * 0.35;
+    } else if (k === 'hand') {
+      tl.g.rotation.z *= 0.85;
+    }
+    if (k === 'safety' && tl.shakeT > 0) {
+      tl.shakeT -= dt;
+      tl.g.rotation.z = Math.sin(tl.shakeT * 30) * 0.24;
+    } else if (k === 'safety') {
+      tl.g.rotation.z *= 0.85;
+    }
+    if (tl.glowRing) {
+      var isFocusTool = (cueToolId === k && !draggingTool);
+      tl.glowRing.material.opacity = isFocusTool ? (0.62 + Math.sin(tSec * 5.4) * 0.32) : 0.22;
+      tl.glowRing.scale.setScalar(isFocusTool ? (1.08 + Math.sin(tSec * 5.4) * 0.14) : 1.0);
+    }
+
+    var idleBob = (draggingTool !== tl && tl.animT <= 0) ? Math.sin(tSec * 2.4 + tl.home.x) * 0.03 : 0;
+    tl.g.position.x += (tl.goal.x - tl.g.position.x) * Math.min(1, dt * 13);
+    tl.g.position.y += ((tl.goal.y + idleBob) - tl.g.position.y) * Math.min(1, dt * 13);
+    tl.g.position.z += (tl.goal.z - tl.g.position.z) * Math.min(1, dt * 13);
+
+    // 同步桌面道具提示签位置（拖拽中或已被 #targetCue 指引时隐藏，零重叠！）
+    if (draggingTool === tl || cueToolId === k) {
+      tl.tagEl.style.opacity = '0';
+    } else {
+      tl.tagEl.style.opacity = '1';
+      projV.set(tl.g.position.x, tl.g.position.y + tl.tagYOffset, tl.g.position.z).project(camera);
+      tl.tagEl.style.left = ((projV.x * 0.5 + 0.5) * window.innerWidth) + 'px';
+      tl.tagEl.style.top = ((-projV.y * 0.5 + 0.5) * window.innerHeight) + 'px';
+    }
+  });
+
+  // 放大镜发现清晰后的短暂展示自动收起（D4）
+  if (lensHoldTimer > 0) {
+    lensHoldTimer -= dt;
+    if (lensHoldTimer <= 0 && (!draggingTool || draggingTool.id !== 'mag')) {
+      $('#lensWrap').classList.remove('show');
+    }
+  }
+
+  // 粉白渐变香雾圆环 + 飘逸小花香粒子动画（D4 自动消退无残留）
+  if (aromaAnimT > 0) {
+    aromaAnimT -= dt;
+    var fade = Math.min(1, aromaAnimT * 0.9);
+    aromaParts.forEach(function (ap) {
+      ap.t += dt * (ap.isRing ? 0.82 : 0.96);
+      var u = ap.t % 1;
+      if (ap.isRing) {
+        ap.m.position.set(
+          ROSE_X + Math.sin(u * 6 + ap.ph) * 0.34,
+          2.44 + u * 0.78,
+          ROSE_Z + 0.18 + u * 2.05
+        );
+        ap.m.rotation.x = 0.35 + u * 0.55;
+        ap.m.rotation.y = u * 1.3 + ap.ph;
+        ap.m.scale.setScalar(0.55 + u * 1.25);
+        ap.m.material.opacity = Math.sin(u * Math.PI) * fade * 0.82;
+      } else {
+        ap.m.position.set(
+          ROSE_X + ap.drift + Math.sin(u * 7.5 + ap.ph) * 0.46,
+          2.48 + u * 1.05 + Math.cos(u * 5 + ap.ph) * 0.12,
+          ROSE_Z + 0.16 + u * 2.25
+        );
+        ap.m.scale.setScalar(0.45 + Math.sin(u * Math.PI) * 0.95);
+        ap.m.material.opacity = Math.sin(u * Math.PI) * fade * 0.92;
+      }
+    });
+    if (aromaAnimT <= 0) {
+      aromaParts.forEach(function (ap) { ap.m.visible = false; });
+    }
+  }
+
+  // 彩带
+  if (cfOn) {
+    cfCtx.clearRect(0, 0, cfCanvas.width, cfCanvas.height);
+    var alive = 0;
+    cfParts.forEach(function (p) {
+      p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 240 * dt; p.a += p.va * dt;
+      if (p.y < cfCanvas.height + 24) {
+        alive++;
+        cfCtx.save(); cfCtx.translate(p.x, p.y); cfCtx.rotate(p.a);
+        cfCtx.fillStyle = p.c; cfCtx.fillRect(-p.r, -p.r * 0.5, p.r * 2, p.r);
+        cfCtx.restore();
+      }
+    });
+    if (!alive) { cfOn = false; cfCtx.clearRect(0, 0, cfCanvas.width, cfCanvas.height); }
+  }
+
+  renderer.render(scene, camera);
+}
+
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () {
+    return {
+      triangles: renderer.info.render.triangles,
+      celebrated: celebrated,
+      doneLook: doneLook,
+      doneTouchPetal: doneTouchPetal,
+      doneTouchStem: doneTouchStem,
+      doneSmell: doneSmell,
+      doneMagLeaf: doneMagLeaf,
+      doneMagStamen: doneMagStamen,
+      doneSafety: doneSafety
+    };
+  },
+  screenTargets: function () {
+    function proj(v) {
+      var p = v.clone().project(camera);
+      return { x: (p.x * 0.5 + 0.5) * window.innerWidth, y: (-p.y * 0.5 + 0.5) * window.innerHeight };
+    }
+    return {
+      rose: proj(new THREE.Vector3(ROSE_X, 1.5, ROSE_Z)),
+      petal: proj(STAMEN_WORLD),
+      stem: proj(STEM_WORLD),
+      leaf: proj(LEAF_WORLD),
+      hand: proj(TOOLS.hand.home.clone().add(new THREE.Vector3(0, 0.32, 0))),
+      fan: proj(TOOLS.fan.home.clone().add(new THREE.Vector3(0, 0.32, 0))),
+      mag: proj(TOOLS.mag.home.clone().add(new THREE.Vector3(0, 0.25, 0))),
+      safety: proj(TOOLS.safety.home.clone().add(new THREE.Vector3(0, 0.45, 0)))
+    };
+  },
+  startDemo: startDemo,
+  resetAll: resetAll
+};
+syncToolTags();
+updateGuide(false);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

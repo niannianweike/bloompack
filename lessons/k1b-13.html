@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第13课 创作科普剧 · 3D 桥梁进化科普剧场</title>
+<style>
+:root{--accent:#e56d17;--ink:#2a2218;--line:#e4d5ba;--card:rgba(255,253,248,.94);--sky:#8ec8f2}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#8ec8f2;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.46em;color:#7a6a52;font-weight:500}
+body.no-py rt{display:none}
+
+#hudTL{position:fixed;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:10px;
+  padding:7px 14px 7px 9px;border-radius:16px;background:var(--card);border:1.5px solid var(--line);
+  box-shadow:0 4px 16px rgba(24,56,92,.16)}
+#backBtn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:#5c4b34;font-size:18px;font-weight:900}
+#backBtn:hover{border-color:var(--accent);color:var(--accent)}
+.hd-t{font-size:16px;font-weight:900;line-height:1.5}
+.hd-sub{font-size:11.5px;color:#7b6c56;font-weight:700}
+
+#guideBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:6;
+  max-width:min(450px,calc(100vw - 640px));display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:15px;background:rgba(255,250,240,.96);
+  border:2px solid #f08a24;box-shadow:0 6px 18px rgba(130,68,12,.18);
+  font-size:13.5px;font-weight:800;color:#753a07;cursor:pointer;line-height:1.4}
+#guideBar:active{transform:translateX(-50%) scale(.98)}
+#guideBar.pulse{animation:guidePop .45s ease}
+@keyframes guidePop{0%{transform:translateX(-50%) scale(.94)}50%{transform:translateX(-50%) scale(1.03)}100%{transform:translateX(-50%) scale(1)}}
+
+#hudTR{position:fixed;top:12px;right:12px;z-index:7;display:flex;align-items:center;gap:6px}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:38px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);
+  background:var(--card);font-size:13.5px;font-weight:800;color:#4a3c28;cursor:pointer;
+  box-shadow:0 3px 0 #d9c8ab;transition:all .14s}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:#b8500a;color:#fff;box-shadow:0 3px 0 #b8500a}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#ffedd5;border:1.5px solid var(--accent);color:#b44908;font-size:10.5px;font-weight:900;
+  white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(229,109,23,.24);
+  animation:cuePop 1.6s ease-in-out infinite;transition:opacity .25s}
+body.interacted .entry-cue{opacity:0;animation:none}
+@keyframes cuePop{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+
+#notes{position:fixed;top:60px;right:12px;z-index:6;width:224px;padding:9px 11px;border-radius:15px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 6px 18px rgba(24,56,92,.16)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+.nt-title{font-size:13.5px;font-weight:900}
+.nt-cnt{font-size:12.5px;font-weight:900;color:var(--accent)}
+.nt-tog{padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:11px;font-weight:800;color:#6c5c45;cursor:pointer}
+.stamps{display:flex;gap:4px;margin-bottom:6px}
+.st{flex:1;text-align:center;padding:3px 2px;border-radius:8px;font-size:11px;font-weight:800;
+  border:1.5px dashed #d7c5a4;color:#9b8a70;background:#faf4e8;transition:all .2s;line-height:1.4}
+.st.lit{border-style:solid;border-color:var(--accent);background:#fff2df;color:#b8500a;animation:stPop .4s ease}
+@keyframes stPop{0%{transform:scale(.75)}60%{transform:scale(1.1)}100%{transform:scale(1)}}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList{display:none}
+.stk{padding:5px 8px;border-radius:10px;background:#fff;border:1px solid #ece0c9;font-size:12px;font-weight:700;line-height:1.4}
+
+/* 顶部因果升级过渡条（工程师提出方案后点亮） */
+#evoPill{position:fixed;top:58px;left:50%;transform:translateX(-50%);z-index:6;
+  display:none;align-items:center;gap:6px;padding:5px 14px;border-radius:99px;
+  background:linear-gradient(135deg,#fef3c7,#ecfdf5);border:2px solid #16a34a;
+  color:#14532d;font-size:12.5px;font-weight:900;white-space:nowrap;
+  box-shadow:0 6px 16px rgba(22,101,52,.22);pointer-events:none}
+#evoPill.show{display:inline-flex;animation:evoPop .35s ease}
+@keyframes evoPop{0%{opacity:0;transform:translateX(-50%) translateY(-6px) scale(.92)}100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+
+/* 左中桥梁名片卡（还原 P56 材料·形状·地点·用途四维表 + 演化提示） */
+#infoCard{position:fixed;left:12px;top:82px;z-index:5;width:206px;padding:9px 11px;border-radius:15px;
+  background:rgba(255,253,248,.94);border:1.5px solid var(--line);box-shadow:0 6px 16px rgba(24,56,92,.14)}
+.ic-title{font-size:14.5px;font-weight:900;color:#1d4ed8;margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.ic-act{font-size:11px;font-weight:900;color:#b45309;background:#fef3c7;padding:2px 7px;border-radius:99px;margin-bottom:5px;display:inline-block}
+.ic-row{display:flex;justify-content:space-between;font-size:12px;font-weight:800;padding:3px 0;border-bottom:1px dashed #e7dcc8}
+.ic-row:last-of-type{border-bottom:none}
+.ic-k{color:#786752}
+.ic-v{color:#2a2218}
+.ic-evo{margin-top:6px;padding:5px 7px;border-radius:9px;background:#fff7ed;border:1px solid #fdba74;
+  font-size:11.5px;font-weight:800;color:#9a3412;line-height:1.4}
+
+/* 3D 气泡、单焦点跳动引导与角色极简名牌 */
+#labels{position:fixed;inset:0;pointer-events:none;z-index:8}
+.cue3d{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:6px 14px;border-radius:99px;z-index:9;
+  background:#fff7ed;border:2.5px solid #ea580c;color:#9a3412;font-size:13.5px;font-weight:900;white-space:nowrap;
+  box-shadow:0 6px 18px rgba(234,88,12,.34);animation:cueBob 1.15s ease-in-out infinite;display:none;pointer-events:none}
+.cue3d.show{display:block}
+@keyframes cueBob{0%,100%{transform:translate(-50%,-100%) translateY(0)}50%{transform:translate(-50%,-100%) translateY(-6px)}}
+.role-tag{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:2px 8px;border-radius:99px;
+  background:rgba(255,253,246,.94);border:1.5px solid #e4c69a;color:#4a3520;font-size:11.5px;font-weight:900;
+  white-space:nowrap;box-shadow:0 3px 8px rgba(24,56,92,.16);transition:opacity .18s}
+.role-tag.done{background:#ecfdf5;border-color:#22c55e;color:#15803d}
+.role-tag.hide{opacity:0}
+.speech-bub{position:absolute;left:0;top:0;transform:translate(-50%,-100%);max-width:296px;z-index:8;
+  padding:8px 13px;border-radius:16px;background:rgba(255,253,246,.98);border:2px solid #e56d17;
+  color:#422006;font-size:13px;font-weight:800;line-height:1.45;box-shadow:0 8px 22px rgba(40,22,4,.24);
+  opacity:0;transition:opacity .2s}
+.speech-bub.show{opacity:1}
+.speech-bub::after{content:"";position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);
+  border:6px solid transparent;border-top-color:#e56d17;border-bottom:0}
+.float-msg{position:absolute;left:0;top:0;transform:translate(-50%,-100%);font-size:18px;font-weight:900;
+  color:#c2560c;text-shadow:0 2px 0 #fff,0 0 8px #fff;white-space:nowrap;animation:fUp 1.5s ease-out forwards}
+.float-msg.ok{color:#15803d}
+@keyframes fUp{0%{opacity:0;transform:translate(-50%,-40%) scale(.7)}18%{opacity:1;transform:translate(-50%,-100%) scale(1.05)}100%{opacity:0;transform:translate(-50%,-190%) scale(1)}}
+
+/* 底部极简 4 桥型纯图标切换坞（严格仅 4 个按钮！） */
+#dock{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:6;
+  display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:18px;
+  background:rgba(255,252,246,.96);border:1.5px solid var(--line);box-shadow:0 8px 22px rgba(24,56,92,.18)}
+.br-card{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:12px;
+  border:1.5px solid #dfd1b8;background:#fff;font:inherit;font-size:14px;font-weight:900;
+  color:#3d3022;cursor:pointer;transition:all .14s}
+.br-card:hover{border-color:#2563eb}
+.br-card.on{background:#e8f1ff;border-color:#2563eb;color:#1d4ed8;box-shadow:0 3px 0 #93c5fd}
+.br-card.tested{border-color:#16a34a}
+.br-card.tested::after{content:"✓";color:#16a34a;font-weight:900;margin-left:2px}
+.br-card.glow{animation:btnPulse 1.2s ease-in-out infinite;border-color:#e56d17}
+@keyframes btnPulse{0%,100%{box-shadow:0 0 0 0 rgba(229,109,23,.55)}50%{box-shadow:0 0 0 9px rgba(229,109,23,0)}}
+
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+#winToast{position:fixed;inset:0;z-index:35;display:none;place-items:center;background:rgba(20,34,54,.36);padding:16px}
+#winToast.show{display:grid}
+.win-card{width:min(458px,100%);max-height:86vh;overflow-y:auto;background:#fffdf8;
+  border:2.5px solid var(--accent);border-radius:22px;padding:18px 20px;text-align:center;
+  box-shadow:0 20px 50px rgba(20,34,54,.3)}
+.win-concl{margin:10px 0;padding:10px 12px;border-radius:13px;background:#fff8eb;border:1.5px solid #f2cf9b;
+  text-align:left;font-size:13.5px;line-height:1.6;color:#5a3309;font-weight:700}
+.win-quiz{margin:10px 0;padding:10px 12px;border-radius:13px;background:#f8fafc;border:1.5px solid #d9e2ec;text-align:left}
+.win-quiz h4{margin:0 0 8px;font-size:13.5px;color:#2b3a4a}
+.qopts{display:flex;flex-direction:column;gap:7px}
+.qopt{padding:8px 11px;border-radius:11px;border:1.5px solid #d9d0be;background:#fff;
+  font:inherit;font-size:13px;font-weight:800;text-align:left;cursor:pointer;transition:all .14s;color:#2a2218}
+.qopt:hover{border-color:var(--accent);background:#fff9f0}
+.qopt.ok{border-color:#2b8a3e;background:#ebfbee;color:#2b8a3e}
+.qopt.bad{border-color:#e03131;background:#fff5f5;color:#c92a2a}
+.qfb{margin-top:7px;font-size:12.5px;font-weight:800;min-height:18px}
+.win-acts{display:flex;justify-content:center;gap:10px;margin-top:12px}
+
+@media (max-width:1120px){
+  #guideBar{top:62px;left:12px;transform:none;max-width:calc(100vw - 260px)}
+  #infoCard{top:114px;width:178px}
+}
+@media (max-width:760px){
+  #infoCard{display:none}
+  #notes{width:190px;top:56px}
+  .br-card{font-size:12px;padding:6px 10px}
+}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="labels">
+  <div class="cue3d" id="targetCue">👆 点小人或桥面过桥！</div>
+</div>
+<canvas id="confetti"></canvas>
+
+<div id="hudTL">
+  <a id="backBtn" href="../index.html" title="返回书包">‹</a>
+  <div>
+    <div class="hd-t" data-py="dì kè chuàng zuò kē pǔ jù">第13课 创作科普剧</div>
+    <div class="hd-sub">活页 · 课本第 56 页「桥梁进化科普剧场」</div>
+  </div>
+</div>
+
+<div id="guideBar" title="点我重听当前步骤">
+  <span id="guideIco">🎭</span>
+  <span id="guideTxt">第1幕·木平桥：先点桥头小行人或桥面过桥，再听大家商量怎么升级新桥！</span>
+</div>
+
+<div id="evoPill">💡 木平桥怕水承重小 ➔ 升级石拱桥！</div>
+
+<div id="hudTR">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<aside id="infoCard">
+  <div class="ic-act" id="icAct">第 1 幕 · 小河行人</div>
+  <div class="ic-title" id="icTitle">🌲 木平桥</div>
+  <div class="ic-row"><span class="ic-k">材料</span><span class="ic-v" id="icMat">木头</span></div>
+  <div class="ic-row"><span class="ic-k">形状</span><span class="ic-v" id="icShape">平桥</span></div>
+  <div class="ic-row"><span class="ic-k">地点</span><span class="ic-v" id="icPlace">小河上</span></div>
+  <div class="ic-row"><span class="ic-k">用途</span><span class="ic-v" id="icUse">行人通行</span></div>
+  <div class="ic-evo" id="icEvo">下一代升级原因：木板怕水承重小 ➔ 改石拱桥</div>
+</aside>
+
+<aside id="notes">
+  <div class="nt-head">
+    <span class="nt-title" data-py="wǒ de fā xiàn">我的发现</span>
+    <span class="nt-cnt" id="ntCnt">0</span>
+    <button class="nt-tog" id="ntTog" type="button">收起</button>
+  </div>
+  <div class="stamps">
+    <span class="st" id="st1" data-py="qiáo liáng zhǒng lèi">桥梁种类</span>
+    <span class="st" id="st2" data-py="tōng chē shí cè">通车实测</span>
+    <span class="st" id="st3" data-py="kē pǔ kāi jiǎng">科普开讲</span>
+  </div>
+  <div id="ntList"></div>
+</aside>
+
+<div id="dock">
+  <button class="br-card on" data-br="wood" type="button">🌲 <span data-py="píng qiáo">平桥</span></button>
+  <button class="br-card" data-br="arch" type="button">💎 <span data-py="gǒng qiáo">拱桥</span></button>
+  <button class="br-card" data-br="cable" type="button">🌉 <span data-py="xié lā">斜拉</span></button>
+  <button class="br-card" data-br="susp" type="button">🚢 <span data-py="xuán suǒ">悬索</span></button>
+</div>
+
+<div id="winToast">
+  <div class="win-card">
+    <div style="font-size:38px">🏆</div>
+    <h3 style="margin:4px 0" data-py="tài bàng la qiáo liáng kē pǔ xiǎo yǎn yuán">太棒啦！桥梁科普小演员！</h3>
+    <div class="win-concl">
+      <b>✨ 科学小结论：</b>遇到新难题就改进结构和材料！桥梁从木平桥 ➔ 石拱桥 ➔ 斜拉桥 ➔ 悬索钢桥不断升级，用木、石、水泥和钢铁跨过小河、大江与大海，让出行更方便安全，也与大自然和谐相处。
+    </div>
+    <div class="win-quiz">
+      <h4>💡 考考你 · 答对领小红花 🌸</h4>
+      <div style="font-size:13px;font-weight:800;margin-bottom:8px">要在宽阔的大江或海面上建造让汽车和火车通行的长大桥，最适合造哪一种桥？</div>
+      <div class="qopts" id="qOpts">
+        <button class="qopt" type="button" data-ok="1">🌉 用钢铁和水泥建造的斜拉桥或悬索钢架桥</button>
+        <button class="qopt" type="button" data-hint="木平桥适合架在小河上供行人走过，跨度小，扛不住火车哦！">🌲 用木板搭起的小河木平桥</button>
+        <button class="qopt" type="button" data-hint="纸桥只是课堂模型，不能建在宽阔的海面上通车哦！">📄 用A4纸折成的桌面纸桥</button>
+      </div>
+      <div class="qfb" id="qFb"></div>
+    </div>
+    <div class="win-acts">
+      <button class="tbtn" id="winKeepBtn" type="button">继续观赏</button>
+      <button class="tbtn on" id="winAgainBtn" type="button">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js"></script>
+<script src="../vendor/voice.js"></script>
+<script>
+(function () {
+'use strict';
+
+try { sessionStorage.setItem('xk_last_vol', 'k1b'); } catch (e) {}
+
+var LESSON_ID = 'k1b-13';
+var BOOK_PROGRESS_KEY = 'xk_k1b_progress';
+
+var $ = function (s) { return document.querySelector(s); };
+var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
+var HAN = /[\u3400-\u9fff]/;
+var pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function ruby(text, py) {
+  if (!py) return esc(text);
+  var syl = py.trim().split(/\s+/), i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) {
+      var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; }
+      out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>';
+    } else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+$$('[data-py]').forEach(function (el) { el.innerHTML = ruby(el.textContent, el.dataset.py); });
+
+$('#backBtn').addEventListener('click', function () {
+  try { sessionStorage.setItem('xk_last_vol', 'k1b'); } catch (e) {}
+});
+
+/* ===== 语音与轻音效 ===== */
+var voiceOn = true;
+function stopVoice() {
+  if (window.__xkVoice) window.__xkVoice.stop();
+  else if (window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
+}
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
+  if (!('speechSynthesis' in window)) return;
+  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+}
+
+var audioCtx = null;
+function playTone(freq, dur, type, vol, delay) {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    var t0 = audioCtx.currentTime + (delay || 0);
+    var osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0.001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.11, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + (dur || 0.18));
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(t0); osc.stop(t0 + (dur || 0.18) + 0.02);
+  } catch (e) {}
+}
+function sfxSwitch() { playTone(480, 0.11, 'triangle', 0.1); playTone(680, 0.14, 'triangle', 0.09, 0.05); }
+function sfxHorn() { playTone(440, 0.14, 'sawtooth', 0.055); playTone(554, 0.18, 'sawtooth', 0.05, 0.14); }
+function sfxRole() { playTone(587, 0.1, 'sine', 0.1); playTone(880, 0.14, 'sine', 0.09, 0.06); }
+function sfxWin() { [523, 659, 784, 1046].forEach(function (f, i) { playTone(f, 0.24, 'triangle', 0.13, i * 0.09); }); }
+
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem(BOOK_PROGRESS_KEY) || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem(BOOK_PROGRESS_KEY, JSON.stringify(d));
+  } catch (e) {}
+}
+
+var cfCv = $('#confetti'), cfCtx = cfCv.getContext('2d'), cfList = [];
+function launchConfetti() {
+  cfCv.width = window.innerWidth; cfCv.height = window.innerHeight;
+  cfList = [];
+  var cols = ['#f97316', '#facc15', '#22c55e', '#3b82f6', '#ec4899', '#a855f7'];
+  for (var i = 0; i < 95; i++) {
+    cfList.push({
+      x: cfCv.width * (0.15 + Math.random() * 0.7), y: -20 - Math.random() * 140,
+      vx: (Math.random() - 0.5) * 210, vy: 110 + Math.random() * 210,
+      w: 7 + Math.random() * 6, h: 5 + Math.random() * 5,
+      r: Math.random() * 6.28, vr: (Math.random() - 0.5) * 9,
+      c: cols[i % cols.length], life: 3.4
+    });
+  }
+}
+
+/* ===== Three.js 场景（阳光水陆交通微缩舞台） ===== */
+var cv = $('#cv');
+var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color('#8ec8f2');
+var camera = new THREE.PerspectiveCamera(36, 16 / 9, 0.1, 100);
+camera.position.set(0.15, 5.30, 11.55);
+camera.lookAt(0.15, 0.72, 0.45);
+
+scene.add(new THREE.HemisphereLight('#ffffff', '#6ea4c9', 0.88));
+var sunL = new THREE.DirectionalLight('#fff8e6', 0.82);
+sunL.position.set(7, 12, 8);
+sunL.castShadow = true;
+sunL.shadow.mapSize.set(1024, 1024);
+sunL.shadow.camera.left = -9; sunL.shadow.camera.right = 9;
+sunL.shadow.camera.top = 7; sunL.shadow.camera.bottom = -7;
+scene.add(sunL);
+
+function toon(col, opts) { return new THREE.MeshToonMaterial(Object.assign({ color: col }, opts || {})); }
+
+var live = new THREE.Group();
+scene.add(live);
+
+/* 柔和云朵（偏左和中央，右上角留空给 #notes） */
+var clouds = [];
+[[-4.2, 4.1, -4.5, 0.9], [-1.1, 4.5, -5.2, 1.1]].forEach(function (c) {
+  var cg = new THREE.Group(); cg.position.set(c[0], c[1], c[2]); cg.scale.setScalar(c[3]);
+  var cm = toon('#ffffff');
+  var s1 = new THREE.Mesh(new THREE.SphereGeometry(0.55, 14, 12), cm);
+  var s2 = new THREE.Mesh(new THREE.SphereGeometry(0.42, 14, 12), cm); s2.position.set(-0.48, -0.08, 0);
+  var s3 = new THREE.Mesh(new THREE.SphereGeometry(0.44, 14, 12), cm); s3.position.set(0.5, -0.06, 0);
+  cg.add(s1, s2, s3);
+  live.add(cg);
+  clouds.push(cg);
+});
+
+/* 水陆底座 */
+var stageGrp = new THREE.Group();
+stageGrp.position.set(-0.3, 0, 0);
+live.add(stageGrp);
+
+var waterMesh = new THREE.Mesh(new THREE.BoxGeometry(11.6, 0.3, 7.6), toon('#3ba9e8'));
+waterMesh.position.set(0, -0.15, 0.2); waterMesh.receiveShadow = true;
+stageGrp.add(waterMesh);
+
+var ripples = [];
+for (var ri = 0; ri < 7; ri++) {
+  var rp = new THREE.Mesh(new THREE.BoxGeometry(0.9 + (ri % 3) * 0.4, 0.02, 0.1), toon('#a5e1ff'));
+  rp.position.set(-2.6 + ri * 0.85, 0.015, -1.6 + (ri % 3) * 1.4);
+  stageGrp.add(rp);
+  ripples.push(rp);
+}
+
+var bankL = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.72, 7.6), toon('#78bd5c'));
+bankL.position.set(-4.6, 0.34, 0.2); bankL.receiveShadow = true;
+var bankR = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.72, 7.6), toon('#78bd5c'));
+bankR.position.set(4.6, 0.34, 0.2); bankR.receiveShadow = true;
+stageGrp.add(bankL, bankR);
+
+var HIT_MAT = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false });
+var appRoadL = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.06, 1.35), toon('#64748b'));
+appRoadL.position.set(-4.6, 0.73, -0.75);
+var appRoadR = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.06, 1.35), toon('#64748b'));
+appRoadR.position.set(4.6, 0.73, -0.75);
+stageGrp.add(appRoadL, appRoadR);
+
+[[-4.9, 1.4, -2.6, 0.85, 1.4, '#fcd34d'], [-3.8, 1.2, -2.8, 0.75, 1.0, '#fb923c'], [-5.5, 1.65, -1.9, 0.72, 1.9, '#93c5fd']].forEach(function (b) {
+  var bm = new THREE.Mesh(new THREE.BoxGeometry(b[3], b[4], 0.72), toon(b[5]));
+  bm.position.set(b[0], b[1], b[2]); bm.castShadow = true;
+  stageGrp.add(bm);
+});
+
+function makeTree(x, z) {
+  var tg = new THREE.Group(); tg.position.set(x, 0.7, z);
+  var tr = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.42, 8), toon('#925c33'));
+  tr.position.y = 0.21;
+  var lf = new THREE.Mesh(new THREE.ConeGeometry(0.36, 0.85, 10), toon('#3f9c47'));
+  lf.position.y = 0.72; lf.castShadow = true;
+  tg.add(tr, lf);
+  stageGrp.add(tg);
+}
+makeTree(-4.8, -1.95); makeTree(-4.4, 1.45); makeTree(3.9, 1.75); makeTree(4.9, 1.2);
+
+// 前景低矮观景石台（放低并靠前排开，让后方的 3D 桥梁和通车车辆完全豁然开朗！）
+var plaza = new THREE.Mesh(new THREE.BoxGeometry(7.2, 0.20, 1.50), toon('#d8bf94'));
+plaza.position.set(0.0, 0.20, 3.22); plaza.receiveShadow = true; plaza.castShadow = true;
+stageGrp.add(plaza);
+
+// 桥下小船（石拱桥/悬索桥时可见并可点击互动，D8）
+var boatGrp = new THREE.Group();
+boatGrp.position.set(0, 0.08, 0.6);
+var hull = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.18, 0.36), toon('#f8fafc'));
+var sail = new THREE.Mesh(new THREE.ConeGeometry(0.26, 0.62, 4), toon('#ef4444'));
+sail.position.set(0, 0.42, 0); sail.rotation.y = Math.PI / 4;
+hull.userData = { waterProp: true }; sail.userData = { waterProp: true };
+boatGrp.add(hull, sail);
+stageGrp.add(boatGrp);
+
+/* ===== 4 大经典 3D 桥梁模型 ===== */
+function makeHighwayTex(hasRail) {
+  var c = document.createElement('canvas'); c.width = 512; c.height = 128;
+  var g = c.getContext('2d');
+  g.fillStyle = '#5a6575'; g.fillRect(0, 0, 512, 128);
+  g.fillStyle = '#e2e8f0'; g.fillRect(0, 8, 512, 5); g.fillRect(0, 115, 512, 5);
+  if (hasRail) {
+    g.fillStyle = '#94a3b8'; g.fillRect(0, 26, 512, 4); g.fillRect(0, 52, 512, 4);
+    g.fillStyle = '#475569';
+    for (var x = 6; x < 512; x += 22) g.fillRect(x, 22, 6, 38);
+    g.fillStyle = '#fde047';
+    for (var x2 = 16; x2 < 512; x2 += 44) g.fillRect(x2, 86, 22, 6);
+  } else {
+    g.fillStyle = '#fde047';
+    for (var x3 = 16; x3 < 512; x3 += 44) g.fillRect(x3, 60, 24, 7);
+  }
+  return new THREE.CanvasTexture(c);
+}
+
+var bridgeContainer = new THREE.Group();
+bridgeContainer.position.set(0, 0, -0.75);
+stageGrp.add(bridgeContainer);
+var bridgeGroups = {};
+var bridgeClickMeshes = [];
+
+function regBridgeMesh(m, key) {
+  m.castShadow = true; m.receiveShadow = true;
+  m.userData = { bridgeKey: key };
+  bridgeClickMeshes.push(m);
+  return m;
+}
+function addBridgeHitBox(grp, key, yCenter, height) {
+  var hb = new THREE.Mesh(new THREE.BoxGeometry(6.8, height || 2.1, 2.0), HIT_MAT);
+  hb.position.set(0, yCenter || 1.25, 0);
+  hb.userData = { bridgeKey: key };
+  grp.add(hb);
+  bridgeClickMeshes.push(hb);
+}
+
+// 1) 🌲 木平桥
+var gWood = new THREE.Group();
+for (var wx = -2.8; wx <= 2.85; wx += 0.36) {
+  var plank = regBridgeMesh(new THREE.Mesh(new THREE.BoxGeometry(0.31, 0.08, 1.32), toon('#b77942')), 'wood');
+  plank.position.set(wx, 0.78, 0); gWood.add(plank);
+}
+[-0.55, 0.55].forEach(function (z) {
+  var beam = regBridgeMesh(new THREE.Mesh(new THREE.BoxGeometry(6.1, 0.14, 0.14), toon('#8c5327')), 'wood');
+  beam.position.set(0, 0.67, z); gWood.add(beam);
+  var rail = regBridgeMesh(new THREE.Mesh(new THREE.BoxGeometry(5.9, 0.08, 0.08), toon('#a16230')), 'wood');
+  rail.position.set(0, 1.24, z * 1.15); gWood.add(rail);
+  for (var px = -2.6; px <= 2.65; px += 1.3) {
+    var post = regBridgeMesh(new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.52, 8), toon('#8c5327')), 'wood');
+    post.position.set(px, 1.0, z * 1.15); gWood.add(post);
+  }
+});
+[-1.5, 0, 1.5].forEach(function (px) {
+  [-0.48, 0.48].forEach(function (z) {
+    var pier = regBridgeMesh(new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.13, 0.95, 10), toon('#78441e')), 'wood');
+    pier.position.set(px, 0.25, z); gWood.add(pier);
+  });
+});
+addBridgeHitBox(gWood, 'wood', 1.15, 1.7);
+bridgeContainer.add(gWood); bridgeGroups.wood = gWood;
+
+// 2) 💎 石拱桥
+var gArch = new THREE.Group();
+function archY(x) {
+  var u = Math.max(-1, Math.min(1, x / 2.95));
+  return 0.76 + (1 - u * u) * 0.95;
+}
+for (var ai = -10; ai <= 10; ai++) {
+  var ax = ai * 0.29;
+  var ay = archY(ax);
+  var slope = Math.atan2(archY(ax + 0.14) - archY(ax - 0.14), 0.28);
+  var stone = regBridgeMesh(new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.28, 1.36), toon(ai % 2 ? '#b8bec7' : '#cbd2dc')), 'arch');
+  stone.position.set(ax, ay - 0.12, 0); stone.rotation.z = slope; gArch.add(stone);
+  [-0.64, 0.64].forEach(function (z) {
+    var rail = regBridgeMesh(new THREE.Mesh(new THREE.BoxGeometry(0.31, 0.34, 0.11), toon('#9aa3b0')), 'arch');
+    rail.position.set(ax, ay + 0.18, z); rail.rotation.z = slope; gArch.add(rail);
+  });
+}
+[-2.6, -1.3, 0, 1.3, 2.6].forEach(function (px) {
+  var py = archY(px);
+  [-0.64, 0.64].forEach(function (z) {
+    var ball = regBridgeMesh(new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 10), toon('#e2e8f0')), 'arch');
+    ball.position.set(px, py + 0.42, z); gArch.add(ball);
+  });
+});
+[-2.85, 2.85].forEach(function (x) {
+  var base = regBridgeMesh(new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.85, 1.48), toon('#8e98a6')), 'arch');
+  base.position.set(x, 0.35, 0); gArch.add(base);
+});
+addBridgeHitBox(gArch, 'arch', 1.45, 2.1);
+gArch.visible = false;
+bridgeContainer.add(gArch); bridgeGroups.arch = gArch;
+
+// 3) 🌉 斜拉桥
+var gCable = new THREE.Group();
+var cableDeck = regBridgeMesh(new THREE.Mesh(new THREE.BoxGeometry(6.4, 0.22, 1.56), new THREE.MeshToonMaterial({ map: makeHighwayTex(false) })), 'cable');
+cableDeck.position.set(0, 0.9, 0); gCable.add(cableDeck);
+[-1.65, 1.65].forEach(function (tx) {
+  [-0.78, 0.78].forEach(function (tz) {
+    var col = regBridgeMesh(new THREE.Mesh(new THREE.BoxGeometry(0.24, 3.6, 0.22), toon('#f8fafc')), 'cable');
+    col.position.set(tx, 1.75, tz); gCable.add(col);
+  });
+  var beamLow = regBridgeMesh(new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.2, 1.6), toon('#e2e8f0')), 'cable');
+  beamLow.position.set(tx, 0.65, 0);
+  var beamMid = regBridgeMesh(new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.18, 1.6), toon('#f8fafc')), 'cable');
+  beamMid.position.set(tx, 2.45, 0);
+  var xBar1 = regBridgeMesh(new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.12, 1.5), toon('#f1f5f9')), 'cable');
+  xBar1.position.set(tx, 3.05, 0); xBar1.rotation.x = 0.58;
+  var xBar2 = regBridgeMesh(new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.12, 1.5), toon('#f1f5f9')), 'cable');
+  xBar2.position.set(tx, 3.05, 0); xBar2.rotation.x = -0.58;
+  var foot = regBridgeMesh(new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.42, 1.85), toon('#cbd5e1')), 'cable');
+  foot.position.set(tx, 0.14, 0);
+  gCable.add(beamLow, beamMid, xBar1, xBar2, foot);
+
+  var cableMat = toon('#e2e8f0');
+  [-1, 1].forEach(function (side) {
+    for (var k = 1; k <= 4; k++) {
+      var topY = 2.35 + k * 0.28;
+      var dx = side * (k * 0.34);
+      var len = Math.sqrt(dx * dx + (topY - 0.96) * (topY - 0.96));
+      var ang = Math.atan2(dx, topY - 0.96);
+      [-0.72, 0.72].forEach(function (tz) {
+        var stay = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, len, 6), cableMat);
+        stay.position.set(tx + dx * 0.5, (topY + 0.96) * 0.5, tz);
+        stay.rotation.z = ang; gCable.add(stay);
+      });
+    }
+  });
+});
+addBridgeHitBox(gCable, 'cable', 1.65, 2.5);
+gCable.visible = false;
+bridgeContainer.add(gCable); bridgeGroups.cable = gCable;
+
+// 4) 🚢 悬索钢架桥
+var gSusp = new THREE.Group();
+var suspDeck = regBridgeMesh(new THREE.Mesh(new THREE.BoxGeometry(6.5, 0.24, 1.66), new THREE.MeshToonMaterial({ map: makeHighwayTex(true) })), 'susp');
+suspDeck.position.set(0, 0.96, 0); gSusp.add(suspDeck);
+[-0.78, 0.78].forEach(function (z) {
+  var truss = regBridgeMesh(new THREE.Mesh(new THREE.BoxGeometry(6.4, 0.18, 0.08), toon('#dc2626')), 'susp');
+  truss.position.set(0, 0.78, z); gSusp.add(truss);
+});
+[-1.8, 1.8].forEach(function (tx) {
+  [-0.84, 0.84].forEach(function (tz) {
+    var col = regBridgeMesh(new THREE.Mesh(new THREE.BoxGeometry(0.24, 3.45, 0.22), toon('#dc2626')), 'susp');
+    col.position.set(tx, 1.68, tz); gSusp.add(col);
+  });
+  [0.65, 2.25, 3.15].forEach(function (by) {
+    var hb = regBridgeMesh(new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.18, 1.72), toon('#ef4444')), 'susp');
+    hb.position.set(tx, by, 0); gSusp.add(hb);
+  });
+  var base = regBridgeMesh(new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.45, 1.95), toon('#cbd5e1')), 'susp');
+  base.position.set(tx, 0.15, 0); gSusp.add(base);
+});
+function suspCableY(x) {
+  if (Math.abs(x) <= 1.8) { var u = x / 1.8; return 1.55 + u * u * 1.78; }
+  var d = (Math.abs(x) - 1.8) / 1.45;
+  return 3.33 - d * 2.2;
+}
+var mainCableMat = toon('#b91c1c'), hangerMat = toon('#f8fafc');
+[-0.82, 0.82].forEach(function (tz) {
+  for (var sx = -3.1; sx < 3.1; sx += 0.25) {
+    var y1 = suspCableY(sx), y2 = suspCableY(sx + 0.25);
+    var dx = 0.25, dy = y2 - y1;
+    var seg = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.036, Math.sqrt(dx * dx + dy * dy) + 0.02, 8), mainCableMat);
+    seg.position.set(sx + 0.125, (y1 + y2) * 0.5, tz);
+    seg.rotation.z = Math.atan2(dy, dx) - Math.PI / 2;
+    gSusp.add(seg);
+  }
+  for (var hx = -1.5; hx <= 1.55; hx += 0.38) {
+    var hy = suspCableY(hx), hLen = hy - 1.02;
+    var hg = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, hLen, 6), hangerMat);
+    hg.position.set(hx, 1.02 + hLen * 0.5, tz); gSusp.add(hg);
+  }
+});
+addBridgeHitBox(gSusp, 'susp', 1.65, 2.5);
+gSusp.visible = false;
+bridgeContainer.add(gSusp); bridgeGroups.susp = gSusp;
+
+/* ===== 桥梁直点通车角色（桥头停靠待发 → 直点即发车！） ===== */
+var trafficGrp = new THREE.Group();
+bridgeContainer.add(trafficGrp);
+var trafficActors = [];
+var trafficHitMeshes = [];
+var trafficRunning = false;
+
+var starterRing = new THREE.Mesh(
+  new THREE.RingGeometry(0.52, 0.72, 28),
+  new THREE.MeshBasicMaterial({ color: '#fbbf24', side: THREE.DoubleSide, transparent: true, opacity: 0.90 })
+);
+starterRing.rotation.x = -Math.PI / 2;
+starterRing.position.set(-2.05, 0.84, 0);
+bridgeContainer.add(starterRing);
+
+var goCueEl = $('#targetCue');
+
+function regTrafficGroup(g) {
+  g.traverse(function (m) {
+    if (m.isMesh) {
+      m.userData = Object.assign({}, m.userData, { trafficTap: true });
+      trafficHitMeshes.push(m);
+    }
+  });
+  return g;
+}
+
+function makePedestrian(shirtCol, hatCol) {
+  var g = new THREE.Group();
+  var legL = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.28, 8), toon('#334155'));
+  legL.position.set(-0.055, 0.14, 0);
+  var legR = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.28, 8), toon('#334155'));
+  legR.position.set(0.055, 0.14, 0);
+  var body = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.34, 10), toon(shirtCol));
+  body.position.y = 0.42; body.castShadow = true;
+  var head = new THREE.Mesh(new THREE.SphereGeometry(0.135, 12, 12), toon('#fed7aa'));
+  head.position.y = 0.69; head.castShadow = true;
+  var hat = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 8, 0, Math.PI * 2, 0, Math.PI * 0.55), toon(hatCol));
+  hat.position.y = 0.72;
+  var hitB = new THREE.Mesh(new THREE.BoxGeometry(0.95, 1.25, 0.95), HIT_MAT);
+  hitB.position.y = 0.55;
+  g.add(legL, legR, body, head, hat, hitB);
+  g.scale.setScalar(1.36);
+  g.userData = { legL: legL, legR: legR };
+  return regTrafficGroup(g);
+}
+
+function makeCar(col) {
+  var g = new THREE.Group();
+  var chassis = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.28, 0.50), toon(col));
+  chassis.position.y = 0.21; chassis.castShadow = true;
+  var cabin = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.24, 0.44), toon('#e0f2fe'));
+  cabin.position.set(-0.04, 0.44, 0); cabin.castShadow = true;
+  [[-0.28, -0.24], [0.28, -0.24], [-0.28, 0.24], [0.28, 0.24]].forEach(function (w) {
+    var wh = new THREE.Mesh(new THREE.CylinderGeometry(0.105, 0.105, 0.08, 12), toon('#1e293b'));
+    wh.rotation.x = Math.PI / 2; wh.position.set(w[0], 0.105, w[1]); g.add(wh);
+  });
+  var hitB = new THREE.Mesh(new THREE.BoxGeometry(1.45, 1.05, 1.05), HIT_MAT);
+  hitB.position.y = 0.42;
+  g.add(chassis, cabin, hitB);
+  g.scale.setScalar(1.22);
+  return regTrafficGroup(g);
+}
+
+function makeTrain() {
+  var g = new THREE.Group();
+  for (var c = 0; c < 3; c++) {
+    var car = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.36, 0.44), toon('#2563eb'));
+    car.position.set(-c * 1.05, 0.26, 0); car.castShadow = true;
+    var stripe = new THREE.Mesh(new THREE.BoxGeometry(0.97, 0.08, 0.46), toon('#f8fafc'));
+    stripe.position.set(-c * 1.05, 0.34, 0);
+    g.add(car, stripe);
+  }
+  var nose = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.42, 10), toon('#f8fafc'));
+  nose.rotation.z = -Math.PI / 2; nose.position.set(0.66, 0.24, 0);
+  var hitB = new THREE.Mesh(new THREE.BoxGeometry(3.4, 1.15, 1.1), HIT_MAT);
+  hitB.position.set(-0.85, 0.45, 0);
+  g.add(nose, hitB);
+  g.scale.setScalar(1.16);
+  return regTrafficGroup(g);
+}
+
+function clearTraffic() {
+  while (trafficGrp.children.length) trafficGrp.remove(trafficGrp.children[0]);
+  trafficActors = [];
+  trafficHitMeshes = [];
+  trafficRunning = false;
+}
+
+// 切换桥梁时立即在桥面显眼入口停好待发的大号小人/小汽车/小火车，直点车人或桥面即发车！
+function spawnTrafficActors(key, running) {
+  clearTraffic();
+  trafficRunning = !!running;
+  if (key === 'wood') {
+    var p1 = makePedestrian('#f97316', '#3b82f6');
+    var p2 = makePedestrian('#ec4899', '#facc15');
+    p2.rotation.y = Math.PI;
+    trafficGrp.add(p1, p2);
+    trafficActors.push(
+      { obj: p1, kind: 'ped', x: running ? -2.25 : -2.05, dir: 1, speed: 1.55, z: -0.16, arch: false, starter: true },
+      { obj: p2, kind: 'ped', x: running ? 2.55 : 2.35, dir: -1, speed: 1.45, z: 0.20, arch: false, starter: false }
+    );
+  } else if (key === 'arch') {
+    // 第2幕：石拱桥大河汽车平稳驶过弯弯拱面！
+    var ac1 = makeCar('#ef4444');
+    var ac2 = makeCar('#3b82f6'); ac2.rotation.y = Math.PI;
+    trafficGrp.add(ac1, ac2);
+    trafficActors.push(
+      { obj: ac1, kind: 'car', x: running ? -2.30 : -2.05, dir: 1, speed: 2.05, z: 0.24, arch: true, starter: true },
+      { obj: ac2, kind: 'car', x: running ? 2.55 : 2.35, dir: -1, speed: 1.95, z: -0.24, arch: true, starter: false }
+    );
+  } else if (key === 'cable') {
+    var c1 = makeCar('#ef4444');
+    var c2 = makeCar('#facc15'); c2.rotation.y = Math.PI;
+    var c3 = makeCar('#10b981');
+    trafficGrp.add(c1, c2, c3);
+    trafficActors.push(
+      { obj: c1, kind: 'car', x: running ? -2.35 : -2.05, dir: 1, speed: 2.6, z: 0.30, y: 1.02, starter: true },
+      { obj: c2, kind: 'car', x: running ? 2.65 : 2.45, dir: -1, speed: 2.4, z: -0.30, y: 1.02, starter: false },
+      { obj: c3, kind: 'car', x: -4.6, dir: 1, speed: 2.6, z: 0.30, y: 1.02, starter: false }
+    );
+  } else {
+    var tr = makeTrain();
+    var c4 = makeCar('#facc15'); c4.rotation.y = Math.PI;
+    trafficGrp.add(tr, c4);
+    trafficActors.push(
+      { obj: tr, kind: 'train', x: running ? -2.65 : -1.55, dir: 1, speed: 2.7, z: -0.26, y: 1.08, starter: true },
+      { obj: c4, kind: 'car', x: running ? 2.75 : 2.55, dir: -1, speed: 2.2, z: 0.34, y: 1.08, starter: false }
+    );
+  }
+}
+
+/* ===== 4 位可爱 3D 小小科普剧角色（每座桥下都有专属剧本台词：4桥 × 4角色 = 16句！） ===== */
+var ROLE_ORDER = ['resident', 'engineer', 'eco', 'mayor'];
+var ROLE_DATA = {
+  resident: { shortName: '居民', name: '居民', ico: '👧', x: -2.45, shirt: '#f43f5e', hat: '#fda4af', prop: 'basket' },
+  engineer: { shortName: '工程师', name: '工程师', ico: '👷', x: -0.82, shirt: '#2563eb', hat: '#facc15', prop: 'scroll' },
+  eco: { shortName: '环保员', name: '环保员', ico: '🌿', x: 0.82, shirt: '#16a34a', hat: '#4ade80', prop: 'leaf' },
+  mayor: { shortName: '市长', name: '市长', ico: '🎩', x: 2.45, shirt: '#1e3a8a', hat: '#334155', prop: 'medal' }
+};
+
+var BRIDGE_SCRIPTS = {
+  wood: {
+    resident: {
+      line: '木平桥过小河真方便！可大汽车太重啦，木板咯吱响，下雨还怕泡烂！',
+      note: '👧 第1幕·居民：木平桥过小河方便，但大汽车太重、木板怕水泡烂！'
+    },
+    eco: {
+      line: '少砍大树保护森林，换成坚固的天然石材更环保耐用！',
+      note: '🌿 第1幕·环保员：少砍大树护森林，换天然石材更环保耐用！'
+    },
+    engineer: {
+      line: '我想到办法啦！用石头砌成弯弯的石拱桥，把重量分到两岸，汽车随便跑！',
+      note: '👷 第1幕·工程师：遇到难题改石拱桥，把重量分到两岸！'
+    },
+    mayor: {
+      line: '好主意！批准升级建造石拱桥，大家快去验收新桥吧！',
+      note: '🎩 第1幕·市长：批准升级建造石拱桥！'
+    }
+  },
+  arch: {
+    resident: {
+      line: '太稳啦！小汽车开过石拱桥一点都不晃！可到了更宽的大江边，大轮船过不去怎么办？',
+      note: '👧 第2幕·居民：石拱桥跑汽车真稳！但宽阔大江大轮船过不去怎么办？'
+    },
+    eco: {
+      line: '江里打太多石桥墩，会挡住江水流动，也会妨碍鱼儿和大船通行！',
+      note: '🌿 第2幕·环保员：江里桥墩太多会挡江水、妨碍鱼儿和大船！'
+    },
+    engineer: {
+      line: '我们建起高高的桥塔，用斜拉钢索把桥面拉起来——造斜拉桥，桥墩少、大船照样过！',
+      note: '👷 第2幕·工程师：用高塔和斜拉钢索造斜拉桥，桥墩少、大船照样过！'
+    },
+    mayor: {
+      line: '批准升级斜拉桥！让宽阔大江既能跑汽车，又能通大船！',
+      note: '🎩 第2幕·市长：批准升级斜拉桥，大江通车又通船！'
+    }
+  },
+  cable: {
+    resident: {
+      line: '哇，斜拉桥又宽又气派！如果以后要跨过超级宽的大海海峡，还要跑重重的火车呢？',
+      note: '👧 第3幕·居民：斜拉桥真气派！可跨大海还要跑重重的火车怎么办？'
+    },
+    eco: {
+      line: '跨海大桥海风大、海水咸，要选耐腐蚀的高强度钢材，保护海洋生态！',
+      note: '🌿 第3幕·环保员：跨海桥选耐腐蚀高强钢材，保护海洋生态！'
+    },
+    engineer: {
+      line: '超长跨海要用悬索钢桥！两根超粗主缆像大力士一样吊起整座钢桥，火车都能稳稳开过海！',
+      note: '👷 第3幕·工程师：超长跨海造悬索钢桥，粗主缆吊起钢桥跑火车！'
+    },
+    mayor: {
+      line: '太震撼了！立刻升级建造跨海悬索钢桥，开启终极通车仪式！',
+      note: '🎩 第3幕·市长：批准升级跨海悬索钢桥，开启终极通车！'
+    }
+  },
+  susp: {
+    resident: {
+      line: '坐着火车跨越大海去旅行，从木平桥到悬索桥，桥梁变得越来越厉害啦！',
+      note: '👧 终幕·居民：从木平桥到悬索桥，坐火车跨越大海越来越厉害！'
+    },
+    eco: {
+      line: '科技进步的同时守护绿水青山，每座好桥都和大自然和谐相处！',
+      note: '🌿 终幕·环保员：科技进步守护绿水青山，与自然和谐相处！'
+    },
+    engineer: {
+      line: '遇到难题就改进结构和材料——这就是工程师不断升级桥梁的秘密！',
+      note: '👷 终幕·工程师：遇到难题改进结构和材料，就是升级桥梁的秘密！'
+    },
+    mayor: {
+      line: '恭喜《桥梁进化科普剧》圆满首映！为小小科学工程师鼓掌！',
+      note: '🎩 终幕·市长：《桥梁进化科普剧》圆满首映，为小小工程师鼓掌！'
+    }
+  }
+};
+
+var roleActors = {};
+var roleClickMeshes = [];
+
+ROLE_ORDER.forEach(function (rk) {
+  var rd = ROLE_DATA[rk];
+  var g = new THREE.Group();
+  g.position.set(rd.x, 0.30, 3.22);
+
+  var spot = new THREE.Mesh(
+    new THREE.RingGeometry(0.32, 0.48, 26),
+    new THREE.MeshBasicMaterial({ color: '#facc15', side: THREE.DoubleSide, transparent: true, opacity: 0.72 })
+  );
+  spot.rotation.x = -Math.PI / 2; spot.position.y = 0.02;
+  g.add(spot);
+
+  var animRoot = new THREE.Group();
+  animRoot.scale.setScalar(0.78);
+  g.add(animRoot);
+
+  var legs = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.3, 10), toon('#334155'));
+  legs.position.y = 0.15;
+  var torso = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.22, 0.44, 12), toon(rd.shirt));
+  torso.position.y = 0.48; torso.castShadow = true;
+  var head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 14, 14), toon('#fed7aa'));
+  head.position.y = 0.88; head.castShadow = true;
+  var eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), toon('#1e293b'));
+  eyeL.position.set(-0.07, 0.9, 0.17);
+  var eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), toon('#1e293b'));
+  eyeR.position.set(0.07, 0.9, 0.17);
+
+  var hat = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.21, 0.13, 12), toon(rd.hat));
+  hat.position.y = 1.05;
+  if (rk === 'mayor') {
+    var brim = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.03, 14), toon('#1e293b'));
+    brim.position.y = 0.99; animRoot.add(brim);
+  }
+
+  var armL = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.34, 8), toon(rd.shirt));
+  armL.position.set(-0.23, 0.5, 0.02); armL.rotation.z = 0.35;
+  var armR = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.34, 8), toon(rd.shirt));
+  armR.position.set(0.23, 0.54, 0.02); armR.rotation.z = -0.35;
+
+  // 正立挂在 animRoot 躯干前的标志道具（遵守 U6）
+  if (rd.prop === 'basket') {
+    var bk = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.16, 0.16), toon('#d97706'));
+    bk.position.set(-0.25, 0.34, 0.15); animRoot.add(bk);
+  } else if (rd.prop === 'scroll') {
+    var sc = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.36, 10), toon('#e0f2fe'));
+    sc.position.set(-0.22, 0.48, 0.18); sc.rotation.z = 0.3; animRoot.add(sc);
+  } else if (rd.prop === 'leaf') {
+    var lf = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 8), toon('#86efac'));
+    lf.scale.set(1.2, 0.7, 0.5); lf.position.set(0, 0.52, 0.21); animRoot.add(lf);
+  } else if (rd.prop === 'medal') {
+    var md = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.03, 12), toon('#facc15'));
+    md.rotation.x = Math.PI / 2; md.position.set(0, 0.52, 0.21); animRoot.add(md);
+  }
+
+  // 超大透明优先点击圆柱碰撞体（确保 6 岁小朋友一碰即中！）
+  var hitCyl = new THREE.Mesh(new THREE.CylinderGeometry(0.56, 0.56, 1.38, 12), HIT_MAT);
+  hitCyl.position.y = 0.66;
+  animRoot.add(legs, torso, head, eyeL, eyeR, hat, armL, armR, hitCyl);
+  animRoot.traverse(function (m) {
+    if (m.isMesh) { m.userData = { roleKey: rk }; roleClickMeshes.push(m); }
+  });
+
+  // 头顶极简常驻小名牌
+  var tag = document.createElement('div');
+  tag.className = 'role-tag';
+  tag.textContent = rd.shortName;
+  $('#labels').appendChild(tag);
+
+  stageGrp.add(g);
+  roleActors[rk] = { root: g, anim: animRoot, armL: armL, armR: armR, head: head, spot: spot, tag: tag, hopT: 0 };
+});
+
+/* ===== 4 幕桥梁进化科普元数据 ===== */
+var BRIDGE_ORDER = ['wood', 'arch', 'cable', 'susp'];
+var BRIDGE_INFO = {
+  wood: {
+    act: '第 1 幕 · 小河行人',
+    title: '🌲 木平桥', mat: '木头', shape: '平桥', btnLabel: '平桥', place: '小河上', use: '行人通行',
+    nextBr: 'arch',
+    evoHint: '下一代升级原因：木板怕水承重小 ➔ 改石拱桥',
+    evoBanner: '💡 木平桥怕水承重小 ➔ 升级石拱桥！',
+    buildSpeech: '第1幕木平桥！它用木头架在小河上，先点桥头小行人或桥面走过去试试吧！',
+    runSpeech: '小行人走过木平桥啦！现在点广场上的居民，听听木平桥遇到了什么难题！',
+    note: '🌲 第1幕·木平桥：木头·小河上·行人通行'
+  },
+  arch: {
+    act: '第 2 幕 · 大河汽车',
+    title: '💎 石拱桥', mat: '天然石材', shape: '拱桥', btnLabel: '拱桥', place: '大河上', use: '汽车通行',
+    nextBr: 'cable',
+    evoHint: '下一代升级原因：大江太宽挡大船 ➔ 改斜拉桥',
+    evoBanner: '💡 石拱桥墩多挡大船 ➔ 升级斜拉桥！',
+    buildSpeech: '第2幕石拱桥升级建成！弯弯的石拱很结实，点桥头小汽车或拱桥试驾吧！',
+    runSpeech: '小汽车稳稳开过石拱桥啦！点广场上的居民，听听到了宽阔大江又有什么新难题！',
+    note: '💎 第2幕·石拱桥：石材·大河上·汽车平稳通行'
+  },
+  cable: {
+    act: '第 3 幕 · 宽江重车',
+    title: '🌉 斜拉桥', mat: '水泥与钢铁', shape: '斜拉桥', btnLabel: '斜拉', place: '宽阔大江', use: '汽车通行',
+    nextBr: 'susp',
+    evoHint: '下一代升级原因：超宽海峡跑火车 ➔ 改悬索钢桥',
+    evoBanner: '💡 超宽海峡要跑重火车 ➔ 升级悬索钢桥！',
+    buildSpeech: '第3幕斜拉桥升级建成！高塔钢索拉起宽桥面，点彩色小汽车开过宽江吧！',
+    runSpeech: '小汽车飞驰过斜拉桥，大船也能自由通行！快点环保员或居民，听听跨海建桥的新挑战！',
+    note: '🌉 第3幕·斜拉桥：水泥钢铁·大江上·桥墩少通大船'
+  },
+  susp: {
+    act: '第 4 幕 · 跨海火车（终幕）',
+    title: '🚢 悬索钢桥', mat: '高强度钢铁', shape: '悬索桥', btnLabel: '悬索', place: '跨海海峡', use: '汽车与火车通行',
+    nextBr: null,
+    evoHint: '进化终幕：遇到难题就改进结构与材料！',
+    evoBanner: '🎉 进化完成：木平桥 ➔ 石拱桥 ➔ 斜拉桥 ➔ 悬索钢桥！',
+    buildSpeech: '第4幕终极悬索钢桥建成啦！超粗主缆吊起跨海钢桥，快点蓝色小火车鸣笛过海吧！',
+    runSpeech: '小火车鸣笛飞驰跨越大海啦！快点广场上的市长或小伙伴们，发表终幕感言吧！',
+    note: '🚢 第4幕·悬索钢桥：高强钢铁·跨海大桥·火车汽车畅行'
+  }
+};
+
+/* ===== 状态与 4 幕剧情推进控制 ===== */
+var curBridge = 'wood';
+var bridgePop = 1;
+var viewedBridges = { wood: true };
+var testedBridges = {};
+var heardRoles = {};
+var actRoles = { wood: {}, arch: {}, cable: {}, susp: {} };
+var activeRole = null;
+
+var found = {}, stamps = { s1: false, s2: false, s3: false };
+var celebrated = false, demo = false, resetGen = 0;
+var curGuideSpeech = '第1幕木平桥：点桥头小行人或桥面过桥，再点广场角色听难题和升级方案！';
+
+var speechBubEl = document.createElement('div');
+speechBubEl.className = 'speech-bub';
+$('#labels').appendChild(speechBubEl);
+
+function markInteracted() { document.body.classList.add('interacted'); }
+
+function projectToScreen(vec3) {
+  var v = vec3.clone().project(camera);
+  return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight };
+}
+function spawnFloatMsg(text, worldPos, cls) {
+  var p = projectToScreen(worldPos);
+  var d = document.createElement('div');
+  d.className = 'float-msg' + (cls ? ' ' + cls : '');
+  d.style.left = p.x + 'px'; d.style.top = p.y + 'px';
+  d.textContent = text;
+  $('#labels').appendChild(d);
+  setTimeout(function () { if (d.parentNode) d.parentNode.removeChild(d); }, 1550);
+}
+
+/* 计算当前幕下一步应指向哪位角色（或 null 表示该升级下一座桥） */
+function getActFocusRole(br) {
+  var ar = actRoles[br] || {};
+  if (br === 'wood') {
+    if (!ar.resident && !ar.engineer) return { rk: 'resident', cue: '👆 点【居民】听木桥遇到啥难题' };
+    if (!ar.engineer) return { rk: 'engineer', cue: '👆 点【工程师】听升级石拱桥方案' };
+    return null;
+  }
+  if (br === 'arch') {
+    if (!ar.resident && !ar.engineer) return { rk: 'resident', cue: '👆 点【居民】听大江通船难题' };
+    if (!ar.engineer) return { rk: 'engineer', cue: '👆 点【工程师】听升级斜拉桥方案' };
+    return null;
+  }
+  if (br === 'cable') {
+    if (!heardRoles.eco && !ar.eco && !ar.engineer) return { rk: 'eco', cue: '👆 点【环保员】听跨海环保建议' };
+    if (!ar.resident && !ar.eco && !ar.engineer) return { rk: 'resident', cue: '👆 点【居民】听跨海火车难题' };
+    if (!ar.engineer) return { rk: 'engineer', cue: '👆 点【工程师】听升级悬索桥方案' };
+    return null;
+  }
+  // 终幕 susp：优先引出尚未登台的角色（尤其是市长压轴谢幕）
+  var prio = ['resident', 'eco', 'engineer', 'mayor'];
+  var unheard = prio.find(function (rk) { return !heardRoles[rk]; });
+  if (unheard) {
+    var msg = unheard === 'mayor' ? '👆 点【市长】宣布首映谢幕！' : ('👆 点【' + ROLE_DATA[unheard].shortName + '】讲终幕感言');
+    return { rk: unheard, cue: msg };
+  }
+  return null;
+}
+
+function getNextUpgradeBridge() {
+  var bi = BRIDGE_INFO[curBridge];
+  if (bi.nextBr && !testedBridges[bi.nextBr]) return bi.nextBr;
+  return BRIDGE_ORDER.find(function (k) { return !testedBridges[k]; }) || null;
+}
+
+function updateEvoBanner() {
+  var pill = $('#evoPill');
+  var bi = BRIDGE_INFO[curBridge];
+  var ar = actRoles[curBridge] || {};
+  var show = false;
+  if (curBridge !== 'susp' && (ar.engineer || ar.mayor)) {
+    pill.textContent = bi.evoBanner;
+    show = true;
+  } else if (curBridge === 'susp' && (testedBridges.susp && (ar.mayor || ar.engineer || celebrated))) {
+    pill.textContent = bi.evoBanner;
+    show = true;
+  }
+  pill.classList.toggle('show', show);
+}
+
+function syncRoleTags() {
+  var ar = actRoles[curBridge] || {};
+  ROLE_ORDER.forEach(function (rk) {
+    var ra = roleActors[rk];
+    var doneInAct = !!ar[rk];
+    ra.tag.textContent = ROLE_DATA[rk].shortName + (doneInAct ? ' ✓' : '');
+    ra.tag.classList.toggle('done', doneInAct);
+  });
+}
+
+function addDiscovery(key, stampKey, html, spoken) {
+  if (!found[key]) {
+    found[key] = true;
+    var el = document.createElement('div');
+    el.className = 'stk';
+    el.innerHTML = html;
+    $('#ntList').prepend(el);
+    $('#ntCnt').textContent = Object.keys(found).length;
+  }
+  if (stampKey && !stamps[stampKey]) {
+    stamps[stampKey] = true;
+    var sEl = $('#' + stampKey.replace('s', 'st'));
+    if (sEl) sEl.classList.add('lit');
+  }
+  updateEvoBanner();
+  updateGuide(false);
+  if (!demo && !celebrated && stamps.s1 && stamps.s2 && stamps.s3) {
+    celebrated = true;
+    saveProgress(LESSON_ID, true);
+    sfxWin();
+    launchConfetti();
+    $('#winToast').classList.add('show');
+    speak('恭喜《桥梁进化科普剧》圆满首映！你演完了木平桥、石拱桥、斜拉桥到悬索钢桥四幕大戏，快来看看科学小结论并领小红花吧！', true);
+    return;
+  }
+  if (spoken && !demo) speak(spoken);
+}
+
+function updateGuide(speakIt) {
+  $$('.br-card').forEach(function (b) { b.classList.remove('glow'); });
+  var bi = BRIDGE_INFO[curBridge];
+  var tCnt = Object.keys(testedBridges).length;
+  var rCnt = Object.keys(heardRoles).length;
+
+  if (celebrated) {
+    $('#guideIco').textContent = '🏆';
+    curGuideSpeech = '《桥梁进化科普剧》圆满首映！随时点任意桥和4位角色，重温全部16句专属剧本台词！';
+    $('#guideTxt').textContent = curGuideSpeech;
+  } else if (!testedBridges[curBridge]) {
+    $('#guideIco').textContent = '🌉';
+    curGuideSpeech = bi.act + '：先点桥头车/人或桥面通车实测！';
+    $('#guideTxt').textContent = bi.act + '：点击桥头车/人或桥梁通车（已演 ' + tCnt + ' / 4 幕）';
+  } else {
+    var focusRole = getActFocusRole(curBridge);
+    var nextBr = getNextUpgradeBridge();
+    if (focusRole) {
+      $('#guideIco').textContent = '🎭';
+      curGuideSpeech = bi.act + '已通车！点广场上的' + ROLE_DATA[focusRole.rk].shortName + '，听难题与升级方案！';
+      $('#guideTxt').textContent = bi.act + '：点【' + ROLE_DATA[focusRole.rk].shortName + '】开讲（也可点其他角色听专属台词）';
+    } else if (nextBr) {
+      var nb = BRIDGE_INFO[nextBr];
+      $('#guideIco').textContent = '✨';
+      curGuideSpeech = '工程师提出升级方案啦！快点下方【' + nb.btnLabel + '】按钮建造新桥验收吧！';
+      $('#guideTxt').textContent = '方案通过！点下方【' + nb.btnLabel + '】升级建造新桥，开启下一幕！';
+      var nextBtn = $('[data-br="' + nextBr + '"]');
+      if (nextBtn) nextBtn.classList.add('glow');
+    } else if (!stamps.s3) {
+      $('#guideIco').textContent = '🎭';
+      curGuideSpeech = '4幕桥梁全通车啦！点广场上还没登台的角色发表感言（已登台 ' + rCnt + ' / 4 位）！';
+      $('#guideTxt').textContent = '点广场上还没登台的角色发表感言（已登台 ' + rCnt + ' / 4 位）';
+    } else {
+      $('#guideIco').textContent = '🏆';
+      curGuideSpeech = '全部桥梁和角色演出完毕！';
+      $('#guideTxt').textContent = curGuideSpeech;
+    }
+  }
+  var gb = $('#guideBar'); gb.classList.remove('pulse'); void gb.offsetWidth; gb.classList.add('pulse');
+  if (speakIt) speak(curGuideSpeech, true);
+}
+
+function updateInfoCard(key) {
+  var bi = BRIDGE_INFO[key];
+  $('#icAct').textContent = bi.act;
+  $('#icTitle').textContent = bi.title;
+  $('#icMat').textContent = bi.mat;
+  $('#icShape').textContent = bi.shape;
+  $('#icPlace').textContent = bi.place;
+  $('#icUse').textContent = bi.use;
+  $('#icEvo').textContent = bi.evoHint;
+}
+
+function selectBridge(key, silent) {
+  curBridge = key;
+  viewedBridges[key] = true;
+  activeRole = null;
+  speechBubEl.classList.remove('show');
+  bridgePop = 0.05;
+  Object.keys(bridgeGroups).forEach(function (k) { bridgeGroups[k].visible = (k === key); });
+  boatGrp.visible = (key === 'arch' || key === 'cable' || key === 'susp');
+  spawnTrafficActors(key, false);
+  updateInfoCard(key);
+  syncRoleTags();
+  updateEvoBanner();
+  $$('.br-card').forEach(function (b) { b.classList.toggle('on', b.dataset.br === key); });
+  sfxSwitch();
+
+  var allViewed = Object.keys(viewedBridges).length === 4;
+  if (allViewed && !stamps.s1) {
+    addDiscovery('all_viewed', 's1', '🌉 集齐全部 4 幕进化桥梁：木平 ➔ 石拱 ➔ 斜拉 ➔ 悬索！', silent ? null : BRIDGE_INFO[key].buildSpeech);
+  } else {
+    updateGuide(false);
+    if (!silent && !demo) speak(BRIDGE_INFO[key].buildSpeech);
+  }
+}
+
+function triggerTraffic() {
+  spawnTrafficActors(curBridge, true);
+  testedBridges[curBridge] = true;
+  sfxHorn();
+  $$('.br-card').forEach(function (b) {
+    if (testedBridges[b.dataset.br]) b.classList.add('tested');
+  });
+  var bi = BRIDGE_INFO[curBridge];
+  var icon = curBridge === 'wood' ? '🚶 ' : (curBridge === 'susp' ? '🚆 ' : '🚗 ');
+  spawnFloatMsg(icon + bi.use + '中！', new THREE.Vector3(-0.3, 2.2, -0.4), 'ok');
+  var allTested = Object.keys(testedBridges).length === 4;
+  addDiscovery('run_' + curBridge, allTested ? 's2' : null, bi.note, bi.runSpeech);
+}
+
+function playRole(rk) {
+  activeRole = rk;
+  heardRoles[rk] = true;
+  if (!actRoles[curBridge]) actRoles[curBridge] = {};
+  actRoles[curBridge][rk] = true;
+  roleActors[rk].hopT = 1.0;
+  syncRoleTags();
+  sfxRole();
+  var sc = BRIDGE_SCRIPTS[curBridge][rk];
+  var allHeard = Object.keys(heardRoles).length === 4;
+  addDiscovery('role_' + curBridge + '_' + rk, allHeard ? 's3' : null, sc.note, sc.line);
+}
+
+function resetAll() {
+  resetGen++;
+  demo = false;
+  stopVoice();
+  viewedBridges = { wood: true };
+  testedBridges = {};
+  heardRoles = {};
+  actRoles = { wood: {}, arch: {}, cable: {}, susp: {} };
+  activeRole = null;
+  found = {};
+  stamps = { s1: false, s2: false, s3: false };
+  celebrated = false;
+  $('#ntList').innerHTML = ''; $('#ntCnt').textContent = '0';
+  $$('.st').forEach(function (s) { s.classList.remove('lit'); });
+  $$('.br-card').forEach(function (b) { b.classList.remove('tested', 'glow'); });
+  $('#evoPill').classList.remove('show');
+  $('#winToast').classList.remove('show');
+  $('#qFb').textContent = '';
+  $$('.qopt').forEach(function (b) { b.classList.remove('ok', 'bad'); });
+  $('#demoBtn').classList.remove('on');
+  speechBubEl.classList.remove('show');
+  selectBridge('wood', true);
+  updateGuide(false);
+}
+
+function startDemo() {
+  markInteracted();
+  resetAll();
+  demo = true;
+  $('#demoBtn').classList.add('on');
+  var g = resetGen;
+  var steps = [
+    [250, function () { speak('演示开始！欢迎观看4幕《桥梁进化科普剧》！', true); }],
+    [1800, function () { selectBridge('wood', true); triggerTraffic(); speak('第1幕木平桥通车！听听居民遇到了什么难题。', true); }],
+    [4200, function () { playRole('resident'); speak(BRIDGE_SCRIPTS.wood.resident.line, true); }],
+    [7200, function () { playRole('engineer'); speak(BRIDGE_SCRIPTS.wood.engineer.line, true); }],
+    [10400, function () { selectBridge('arch', true); triggerTraffic(); speak('第2幕升级石拱桥！小汽车稳稳驶过！', true); }],
+    [13000, function () { playRole('engineer'); speak(BRIDGE_SCRIPTS.arch.engineer.line, true); }],
+    [16400, function () { selectBridge('cable', true); triggerTraffic(); speak('第3幕升级斜拉桥！大船也能轻松从桥下通过！', true); }],
+    [19200, function () { playRole('eco'); speak(BRIDGE_SCRIPTS.cable.eco.line, true); }],
+    [22400, function () { selectBridge('susp', true); triggerTraffic(); speak('终幕跨海悬索钢桥！小火车鸣笛过海！', true); }],
+    [25200, function () { playRole('mayor'); speak(BRIDGE_SCRIPTS.susp.mayor.line + ' 现在轮到你亲自导演科普剧吧！', true); }],
+    [28800, function () { demo = false; $('#demoBtn').classList.remove('on'); }]
+  ];
+  steps.forEach(function (it) { setTimeout(function () { if (g === resetGen) it[1](); }, it[0]); });
+}
+
+/* ===== 3D 场景直接交互（直点角色 / 直点车人 / 直点桥梁 / 直点小船） ===== */
+var ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+function setPtr(e) {
+  var r = cv.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+}
+
+cv.addEventListener('pointerdown', function (e) {
+  markInteracted();
+  setPtr(e);
+
+  // 1. 优先命中桥面上的小行人、小汽车、小火车发车过桥
+  if (ray.intersectObjects(trafficHitMeshes, false).length) {
+    triggerTraffic();
+    return;
+  }
+
+  // 2. 直接点击前景低矮观景台上的 4 位 3D 科普小人
+  var rHits = ray.intersectObjects(roleClickMeshes, false);
+  if (rHits.length) {
+    playRole(rHits[0].object.userData.roleKey);
+    return;
+  }
+
+  // 3. 直接点击当前显示的 3D 桥梁本身也可立刻鸣笛发车过桥
+  var visBrMeshes = bridgeClickMeshes.filter(function (m) { return m.userData.bridgeKey === curBridge; });
+  if (ray.intersectObjects(visBrMeshes, false).length) {
+    triggerTraffic();
+    return;
+  }
+
+  // 4. 点击桥下帆船给语音科普（D8）
+  if (boatGrp.visible && ray.intersectObjects([hull, sail], false).length) {
+    sfxSwitch();
+    speak('高高的桥洞和桥身让小船也能安全地从桥下航行通过哦！');
+  }
+});
+
+cv.addEventListener('pointermove', function (e) {
+  setPtr(e);
+  var visBr = bridgeClickMeshes.filter(function (m) { return m.userData.bridgeKey === curBridge; });
+  var targets = roleClickMeshes.concat(trafficHitMeshes).concat(visBr);
+  if (boatGrp.visible) targets.push(hull, sail);
+  cv.style.cursor = ray.intersectObjects(targets, false).length ? 'pointer' : 'default';
+});
+
+$$('.br-card').forEach(function (b) {
+  b.addEventListener('click', function () { markInteracted(); selectBridge(b.dataset.br, false); });
+});
+
+$('#voiceBtn').addEventListener('click', function () {
+  markInteracted();
+  voiceOn = !voiceOn;
+  this.classList.toggle('on', voiceOn);
+  if (voiceOn) updateGuide(true); else stopVoice();
+});
+$('#demoBtn').addEventListener('click', startDemo);
+$('#guideBar').addEventListener('click', function () { markInteracted(); updateGuide(true); });
+$('#resetBtn').addEventListener('click', resetAll);
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+$('#winKeepBtn').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgainBtn').addEventListener('click', resetAll);
+$('#qOpts').addEventListener('click', function (e) {
+  var b = e.target.closest('.qopt');
+  if (!b) return;
+  if (b.dataset.ok === '1') {
+    b.classList.add('ok');
+    $('#qFb').textContent = '🌸 答对啦！获得本课小红花！';
+    saveProgress(LESSON_ID, true);
+    sfxRole();
+    speak('答对啦！获得本课小红花！', true);
+  } else {
+    b.classList.add('bad');
+    var h = b.dataset.hint || '再想想哦！';
+    $('#qFb').textContent = h;
+    speak(h, true);
+  }
+});
+
+/* ===== 渲染循环 ===== */
+var introT0 = performance.now(), lastT = performance.now();
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  camera.updateProjectionMatrix();
+  cfCv.width = w; cfCv.height = h;
+}
+window.addEventListener('resize', fit);
+fit();
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (now - lastT) / 1000));
+  lastT = now;
+  var t = now * 0.001;
+
+  var pop = Math.min(1, (performance.now() - introT0) / 680);
+  var ease = 1 - Math.pow(1 - pop, 3);
+  live.scale.setScalar(0.01 + 0.99 * ease);
+
+  clouds.forEach(function (c, i) { c.position.x += Math.sin(t * 0.25 + i) * dt * 0.08; });
+  ripples.forEach(function (rp, i) { rp.position.z += Math.sin(t * 1.4 + i) * dt * 0.14; });
+  if (boatGrp.visible) {
+    boatGrp.position.z = -0.3 + Math.sin(t * 0.55) * 1.45;
+    boatGrp.position.x = Math.cos(t * 0.4) * 0.45;
+    boatGrp.rotation.y = Math.cos(t * 0.55) > 0 ? 0 : Math.PI;
+    boatGrp.rotation.z = Math.sin(t * 2.5) * 0.06;
+  }
+
+  // 桥梁切换弹入动画
+  if (bridgePop < 1) {
+    bridgePop = Math.min(1, bridgePop + dt * 3.2);
+    var be = 1 - Math.pow(1 - bridgePop, 3);
+    bridgeGroups[curBridge].scale.set(1, 0.05 + 0.95 * be, 1);
+  } else {
+    bridgeGroups[curBridge].scale.set(1, 1, 1);
+  }
+
+  // 桥头待发车/行人呼吸动画 或 通车行驶动画（支持石拱桥曲面行车！）
+  var starterObj = null;
+  trafficActors.forEach(function (a) {
+    if (a.starter) starterObj = a;
+    if (trafficRunning) {
+      a.x += a.dir * a.speed * dt;
+      if (a.dir > 0 && a.x > 4.2) a.x = -4.2;
+      if (a.dir < 0 && a.x < -4.2) a.x = 4.2;
+      if (a.kind === 'ped') {
+        var py = a.arch ? archY(a.x) + 0.04 : 0.82;
+        a.obj.position.set(a.x, py + Math.abs(Math.sin(t * 9)) * 0.04, a.z);
+        a.obj.userData.legL.rotation.x = Math.sin(t * 9) * 0.45;
+        a.obj.userData.legR.rotation.x = -Math.sin(t * 9) * 0.45;
+      } else if (a.arch) {
+        var cy = archY(a.x) + 0.05;
+        var sl = Math.atan2(archY(a.x + 0.14) - archY(a.x - 0.14), 0.28);
+        a.obj.position.set(a.x, cy, a.z);
+        a.obj.rotation.z = a.dir > 0 ? sl : -sl;
+      } else {
+        a.obj.position.set(a.x, a.y, a.z);
+        a.obj.rotation.z = 0;
+      }
+    } else {
+      // 待发状态：在桥头轻盈上下呼吸等小朋友来点！
+      var baseY = a.kind === 'ped' ? (a.arch ? archY(a.x) + 0.04 : 0.82)
+        : (a.arch ? archY(a.x) + 0.05 : a.y);
+      var bob = a.starter ? Math.abs(Math.sin(t * 4.2)) * 0.055 : 0;
+      a.obj.position.set(a.x, baseY + bob, a.z);
+      if (a.arch && a.kind === 'car') {
+        var sl0 = Math.atan2(archY(a.x + 0.14) - archY(a.x - 0.14), 0.28);
+        a.obj.rotation.z = a.dir > 0 ? sl0 : -sl0;
+      }
+      if (a.kind === 'ped') {
+        a.obj.userData.legL.rotation.x = 0;
+        a.obj.userData.legR.rotation.x = 0;
+      }
+    }
+  });
+
+  // 待发提示光圈
+  if (!trafficRunning && starterObj) {
+    var baseY2 = starterObj.kind === 'ped' ? (starterObj.arch ? archY(starterObj.x) + 0.05 : 0.84)
+      : (starterObj.arch ? archY(starterObj.x) + 0.06 : (starterObj.y + 0.03));
+    starterRing.visible = true;
+    starterRing.position.set(starterObj.x, baseY2, starterObj.z);
+    starterRing.scale.setScalar(1 + Math.sin(t * 4.8) * 0.12);
+  } else {
+    starterRing.visible = false;
+  }
+
+  // 单焦点跳动 #targetCue：每幕严格按「通车 ➔ 听难题/环保 ➔ 工程师提方案 ➔ 点新桥升级」因果推进！
+  var focusRoleInfo = (!demo && !celebrated && testedBridges[curBridge]) ? getActFocusRole(curBridge) : null;
+  var focusRoleKey = focusRoleInfo ? focusRoleInfo.rk : null;
+  var showCue = false, cueTxt = '', cueX = 0, cueY = 0;
+  if (!demo && !celebrated) {
+    if (!testedBridges[curBridge] && starterObj) {
+      var wpGo = new THREE.Vector3();
+      starterObj.obj.getWorldPosition(wpGo);
+      wpGo.y += (starterObj.kind === 'ped' ? 1.25 : 0.92);
+      var spGo = projectToScreen(wpGo);
+      showCue = true;
+      cueTxt = starterObj.kind === 'ped' ? '👆 点小人或桥面过桥'
+        : (starterObj.kind === 'car' ? '👆 点汽车或桥面通车' : '👆 点火车或桥面通车');
+      cueX = spGo.x;
+      cueY = spGo.y - 6;
+    } else if (focusRoleInfo) {
+      var rTarget = roleActors[focusRoleInfo.rk];
+      var wpR = new THREE.Vector3();
+      rTarget.root.getWorldPosition(wpR);
+      wpR.y += 1.26;
+      var spR = projectToScreen(wpR);
+      showCue = true;
+      cueTxt = focusRoleInfo.cue;
+      cueX = spR.x;
+      cueY = spR.y - 8;
+    } else {
+      var nextBrKey = getNextUpgradeBridge();
+      if (nextBrKey) {
+        var nextBrBtn = $('[data-br="' + nextBrKey + '"]');
+        if (nextBrBtn) {
+          var nr = nextBrBtn.getBoundingClientRect();
+          showCue = true;
+          cueTxt = '👆 点【' + BRIDGE_INFO[nextBrKey].btnLabel + '】升级新桥！';
+          cueX = nr.left + nr.width / 2;
+          cueY = nr.top - 12;
+        }
+      } else {
+        var unheardAny = ROLE_ORDER.find(function (rk) { return !heardRoles[rk]; });
+        if (unheardAny) {
+          focusRoleKey = unheardAny;
+          var rT2 = roleActors[unheardAny];
+          var wpR2 = new THREE.Vector3();
+          rT2.root.getWorldPosition(wpR2);
+          wpR2.y += 1.26;
+          var spR2 = projectToScreen(wpR2);
+          showCue = true;
+          cueTxt = '👆 点【' + ROLE_DATA[unheardAny].shortName + '】登台开讲';
+          cueX = spR2.x;
+          cueY = spR2.y - 8;
+        }
+      }
+    }
+  }
+  if (showCue) {
+    goCueEl.textContent = cueTxt;
+    goCueEl.style.left = Math.max(115, Math.min(window.innerWidth - 135, cueX)) + 'px';
+    goCueEl.style.top = Math.max(96, Math.min(window.innerHeight - 64, cueY)) + 'px';
+    goCueEl.classList.add('show');
+  } else {
+    goCueEl.classList.remove('show');
+  }
+
+  // 4 位科普剧小角色：常驻呼吸光圈 + 头顶极简名牌 + 差异化表情动作 + 动态剧场对话气泡
+  var curActRoles = actRoles[curBridge] || {};
+  ROLE_ORDER.forEach(function (rk) {
+    var ra = roleActors[rk];
+    var isAct = activeRole === rk;
+    var isDoneInAct = !!curActRoles[rk];
+    var isFocusRole = (focusRoleKey === rk);
+
+    if (isAct || isFocusRole) {
+      ra.spot.material.color.setHex(0xf97316);
+      ra.spot.material.opacity = 0.94;
+      ra.spot.scale.setScalar(1.14 + Math.sin(t * 6) * 0.08);
+    } else if (isDoneInAct) {
+      ra.spot.material.color.setHex(0x22c55e);
+      ra.spot.material.opacity = 0.56;
+      ra.spot.scale.setScalar(1.0);
+    } else {
+      ra.spot.material.color.setHex(0xfacc15);
+      ra.spot.material.opacity = 0.56 + 0.28 * Math.sin(t * 4.2 + ROLE_DATA[rk].x);
+      ra.spot.scale.setScalar(1 + Math.sin(t * 4.2 + ROLE_DATA[rk].x) * 0.08);
+    }
+
+    if (ra.hopT > 0) {
+      ra.hopT = Math.max(0, ra.hopT - dt * 0.85);
+      ra.anim.position.y = Math.sin(ra.hopT * Math.PI * 2) * 0.18;
+      ra.armR.rotation.z = -0.35 - Math.abs(Math.sin(ra.hopT * Math.PI * 4)) * 1.05;
+      if (rk === 'mayor' || rk === 'resident') {
+        ra.armL.rotation.z = 0.35 + Math.abs(Math.sin(ra.hopT * Math.PI * 4)) * 0.85;
+      } else {
+        ra.armL.rotation.z = 0.35 + Math.sin(ra.hopT * Math.PI * 2) * 0.45;
+      }
+      ra.head.rotation.y = Math.sin(ra.hopT * Math.PI * 3) * 0.22;
+    } else {
+      ra.anim.position.y = isAct ? Math.abs(Math.sin(t * 3.8)) * 0.055 : 0;
+      ra.armR.rotation.z = isAct ? -0.82 + Math.sin(t * 6.5) * 0.28 : -0.35;
+      ra.armL.rotation.z = isAct ? 0.55 + Math.cos(t * 5.2) * 0.18 : 0.35;
+      ra.head.rotation.y = isAct ? Math.sin(t * 3.2) * 0.14 : 0;
+    }
+
+    // 头顶极简名牌位置投影（正在说话或被单焦点气泡指向的角色隐藏小名牌，零重叠！）
+    var wpT = new THREE.Vector3();
+    ra.root.getWorldPosition(wpT);
+    wpT.y += 1.04;
+    var spT = projectToScreen(wpT);
+    ra.tag.style.left = spT.x + 'px';
+    ra.tag.style.top = spT.y + 'px';
+    ra.tag.classList.toggle('hide', isAct || isFocusRole);
+  });
+
+  if (activeRole) {
+    var rObj = roleActors[activeRole];
+    var wp = new THREE.Vector3();
+    rObj.root.getWorldPosition(wp);
+    // 如果单焦点指引正指向另一位角色，适当抬高气泡避免横向碰到隔壁指引标签！
+    wp.y += (focusRoleKey && focusRoleKey !== activeRole) ? 1.56 : 1.18;
+    var sp = projectToScreen(wp);
+    var rd = ROLE_DATA[activeRole];
+    var sc = BRIDGE_SCRIPTS[curBridge][activeRole];
+    speechBubEl.textContent = rd.ico + ' ' + rd.name + '：“' + sc.line + '”';
+    speechBubEl.style.left = Math.max(165, Math.min(window.innerWidth - 265, sp.x)) + 'px';
+    speechBubEl.style.top = Math.max(110, sp.y) + 'px';
+    speechBubEl.classList.add('show');
+  } else {
+    speechBubEl.classList.remove('show');
+  }
+
+  if (cfList.length) {
+    cfCtx.clearRect(0, 0, cfCv.width, cfCv.height);
+    for (var i = cfList.length - 1; i >= 0; i--) {
+      var q = cfList[i];
+      q.life -= dt; q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 260 * dt; q.r += q.vr * dt;
+      if (q.life <= 0 || q.y > cfCv.height + 40) { cfList.splice(i, 1); continue; }
+      cfCtx.save(); cfCtx.translate(q.x, q.y); cfCtx.rotate(q.r);
+      cfCtx.fillStyle = q.c; cfCtx.fillRect(-q.w / 2, -q.h / 2, q.w, q.h);
+      cfCtx.restore();
+    }
+  }
+
+  renderer.render(scene, camera);
+}
+
+selectBridge('wood', true);
+updateGuide(false);
+
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () {
+    var targets = {
+      bridge: projectToScreen(new THREE.Vector3(-0.3, 1.05, -0.75))
+    };
+    var st = trafficActors.find(function (a) { return a.starter; });
+    if (st) {
+      var wp = new THREE.Vector3();
+      st.obj.getWorldPosition(wp);
+      wp.y += 0.45;
+      targets.starter = projectToScreen(wp);
+    }
+    ROLE_ORDER.forEach(function (rk) {
+      var wp2 = new THREE.Vector3();
+      roleActors[rk].root.getWorldPosition(wp2);
+      wp2.y += 0.55;
+      targets['role_' + rk] = projectToScreen(wp2);
+    });
+    return {
+      triangles: renderer.info.render.triangles,
+      celebrated: celebrated,
+      curBridge: curBridge,
+      activeRole: activeRole,
+      stamps: stamps,
+      testedBridges: Object.keys(testedBridges),
+      heardRoles: Object.keys(heardRoles),
+      actRoles: actRoles,
+      cueText: goCueEl.classList.contains('show') ? goCueEl.textContent : '',
+      speechText: speechBubEl.classList.contains('show') ? speechBubEl.textContent : '',
+      evoText: $('#evoPill').classList.contains('show') ? $('#evoPill').textContent : '',
+      guideTxt: $('#guideTxt').textContent,
+      currentScripts: BRIDGE_SCRIPTS[curBridge],
+      targets: targets
+    };
+  },
+  startDemo: startDemo,
+  resetAll: resetAll
+};
+
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

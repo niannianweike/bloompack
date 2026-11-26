@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第3课 制作校园模型 · 方位线索盲拼工坊</title>
+<style>
+:root{--accent:#e56d17;--ink:#2a2218;--line:#e4d5ba;--card:rgba(255,253,248,.94);--ok:#16a34a}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#cca372;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.46em;color:#7a6a52;font-weight:600}
+body.no-py rt{display:none}
+
+/* 左上标题卡片 */
+#hudTL{position:fixed;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:10px;
+  padding:7px 14px 7px 9px;border-radius:16px;background:var(--card);border:1.5px solid var(--line);
+  box-shadow:0 4px 16px rgba(60,36,12,.14)}
+#backBtn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:#5c4b34;font-size:18px;font-weight:900}
+#backBtn:hover{border-color:var(--accent);color:var(--accent)}
+.hd-t{font-size:16px;font-weight:900;line-height:1.5}
+.hd-sub{font-size:11.5px;color:#7b6c56;font-weight:700}
+
+/* 顶部中央动态方位线索小助手 */
+#guideBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:6;
+  max-width:min(470px,calc(100vw - 630px));display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:15px;background:rgba(255,250,240,.96);
+  border:2px solid #f08a24;box-shadow:0 6px 18px rgba(130,68,12,.16);
+  font-size:13.5px;font-weight:800;color:#753a07;cursor:pointer;line-height:1.35}
+#guideBar:active{transform:translateX(-50%) scale(.98)}
+#guideBar.bump{animation:gbBump .42s ease}
+@keyframes gbBump{0%{transform:translateX(-50%) scale(.94)}50%{transform:translateX(-50%) scale(1.04)}100%{transform:translateX(-50%) scale(1)}}
+
+/* 右上工具条 */
+#hudTR{position:fixed;top:12px;right:12px;z-index:7;display:flex;align-items:center;gap:6px}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:38px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);
+  background:var(--card);font:inherit;font-size:13.5px;font-weight:800;color:#4a3c28;cursor:pointer;
+  box-shadow:0 3px 0 #d9c8ab;transition:all .14s}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:#b8500a;color:#fff;box-shadow:0 3px 0 #b8500a}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#ffedd5;border:1.5px solid var(--accent);color:#b44908;font-size:10.5px;font-weight:900;
+  white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(229,109,23,.24);
+  animation:cuePop 1.6s ease-in-out infinite;transition:opacity .25s}
+body.interacted .entry-cue{opacity:0;animation:none}
+@keyframes cuePop{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+
+/* 右上可收起窄版发现栏（D3 防遮挡） */
+#notes{position:fixed;top:60px;right:12px;z-index:6;width:224px;padding:9px 11px;border-radius:15px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 6px 18px rgba(60,36,12,.12)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+.nt-title{font-size:13.5px;font-weight:900}
+.nt-cnt{font-size:12.5px;font-weight:900;color:var(--accent)}
+.nt-tog{padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#fff;font:inherit;font-size:11px;font-weight:800;color:#6c5c45;cursor:pointer}
+.stamps{display:flex;gap:4px;margin-bottom:6px}
+.st{flex:1;text-align:center;padding:3px 2px;border-radius:8px;font-size:11px;font-weight:800;
+  border:1.5px dashed #d7c5a4;color:#9b8a70;background:#faf4e8;transition:all .2s;line-height:1.4}
+.st.lit{border-style:solid;border-color:var(--accent);background:#fff2df;color:#b8500a;animation:stPop .4s ease}
+@keyframes stPop{0%{transform:scale(.7)}60%{transform:scale(1.1)}100%{transform:scale(1)}}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList{display:none}
+#notes.collapsed .stamps{margin-bottom:0}
+.stk{padding:5px 8px;border-radius:10px;background:#fff;border:1px solid #ece0c9;font-size:12px;font-weight:700;line-height:1.38}
+
+/* 3D 场景浮标 */
+#labels{position:fixed;inset:0;pointer-events:none;z-index:4}
+.tag3d{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:5px 12px;border-radius:99px;
+  background:rgba(42,34,24,.92);color:#fff;font-size:13.5px;font-weight:800;white-space:nowrap;
+  box-shadow:0 4px 12px rgba(0,0,0,.22);opacity:0;transition:opacity .2s}
+.tag3d.show{opacity:1}
+.tag3d.warm{background:#d95b12}
+.tag3d.ok{background:#15803d}
+.part-lbl{position:absolute;left:0;top:0;transform:translate(-50%,0);padding:2px 8px;border-radius:99px;
+  background:rgba(255,252,245,.94);border:1.5px solid #d7c3a0;color:#4e3d26;font-size:11px;font-weight:900;
+  white-space:nowrap;box-shadow:0 2px 6px rgba(60,36,12,.14);transition:all .15s}
+.part-lbl.sel{background:#e56d17;border-color:#b84e08;color:#fff;transform:translate(-50%,0) scale(1.08)}
+.part-lbl.quest{border-color:#ea580c;background:#fff7ed;color:#9a3412}
+.part-lbl.done{background:#ecfdf5;border-color:#16a34a;color:#15803d;font-size:10.5px}
+.cue3d{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:4px 12px;border-radius:99px;
+  background:#fff7ed;border:2px solid #ea580c;color:#9a3412;font-size:13px;font-weight:900;white-space:nowrap;
+  box-shadow:0 4px 14px rgba(234,88,12,.28);animation:cueBob 1.3s ease-in-out infinite;display:none;pointer-events:none}
+.cue3d.show{display:block}
+@keyframes cueBob{0%,100%{transform:translate(-50%,-100%) translateY(0)}50%{transform:translate(-50%,-100%) translateY(-6px)}}
+
+/* 底部控制坞：仅保留纯进度胶囊 + 唯一视角切换按钮（extraBtns = 1） */
+#dock{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:6;
+  display:flex;align-items:center;gap:10px;padding:8px 14px;border-radius:18px;
+  background:rgba(255,252,245,.95);border:1.5px solid var(--line);box-shadow:0 8px 24px rgba(60,36,12,.18);
+  max-width:calc(100vw - 24px);justify-content:center}
+.prog-pill{padding:5px 12px;border-radius:11px;background:#fff5e3;border:1.5px solid #f0c98d;
+  font-size:13px;font-weight:900;color:#b44908}
+.cbtn{height:38px;padding:0 14px;border-radius:12px;border:1.5px solid #d9c6a3;background:#fffaf0;
+  font:inherit;font-size:13.5px;font-weight:900;color:#3d2e1b;cursor:pointer;display:flex;align-items:center;gap:5px;
+  box-shadow:0 3px 0 #d4be98;transition:all .12s}
+.cbtn:hover{border-color:var(--accent);background:#fff3e0;color:#b84f08}
+.cbtn:active{transform:translateY(2px);box-shadow:0 1px 0 #d4be98}
+.cbtn.act{background:#e56d17;border-color:#b84e08;color:#fff;box-shadow:0 3px 0 #b84e08}
+.cbtn.pulse{animation:btnPulse 1.2s ease-in-out infinite}
+@keyframes btnPulse{0%,100%{box-shadow:0 3px 0 #b84e08,0 0 0 0 rgba(229,109,23,.55)}50%{box-shadow:0 3px 0 #b84e08,0 0 0 8px rgba(229,109,23,0)}}
+
+/* 通关彩带 + 结论与1题巩固弹窗 */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+#winToast{position:fixed;inset:0;z-index:35;display:none;place-items:center;background:rgba(36,24,10,.34);padding:16px}
+#winToast.show{display:grid}
+.win-card{width:min(450px,100%);max-height:85vh;overflow-y:auto;background:#fffdf8;
+  border:2.5px solid var(--accent);border-radius:22px;padding:18px 20px;text-align:center;
+  box-shadow:0 20px 50px rgba(40,22,4,.28)}
+.win-concl{margin:10px 0;padding:10px 12px;border-radius:13px;background:#fff8eb;border:1.5px solid #f2cf9b;
+  text-align:left;font-size:13.5px;line-height:1.55;color:#5a3309;font-weight:700}
+.win-quiz{margin:10px 0;padding:10px 12px;border-radius:13px;background:#f8fafc;border:1.5px solid #d9e2ec;text-align:left}
+.win-quiz h4{margin:0 0 8px;font-size:13.5px;color:#c2410c}
+.qopts{display:flex;flex-direction:column;gap:7px}
+.qopt{padding:8px 11px;border-radius:11px;border:1.5px solid #d9d0be;background:#fff;
+  font:inherit;font-size:13.5px;font-weight:800;text-align:left;cursor:pointer;transition:all .14s;color:#2a2218}
+.qopt:hover{border-color:var(--accent);background:#fff9f0}
+.qopt.ok{border-color:#2b8a3e;background:#ebfbee;color:#2b8a3e}
+.qopt.bad{border-color:#e03131;background:#fff5f5;color:#c92a2a}
+.qfb{margin-top:7px;font-size:12.5px;font-weight:800;min-height:18px;color:#b84f08}
+.win-acts{display:flex;justify-content:center;gap:10px;margin-top:12px}
+
+@media (max-width:1100px){
+  #guideBar{top:62px;left:12px;transform:none;max-width:calc(100vw - 260px)}
+  #guideBar.bump{animation:none}
+}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="labels">
+  <div id="popTag" class="tag3d"></div>
+  <div id="targetCue" class="cue3d">👆 拖或点模型</div>
+</div>
+<canvas id="confetti"></canvas>
+
+<div id="hudTL">
+  <a id="backBtn" href="../index.html" title="返回书包">‹</a>
+  <div>
+    <div class="hd-t" data-py="dì kè zhì zuò xiào yuán mó xíng">第3课 制作校园模型</div>
+    <div class="hd-sub">活页 · 课本第 13 页「方位线索盲拼工坊」</div>
+  </div>
+</div>
+
+<div id="guideBar" title="点我重听当前方位线索">
+  <span id="guideIco">🧭</span>
+  <span id="guideTxt">第1步：先把左侧的【操场】放到校园正中间当参照物吧！</span>
+</div>
+
+<div id="hudTR">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<aside id="notes">
+  <div class="nt-head">
+    <span class="nt-title" data-py="wǒ de fā xiàn">我的发现</span>
+    <span class="nt-cnt" id="ntCnt">0</span>
+    <button class="nt-tog" id="ntTog" type="button">收起</button>
+  </div>
+  <div class="stamps">
+    <span class="st" id="st1" data-py="dìng hǎo zhōng xīn">定好中心</span>
+    <span class="st" id="st2" data-py="fāng wèi máng pīn">方位盲拼</span>
+    <span class="st" id="st3" data-py="xiǎo dǎo yóu xún jiǎn">小导游巡检</span>
+  </div>
+  <div id="ntList"></div>
+</aside>
+
+<div id="dock">
+  <span class="prog-pill" id="buildProg">已拼装 0/6</span>
+  <button class="cbtn act" id="viewBtn" type="button">📷 俯视 / 立体</button>
+</div>
+
+<div id="winToast">
+  <div class="win-card">
+    <div style="font-size:40px">🏆</div>
+    <h3 style="margin:4px 0" data-py="tài bàng la xiào yuán mó xíng dà gōng gào chéng">太棒啦！校园模型大功告成！</h3>
+    <div class="win-concl">
+      <b>✨ 科学小结论：</b>制作校园模型要先标明<b>东、南、西、北</b>，放好正中间的<b>参照物（操场）</b>，再按各栋建筑的方位关系准确摆放到位，就能一眼看清校园全貌！
+    </div>
+    <div class="win-quiz">
+      <h4>💡 考考你 · 答对领小红花 🌸</h4>
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:8px">把操场放在校园正中间后，如果教学楼在操场北面、图书馆在东南角，我们该先看底板上的什么来确定位置？</div>
+      <div class="qopts" id="qOpts">
+        <button class="qopt" type="button" data-ok="1">🧭 先看指北针和东、南、西、北四个方向标志</button>
+        <button class="qopt" type="button" data-hint="随便乱放很容易把北面和南面搞反哦！再想想看什么标志？">🎲 不看方向，随便找个空位放上去</button>
+        <button class="qopt" type="button" data-hint="颜色只是装饰，真正决定位置的是东西南北方位标志哦！">🎨 只看建筑屋顶的颜色来摆放</button>
+      </div>
+      <div class="qfb" id="qFb"></div>
+    </div>
+    <div class="win-acts">
+      <button class="tbtn" id="winKeepBtn" type="button">继续自由巡游</button>
+      <button class="tbtn on" id="winAgainBtn" type="button">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js"></script>
+<script src="../vendor/voice.js"></script>
+<script>
+(function () {
+'use strict';
+
+var LESSON_ID = 'k1b-03';
+var BOOK_PROGRESS_KEY = 'xk_k1b_progress';
+try { sessionStorage.setItem('xk_last_vol', 'k1b'); } catch (e) {}
+
+var $ = function (s) { return document.querySelector(s); };
+var HAN = /[\u3400-\u9fff]/;
+var pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function ruby(text, py) {
+  if (!py) return esc(text);
+  var syl = py.trim().split(/\s+/), i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) {
+      var p = syl[i++];
+      if (!p) { pyErrors.push(text); p = ''; }
+      out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>';
+    } else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+document.querySelectorAll('[data-py]').forEach(function (el) { el.innerHTML = ruby(el.textContent, el.dataset.py); });
+$('#backBtn').addEventListener('click', function () { try { sessionStorage.setItem('xk_last_vol', 'k1b'); } catch (e) {} });
+
+/* ===== 语音与轻音效 ===== */
+var voiceOn = true;
+function stopVoice() {
+  if (window.__xkVoice) window.__xkVoice.stop();
+  else if (window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
+}
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
+  if (!('speechSynthesis' in window)) return;
+  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+}
+
+var audioCtx = null;
+function playTone(type) {
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!audioCtx) audioCtx = new AC();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    var now = audioCtx.currentTime;
+    var osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    if (type === 'snap') {
+      osc.type = 'triangle'; osc.frequency.setValueAtTime(520, now); osc.frequency.exponentialRampToValueAtTime(860, now + 0.09);
+      gain.gain.setValueAtTime(0.16, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+      osc.start(now); osc.stop(now + 0.15);
+    } else if (type === 'bump') {
+      osc.type = 'sine'; osc.frequency.setValueAtTime(210, now); osc.frequency.exponentialRampToValueAtTime(120, now + 0.16);
+      gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+      osc.start(now); osc.stop(now + 0.18);
+    } else if (type === 'pick') {
+      osc.type = 'sine'; osc.frequency.setValueAtTime(440, now); osc.frequency.exponentialRampToValueAtTime(560, now + 0.06);
+      gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+      osc.start(now); osc.stop(now + 0.08);
+    } else if (type === 'win') {
+      [523, 659, 784, 1046].forEach(function (f, idx) {
+        var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = 'triangle'; o.frequency.setValueAtTime(f, now + idx * 0.1);
+        g.gain.setValueAtTime(0.15, now + idx * 0.1); g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.28);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(now + idx * 0.1); o.stop(now + idx * 0.1 + 0.29);
+      });
+    }
+  } catch (e) {}
+}
+
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem(BOOK_PROGRESS_KEY) || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem(BOOK_PROGRESS_KEY, JSON.stringify(d));
+  } catch (e) {}
+}
+
+/* ===== 彩带庆祝 ===== */
+var cfCv = $('#confetti'), cfCtx = cfCv.getContext('2d'), cfList = [], cfOn = false;
+function launchConfetti() {
+  cfCv.width = window.innerWidth; cfCv.height = window.innerHeight;
+  cfList = [];
+  var cols = ['#f97316', '#facc15', '#22c55e', '#38bdf8', '#f43f5e', '#a855f7'];
+  for (var i = 0; i < 85; i++) {
+    cfList.push({
+      x: Math.random() * cfCv.width, y: -20 - Math.random() * 140,
+      vx: (Math.random() - 0.5) * 160, vy: 120 + Math.random() * 210,
+      r: 5 + Math.random() * 5, a: Math.random() * 6.28, va: (Math.random() - 0.5) * 8,
+      col: cols[i % cols.length]
+    });
+  }
+  cfOn = true;
+}
+function tickConfetti(dt) {
+  if (!cfOn) return;
+  cfCtx.clearRect(0, 0, cfCv.width, cfCv.height);
+  var alive = 0;
+  for (var i = 0; i < cfList.length; i++) {
+    var p = cfList[i];
+    p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 180 * dt; p.a += p.va * dt;
+    if (p.y < cfCv.height + 30) alive++;
+    cfCtx.save(); cfCtx.translate(p.x, p.y); cfCtx.rotate(p.a);
+    cfCtx.fillStyle = p.col; cfCtx.fillRect(-p.r, -p.r * 0.55, p.r * 2, p.r * 1.1);
+    cfCtx.restore();
+  }
+  if (!alive) { cfOn = false; cfCtx.clearRect(0, 0, cfCv.width, cfCv.height); }
+}
+
+/* ===== Three.js r147 校园模型手工工坊 ===== */
+var cv = $('#cv');
+var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color('#cca372');
+
+var camera = new THREE.PerspectiveCamera(36, 16 / 9, 0.1, 100);
+var CAM_3D = { pos: new THREE.Vector3(-0.12, 8.5, 8.1), look: new THREE.Vector3(-0.12, 0.0, 0.20) };
+var CAM_TOP = { pos: new THREE.Vector3(0.55, 11.0, 0.45), look: new THREE.Vector3(0.55, 0.0, 0.22) };
+var camPosCur = CAM_3D.pos.clone(), camLookCur = CAM_3D.look.clone();
+var isTopView = false;
+
+scene.add(new THREE.HemisphereLight('#fff9ee', '#8c6943', 0.68));
+var sunL = new THREE.DirectionalLight('#fff5df', 0.58);
+sunL.position.set(-4, 12, 6);
+sunL.castShadow = true;
+sunL.shadow.mapSize.set(1024, 1024);
+sunL.shadow.camera.left = -8; sunL.shadow.camera.right = 8;
+sunL.shadow.camera.top = 7; sunL.shadow.camera.bottom = -7;
+sunL.shadow.bias = -0.0008;
+scene.add(sunL);
+
+var ramp = new THREE.DataTexture(new Uint8Array([134, 134, 134, 255, 195, 195, 195, 255, 236, 236, 236, 255, 255, 255, 255, 255]), 4, 1, THREE.RGBAFormat);
+ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+var INK = new THREE.LineBasicMaterial({ color: 0x3b2d1f, transparent: true, opacity: 0.46 });
+function toon(col, extra) {
+  var o = { color: new THREE.Color(col), gradientMap: ramp };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshToonMaterial(o);
+}
+function mk(geo, mat, ink) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  if (ink !== false) m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 32), INK));
+  return m;
+}
+function ctex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  return new THREE.CanvasTexture(c);
+}
+
+var live = new THREE.Group();
+live.position.set(-0.32, 0, 0.18);
+scene.add(live);
+
+var deskTex = ctex(512, 512, function (g, w, h) {
+  g.fillStyle = '#c89e6c'; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 65; i++) {
+    g.fillStyle = 'rgba(110,70,30,' + (Math.random() * 0.05).toFixed(3) + ')';
+    g.fillRect(0, Math.random() * h, w, 1 + Math.random() * 3);
+  }
+});
+deskTex.wrapS = deskTex.wrapT = THREE.RepeatWrapping; deskTex.repeat.set(3, 3);
+var deskPlane = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshLambertMaterial({ map: deskTex }));
+deskPlane.rotation.x = -Math.PI / 2; deskPlane.position.y = -0.06; deskPlane.receiveShadow = true;
+live.add(deskPlane);
+
+/* 左侧建筑零件托盘 */
+var trayMat = new THREE.Mesh(new THREE.BoxGeometry(2.62, 0.06, 4.86), toon('#f5ebd6'));
+trayMat.position.set(-3.42, -0.02, 0.06);
+trayMat.receiveShadow = true; trayMat.castShadow = false;
+live.add(trayMat);
+
+/* ===== 校园草坪底板：清晰东/南/西/北 + 指北针 + 6个完全中性相同的空白虚线槽位（零建筑名、零轮廓剧透！） ===== */
+var BOARD_X = 0.72, BOARD_Z = 0.06, BOARD_W = 5.25, BOARD_H = 4.62;
+
+var QUEST_ORDER = ['field', 'teaching', 'gate', 'complex', 'admin', 'library'];
+
+var PARTS_DEF = [
+  {
+    id: 'field', name: '操场', emoji: '🏟️',
+    tray: [-3.98, -1.46], slot: [BOARD_X, BOARD_Z],
+    slotDirName: '校园正中间',
+    clueShort: '第1步：先把【操场】放到校园正中间当参照物吧！',
+    clueDetail: '先把操场放到校园正中间的空位里，有了中心参照物就能找东西南北啦！',
+    wrongGuide: '操场是中心参照物，要放在校园最正中间的空位哦！',
+    okSpeech: '太棒啦！操场放稳在校园正中间啦！现在看方位线索：教学楼在操场的北面，请放到操场北面的空位吧！',
+    tourSpeech: '操场在校园正中间，北面是教学楼，南面是校门，西面是综合楼！',
+    tourNeighbor: 'teaching',
+    sticker: '🏟️ 操场定好校园正中间参照位'
+  },
+  {
+    id: 'teaching', name: '教学楼', emoji: '🏫',
+    tray: [-2.82, -1.46], slot: [BOARD_X, BOARD_Z - 1.16],
+    slotDirName: '操场北面',
+    clueShort: '方位线索 1/5：【教学楼】在操场的北面，把它放到操场北面的空位吧！',
+    clueDetail: '教学楼在操场的北面，看看底板上方大大的北字，把它拖到或点放到操场北面的空位吧！',
+    wrongGuide: '看看底板上面大大的北字，教学楼在操场北面的空位哦！',
+    okSpeech: '答对啦！教学楼稳稳落位在操场北面！下一道线索：校门在操场的南面，请放进操场南面的空位！',
+    tourSpeech: '教学楼在操场的北面，行政楼在教学楼的东面！',
+    tourNeighbor: 'field',
+    sticker: '🏫 按线索把教学楼放在操场北面'
+  },
+  {
+    id: 'gate', name: '校门', emoji: '🚩',
+    tray: [-3.98, 0.04], slot: [BOARD_X, BOARD_Z + 1.16],
+    slotDirName: '操场南面',
+    clueShort: '方位线索 2/5：【校门】在操场的南面，请放进操场南面的空位！',
+    clueDetail: '校门在操场的南面，看看底板下方大大的南字，把它放到操场南面的空位吧！',
+    wrongGuide: '看看底板下面大大的南字，校门在操场南面的空位哦！',
+    okSpeech: '放对啦！校门稳稳立在操场南面！下一道线索：综合楼在操场的西面，请放进操场西面的空位！',
+    tourSpeech: '校门在操场的南面，和北面的教学楼正相对！',
+    tourNeighbor: 'field',
+    sticker: '🚩 按线索把校门放在操场南面'
+  },
+  {
+    id: 'complex', name: '综合楼', emoji: '🧪',
+    tray: [-2.82, 0.04], slot: [BOARD_X - 1.44, BOARD_Z],
+    slotDirName: '操场西面',
+    clueShort: '方位线索 3/5：【综合楼】在操场的西面，请放进操场西面的空位！',
+    clueDetail: '综合楼在操场的西面，看看底板左边大大的西字，把它放到操场西面的空位吧！',
+    wrongGuide: '看看底板左边大大的西字，综合楼在操场西面的空位哦！',
+    okSpeech: '好厉害！综合楼放稳在操场西面！下一道线索：行政楼在校园的东北角，也就是北面和东面之间，请放进去！',
+    tourSpeech: '综合楼在操场的西面，操场在综合楼的东面！',
+    tourNeighbor: 'field',
+    sticker: '🧪 按线索把综合楼放在操场西面'
+  },
+  {
+    id: 'admin', name: '行政楼', emoji: '🏢',
+    tray: [-3.98, 1.54], slot: [BOARD_X + 1.44, BOARD_Z - 1.16],
+    slotDirName: '校园东北角',
+    clueShort: '方位线索 4/5：【行政楼】在校园的东北角（北面和东面之间），请放进去！',
+    clueDetail: '行政楼在校园的东北角，也就是北面和东面之间的右上角空位，请放进去吧！',
+    wrongGuide: '东北角在北面和东面之间，就是底板右上角的空位哦！',
+    okSpeech: '真棒！行政楼放稳在校园东北角！最后一道线索：图书馆在校园的东南角，也就是南面和东面之间，请放进去！',
+    tourSpeech: '行政楼在校园东北角，在教学楼的东面、图书馆的北面！',
+    tourNeighbor: 'teaching',
+    sticker: '🏢 按线索把行政楼放在校园东北角'
+  },
+  {
+    id: 'library', name: '图书馆', emoji: '📚',
+    tray: [-2.82, 1.54], slot: [BOARD_X + 1.44, BOARD_Z + 1.16],
+    slotDirName: '校园东南角',
+    clueShort: '方位线索 5/5：【图书馆】在校园的东南角（南面和东面之间），请放进去！',
+    clueDetail: '图书馆在校园的东南角，也就是南面和东面之间的右下角空位，请放进去吧！',
+    wrongGuide: '东南角在南面和东面之间，就是底板右下角的空位哦！',
+    okSpeech: '太棒啦！六栋建筑全部按方位盲拼成功！快点下方俯视按钮看校园全貌，并点任意两栋建筑当小导游吧！',
+    tourSpeech: '图书馆在校园东南角，在校门的东面、行政楼的南面！',
+    tourNeighbor: 'gate',
+    sticker: '📚 按线索把图书馆放在校园东南角'
+  }
+];
+
+function worldToBoardUV(wx, wz, w, h) {
+  return {
+    u: ((wx - BOARD_X) / BOARD_W + 0.5) * w,
+    v: ((wz - BOARD_Z) / BOARD_H + 0.5) * h
+  };
+}
+
+function drawRoundRect(g, x, y, rw, rh, rad) {
+  g.beginPath();
+  g.moveTo(x + rad, y);
+  g.lineTo(x + rw - rad, y);
+  g.quadraticCurveTo(x + rw, y, x + rw, y + rad);
+  g.lineTo(x + rw, y + rh - rad);
+  g.quadraticCurveTo(x + rw, y + rh, x + rw - rad, y + rh);
+  g.lineTo(x + rad, y + rh);
+  g.quadraticCurveTo(x, y + rh, x, y + rh - rad);
+  g.lineTo(x, y + rad);
+  g.quadraticCurveTo(x, y, x + rad, y);
+  g.closePath();
+}
+
+/* 干净清爽的校园草坪底板：只有东/南/西/北 + 指北针 + 一模一样的中性浅绿虚线圆角方框（零建筑名、零形状轮廓！） */
+var boardTex = ctex(1024, 892, function (g, w, h) {
+  // 清新浅绿校园草坪底色（防过曝，层次分明）
+  g.fillStyle = '#a8d98c'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#c8eab3'; g.fillRect(36, 36, w - 72, h - 72);
+
+  // 淡色校园十字基准线（辅助认方位，绝不暗示具体建筑！）
+  g.strokeStyle = 'rgba(84,132,58,0.28)'; g.lineWidth = 4;
+  g.beginPath();
+  g.moveTo(w / 2, 114); g.lineTo(w / 2, h - 114);
+  g.moveTo(114, h / 2); g.lineTo(w - 114, h / 2);
+  g.stroke();
+
+  // 校园围墙实线边框
+  g.strokeStyle = '#537b3a'; g.lineWidth = 10; g.strokeRect(30, 30, w - 60, h - 60);
+
+  // 超大清晰 东 / 南 / 西 / 北 四边方位标（配醒目浅色底牌）
+  function drawDirTag(ch, cx, cy, col) {
+    g.save();
+    g.fillStyle = '#fffdf7';
+    g.strokeStyle = col; g.lineWidth = 6;
+    drawRoundRect(g, cx - 38, cy - 34, 76, 68, 16);
+    g.fill(); g.stroke();
+    g.fillStyle = col; g.font = 'bold 48px "Microsoft YaHei", sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(ch, cx, cy + 3);
+    g.restore();
+  }
+  drawDirTag('北', w / 2, 72, '#2563eb');
+  drawDirTag('南', w / 2, h - 72, '#dc2626');
+  drawDirTag('东', w - 72, h / 2, '#ea580c');
+  drawDirTag('西', 72, h / 2, '#16a34a');
+
+  // 左上角清晰红色指北针
+  g.save(); g.translate(118, 118);
+  g.fillStyle = 'rgba(255,253,247,0.95)';
+  g.beginPath(); g.arc(0, 0, 42, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = '#4c6d34'; g.lineWidth = 5; g.stroke();
+  g.fillStyle = '#dc2626';
+  g.beginPath(); g.moveTo(0, -32); g.lineTo(-10, 2); g.lineTo(10, 2); g.closePath(); g.fill();
+  g.fillStyle = '#94a3b8';
+  g.beginPath(); g.moveTo(0, 28); g.lineTo(-8, 2); g.lineTo(8, 2); g.closePath(); g.fill();
+  g.fillStyle = '#dc2626'; g.font = 'bold 19px "Microsoft YaHei", sans-serif';
+  g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('N', 0, -44);
+  g.restore();
+
+  // 全部 6 个槽位统一画成完全一模一样的中性浅绿虚线圆角方形空位（完全不写建筑名、不画专属轮廓！）
+  PARTS_DEF.forEach(function (def) {
+    var uv = worldToBoardUV(def.slot[0], def.slot[1], w, h);
+    var sw = 176, sh = 136;
+    g.save();
+    g.fillStyle = def.id === 'field' ? 'rgba(255,252,235,0.82)' : 'rgba(235,250,224,0.86)';
+    g.strokeStyle = def.id === 'field' ? '#658f48' : '#4f823a';
+    g.lineWidth = 6;
+    g.setLineDash([14, 10]);
+    drawRoundRect(g, uv.u - sw / 2, uv.v - sh / 2, sw, sh, 20);
+    g.fill(); g.stroke();
+    g.setLineDash([]);
+    if (def.id === 'field') {
+      g.strokeStyle = 'rgba(79,130,58,0.52)'; g.lineWidth = 4;
+      g.beginPath();
+      g.moveTo(uv.u - 16, uv.v); g.lineTo(uv.u + 16, uv.v);
+      g.moveTo(uv.u, uv.v - 16); g.lineTo(uv.u, uv.v + 16);
+      g.stroke();
+    }
+    g.restore();
+  });
+});
+
+var cardBoard = mk(new THREE.BoxGeometry(BOARD_W, 0.08, BOARD_H), [
+  toon('#8fb36b'), toon('#8fb36b'),
+  new THREE.MeshLambertMaterial({ map: boardTex }),
+  toon('#8fb36b'), toon('#8fb36b'), toon('#8fb36b')
+], false);
+cardBoard.position.set(BOARD_X, 0.0, BOARD_Z);
+cardBoard.castShadow = false;
+cardBoard.receiveShadow = true;
+live.add(cardBoard);
+
+/* 槽位中性柔和圆环 + 公平碰撞体（盲拼期间 5 个四周槽位完全一致，绝不偷标答案！） */
+var slotPads = [];
+var slotHitMeshes = [];
+var slotMap = {};
+PARTS_DEF.forEach(function (def) {
+  var pad = new THREE.Mesh(
+    new THREE.RingGeometry(0.38, 0.50, 28),
+    new THREE.MeshBasicMaterial({ color: '#86b868', side: THREE.DoubleSide, transparent: true, opacity: 0.30 })
+  );
+  pad.rotation.x = -Math.PI / 2;
+  pad.position.set(def.slot[0], 0.055, def.slot[1]);
+  pad.userData = { kind: 'slot', id: def.id };
+  live.add(pad);
+  slotPads.push(pad);
+  slotMap[def.id] = pad;
+
+  var hit = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.72, 0.72, 0.36, 16),
+    new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false })
+  );
+  hit.position.set(def.slot[0], 0.18, def.slot[1]);
+  hit.userData = { kind: 'slot', id: def.id };
+  live.add(hit);
+  slotHitMeshes.push(hit);
+});
+
+/* 辅助光圈：仅在（1）第1步中心操场（2）同一题连错 >= 2 次防卡死（3）小导游阶段启用！平时盲拼绝对隐藏！ */
+var hintBeacon = new THREE.Group();
+var hbRing = new THREE.Mesh(
+  new THREE.RingGeometry(0.46, 0.64, 28),
+  new THREE.MeshBasicMaterial({ color: '#f59e0b', side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
+);
+hbRing.rotation.x = -Math.PI / 2; hbRing.position.y = 0.062;
+hintBeacon.add(hbRing);
+hintBeacon.visible = false;
+live.add(hintBeacon);
+
+/* 构建 6 件纸折 3D 校园模型 */
+function buildPartMesh(id) {
+  var g = new THREE.Group();
+  if (id === 'teaching') {
+    var sp = mk(new THREE.BoxGeometry(0.28, 0.48, 0.78), toon('#fed7aa')); sp.position.set(0.38, 0.24, 0);
+    var w1 = mk(new THREE.BoxGeometry(0.96, 0.46, 0.20), toon('#ffedd5')); w1.position.set(-0.02, 0.23, -0.29);
+    var w2 = mk(new THREE.BoxGeometry(0.84, 0.46, 0.18), toon('#ffedd5')); w2.position.set(0.04, 0.23, 0);
+    var w3 = mk(new THREE.BoxGeometry(0.96, 0.46, 0.20), toon('#ffedd5')); w3.position.set(-0.02, 0.23, 0.29);
+    var r0 = mk(new THREE.BoxGeometry(0.32, 0.07, 0.82), toon('#ea580c'), false); r0.position.set(0.38, 0.50, 0);
+    var r1 = mk(new THREE.BoxGeometry(1.00, 0.07, 0.24), toon('#f97316'), false); r1.position.set(-0.02, 0.48, -0.29);
+    var r2 = mk(new THREE.BoxGeometry(0.88, 0.07, 0.22), toon('#f97316'), false); r2.position.set(0.04, 0.48, 0);
+    var r3 = mk(new THREE.BoxGeometry(1.00, 0.07, 0.24), toon('#f97316'), false); r3.position.set(-0.02, 0.48, 0.29);
+    g.add(sp, w1, w2, w3, r0, r1, r2, r3);
+  } else if (id === 'admin') {
+    var b = mk(new THREE.BoxGeometry(0.76, 0.50, 0.56), toon('#e0f2fe')); b.position.y = 0.25;
+    var r = mk(new THREE.BoxGeometry(0.82, 0.09, 0.62), toon('#3b82f6')); r.position.y = 0.54;
+    var clk = mk(new THREE.CylinderGeometry(0.10, 0.10, 0.05, 12), toon('#fde047'), false);
+    clk.rotation.x = Math.PI / 2; clk.position.set(0, 0.36, 0.29);
+    g.add(b, r, clk);
+  } else if (id === 'complex') {
+    var c1 = mk(new THREE.BoxGeometry(0.56, 0.52, 0.94), toon('#dcfce7')); c1.position.y = 0.26;
+    var cr = mk(new THREE.BoxGeometry(0.62, 0.08, 1.00), toon('#16a34a')); cr.position.y = 0.55;
+    var win = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.14, 0.66), toon('#38bdf8')); win.position.y = 0.32;
+    g.add(c1, cr, win);
+  } else if (id === 'library') {
+    var lb = mk(new THREE.BoxGeometry(0.84, 0.44, 0.58), toon('#fef3c7')); lb.position.y = 0.22;
+    var lr = mk(new THREE.BoxGeometry(0.90, 0.08, 0.64), toon('#d97706')); lr.position.y = 0.48;
+    var bk1 = mk(new THREE.BoxGeometry(0.24, 0.16, 0.05), toon('#ef4444'), false); bk1.position.set(-0.1, 0.60, 0); bk1.rotation.y = 0.35;
+    var bk2 = mk(new THREE.BoxGeometry(0.24, 0.16, 0.05), toon('#ef4444'), false); bk2.position.set(0.1, 0.60, 0); bk2.rotation.y = -0.35;
+    g.add(lb, lr, bk1, bk2);
+  } else if (id === 'field') {
+    var fTex = ctex(256, 180, function (ctx, w, h) {
+      ctx.fillStyle = '#e0634c';
+      ctx.beginPath(); ctx.ellipse(w / 2, h / 2, 122, 82, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.ellipse(w / 2, h / 2, 106, 68, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = '#4ade80';
+      ctx.beginPath(); ctx.ellipse(w / 2, h / 2, 88, 52, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(w / 2, h / 2 - 52); ctx.lineTo(w / 2, h / 2 + 52); ctx.stroke();
+    });
+    var base = mk(new THREE.CylinderGeometry(0.64, 0.66, 0.08, 24), [
+      toon('#d9534f'), new THREE.MeshLambertMaterial({ map: fTex }), toon('#d9534f')
+    ], false);
+    base.scale.set(1.10, 1, 0.72);
+    base.position.y = 0.05;
+    var g1 = mk(new THREE.BoxGeometry(0.06, 0.14, 0.24), toon('#ffffff'), false); g1.position.set(-0.50, 0.14, 0);
+    var g2 = g1.clone(); g2.position.x = 0.50;
+    g.add(base, g1, g2);
+  } else if (id === 'gate') {
+    // 朝南敞开的校门（两根柱子横排在东西方向，放在操场南面最自然！）
+    var p1 = mk(new THREE.BoxGeometry(0.16, 0.56, 0.16), toon('#f87171')); p1.position.set(-0.32, 0.28, 0);
+    var p2 = mk(new THREE.BoxGeometry(0.16, 0.56, 0.16), toon('#f87171')); p2.position.set(0.32, 0.28, 0);
+    var arch = mk(new THREE.BoxGeometry(0.88, 0.16, 0.20), toon('#f59e0b')); arch.position.set(0, 0.62, 0);
+    var pole = mk(new THREE.CylinderGeometry(0.018, 0.018, 0.36, 8), toon('#eab308'), false); pole.position.set(0, 0.86, 0);
+    var flag = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.14, 0.02), toon('#ef4444')); flag.position.set(0.11, 0.96, 0);
+    flag.name = 'gateFlag';
+    g.add(p1, p2, arch, pole, flag);
+  }
+  var hitW = (id === 'teaching' || id === 'field') ? 1.28 : 1.08;
+  var hitH = (id === 'gate') ? 1.12 : 0.88;
+  var hitD = (id === 'complex' || id === 'teaching') ? 1.15 : 1.02;
+  var hitBox = new THREE.Mesh(
+    new THREE.BoxGeometry(hitW, hitH, hitD),
+    new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false })
+  );
+  hitBox.position.y = hitH * 0.48;
+  hitBox.castShadow = false; hitBox.receiveShadow = false;
+  g.add(hitBox);
+  return g;
+}
+
+var partObjs = [];
+var partMap = {};
+var partHitMeshes = [];
+var labelsEl = $('#labels');
+var gateFlagRef = null;
+var TRAY_SCALE = 0.82;
+
+PARTS_DEF.forEach(function (def) {
+  var m = buildPartMesh(def.id);
+  m.position.set(def.tray[0], 0.04, def.tray[1]);
+  m.scale.setScalar(TRAY_SCALE);
+  m.traverse(function (ch) {
+    ch.userData = { kind: 'part', id: def.id };
+    if (ch.isMesh) partHitMeshes.push(ch);
+    if (ch.name === 'gateFlag') gateFlagRef = ch;
+  });
+  live.add(m);
+
+  // 零件名牌（未拼装时显示在左侧托盘；拼装成功后才在底板建筑下亮出“✅ 建筑名”）
+  var lbl = document.createElement('div');
+  lbl.className = 'part-lbl';
+  lbl.textContent = def.emoji + ' ' + def.name;
+  labelsEl.appendChild(lbl);
+
+  var rec = {
+    def: def, mesh: m, lbl: lbl,
+    placed: false,
+    targetPos: new THREE.Vector3(def.tray[0], 0.04, def.tray[1]),
+    targetScale: TRAY_SCALE,
+    shakeT: 0
+  };
+  partObjs.push(rec);
+  partMap[def.id] = rec;
+});
+
+/* 星星粒子特效 */
+var bursts = [];
+function spawnGlueBurst(x, z) {
+  var cols = ['#facc15', '#22c55e', '#f97316', '#38bdf8'];
+  for (var i = 0; i < 12; i++) {
+    var ang = (i / 12) * Math.PI * 2;
+    var sp = new THREE.Mesh(new THREE.OctahedronGeometry(0.07, 0), new THREE.MeshBasicMaterial({ color: cols[i % 4] }));
+    sp.position.set(x, 0.32, z);
+    live.add(sp);
+    bursts.push({
+      mesh: sp,
+      vx: Math.cos(ang) * (1.2 + Math.random() * 0.8),
+      vy: 1.6 + Math.random() * 0.9,
+      vz: Math.sin(ang) * (1.2 + Math.random() * 0.8),
+      life: 0.65
+    });
+  }
+}
+
+/* 3D 导游方位连线箭头 */
+var tourArrow = new THREE.Group();
+var taMat = new THREE.MeshBasicMaterial({ color: '#e56d17' });
+var taShaft = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.05, 1), taMat);
+var taHead = new THREE.Mesh(new THREE.ConeGeometry(0.19, 0.34, 4), taMat);
+taHead.rotation.x = Math.PI / 2;
+tourArrow.add(taShaft, taHead);
+tourArrow.visible = false;
+live.add(tourArrow);
+
+function showTourArrow(fromId, toId) {
+  var a = partMap[fromId].def.slot, b = partMap[toId].def.slot;
+  var dx = b[0] - a[0], dz = b[1] - a[1], dist = Math.hypot(dx, dz);
+  if (dist < 0.2) return;
+  tourArrow.visible = true;
+  var len = Math.max(0.25, dist - 0.55);
+  taShaft.scale.set(1, 1, len);
+  taShaft.position.set(0, 0.62, len * 0.5);
+  taHead.position.set(0, 0.62, len + 0.14);
+  tourArrow.position.set(a[0], 0, a[1]);
+  tourArrow.rotation.y = Math.atan2(dx, dz);
+}
+
+/* 悬停底座光环 + 拖拽投影圈 */
+var hoverPartRing = new THREE.Mesh(
+  new THREE.RingGeometry(0.42, 0.54, 28),
+  new THREE.MeshBasicMaterial({ color: '#f97316', side: THREE.DoubleSide, transparent: true, opacity: 0.72 })
+);
+hoverPartRing.rotation.x = -Math.PI / 2; hoverPartRing.position.y = 0.04; hoverPartRing.visible = false;
+live.add(hoverPartRing);
+
+var dragShadow = new THREE.Mesh(
+  new THREE.CircleGeometry(0.42, 24),
+  new THREE.MeshBasicMaterial({ color: '#3b240c', side: THREE.DoubleSide, transparent: true, opacity: 0.24, depthWrite: false })
+);
+dragShadow.rotation.x = -Math.PI / 2; dragShadow.position.y = 0.052; dragShadow.visible = false;
+live.add(dragShadow);
+
+/* ===== 状态与方位盲拼核心逻辑 ===== */
+var resetGen = 0;
+var found = {}, stamps = { s1: false, s2: false, s3: false };
+var celebrated = false, demo = false;
+var questIdx = 0; // 0=操场中心, 1=教学楼北, 2=校门南, 3=综合楼西, 4=行政楼东北, 5=图书馆东南, 6=全部完成
+var wrongStreak = 0;
+var selectedId = null;
+var hoveredPartId = null;
+var nearSlotId = null;
+var dragging = null;
+var dragStartClient = { x: 0, y: 0 };
+var dragMoved = false;
+var viewedTop = false;
+var touredIds = {};
+var curGuideSpeech = '';
+
+function currentQuestId() {
+  return questIdx < QUEST_ORDER.length ? QUEST_ORDER[questIdx] : null;
+}
+
+var popTimer = 0, popWorld = new THREE.Vector3();
+function showPop(worldV, text, cls) {
+  popWorld.copy(worldV).add(live.position);
+  var el = $('#popTag');
+  el.textContent = text;
+  el.className = 'tag3d show' + (cls ? ' ' + cls : '');
+  popTimer = 2.9;
+}
+
+function placedCount() {
+  return partObjs.filter(function (r) { return r.placed; }).length;
+}
+
+function syncChips() {
+  $('#buildProg').textContent = '已拼装 ' + placedCount() + '/6';
+  var qId = currentQuestId();
+  var allPlaced = (placedCount() === 6);
+  partObjs.forEach(function (r) {
+    r.lbl.classList.toggle('sel', !r.placed && (selectedId === r.def.id || hoveredPartId === r.def.id));
+    r.lbl.classList.toggle('quest', !r.placed && qId === r.def.id && selectedId !== r.def.id);
+    r.lbl.classList.toggle('done', r.placed);
+    r.lbl.textContent = r.placed ? ('✅ ' + r.def.name) : (r.def.emoji + ' ' + r.def.name);
+
+    // 关键防抄作业：盲拼阶段所有空闲槽位完全中性一致，绝不提前高亮答案槽位！
+    var pad = slotMap[r.def.id];
+    if (allPlaced) {
+      var needTour = !touredIds[r.def.id];
+      pad.material.color.set(needTour ? '#f97316' : '#16a34a');
+      pad.material.opacity = needTour ? 0.78 : 0.42;
+    } else if (r.placed) {
+      pad.material.color.set('#16a34a');
+      pad.material.opacity = 0.46;
+    } else if (nearSlotId === r.def.id) {
+      // 鼠标悬停/拖到任意空槽位上都给相同的柔和白黄色反馈，绝不泄密！
+      pad.material.color.set('#f59e0b');
+      pad.material.opacity = 0.85;
+    } else if (questIdx === 0 && r.def.id === 'field') {
+      // 仅第1步中心参照物（操场）在正中间泛柔和浅绿光
+      pad.material.color.set('#16a34a');
+      pad.material.opacity = 0.75;
+    } else {
+      pad.material.color.set('#6ca150');
+      pad.material.opacity = 0.30;
+    }
+  });
+}
+
+function addDiscovery(key, stampKey, html, spoken) {
+  if (!found[key]) {
+    found[key] = true;
+    var el = document.createElement('div');
+    el.className = 'stk';
+    el.innerHTML = html;
+    $('#ntList').prepend(el);
+    $('#ntCnt').textContent = Object.keys(found).length;
+  }
+  if (stampKey && !stamps[stampKey]) {
+    stamps[stampKey] = true;
+    var sEl = $('#' + stampKey.replace('s', 'st'));
+    if (sEl) sEl.classList.add('lit');
+  }
+  if (!demo && !celebrated && stamps.s1 && stamps.s2 && stamps.s3) {
+    celebrated = true;
+    saveProgress(LESSON_ID, true);
+    playTone('win');
+    launchConfetti();
+    $('#winToast').classList.add('show');
+    speak('太棒啦！全部发现都集齐了，制作校园模型要先标明东西南北、放好正中间的操场当参照物，再按方位关系把建筑摆放到位！', true);
+    updateGuide(false);
+    return;
+  }
+  updateGuide(false);
+  if (spoken && !demo) speak(spoken);
+}
+
+function updateGuide(speakIt) {
+  var bar = $('#guideBar');
+  var vBtn = $('#viewBtn');
+  vBtn.classList.remove('pulse');
+  var qId = currentQuestId();
+  var tCnt = Object.keys(touredIds).length;
+
+  if (qId) {
+    $('#guideIco').textContent = questIdx === 0 ? '🏟️' : '🧭';
+    curGuideSpeech = partMap[qId].def.clueShort;
+  } else if (!viewedTop) {
+    $('#guideIco').textContent = '📷';
+    curGuideSpeech = '盲拼大成功！点下方「📷 俯视 / 立体」切俯视图看全貌，并点建筑当小导游吧！';
+    vBtn.classList.add('pulse');
+  } else if (tCnt < 2) {
+    $('#guideIco').textContent = '🎤';
+    curGuideSpeech = '最后一步：当校园小导游！点击校园里任意 2 栋建筑，用方位词介绍它们的位置吧！';
+  } else {
+    $('#guideIco').textContent = '🏆';
+    curGuideSpeech = '自由巡游模式：可随时切换俯视/立体，点击任意建筑听校园方位介绍！';
+  }
+  $('#guideTxt').textContent = curGuideSpeech;
+  bar.classList.remove('bump');
+  void bar.offsetWidth;
+  bar.classList.add('bump');
+  if (speakIt) speak(curGuideSpeech, true);
+}
+
+function selectPart(id) {
+  var rec = partMap[id];
+  if (!rec) return;
+  if (rec.placed) {
+    tourBuilding(id);
+    return;
+  }
+  var qId = currentQuestId();
+  if (qId && id !== qId) {
+    var qRec = partMap[qId];
+    playTone('bump');
+    showPop(new THREE.Vector3(rec.mesh.position.x, 0.9, rec.mesh.position.z), '先按线索放「' + qRec.def.name + '」哦！', 'warm');
+    speak('我们先帮' + qRec.def.name + '找到位置吧！' + qRec.def.clueDetail);
+    selectedId = qId;
+    syncChips();
+    return;
+  }
+  selectedId = (selectedId === id) ? null : id;
+  playTone('pick');
+  if (selectedId) {
+    showPop(new THREE.Vector3(rec.mesh.position.x, 0.9, rec.mesh.position.z), '已选中「' + rec.def.name + '」，请点你认为正确的空位！', 'warm');
+    speak(rec.def.clueDetail);
+  }
+  syncChips();
+}
+
+function tryPlaceInSlot(partId, slotId) {
+  var rec = partMap[partId];
+  var slotRec = partMap[slotId];
+  if (!rec || !slotRec) return;
+
+  // 若拖拽的不是当前任务建筑，先温和引导完成当前方位线索
+  var qId = currentQuestId();
+  if (qId && partId !== qId) {
+    var qRec = partMap[qId];
+    rec.targetPos.set(rec.def.tray[0], 0.04, rec.def.tray[1]);
+    rec.targetScale = TRAY_SCALE;
+    rec.shakeT = 0.35;
+    playTone('bump');
+    showPop(new THREE.Vector3(slotRec.def.slot[0], 0.85, slotRec.def.slot[1]), '先放当前线索「' + qRec.def.name + '」哦！', 'warm');
+    speak('我们先按线索放' + qRec.def.name + '吧！' + qRec.def.clueDetail);
+    syncChips();
+    return;
+  }
+
+  if (partId === slotId) {
+    rec.placed = true;
+    rec.targetPos.set(rec.def.slot[0], 0.05, rec.def.slot[1]);
+    rec.targetScale = 1.0;
+    selectedId = null;
+    wrongStreak = 0;
+    questIdx++;
+    playTone('snap');
+    spawnGlueBurst(rec.def.slot[0], rec.def.slot[1]);
+    showPop(new THREE.Vector3(rec.def.slot[0], 0.95, rec.def.slot[1]), '✅ ' + rec.def.name + '放对在' + rec.def.slotDirName + '啦！', 'ok');
+    syncChips();
+    var cnt = placedCount();
+    var hitStamp = cnt === 1 ? 's1' : (cnt === 6 ? 's2' : null);
+    addDiscovery('put_' + partId, hitStamp, rec.def.sticker, rec.def.okSpeech);
+  } else {
+    // 放错空位：弹性弹回托盘 + 明确告诉孩子刚才放错在哪边、应该往哪边找！
+    wrongStreak++;
+    rec.placed = false;
+    rec.targetPos.set(rec.def.tray[0], 0.04, rec.def.tray[1]);
+    rec.targetScale = TRAY_SCALE;
+    rec.shakeT = 0.45;
+    playTone('bump');
+    var wrongPlace = slotRec.def.slotDirName;
+    var tipMsg = '哎呀，这里是' + wrongPlace + '哦！' + rec.def.wrongGuide;
+    showPop(new THREE.Vector3(slotRec.def.slot[0], 0.82, slotRec.def.slot[1]), '这里是' + wrongPlace + '哦，再看看方向！', 'warm');
+    speak(tipMsg);
+    syncChips();
+  }
+}
+
+function tourBuilding(id) {
+  var rec = partMap[id];
+  if (!rec || !rec.placed) return;
+  playTone('snap');
+  if (partMap[rec.def.tourNeighbor] && partMap[rec.def.tourNeighbor].placed) {
+    showTourArrow(id, rec.def.tourNeighbor);
+  }
+  showPop(new THREE.Vector3(rec.def.slot[0], 1.0, rec.def.slot[1]), '🎤 ' + rec.def.tourSpeech, 'ok');
+  if (placedCount() === 6) {
+    touredIds[id] = true;
+    var tCnt = Object.keys(touredIds).length;
+    var hitS3 = (viewedTop && tCnt >= 2 && !stamps.s3) ? 's3' : null;
+    addDiscovery('tour_' + id, hitS3, '🎤 小导游：' + rec.def.name + '（' + rec.def.slotDirName + '）', rec.def.tourSpeech);
+  } else {
+    speak(rec.def.tourSpeech);
+  }
+}
+
+function toggleCameraView() {
+  isTopView = !isTopView;
+  $('#viewBtn').textContent = isTopView ? '🧊 立体 / 俯视' : '📷 俯视 / 立体';
+  playTone('pick');
+  if (isTopView) {
+    viewedTop = true;
+    var tCnt = Object.keys(touredIds).length;
+    var hitS3 = (placedCount() === 6 && tCnt >= 2 && !stamps.s3) ? 's3' : null;
+    addDiscovery('view_top', hitS3, '📷 切换到俯视平面图观察校园全貌', '切换到俯视平面图啦！从正上方看，以操场为中心的东南西北各栋建筑一目了然！');
+  } else {
+    speak('切换回立体视角啦，可以清楚看到每栋校园模型的立体样子！');
+    updateGuide(false);
+  }
+}
+
+/* ===== 重置与演示 ===== */
+function resetAll() {
+  resetGen++;
+  demo = false;
+  stopVoice();
+  $('#demoBtn').classList.remove('on');
+  found = {};
+  stamps = { s1: false, s2: false, s3: false };
+  celebrated = false;
+  questIdx = 0;
+  wrongStreak = 0;
+  selectedId = null;
+  hoveredPartId = null;
+  nearSlotId = null;
+  dragging = null;
+  hoverPartRing.visible = false;
+  dragShadow.visible = false;
+  viewedTop = false;
+  isTopView = false;
+  $('#viewBtn').textContent = '📷 俯视 / 立体';
+  touredIds = {};
+  tourArrow.visible = false;
+  partObjs.forEach(function (r) {
+    r.placed = false;
+    r.targetPos.set(r.def.tray[0], 0.04, r.def.tray[1]);
+    r.mesh.position.copy(r.targetPos);
+    r.targetScale = TRAY_SCALE;
+    r.mesh.scale.setScalar(TRAY_SCALE);
+    r.shakeT = 0;
+  });
+  hintBeacon.visible = false;
+  $('#popTag').className = 'tag3d';
+  $('#ntList').innerHTML = ''; $('#ntCnt').textContent = '0';
+  document.querySelectorAll('.st').forEach(function (s) { s.classList.remove('lit'); });
+  $('#winToast').classList.remove('show');
+  $('#qFb').textContent = '';
+  document.querySelectorAll('.qopt').forEach(function (b) { b.classList.remove('ok', 'bad'); });
+  syncChips();
+  updateGuide(false);
+}
+
+function startDemo() {
+  markInteracted();
+  if (demo) { resetAll(); return; }
+  resetAll();
+  demo = true;
+  $('#demoBtn').classList.add('on');
+  var g = resetGen;
+  function at(ms, fn) { setTimeout(function () { if (g !== resetGen || !demo) return; fn(); }, ms); }
+  speak('开始演示！先把操场放在校园正中间当参照物，再看东西南北方位线索，把教学楼、校门、综合楼、行政楼、图书馆准确盲拼到位！', true);
+  QUEST_ORDER.forEach(function (id, idx) {
+    at(1100 + idx * 1050, function () { tryPlaceInSlot(id, id); });
+  });
+  at(7800, function () { toggleCameraView(); });
+  at(9100, function () { tourBuilding('teaching'); });
+  at(10500, function () { tourBuilding('library'); });
+  at(12100, function () {
+    demo = false;
+    $('#demoBtn').classList.remove('on');
+    resetAll();
+    speak('演示结束啦！现在轮到你先放操场，再看东西南北方位线索自己盲拼校园吧！', true);
+  });
+}
+
+/* ===== 拖拽与点选交互（公平空位吸附，绝不偷泄答案！） ===== */
+function markInteracted() { document.body.classList.add('interacted'); }
+
+var ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+var dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.18);
+var dragPt = new THREE.Vector3();
+
+function findNearestEmptySlot(lx, lz) {
+  var bestId = null, bestD = 1.05;
+  PARTS_DEF.forEach(function (d) {
+    if (partMap[d.id].placed) return;
+    var dist = Math.hypot(lx - d.slot[0], lz - d.slot[1]);
+    if (dist < bestD) { bestD = dist; bestId = d.id; }
+  });
+  return bestId;
+}
+
+function setRay(e) {
+  var r = cv.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+}
+
+cv.addEventListener('pointerdown', function (e) {
+  markInteracted();
+  if (demo) return;
+  setRay(e);
+
+  // 若已点选左侧当前零件，优先检测底板任意未放空槽位，直接判断放置！
+  if (selectedId && partMap[selectedId] && !partMap[selectedId].placed) {
+    var hitS = ray.intersectObjects(slotHitMeshes, false);
+    if (hitS.length) {
+      var sid = hitS[0].object.userData.id;
+      if (!partMap[sid].placed) {
+        tryPlaceInSlot(selectedId, sid);
+        return;
+      }
+    }
+  }
+
+  // 检测建筑零件（只扫 Mesh 列表）
+  var hitP = ray.intersectObjects(partHitMeshes, false);
+  if (hitP.length) {
+    var pid = hitP[0].object.userData && hitP[0].object.userData.id;
+    if (pid && partMap[pid]) {
+      if (partMap[pid].placed) {
+        tourBuilding(pid);
+        return;
+      }
+      dragging = partMap[pid];
+      dragStartClient = { x: e.clientX, y: e.clientY };
+      dragMoved = false;
+      cv.setPointerCapture(e.pointerId);
+      return;
+    }
+  }
+
+  // 若当前选中了未放零件，点击底板某空位附近也可直接尝试放入
+  if (selectedId && partMap[selectedId] && !partMap[selectedId].placed) {
+    if (ray.ray.intersectPlane(dragPlane, dragPt)) {
+      var lx = dragPt.x - live.position.x, lz = dragPt.z - live.position.z;
+      var bestId = findNearestEmptySlot(lx, lz);
+      if (bestId) tryPlaceInSlot(selectedId, bestId);
+    }
+  }
+});
+
+cv.addEventListener('pointermove', function (e) {
+  setRay(e);
+  if (dragging) {
+    var moveD = Math.hypot(e.clientX - dragStartClient.x, e.clientY - dragStartClient.y);
+    if (moveD > 8) {
+      dragMoved = true;
+      selectedId = dragging.def.id;
+      if (ray.ray.intersectPlane(dragPlane, dragPt)) {
+        var lx = dragPt.x - live.position.x, lz = dragPt.z - live.position.z;
+        var closeId = findNearestEmptySlot(lx, lz);
+        nearSlotId = closeId;
+        // 公平轻微居中预览：靠近任意空槽位都有相同手感，绝不只吸附正确槽位！
+        if (closeId) {
+          var sd = partMap[closeId].def.slot;
+          dragging.targetPos.set(lx * 0.6 + sd[0] * 0.4, 0.25, lz * 0.6 + sd[1] * 0.4);
+        } else {
+          dragging.targetPos.set(lx, 0.26, lz);
+        }
+        dragging.targetScale = 0.96;
+        dragShadow.visible = true;
+        dragShadow.position.set(dragging.targetPos.x, 0.052, dragging.targetPos.z);
+      }
+      syncChips();
+    }
+    hoverPartRing.visible = false;
+    cv.style.cursor = 'grabbing';
+    return;
+  }
+
+  var hp = ray.intersectObjects(partHitMeshes, false);
+  if (hp.length && hp[0].object.userData && partMap[hp[0].object.userData.id]) {
+    var hid = hp[0].object.userData.id;
+    if (hoveredPartId !== hid) { hoveredPartId = hid; syncChips(); }
+    var hRec = partMap[hid];
+    hoverPartRing.visible = true;
+    hoverPartRing.position.set(hRec.mesh.position.x, hRec.placed ? 0.055 : 0.032, hRec.mesh.position.z);
+    cv.style.cursor = hRec.placed ? 'pointer' : 'grab';
+  } else {
+    if (hoveredPartId !== null) { hoveredPartId = null; syncChips(); }
+    hoverPartRing.visible = false;
+    if (selectedId && !partMap[selectedId].placed) {
+      var hs = ray.intersectObjects(slotHitMeshes, false);
+      var newNear = (hs.length && !partMap[hs[0].object.userData.id].placed) ? hs[0].object.userData.id : null;
+      if (nearSlotId !== newNear) { nearSlotId = newNear; syncChips(); }
+      cv.style.cursor = newNear ? 'pointer' : 'default';
+    } else {
+      if (nearSlotId !== null) { nearSlotId = null; syncChips(); }
+      cv.style.cursor = 'default';
+    }
+  }
+});
+
+cv.addEventListener('pointerup', function (e) {
+  if (!dragging) return;
+  var rec = dragging;
+  dragging = null;
+  nearSlotId = null;
+  dragShadow.visible = false;
+  try { cv.releasePointerCapture(e.pointerId); } catch (err) {}
+  cv.style.cursor = 'default';
+
+  if (!dragMoved) {
+    selectPart(rec.def.id);
+    return;
+  }
+  var lx = rec.targetPos.x, lz = rec.targetPos.z;
+  if (lx < -1.95) {
+    rec.targetPos.set(rec.def.tray[0], 0.04, rec.def.tray[1]);
+    rec.targetScale = TRAY_SCALE;
+    selectedId = null;
+    syncChips();
+    return;
+  }
+  var bestId = findNearestEmptySlot(lx, lz);
+  if (bestId) {
+    tryPlaceInSlot(rec.def.id, bestId);
+  } else {
+    rec.targetPos.set(rec.def.tray[0], 0.04, rec.def.tray[1]);
+    rec.targetScale = TRAY_SCALE;
+    selectedId = null;
+    syncChips();
+  }
+});
+
+$('#viewBtn').addEventListener('click', function () { markInteracted(); if (!demo) toggleCameraView(); });
+$('#voiceBtn').addEventListener('click', function () {
+  markInteracted();
+  voiceOn = !voiceOn;
+  this.classList.toggle('on', voiceOn);
+  if (voiceOn) updateGuide(true); else stopVoice();
+});
+$('#demoBtn').addEventListener('click', startDemo);
+$('#guideBar').addEventListener('click', function () { markInteracted(); updateGuide(true); });
+$('#resetBtn').addEventListener('click', function () { markInteracted(); resetAll(); });
+$('#pyBtn').addEventListener('click', function () { markInteracted(); document.body.classList.toggle('no-py'); });
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+$('#winKeepBtn').addEventListener('click', function () {
+  $('#winToast').classList.remove('show');
+  updateGuide(false);
+});
+$('#winAgainBtn').addEventListener('click', resetAll);
+$('#qOpts').addEventListener('click', function (e) {
+  var b = e.target.closest('.qopt');
+  if (!b) return;
+  if (b.dataset.ok === '1') {
+    b.classList.add('ok');
+    $('#qFb').textContent = '🌸 答对啦！获得本课小红花！';
+    saveProgress(LESSON_ID, true);
+    playTone('win');
+    speak('答对啦！先看指北针和东西南北四个方向标志，就能准确摆放每栋建筑，获得本课小红花！', true);
+  } else {
+    b.classList.add('bad');
+    var h = b.dataset.hint || '再想想哦！';
+    $('#qFb').textContent = h;
+    speak(h, true);
+  }
+});
+
+/* ===== 投影与渲染循环 ===== */
+function projectToScreen(v) {
+  var p = v.clone().project(camera);
+  return { x: (p.x * 0.5 + 0.5) * window.innerWidth, y: (-p.y * 0.5 + 0.5) * window.innerHeight };
+}
+
+var introT0 = performance.now(), lastT = performance.now();
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  camera.updateProjectionMatrix();
+  cfCv.width = w; cfCv.height = h;
+}
+window.addEventListener('resize', fit);
+fit();
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (now - lastT) / 1000));
+  lastT = now;
+  var t = now * 0.001;
+
+  var pop = Math.min(1, (performance.now() - introT0) / 700);
+  var ease = 1 - Math.pow(1 - pop, 3);
+  live.scale.setScalar(0.01 + 0.99 * ease);
+
+  // 相机平滑切换
+  var tgtCam = isTopView ? CAM_TOP : CAM_3D;
+  camPosCur.lerp(tgtCam.pos, Math.min(1, dt * 6));
+  camLookCur.lerp(tgtCam.look, Math.min(1, dt * 6));
+  camera.position.copy(camPosCur);
+  camera.lookAt(camLookCur);
+
+  if (gateFlagRef) gateFlagRef.rotation.y = Math.sin(t * 4.5) * 0.22;
+
+  var qId = currentQuestId();
+  var cnt = placedCount();
+  var tCnt = Object.keys(touredIds).length;
+
+  partObjs.forEach(function (r, idx) {
+    var isHov = (hoveredPartId === r.def.id && dragging !== r);
+    var isCurQuest = (!r.placed && qId === r.def.id && dragging !== r);
+    var liftY = 0;
+    if (!r.placed && selectedId === r.def.id && dragging !== r) {
+      liftY = 0.20 + Math.sin(t * 6) * 0.05;
+    } else if (isHov) {
+      liftY = r.placed ? 0.06 : (0.14 + Math.sin(t * 6) * 0.03);
+    } else if (isCurQuest) {
+      liftY = 0.06 + Math.sin(t * 4.2) * 0.04;
+    }
+    var ty = r.targetPos.y + liftY;
+    r.mesh.position.x += (r.targetPos.x - r.mesh.position.x) * Math.min(1, dt * 15);
+    r.mesh.position.y += (ty - r.mesh.position.y) * Math.min(1, dt * 15);
+    r.mesh.position.z += (r.targetPos.z - r.mesh.position.z) * Math.min(1, dt * 15);
+    var wantScale = r.targetScale + (isHov ? 0.07 : 0);
+    var curS = r.mesh.scale.x + (wantScale - r.mesh.scale.x) * Math.min(1, dt * 12);
+    r.mesh.scale.setScalar(curS);
+    if (r.shakeT > 0) {
+      r.shakeT = Math.max(0, r.shakeT - dt);
+      r.mesh.rotation.z = Math.sin(r.shakeT * 36) * 0.24;
+    } else {
+      r.mesh.rotation.z = 0;
+    }
+
+    var pad = slotMap[r.def.id];
+    if (cnt === 6 && !touredIds[r.def.id]) {
+      pad.scale.setScalar(1.10 + Math.sin(t * 5.2 + idx) * 0.10);
+    } else if (questIdx === 0 && r.def.id === 'field') {
+      pad.scale.setScalar(1.12 + Math.sin(t * 5) * 0.12);
+    } else if (nearSlotId === r.def.id && !r.placed) {
+      pad.scale.setScalar(1.18 + Math.sin(t * 6) * 0.08);
+    } else {
+      pad.scale.setScalar(1.0);
+    }
+
+    // 零件名牌定位：未放置显示在托盘下方（微调间距不压下一行建筑）；已放置后才在底板建筑前方亮出“✅ 建筑名”
+    if (dragging !== r) {
+      var offZ = r.placed ? 0.44 : 0.48;
+      var lp = projectToScreen(new THREE.Vector3(r.mesh.position.x, 0.04, r.mesh.position.z + offZ).add(live.position));
+      r.lbl.style.left = lp.x + 'px';
+      r.lbl.style.top = lp.y + 'px';
+      r.lbl.style.display = 'block';
+    } else {
+      r.lbl.style.display = 'none';
+    }
+  });
+
+  if (hoverPartRing.visible) hoverPartRing.scale.setScalar(1.0 + Math.sin(t * 5) * 0.09);
+
+  // 柔和辅助光圈 + 单焦点 #targetCue（盲拼期间绝不提前给底板答案空位发光！）
+  var cueEl = $('#targetCue');
+  var notesRect = $('#notes').getBoundingClientRect();
+  function placeCueSafe(sx, sy, txt) {
+    cueEl.textContent = txt;
+    var x = Math.max(105, Math.min(window.innerWidth - 110, sx));
+    var y = Math.max(82, Math.min(window.innerHeight - 66, sy));
+    if (x + 100 > notesRect.left && y - 34 < notesRect.bottom + 8) {
+      x = Math.min(x, notesRect.left - 110);
+    }
+    cueEl.style.left = x + 'px';
+    cueEl.style.top = y + 'px';
+    cueEl.classList.add('show');
+  }
+
+  if (demo || celebrated) {
+    hintBeacon.visible = false;
+    cueEl.classList.remove('show');
+  } else if (qId) {
+    var qRec = partMap[qId];
+    // 只有第1步（中心操场）或同一题连错 >= 2 次防卡死时，才在目标空位给柔和提示光圈！
+    if (questIdx === 0 || wrongStreak >= 2) {
+      hintBeacon.visible = true;
+      hintBeacon.position.set(qRec.def.slot[0], 0, qRec.def.slot[1]);
+      hbRing.scale.setScalar(0.96 + Math.sin(t * 5.5) * 0.14);
+    } else {
+      hintBeacon.visible = false;
+    }
+    // 单焦点 #targetCue 只标在左侧对应那栋建筑上方（选中/拖起后隐藏，不泄密空位！）
+    if (!selectedId && !dragging) {
+      var spTray = projectToScreen(new THREE.Vector3(qRec.mesh.position.x, 0.92, qRec.mesh.position.z).add(live.position));
+      placeCueSafe(spTray.x, spTray.y, questIdx === 0 ? '👆 先放「操场」到正中间' : ('👆 拖或点「' + qRec.def.name + '」'));
+    } else {
+      cueEl.classList.remove('show');
+    }
+  } else if (!viewedTop) {
+    hintBeacon.visible = false;
+    var vbRect = $('#viewBtn').getBoundingClientRect();
+    cueEl.textContent = '👇 点这里切俯视图看全貌';
+    cueEl.style.left = (vbRect.left + vbRect.width * 0.5) + 'px';
+    cueEl.style.top = (vbRect.top - 10) + 'px';
+    cueEl.classList.add('show');
+  } else if (tCnt < 2) {
+    var tourRec = partObjs.find(function (r) { return r.placed && !touredIds[r.def.id]; });
+    if (tourRec) {
+      hintBeacon.visible = true;
+      hintBeacon.position.set(tourRec.def.slot[0], 0, tourRec.def.slot[1]);
+      hbRing.scale.setScalar(0.96 + Math.sin(t * 5.5) * 0.14);
+      var spTour = projectToScreen(new THREE.Vector3(tourRec.def.slot[0], 1.05, tourRec.def.slot[1]).add(live.position));
+      placeCueSafe(spTour.x, spTour.y, '👆 点「' + tourRec.def.name + '」当小导游');
+    } else {
+      hintBeacon.visible = false;
+      cueEl.classList.remove('show');
+    }
+  } else {
+    hintBeacon.visible = false;
+    cueEl.classList.remove('show');
+  }
+
+  for (var i = bursts.length - 1; i >= 0; i--) {
+    var b = bursts[i];
+    b.life -= dt;
+    b.mesh.position.x += b.vx * dt;
+    b.mesh.position.y += b.vy * dt;
+    b.mesh.position.z += b.vz * dt;
+    b.vy -= 4.8 * dt;
+    b.mesh.rotation.y += dt * 7;
+    b.mesh.scale.setScalar(Math.max(0.01, b.life / 0.65));
+    if (b.life <= 0) { live.remove(b.mesh); bursts.splice(i, 1); }
+  }
+
+  if (popTimer > 0) {
+    popTimer = Math.max(0, popTimer - dt);
+    var sp = projectToScreen(popWorld);
+    var pel = $('#popTag');
+    pel.style.left = Math.max(130, Math.min(window.innerWidth - 130, sp.x)) + 'px';
+    pel.style.top = Math.max(76, sp.y - 10) + 'px';
+    if (popTimer === 0) pel.classList.remove('show');
+  }
+
+  tickConfetti(dt);
+  renderer.render(scene, camera);
+}
+
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () {
+    return {
+      triangles: renderer.info.render.triangles,
+      celebrated: celebrated,
+      placed: placedCount(),
+      questIdx: questIdx,
+      currentQuest: currentQuestId(),
+      wrongStreak: wrongStreak,
+      viewedTop: viewedTop,
+      toured: Object.keys(touredIds).length
+    };
+  },
+  screenTargets: function () {
+    var out = {};
+    partObjs.forEach(function (r) {
+      var p = projectToScreen(new THREE.Vector3(r.mesh.position.x, 0.35, r.mesh.position.z).add(live.position));
+      var s = projectToScreen(new THREE.Vector3(r.def.slot[0], 0.15, r.def.slot[1]).add(live.position));
+      out[r.def.id] = { part: p, slot: s, placed: r.placed };
+    });
+    return out;
+  },
+  startDemo: startDemo,
+  resetAll: resetAll
+};
+
+syncChips();
+updateGuide(false);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

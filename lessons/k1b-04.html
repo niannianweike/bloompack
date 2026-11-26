@@ -1,0 +1,2498 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第4课 身边的植物 · 身边植物 3D 认辨台</title>
+<style>
+:root{--accent:#2e9d5b;--accent-dark:#1f7542;--ink:#2a2218;--line:#e4d5ba;--card:rgba(255,253,248,.94)}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#c59b6d;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas#cv.grabbing{cursor:grabbing}
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.46em;color:#7a6a52;font-weight:600}
+body.no-py rt{display:none}
+
+/* 左上标题卡片 */
+#hudTL{position:fixed;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:10px;
+  padding:7px 14px 7px 9px;border-radius:16px;background:var(--card);border:1.5px solid var(--line);
+  box-shadow:0 4px 16px rgba(60,36,12,.14)}
+#backBtn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:#5c4b34;font-size:19px;font-weight:900}
+#backBtn:hover{border-color:var(--accent);color:var(--accent)}
+.hd-t{font-size:16px;font-weight:900;line-height:1.5}
+.hd-sub{font-size:11.5px;color:#7b6c56;font-weight:700}
+
+/* 顶部中央动态分步小助手（U2） */
+#guideBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:6;
+  max-width:min(450px,calc(100vw - 630px));display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:15px;background:rgba(255,250,240,.96);
+  border:2px solid var(--accent);box-shadow:0 6px 18px rgba(32,102,56,.16);
+  font-size:13.5px;font-weight:800;color:#155830;cursor:pointer;line-height:1.38;transition:transform .2s,box-shadow .2s}
+#guideBar:active{transform:translateX(-50%) scale(.98)}
+#guideBar.flash{transform:translateX(-50%) scale(1.04);box-shadow:0 8px 24px rgba(46,157,91,.34)}
+
+/* 右上工具条 + 顶部防遮挡入口微标签（U2） */
+#hudTR{position:fixed;top:12px;right:12px;z-index:7;display:flex;align-items:center;gap:6px}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:38px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);
+  background:var(--card);font-size:13.5px;font-weight:800;color:#4a3c28;cursor:pointer;
+  box-shadow:0 3px 0 #d9c8ab;transition:all .14s;white-space:nowrap}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:var(--accent-dark);color:#fff;box-shadow:0 3px 0 var(--accent-dark)}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#dcfce7;border:1.5px solid var(--accent);color:#166534;font-size:10.5px;font-weight:900;
+  white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(46,157,91,.24);
+  animation:cuePop 1.6s ease-in-out infinite;transition:opacity .25s}
+body.interacted .entry-cue{opacity:0;animation:none}
+@keyframes cuePop{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+
+/* 右上可收起窄版发现栏（D3） */
+#notes{position:fixed;top:60px;right:12px;z-index:6;width:224px;padding:9px 11px;border-radius:15px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 6px 18px rgba(60,36,12,.12)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+.nt-title{font-size:13.5px;font-weight:900}
+.nt-cnt{font-size:12.5px;font-weight:900;color:var(--accent)}
+.nt-tog{padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:11px;font-weight:800;color:#6c5c45;cursor:pointer}
+.stamps{display:flex;gap:4px;margin-bottom:6px}
+.st{flex:1;text-align:center;padding:3px 2px;border-radius:8px;font-size:11px;font-weight:800;
+  border:1.5px dashed #d7c5a4;color:#9b8a70;background:#faf4e8;transition:all .2s;line-height:1.4}
+.st.lit{border-style:solid;border-color:var(--accent);background:#e7faee;color:#166534}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList,#notes.collapsed .stamps{display:none}
+#notes.collapsed .nt-head{margin-bottom:0}
+.stk{padding:5px 8px;border-radius:10px;background:#fff;border:1px solid #ece0c9;font-size:12px;font-weight:700;line-height:1.4}
+.stk b{color:#166534}
+
+/* 左上超大超高清圆形 2D Canvas 植物特征特写镜框（绝不遮挡植物主体与右上 #notes） */
+#lensWrap{position:fixed;left:16px;top:76px;z-index:7;display:none;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+#lensWrap.show{display:flex;animation:lensPop .24s ease-out}
+@keyframes lensPop{0%{opacity:0;transform:scale(.82)}100%{opacity:1;transform:scale(1)}}
+.lens-ring{position:relative;width:222px;height:222px;border-radius:50%;padding:7px;
+  background:linear-gradient(135deg,#22c55e,#15803d,#86efac);
+  box-shadow:0 12px 32px rgba(20,83,45,.34)}
+.lens-ring.focusing{background:linear-gradient(135deg,#eab308,#ca8a04,#fde047);box-shadow:0 10px 26px rgba(120,60,10,.28)}
+.lens-inner{position:relative;width:208px;height:208px;border-radius:50%;overflow:hidden;background:#f8fafc;border:3px solid #fff}
+canvas#lensCv{width:208px;height:208px;display:block;transition:filter .08s linear}
+.lens-tag{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:99px;
+  background:rgba(20,83,45,.92);color:#fff;font-size:11.5px;font-weight:800;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.22)}
+.lens-caption{padding:4px 12px;border-radius:99px;background:rgba(255,253,248,.96);border:1.5px solid #86efac;
+  font-size:12px;font-weight:900;color:#14532d;box-shadow:0 4px 12px rgba(0,0,0,.12);white-space:nowrap;text-align:center}
+
+/* 左侧轻提示（打开高清特写时自动让位） */
+#rotHint{position:fixed;left:14px;top:76px;z-index:5;padding:5px 11px;border-radius:99px;
+  background:rgba(255,253,248,.88);border:1.5px solid var(--line);font-size:12px;font-weight:800;color:#6c583f;
+  pointer-events:none;box-shadow:0 3px 10px rgba(60,36,12,.1);transition:opacity .2s}
+body.lens-open #rotHint{opacity:0}
+
+/* 极简纯图标底部圆点切换栏（仅 5 个纯图标圆点，extraBtns === 0） */
+#dock{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:6;
+  display:flex;align-items:center;gap:10px;padding:7px 12px;border-radius:99px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 8px 24px rgba(55,34,10,.16)}
+.pcard{position:relative;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;
+  border:2px solid #e4d6bd;background:#fff;cursor:pointer;font-size:24px;line-height:1;
+  transition:all .16s;padding:0}
+.pcard:hover{border-color:var(--accent);transform:translateY(-2px) scale(1.06)}
+.pcard.active{border-color:var(--accent);background:#eafaf0;box-shadow:0 3px 0 #a7e3bd;transform:scale(1.08)}
+.pcard.pulse{border-color:#ea580c;background:#fff7ed;animation:pcPulse 1.2s ease-in-out infinite}
+@keyframes pcPulse{0%,100%{box-shadow:0 0 0 0 rgba(234,88,12,.55);transform:scale(1.04)}50%{box-shadow:0 0 0 9px rgba(234,88,12,0);transform:scale(1.13)}}
+.pcard.done::after{content:'✓';position:absolute;top:-3px;right:-3px;width:18px;height:18px;border-radius:50%;
+  background:#16a34a;color:#fff;font-size:11px;font-weight:900;display:grid;place-items:center;
+  border:2px solid #fff;box-shadow:0 2px 5px rgba(22,163,74,.35)}
+
+/* 3D 桌面道具轻量提示签（非按钮） */
+#toolTags{position:fixed;inset:0;pointer-events:none;z-index:3}
+.ttag{position:absolute;transform:translate(-50%,-100%);padding:2px 9px;border-radius:99px;
+  background:rgba(42,34,24,.78);color:#fff;font-size:11.5px;font-weight:800;white-space:nowrap;
+  box-shadow:0 2px 8px rgba(0,0,0,.16);transition:background .2s,opacity .15s}
+.ttag.done{background:rgba(22,163,74,.9)}
+.ttag.pulse{background:rgba(240,138,36,.95);animation:tagBob 1.3s ease-in-out infinite}
+@keyframes tagBob{0%,100%{transform:translate(-50%,-100%)}50%{transform:translate(-50%,-118%)}}
+
+/* 视觉特征辨认 2 选 1 卡片弹窗（高清 Canvas 放大镜特征提示图） */
+#riddlePanel{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:8;width:392px;max-width:calc(100vw - 24px);
+  padding:15px 16px;border-radius:22px;background:rgba(255,252,244,.98);border:2.5px solid #f08a24;
+  box-shadow:0 16px 36px rgba(70,40,8,.26);display:none}
+#riddlePanel.show{display:block;animation:cardFlip .25s ease-out}
+@keyframes cardFlip{0%{opacity:0;transform:translateX(-50%) scale(.88)}100%{opacity:1;transform:translateX(-50%) scale(1)}}
+.rd-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.rd-title{font-size:15px;font-weight:900;color:#9a3412}
+.rd-close{width:30px;height:30px;border-radius:10px;border:1.5px solid var(--line);background:#fff;cursor:pointer;font-weight:900;color:#6c5c45}
+.rd-visual-clue{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:16px;
+  background:#fffbeb;border:2px dashed #f59e0b;margin-bottom:12px}
+.rd-clue-art{width:88px;height:88px;border-radius:50%;background:#fff;border:3px solid #22c55e;flex:none;overflow:hidden;
+  display:grid;place-items:center;box-shadow:0 4px 12px rgba(22,163,74,.22)}
+canvas#rdArtCv{width:82px;height:82px;display:block}
+.rd-clue-txt{font-size:13.5px;font-weight:800;color:#4a3210;line-height:1.48}
+.rd-opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rd-opt{display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 8px;border-radius:15px;
+  border:2px solid #e2d3b8;background:#fff;cursor:pointer;font:inherit;font-size:14.5px;font-weight:900;color:#3a2c1c;transition:all .14s;box-shadow:0 3px 0 #e2d3b8}
+.rd-opt span.em{font-size:36px;line-height:1.1}
+.rd-opt span.sub{font-size:12px;color:#78654b;font-weight:700}
+.rd-opt:hover{border-color:var(--accent);background:#f0fdf4;transform:translateY(-2px)}
+.rd-opt.ok{border-color:#16a34a;background:#dcfce7;color:#14532d;box-shadow:0 3px 0 #86efac}
+.rd-opt.bad{border-color:#e03131;background:#fff5f5;color:#c92a2a}
+.rd-fb{margin-top:9px;font-size:13px;font-weight:800;min-height:20px;color:#166534;text-align:center}
+
+/* 3D 浮动标签 + 单焦点跳动提示气泡 */
+#labels{position:fixed;inset:0;pointer-events:none;z-index:5}
+.cue3d{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:4px 12px;border-radius:99px;
+  background:#fff7ed;border:2px solid #ea580c;color:#9a3412;font-size:13px;font-weight:900;white-space:nowrap;
+  box-shadow:0 4px 14px rgba(234,88,12,.28);animation:cueBob 1.3s ease-in-out infinite;display:none;pointer-events:none}
+.cue3d.show{display:block}
+@keyframes cueBob{0%,100%{transform:translate(-50%,-100%) translateY(0)}50%{transform:translate(-50%,-100%) translateY(-6px)}}
+.popword{position:absolute;transform:translate(-50%,-100%);padding:4px 12px;border-radius:99px;
+  background:rgba(22,101,52,.94);color:#fff;font-size:14px;font-weight:800;white-space:nowrap;
+  box-shadow:0 4px 12px rgba(0,0,0,.18);animation:popFloat 1.65s ease-out forwards}
+.popword.scent{background:rgba(14,116,144,.94)}
+@keyframes popFloat{0%{opacity:0;transform:translate(-50%,-70%) scale(.75)}18%{opacity:1;transform:translate(-50%,-110%) scale(1.04)}82%{opacity:1;transform:translate(-50%,-142%) scale(1)}100%{opacity:0;transform:translate(-50%,-178%) scale(.96)}}
+
+/* 通关彩带 + 结论与1题巩固弹窗 */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+#winToast{position:fixed;inset:0;z-index:35;display:none;place-items:center;background:rgba(36,24,10,.34);padding:16px}
+#winToast.show{display:grid}
+.win-card{width:min(450px,100%);max-height:85vh;overflow-y:auto;background:#fffdf8;
+  border:2.5px solid var(--accent);border-radius:22px;padding:18px 20px;text-align:center;
+  box-shadow:0 20px 50px rgba(40,22,4,.28)}
+.win-concl{margin:10px 0;padding:10px 12px;border-radius:13px;background:#ecfdf3;border:1.5px solid #86efac;
+  text-align:left;font-size:13.5px;line-height:1.58;color:#14532d}
+.win-quiz{margin:10px 0;padding:10px 12px;border-radius:13px;background:#f8fafc;border:1.5px solid #d9e2ec;text-align:left}
+.win-quiz h4{margin:0 0 8px;font-size:13.5px;color:#1f7542}
+.qopts{display:flex;flex-direction:column;gap:7px}
+.qopt{padding:8px 11px;border-radius:11px;border:1.5px solid #d9d0be;background:#fff;
+  font-size:13.5px;font-weight:800;text-align:left;cursor:pointer;transition:all .14s}
+.qopt:hover{border-color:var(--accent);background:#f0fdf4}
+.qopt.ok{border-color:#16a34a;background:#dcfce7;color:#14532d}
+.qopt.bad{border-color:#e03131;background:#fff5f5;color:#c92a2a}
+.qfb{margin-top:7px;font-size:12.5px;font-weight:800;min-height:18px;color:#166534}
+.win-acts{display:flex;justify-content:center;gap:10px;margin-top:12px}
+
+@media (max-width:960px){
+  #guideBar{top:58px;max-width:min(420px,calc(100vw - 260px));font-size:12.5px}
+}
+@media (max-width:740px){
+  #guideBar{top:54px;left:10px;right:10px;transform:none;max-width:none}
+  #notes{top:auto;bottom:84px;right:10px;width:210px}
+  #lensWrap{top:102px;left:8px;transform:scale(.82);transform-origin:top left}
+  #rotHint{display:none}
+}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="toolTags"></div>
+<div id="labels"><div id="targetCue" class="cue3d">🔍 用放大镜或点植物看特写</div></div>
+<canvas id="confetti"></canvas>
+
+<div id="hudTL">
+  <a id="backBtn" href="../index.html" title="返回书包">‹</a>
+  <div>
+    <div class="hd-t" data-py="dì kè shēn biān de zhí wù">第4课 身边的植物</div>
+    <div class="hd-sub">活页 · 课本第 17 页「身边植物 3D 认辨台」</div>
+  </div>
+</div>
+
+<div id="guideBar" title="点我重听当前步骤">
+  <span id="guideIco">🌱</span>
+  <span id="guideTxt">第1步：拖起放大镜或直接点击植物，看清 5 种植物的高清特征特写！</span>
+</div>
+
+<div id="hudTR">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<div id="rotHint">🔍 拖/点放大镜看高清特写 · ✋ 拖/点小手扇闻各种植物 · ❓ 点立牌猜植物</div>
+
+<!-- 高清 2D Canvas 圆形植物特征特写镜 -->
+<div id="lensWrap">
+  <div class="lens-ring" id="lensRing">
+    <div class="lens-inner">
+      <canvas id="lensCv" width="280" height="280"></canvas>
+      <div class="lens-tag" id="lensTag">✨ 高清特征特写</div>
+    </div>
+  </div>
+  <div class="lens-caption" id="lensCap">🔍 植物特征特写镜</div>
+</div>
+
+<aside id="notes">
+  <div class="nt-head">
+    <span class="nt-title" data-py="wǒ de fā xiàn">我的发现</span>
+    <span class="nt-cnt" id="ntCnt">0</span>
+    <button class="nt-tog" id="ntTog" type="button">收起</button>
+  </div>
+  <div class="stamps">
+    <span class="st" id="st1" data-py="guān chá tè zhēng">观察特征</span>
+    <span class="st" id="st2" data-py="shàn wén qì wèi">扇闻气味</span>
+    <span class="st" id="st3" data-py="tè zhēng biàn rèn">特征辨认</span>
+  </div>
+  <div id="ntList"></div>
+</aside>
+
+<!-- 高清特征特写 2 选 1 猜植物卡片（默认隐藏，点桌面 3D 发光立牌翻开） -->
+<div id="riddlePanel">
+  <div class="rd-head">
+    <span class="rd-title" id="rdTitle">❓ 特征卡 1 / 3 · 看特写猜植物</span>
+    <button class="rd-close" id="rdClose" type="button">✕</button>
+  </div>
+  <div class="rd-visual-clue">
+    <div class="rd-clue-art"><canvas id="rdArtCv" width="164" height="164"></canvas></div>
+    <div class="rd-clue-txt" id="rdClue"></div>
+  </div>
+  <div class="rd-opts" id="rdOpts"></div>
+  <div class="rd-fb" id="rdFb"></div>
+</div>
+
+<!-- 底部极简 5 个纯图标圆点切换栏（extraBtns === 0） -->
+<div id="dock">
+  <button class="pcard active" data-plant="pine" type="button" title="松树" aria-label="松树">🌲</button>
+  <button class="pcard" data-plant="lotus" type="button" title="荷花" aria-label="荷花">🌺</button>
+  <button class="pcard" data-plant="sorrel" type="button" title="酢浆草" aria-label="酢浆草">🍀</button>
+  <button class="pcard" data-plant="jasmine" type="button" title="茉莉花" aria-label="茉莉花">🌼</button>
+  <button class="pcard" data-plant="peach" type="button" title="桃树枝" aria-label="桃树枝">🍑</button>
+</div>
+
+<div id="winToast">
+  <div class="win-card">
+    <div style="font-size:38px">🏆</div>
+    <h3 style="margin:4px 0;color:#14532d">太棒啦！身边的植物都认清啦！</h3>
+    <div class="win-concl">
+      <b>✨ 科学小结论：</b>不同植物在叶子形状、花瓣、果实和气味上都有独特特征（如针状松叶、V形缺口荷叶、三片爱心酢浆草叶），闻植物气味时要用扇闻法。
+    </div>
+    <div class="win-quiz">
+      <h4>💡 考考你 · 答对领小红花 🌸</h4>
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:8px">想闻一闻茉莉花的气味，下面哪种做法最安全科学？</div>
+      <div class="qopts" id="qOpts">
+        <button class="qopt" type="button" data-ok="1">✋ 用手在花旁轻轻扇动，闻飘过来的气味</button>
+        <button class="qopt" type="button" data-hint="不能凑太近猛吸哦，要用手轻轻扇闻植物气味！">👃 把鼻子紧贴花瓣用力猛吸</button>
+        <button class="qopt" type="button" data-hint="要爱护身边植物，不能随便采摘揉碎哦！">✂️ 把花摘下来揉碎再闻</button>
+      </div>
+      <div class="qfb" id="qFb"></div>
+    </div>
+    <div class="win-acts">
+      <button class="tbtn" id="winKeepBtn" type="button">继续玩</button>
+      <button class="tbtn on" id="winAgainBtn" type="button">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js"></script>
+<script src="../vendor/voice.js"></script>
+<script>
+(function () {
+'use strict';
+
+try { sessionStorage.setItem('xk_last_vol', 'k1b'); } catch (e) {}
+
+var LESSON_ID = 'k1b-04';
+var BOOK_PROGRESS_KEY = 'xk_k1b_progress';
+var $ = function (s) { return document.querySelector(s); };
+var $$ = function (s) { return document.querySelectorAll(s); };
+
+/* ===== 拼音标注（严格1对1计数） ===== */
+var HAN = /[\u3400-\u9fff]/;
+var pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function ruby(text, py) {
+  if (!py) return esc(text);
+  var syl = py.trim().split(/\s+/), i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) {
+      var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; }
+      out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>';
+    } else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+$$('[data-py]').forEach(function (el) { el.innerHTML = ruby(el.textContent, el.dataset.py); });
+
+/* ===== 轻量音效 + 语音 ===== */
+var actx = null;
+function beep(freqs, dur) {
+  try {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    var t = actx.currentTime;
+    freqs.forEach(function (f, idx) {
+      var o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'triangle'; o.frequency.setValueAtTime(f, t + idx * 0.08);
+      g.gain.setValueAtTime(0.001, t + idx * 0.08);
+      g.gain.exponentialRampToValueAtTime(0.11, t + idx * 0.08 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.08 + (dur || 0.2));
+      o.connect(g); g.connect(actx.destination);
+      o.start(t + idx * 0.08); o.stop(t + idx * 0.08 + (dur || 0.22));
+    });
+  } catch (e) {}
+}
+
+var voiceOn = true;
+function stopVoice() {
+  if (window.__xkVoice) window.__xkVoice.stop();
+  else if (window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
+}
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
+  if (!('speechSynthesis' in window)) return;
+  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+}
+
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem(BOOK_PROGRESS_KEY) || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem(BOOK_PROGRESS_KEY, JSON.stringify(d));
+  } catch (e) {}
+}
+
+/* ===== 彩带庆祝 ===== */
+var cfCanvas = $('#confetti'), cfCtx = cfCanvas.getContext('2d'), cfParts = [], cfOn = false;
+function fireConfetti() {
+  cfCanvas.width = window.innerWidth; cfCanvas.height = window.innerHeight;
+  cfParts = [];
+  var cols = ['#2e9d5b', '#f59e0b', '#f472b6', '#38bdf8', '#a855f7', '#fb7185'];
+  for (var i = 0; i < 88; i++) {
+    cfParts.push({
+      x: cfCanvas.width * (0.15 + Math.random() * 0.7), y: -15 - Math.random() * 110,
+      vx: (Math.random() - 0.5) * 200, vy: 120 + Math.random() * 190,
+      r: 5 + Math.random() * 5, a: Math.random() * 6.28, va: (Math.random() - 0.5) * 9,
+      c: cols[i % cols.length]
+    });
+  }
+  cfOn = true;
+}
+
+/* ===== Three.js 场景（暖木标本展台 + 左侧 3D 放大镜 & 3D 扇闻手 + 右下 3D 特征立牌） ===== */
+var cv = $('#cv');
+var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color('#c8a376');
+var camera = new THREE.PerspectiveCamera(35, 16 / 9, 0.1, 80);
+camera.position.set(0.18, 3.85, 7.25);
+camera.lookAt(-0.1, 1.05, 0.12);
+
+scene.add(new THREE.HemisphereLight('#fff9ee', '#9b7b55', 0.76));
+var sunL = new THREE.DirectionalLight('#fff4df', 0.8);
+sunL.position.set(-4, 10, 6);
+sunL.castShadow = true;
+sunL.shadow.mapSize.set(1024, 1024);
+sunL.shadow.camera.left = -7; sunL.shadow.camera.right = 7;
+sunL.shadow.camera.top = 7; sunL.shadow.camera.bottom = -7;
+sunL.shadow.bias = -0.0008;
+scene.add(sunL);
+
+var ramp = new THREE.DataTexture(new Uint8Array([125,125,125,255, 190,190,190,255, 236,236,236,255, 255,255,255,255]), 4, 1, THREE.RGBAFormat);
+ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+
+function toon(hex, extra) {
+  var o = { color: new THREE.Color(hex), gradientMap: ramp };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshToonMaterial(o);
+}
+function mesh(geo, mat) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+function ctex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c);
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+
+var deskTex = ctex(512, 512, function (g, w, h) {
+  g.fillStyle = '#c9a26e'; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 65; i++) {
+    g.fillStyle = 'rgba(110,70,28,' + (Math.random() * 0.055).toFixed(3) + ')';
+    g.fillRect(0, Math.random() * h, w, 1 + Math.random() * 3);
+  }
+});
+deskTex.wrapS = deskTex.wrapT = THREE.RepeatWrapping; deskTex.repeat.set(3, 3);
+var deskFloor = new THREE.Mesh(new THREE.PlaneGeometry(50, 50), new THREE.MeshLambertMaterial({ map: deskTex }));
+deskFloor.rotation.x = -Math.PI / 2; deskFloor.position.y = -0.22; deskFloor.receiveShadow = true;
+scene.add(deskFloor);
+
+var live = new THREE.Group();
+scene.add(live);
+
+var STAGE_X = -0.18;
+var stageBase = new THREE.Group();
+stageBase.position.set(STAGE_X, 0, 0);
+live.add(stageBase);
+
+var matBoard = mesh(new THREE.BoxGeometry(8.6, 0.14, 4.9), toon('#ebd8b9'));
+matBoard.position.set(0, -0.07, 0.18); matBoard.castShadow = false;
+stageBase.add(matBoard);
+
+// 圆形可旋转木质转盘
+var turntable = new THREE.Group();
+turntable.position.set(0, 0, -0.1);
+stageBase.add(turntable);
+
+var woodTopTex = ctex(256, 256, function (g, w, h) {
+  var gr = g.createRadialGradient(w/2, h/2, 10, w/2, h/2, w/2);
+  gr.addColorStop(0, '#e8c48e'); gr.addColorStop(0.7, '#d8aa6c'); gr.addColorStop(1, '#ba884a');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(130,82,34,.22)'; g.lineWidth = 3;
+  for (var r = 24; r < 120; r += 22) { g.beginPath(); g.arc(w/2, h/2, r, 0, Math.PI*2); g.stroke(); }
+});
+var platter = mesh(new THREE.CylinderGeometry(1.74, 1.87, 0.22, 36), [
+  toon('#b98245'),
+  new THREE.MeshToonMaterial({ map: woodTopTex, gradientMap: ramp }),
+  toon('#a67038')
+]);
+platter.position.y = 0.11;
+turntable.add(platter);
+
+var brassRing = mesh(new THREE.TorusGeometry(1.76, 0.036, 10, 48), toon('#eab308'));
+brassRing.rotation.x = Math.PI / 2; brassRing.position.y = 0.22;
+turntable.add(brassRing);
+
+/* ===== 精修 3D 植物模型工厂（5 课本核心植物 + 2 彩蛋植物，特征一眼可辨！） ===== */
+var plantGroups = {};
+var plantParts = {};
+var hitMeshes = [];
+var fallbackHitMeshes = [];
+var HIT_MAT = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.001, depthWrite: false });
+
+function addHitVolume(parent, geo, x, y, z) {
+  var h = new THREE.Mesh(geo, HIT_MAT);
+  h.position.set(x || 0, y || 0, z || 0);
+  h.castShadow = false; h.receiveShadow = false;
+  parent.add(h);
+  return h;
+}
+
+function tagPart(obj, plantId, partKey, label, speech, recordHtml) {
+  var info = { plantId: plantId, partKey: partKey, label: label, speech: speech, recordHtml: recordHtml, root: obj };
+  if (!plantParts[plantId]) plantParts[plantId] = [];
+  plantParts[plantId].push(info);
+  obj.traverse(function (ch) {
+    if (ch.isMesh) {
+      ch.userData.partInfo = info;
+      hitMeshes.push(ch);
+    }
+  });
+}
+
+function addPlantFallbackCollider(plantGroup, plantId, radius, height, cy) {
+  var h = addHitVolume(plantGroup, new THREE.CylinderGeometry(radius || 1.38, radius || 1.38, height || 2.5, 16), 0, cy || 1.25, 0);
+  h.userData.fallbackPlantId = plantId;
+  fallbackHitMeshes.push(h);
+}
+
+function makePetalGeo(w, len, cup) {
+  var geo = new THREE.PlaneGeometry(1, 1, 6, 10);
+  var pos = geo.attributes.position;
+  for (var i = 0; i < pos.count; i++) {
+    var u = pos.getX(i) * 2;
+    var v = pos.getY(i) + 0.5;
+    var halfW = Math.sin(Math.pow(v, 0.72) * Math.PI) * (w * 0.5);
+    var zCup = (1 - u * u) * cup * Math.sin(v * Math.PI);
+    var zArch = Math.sin(v * Math.PI * 0.88) * (len * 0.18) - Math.pow(v, 2.1) * (len * 0.06);
+    pos.setXYZ(i, u * halfW, v * len, zCup + zArch);
+  }
+  geo.computeVertexNormals();
+  return geo;
+}
+function makeGradTex(c0, c1, c2) {
+  return ctex(128, 256, function (g, w, h) {
+    var gr = g.createLinearGradient(0, h, 0, 0);
+    gr.addColorStop(0, c0); gr.addColorStop(0.55, c1); gr.addColorStop(1, c2);
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(255,255,255,.26)'; g.lineWidth = 2;
+    for (var k = -2; k <= 2; k++) {
+      g.beginPath(); g.moveTo(w/2, h); g.quadraticCurveTo(w/2 + k*18, h*0.5, w/2 + k*8, 8); g.stroke();
+    }
+  });
+}
+
+/* 1. 松树：层次分明深绿簇状针叶枝 + 明显棕色挂枝鳞片松果 */
+(function buildPine() {
+  var g = new THREE.Group(); g.position.y = 0.22; turntable.add(g); plantGroups.pine = g;
+  var mound = mesh(new THREE.CylinderGeometry(0.88, 1.04, 0.16, 20), toon('#8b623c'));
+  mound.position.y = 0.08; g.add(mound);
+
+  var trunkG = new THREE.Group(); g.add(trunkG);
+  var barkTex = ctex(128, 256, function (c, w, h) {
+    c.fillStyle = '#7c4d2b'; c.fillRect(0, 0, w, h);
+    c.fillStyle = '#5e381d';
+    for (var i = 0; i < 42; i++) c.fillRect(Math.random()*w, Math.random()*h, 7, 22+Math.random()*28);
+  });
+  var trunk = mesh(new THREE.CylinderGeometry(0.16, 0.30, 1.25, 14), new THREE.MeshToonMaterial({ map: barkTex, gradientMap: ramp }));
+  trunk.position.y = 0.65; trunkG.add(trunk);
+  for (var r = 0; r < 5; r++) {
+    var rt = mesh(new THREE.ConeGeometry(0.11, 0.38, 7), toon('#704425'));
+    var ra = r * Math.PI * 2 / 5 + 0.3;
+    rt.position.set(Math.cos(ra) * 0.25, 0.16, Math.sin(ra) * 0.25);
+    rt.rotation.z = -Math.cos(ra) * 0.68; rt.rotation.x = Math.sin(ra) * 0.68;
+    trunkG.add(rt);
+  }
+  addHitVolume(trunkG, new THREE.CylinderGeometry(0.58, 0.66, 1.15, 14), 0, 0.58, 0);
+  tagPart(trunkG, 'pine', 'pine_trunk', '粗糙褐色树干', '松树的树干直直的、粗粗的，表皮粗糙呈褐色。', '🌲 <b>松树</b>：粗糙褐色树干，高大挺拔');
+
+  var foliageG = new THREE.Group(); g.add(foliageG);
+  var coneTex = ctex(128, 128, function (c, w, h) {
+    c.fillStyle = '#8b5126'; c.fillRect(0, 0, w, h);
+    c.strokeStyle = '#4e2a10'; c.lineWidth = 4;
+    for (var y = 8; y < h; y += 16) {
+      for (var x = (y % 32 === 8 ? 0 : 12); x < w; x += 24) {
+        c.fillStyle = '#a36233';
+        c.beginPath(); c.moveTo(x+12, y-6); c.lineTo(x+22, y+6); c.lineTo(x+12, y+14); c.lineTo(x+2, y+6); c.closePath();
+        c.fill(); c.stroke();
+      }
+    }
+  });
+  var pineconeMat = new THREE.MeshToonMaterial({ map: coneTex, gradientMap: ramp });
+  function makePinecone() {
+    var pc = new THREE.Group();
+    var body = mesh(new THREE.SphereGeometry(0.115, 12, 10), pineconeMat);
+    body.scale.set(0.86, 1.45, 0.86); pc.add(body);
+    var cap = mesh(new THREE.ConeGeometry(0.08, 0.10, 8), toon('#6e3f1d'));
+    cap.position.y = -0.15; cap.rotation.x = Math.PI; pc.add(cap);
+    return pc;
+  }
+
+  var tiers = [
+    { y: 1.06, r: 1.06, h: 0.74, col: '#185e33', tufts: 10 },
+    { y: 1.58, r: 0.86, h: 0.68, col: '#1f743e', tufts: 9 },
+    { y: 2.08, r: 0.64, h: 0.62, col: '#268b4a', tufts: 7 },
+    { y: 2.52, r: 0.40, h: 0.54, col: '#31a357', tufts: 5 }
+  ];
+  var needleMat1 = toon('#2da455');
+  var needleMat2 = toon('#4ade80');
+  tiers.forEach(function (t, ti) {
+    var cone = mesh(new THREE.ConeGeometry(t.r, t.h, 12), toon(t.col));
+    cone.position.y = t.y; cone.rotation.y = ti * 0.42;
+    foliageG.add(cone);
+    for (var k = 0; k < t.tufts; k++) {
+      var a = (k / t.tufts) * Math.PI * 2 + ti * 0.35;
+      var tuft = new THREE.Group();
+      tuft.position.set(Math.cos(a) * t.r * 0.80, t.y - t.h * 0.28, Math.sin(a) * t.r * 0.80);
+      tuft.rotation.y = -a;
+      // 簇状针叶束（每束 5 根清晰细针！）
+      for (var n = -2; n <= 2; n++) {
+        var needle = mesh(new THREE.ConeGeometry(0.028, 0.40, 5), (n % 2 === 0 ? needleMat1 : needleMat2));
+        needle.rotation.z = -1.18 + n * 0.16;
+        needle.rotation.x = n * 0.22;
+        needle.position.set(0.14, 0.03 + Math.abs(n) * 0.01, n * 0.036);
+        tuft.add(needle);
+      }
+      foliageG.add(tuft);
+    }
+    if (ti < 3) {
+      for (var p = 0; p < (ti === 0 ? 3 : 2); p++) {
+        var pa = p * (Math.PI * 2 / (ti === 0 ? 3 : 2)) + ti * 1.1 + 0.5;
+        var pc = makePinecone();
+        pc.position.set(Math.cos(pa) * t.r * 0.72, t.y - t.h * 0.42, Math.sin(pa) * t.r * 0.72);
+        pc.rotation.z = Math.cos(pa) * 0.2;
+        foliageG.add(pc);
+      }
+    }
+  });
+  addHitVolume(foliageG, new THREE.SphereGeometry(1.18, 14, 12), 0, 1.78, 0);
+  tagPart(foliageG, 'pine', 'pine_leaf', '针状松叶与松果', '看放大特写！松树的叶子细细尖尖的，聚成一束束像绿色小针，枝头还挂着棕色鳞片松果！', '🌲 <b>松树</b>：针状松叶聚成簇，挂着棕色松果');
+  addPlantFallbackCollider(g, 'pine', 1.38, 2.75, 1.4);
+})();
+
+/* 2. 荷花/睡莲：彻底重做带约 48° 超清晰 V 形深缺口立体荷叶 + 多层粉荷 + 带黑色莲子孔的醒目金黄莲蓬！ */
+(function buildLotus() {
+  var g = new THREE.Group(); g.position.y = 0.22; g.visible = false; turntable.add(g); plantGroups.lotus = g;
+  var basin = mesh(new THREE.CylinderGeometry(1.44, 1.20, 0.42, 34), toon('#9fd8c0'));
+  basin.position.y = 0.21; g.add(basin);
+  var basinRim = mesh(new THREE.TorusGeometry(1.42, 0.055, 10, 36), toon('#72bea0'));
+  basinRim.rotation.x = Math.PI / 2; basinRim.position.y = 0.42; g.add(basinRim);
+  var waterTex = ctex(256, 256, function (c, w, h) {
+    var gr = c.createRadialGradient(w*0.48, h*0.48, 10, w/2, h/2, w*0.52);
+    gr.addColorStop(0, '#56ccf2'); gr.addColorStop(0.55, '#2d9cdb'); gr.addColorStop(1, '#1b6ca8');
+    c.fillStyle = gr; c.fillRect(0, 0, w, h);
+    c.strokeStyle = 'rgba(255,255,255,.45)'; c.lineWidth = 3;
+    c.beginPath(); c.arc(w*0.5, h*0.5, 68, 0.2, Math.PI*1.65); c.stroke();
+    c.beginPath(); c.arc(w*0.5, h*0.5, 96, 2.1, Math.PI*1.9); c.stroke();
+  });
+  var water = mesh(new THREE.CylinderGeometry(1.36, 1.36, 0.04, 32), new THREE.MeshLambertMaterial({ map: waterTex }));
+  water.position.y = 0.37; g.add(water);
+
+  // 荷叶纹理：鲜亮放射状叶脉 + 深绿边缘，让 V 形缺口轮廓对比极其鲜明！
+  var padTex = ctex(256, 256, function (c, w, h) {
+    var cx = w/2, cy = h/2, r = w*0.49;
+    var gr = c.createRadialGradient(cx, cy, 8, cx, cy, r);
+    gr.addColorStop(0, '#228b3c'); gr.addColorStop(0.58, '#41c45c'); gr.addColorStop(0.92, '#218238'); gr.addColorStop(1, '#14532d');
+    c.fillStyle = gr; c.fillRect(0, 0, w, h);
+    c.strokeStyle = 'rgba(217,249,157,.88)'; c.lineCap = 'round';
+    for (var i = 0; i < 15; i++) {
+      var a = 0.48 + (i / 14) * (Math.PI * 2 - 0.96);
+      c.lineWidth = 3.0;
+      c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + Math.cos(a)*r*0.92, cy + Math.sin(a)*r*0.92); c.stroke();
+    }
+    c.fillStyle = '#d9f99d'; c.beginPath(); c.arc(cx, cy, 9, 0, Math.PI*2); c.fill();
+  });
+  var padMat = new THREE.MeshToonMaterial({ map: padTex, gradientMap: ramp });
+  var padEdgeMat = toon('#14532d');
+
+  // 约 48° 清晰深 V 形缺口荷叶（缺口直切至叶心，一眼可见！）
+  function makeVNotchPad(radius, rotY) {
+    var shp = new THREE.Shape();
+    var gap = 0.44; // 半角 25°，总缺口约 50° 清晰大 V 形缺口！
+    shp.moveTo(0, 0);
+    var segs = 36;
+    for (var i = 0; i <= segs; i++) {
+      var a = gap + (i / segs) * (Math.PI * 2 - gap * 2);
+      var wob = 1 + Math.sin(a * 8) * 0.018;
+      shp.lineTo(Math.cos(a) * radius * wob, Math.sin(a) * radius * wob);
+    }
+    shp.closePath();
+    var geo = new THREE.ExtrudeGeometry(shp, {
+      depth: 0.032, bevelEnabled: true, bevelThickness: 0.009, bevelSize: 0.01, bevelSegments: 2
+    });
+    var pos = geo.attributes.position, uv = geo.attributes.uv;
+    for (var k = 0; k < pos.count; k++) {
+      uv.setXY(k, pos.getX(k) / (2 * radius) + 0.5, pos.getY(k) / (2 * radius) + 0.5);
+    }
+    uv.needsUpdate = true;
+    geo.rotateX(-Math.PI / 2);
+    var m = mesh(geo, [padMat, padEdgeMat]);
+    m.rotation.y = rotY;
+    return m;
+  }
+
+  var leafG = new THREE.Group(); g.add(leafG);
+  // 前左大水叶：rotY = -1.35 让 V 形深缺口正朝镜头前右打开，下方湛蓝水面清晰透出！
+  var p1 = makeVNotchPad(0.74, -1.35); p1.position.set(-0.46, 0.42, 0.36); leafG.add(p1);
+  // 前右水叶：rotY = -1.95 让 V 形缺口正朝镜头前左打开！
+  var p2 = makeVNotchPad(0.56, -1.95); p2.position.set(0.60, 0.43, 0.16); leafG.add(p2);
+  // 高挺出水荷叶：微微前倾，V 形大缺口直面镜头！
+  var tallStem = mesh(new THREE.CylinderGeometry(0.032, 0.044, 0.98, 10), toon('#349c52'));
+  tallStem.position.set(-0.56, 0.86, -0.34); tallStem.rotation.z = 0.12; leafG.add(tallStem);
+  var p3 = makeVNotchPad(0.58, -1.55); p3.position.set(-0.62, 1.32, -0.32); p3.rotation.x = 0.28; leafG.add(p3);
+  addHitVolume(leafG, new THREE.CylinderGeometry(1.42, 1.42, 0.95, 16), 0, 0.72, 0);
+  tagPart(leafG, 'lotus', 'lotus_leaf', 'V形缺口荷叶', '仔细看！荷叶圆圆大大的，边上有一个明显的 V 形大缺口，叶脉从中心向四周放射！', '🌺 <b>荷花</b>：大圆荷叶有明显 V 形缺口与放射叶脉');
+
+  var flowerG = new THREE.Group(); g.add(flowerG);
+  var fStem = mesh(new THREE.CylinderGeometry(0.042, 0.054, 1.18, 12), toon('#3aa858'));
+  fStem.position.set(0.10, 0.94, -0.02); flowerG.add(fStem);
+
+  var head = new THREE.Group(); head.position.set(0.10, 1.52, -0.02); flowerG.add(head);
+  var pMat1 = new THREE.MeshToonMaterial({ map: makeGradTex('#fff8f4', '#ffcce1', '#ff74ad'), gradientMap: ramp, side: THREE.DoubleSide });
+  var pMat2 = new THREE.MeshToonMaterial({ map: makeGradTex('#fffaf4', '#ffb5d5', '#ff599e'), gradientMap: ramp, side: THREE.DoubleSide });
+  var pMat3 = new THREE.MeshToonMaterial({ map: makeGradTex('#fff6d6', '#ffc8df', '#ff8bc0'), gradientMap: ramp, side: THREE.DoubleSide });
+
+  function ring(cnt, rad, w, len, cup, tilt, mat, ph) {
+    var geo = makePetalGeo(w, len, cup);
+    for (var i = 0; i < cnt; i++) {
+      var rg = new THREE.Group(); rg.rotation.y = i * Math.PI * 2 / cnt + ph;
+      var pm = mesh(geo, mat); pm.position.set(0, 0, rad); pm.rotation.x = tilt;
+      rg.add(pm); head.add(rg);
+    }
+  }
+  ring(8, 0.14, 0.34, 0.64, 0.075, 1.12, pMat1, 0);
+  ring(7, 0.11, 0.30, 0.56, 0.068, 0.80, pMat2, 0.45);
+  ring(6, 0.085, 0.24, 0.45, 0.052, 0.52, pMat3, 0.9);
+
+  // 醒目金黄色莲蓬头（带清晰黑色莲子孔与莲子！）
+  var podTopTex = ctex(128, 128, function (c, w, h) {
+    c.fillStyle = '#facc15'; c.fillRect(0, 0, w, h);
+    c.strokeStyle = '#ca8a04'; c.lineWidth = 5;
+    c.beginPath(); c.arc(w/2, h/2, 58, 0, Math.PI*2); c.stroke();
+    var pts = [[64,64]];
+    for (var i = 0; i < 6; i++) {
+      var a = i * Math.PI / 3;
+      pts.push([64 + Math.cos(a)*30, 64 + Math.sin(a)*30]);
+    }
+    pts.forEach(function (pt) {
+      c.fillStyle = '#291507';
+      c.beginPath(); c.arc(pt[0], pt[1], 10, 0, Math.PI*2); c.fill();
+      c.fillStyle = '#78350f';
+      c.beginPath(); c.arc(pt[0], pt[1], 5.5, 0, Math.PI*2); c.fill();
+    });
+  });
+  var pod = mesh(new THREE.CylinderGeometry(0.24, 0.12, 0.24, 18), [
+    toon('#eab308'),
+    new THREE.MeshToonMaterial({ map: podTopTex, gradientMap: ramp }),
+    toon('#ca8a04')
+  ]);
+  pod.position.y = 0.17; head.add(pod);
+  for (var sd = 0; sd < 7; sd++) {
+    var sa = sd * Math.PI * 2 / 6, sr = sd === 0 ? 0 : 0.125;
+    var hole = mesh(new THREE.CylinderGeometry(0.036, 0.036, 0.025, 10), toon('#291507'));
+    hole.position.set(Math.cos(sa)*sr, 0.295, Math.sin(sa)*sr); head.add(hole);
+  }
+
+  // 右后方可爱荷花骨朵
+  var budStem = mesh(new THREE.CylinderGeometry(0.024, 0.032, 0.72, 8), toon('#38a156'));
+  budStem.position.set(0.56, 0.72, -0.34); budStem.rotation.z = -0.14; flowerG.add(budStem);
+  var bud = mesh(new THREE.SphereGeometry(0.16, 12, 10), pMat2);
+  bud.scale.set(0.85, 1.4, 0.85); bud.position.set(0.62, 1.12, -0.34); flowerG.add(bud);
+
+  addHitVolume(flowerG, new THREE.SphereGeometry(0.80, 14, 12), 0.10, 1.58, -0.02);
+  tagPart(flowerG, 'lotus', 'lotus_flower', '多层荷花与莲蓬', '荷花有三层粉红花瓣层层张开，中间藏着带黑色莲子孔的金黄莲蓬！', '🌺 <b>荷花</b>：多层粉红花瓣，中心有带莲子孔的莲蓬');
+  addPlantFallbackCollider(g, 'lotus', 1.48, 2.25, 1.05);
+})();
+
+/* 3. 酢浆草：3 颗清晰倒心形/爱心叶片三出复叶 + 嫩黄/粉红五瓣小花 */
+(function buildSorrel() {
+  var g = new THREE.Group(); g.position.y = 0.22; g.visible = false; turntable.add(g); plantGroups.sorrel = g;
+  var pot = mesh(new THREE.CylinderGeometry(1.12, 0.92, 0.42, 26), toon('#d97d4b'));
+  pot.position.y = 0.21; g.add(pot);
+  var rim = mesh(new THREE.CylinderGeometry(1.18, 1.14, 0.1, 26), toon('#c46a3a'));
+  rim.position.y = 0.42; g.add(rim);
+  var soil = mesh(new THREE.CylinderGeometry(1.06, 1.06, 0.05, 24), toon('#785335'));
+  soil.position.y = 0.44; g.add(soil);
+
+  // 超清晰饱满倒心形叶片（外端深心形凹口！）
+  var heartShp = new THREE.Shape();
+  heartShp.moveTo(0, 0);
+  heartShp.bezierCurveTo(-0.32, 0.14, -0.38, 0.46, -0.17, 0.50);
+  heartShp.bezierCurveTo(-0.05, 0.52, -0.02, 0.37, 0, 0.34);
+  heartShp.bezierCurveTo(0.02, 0.37, 0.05, 0.52, 0.17, 0.50);
+  heartShp.bezierCurveTo(0.38, 0.46, 0.32, 0.14, 0, 0);
+  var heartGeo = new THREE.ExtrudeGeometry(heartShp, { depth: 0.018, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.006, bevelSegments: 2 });
+  var hPos = heartGeo.attributes.position, hUv = heartGeo.attributes.uv;
+  for (var hi = 0; hi < hPos.count; hi++) hUv.setXY(hi, hPos.getX(hi) / 0.72 + 0.5, hPos.getY(hi) / 0.54);
+  hUv.needsUpdate = true;
+  heartGeo.rotateX(-Math.PI / 2);
+
+  var heartTex = ctex(128, 128, function (c, w, h) {
+    var gr = c.createLinearGradient(0, h, 0, 0);
+    gr.addColorStop(0, '#229a41'); gr.addColorStop(0.55, '#4ade80'); gr.addColorStop(1, '#2db950');
+    c.fillStyle = gr; c.fillRect(0, 0, w, h);
+    c.strokeStyle = 'rgba(236,253,245,.72)'; c.lineWidth = 4;
+    c.beginPath(); c.moveTo(w/2, h); c.lineTo(w/2, 22); c.stroke();
+  });
+  var leafMat = new THREE.MeshToonMaterial({ map: heartTex, gradientMap: ramp });
+
+  var leavesG = new THREE.Group(); g.add(leavesG);
+  var leafSpots = [
+    [-0.46, 0.88, 0.34, 0.3, 0.24], [0.44, 0.94, 0.30, 1.2, 0.22], [-0.38, 0.98, -0.36, 2.1, -0.15],
+    [0.48, 0.86, -0.32, 3.0, -0.12], [0.02, 0.82, 0.58, 0.6, 0.32], [-0.04, 1.08, -0.04, 1.7, 0.16]
+  ];
+  leafSpots.forEach(function (sp) {
+    var st = mesh(new THREE.CylinderGeometry(0.018, 0.022, sp[1] - 0.42, 8), toon('#5ec45d'));
+    st.position.set(sp[0] * 0.65, 0.44 + (sp[1] - 0.42) / 2, sp[2] * 0.65);
+    st.rotation.z = -sp[0] * 0.35; st.rotation.x = sp[2] * 0.35;
+    leavesG.add(st);
+    var trio = new THREE.Group(); trio.position.set(sp[0], sp[1], sp[2]); trio.rotation.y = sp[3]; trio.rotation.x = sp[4];
+    for (var i = 0; i < 3; i++) {
+      var lf = mesh(heartGeo, leafMat);
+      lf.rotation.y = i * Math.PI * 2 / 3;
+      lf.rotation.x = 0.22;
+      trio.add(lf);
+    }
+    leavesG.add(trio);
+  });
+  addHitVolume(leavesG, new THREE.CylinderGeometry(1.22, 1.22, 0.78, 16), 0, 0.88, 0);
+  tagPart(leavesG, 'sorrel', 'sorrel_leaf', '三片爱心形小叶', '看放大特写！酢浆草每根细茎顶上都长着三片对称的爱心形绿色小叶！', '🍀 <b>酢浆草</b>：每簇 3 片对称爱心形绿叶');
+
+  var flowersG = new THREE.Group(); g.add(flowersG);
+  var sPetalGeo = makePetalGeo(0.24, 0.36, 0.04);
+  var sPetalPink = new THREE.MeshToonMaterial({ map: makeGradTex('#fef3c7', '#f5a8f7', '#db2777'), gradientMap: ramp, side: THREE.DoubleSide });
+  var sPetalYel = new THREE.MeshToonMaterial({ map: makeGradTex('#fef9c3', '#fde047', '#f59e0b'), gradientMap: ramp, side: THREE.DoubleSide });
+  var flSpots = [[0, 1.52, 0.06, 0], [-0.36, 1.36, 0.16, 1], [0.34, 1.40, -0.08, 0], [0.14, 1.28, 0.36, 1], [-0.20, 1.32, -0.26, 0]];
+  flSpots.forEach(function (fs, idx) {
+    var fst = mesh(new THREE.CylinderGeometry(0.015, 0.019, fs[1] - 0.44, 8), toon('#65c466'));
+    fst.position.set(fs[0] * 0.6, 0.44 + (fs[1] - 0.44) / 2, fs[2] * 0.6);
+    fst.rotation.z = -fs[0] * 0.4; fst.rotation.x = fs[2] * 0.4;
+    flowersG.add(fst);
+    var fl = new THREE.Group(); fl.position.set(fs[0], fs[1], fs[2]);
+    fl.rotation.x = 0.28 * (idx % 2 === 0 ? 1 : -0.5); fl.rotation.z = (idx - 2) * 0.12;
+    var mat = fs[3] ? sPetalYel : sPetalPink;
+    for (var p = 0; p < 5; p++) {
+      var pg = new THREE.Group(); pg.rotation.y = p * Math.PI * 2 / 5;
+      var pm = mesh(sPetalGeo, mat); pm.position.set(0, 0, 0.03); pm.rotation.x = 1.05;
+      pg.add(pm); fl.add(pg);
+    }
+    var ctr = mesh(new THREE.SphereGeometry(0.06, 10, 8), toon('#facc15'));
+    ctr.position.y = 0.04; fl.add(ctr);
+    flowersG.add(fl);
+  });
+  addHitVolume(flowersG, new THREE.SphereGeometry(0.90, 14, 12), 0, 1.45, 0.04);
+  tagPart(flowersG, 'sorrel', 'sorrel_flower', '五瓣娇俏小花', '酢浆草开着娇小的粉红和嫩黄小花，数一数，每朵正好有五片花瓣！', '🍀 <b>酢浆草</b>：五瓣嫩黄/粉红娇小花朵');
+  addPlantFallbackCollider(g, 'sorrel', 1.35, 2.05, 0.98);
+})();
+
+/* 4. 茉莉花：油亮深绿椭圆形对生叶片 + 洁白多层重瓣小花 */
+(function buildJasmine() {
+  var g = new THREE.Group(); g.position.y = 0.22; g.visible = false; turntable.add(g); plantGroups.jasmine = g;
+  var pot = mesh(new THREE.CylinderGeometry(0.84, 0.66, 0.56, 24), toon('#e2e8f0'));
+  pot.position.y = 0.28; g.add(pot);
+  var potBand = mesh(new THREE.CylinderGeometry(0.86, 0.84, 0.12, 24), toon('#60a5fa'));
+  potBand.position.y = 0.52; g.add(potBand);
+  var soil = mesh(new THREE.CylinderGeometry(0.78, 0.78, 0.05, 20), toon('#6b4b32'));
+  soil.position.y = 0.56; g.add(soil);
+
+  // 真实椭圆形对生叶几何体 + 油亮叶脉贴图
+  var ovalShp = new THREE.Shape();
+  ovalShp.moveTo(0, 0);
+  ovalShp.bezierCurveTo(-0.22, 0.12, -0.22, 0.36, 0, 0.46);
+  ovalShp.bezierCurveTo(0.22, 0.36, 0.22, 0.12, 0, 0);
+  var ovalGeo = new THREE.ExtrudeGeometry(ovalShp, { depth: 0.016, bevelEnabled: true, bevelThickness: 0.005, bevelSize: 0.005, bevelSegments: 2 });
+  var oPos = ovalGeo.attributes.position, oUv = ovalGeo.attributes.uv;
+  for (var oi = 0; oi < oPos.count; oi++) oUv.setXY(oi, oPos.getX(oi) / 0.46 + 0.5, oPos.getY(oi) / 0.46);
+  oUv.needsUpdate = true;
+  ovalGeo.rotateX(-Math.PI / 2);
+
+  var jLeafTex = ctex(128, 128, function (c, w, h) {
+    var gr = c.createLinearGradient(0, h, 0, 0);
+    gr.addColorStop(0, '#146932'); gr.addColorStop(0.55, '#1f8f47'); gr.addColorStop(1, '#34b862');
+    c.fillStyle = gr; c.fillRect(0, 0, w, h);
+    c.strokeStyle = 'rgba(209,250,229,.78)'; c.lineWidth = 3.5;
+    c.beginPath(); c.moveTo(w/2, h); c.lineTo(w/2, 8); c.stroke();
+    c.lineWidth = 1.8;
+    for (var i = 1; i <= 4; i++) {
+      var y = h - i * 24;
+      c.beginPath(); c.moveTo(w/2, y); c.quadraticCurveTo(w*0.26, y-10, 14, y-22); c.stroke();
+      c.beginPath(); c.moveTo(w/2, y); c.quadraticCurveTo(w*0.74, y-10, w-14, y-22); c.stroke();
+    }
+  });
+  var jLeafMat = new THREE.MeshToonMaterial({ map: jLeafTex, gradientMap: ramp });
+
+  var leavesG = new THREE.Group(); g.add(leavesG);
+  var branchDefs = [[0, 0.56, 0, 0.04, 0.04], [-0.14, 0.56, 0.08, 0.40, 0.24], [0.16, 0.56, -0.06, -0.36, -0.20], [0.06, 0.56, 0.14, -0.22, 0.34]];
+  branchDefs.forEach(function (bd) {
+    var br = new THREE.Group(); br.position.set(bd[0], bd[1], bd[2]); br.rotation.z = bd[3]; br.rotation.x = bd[4];
+    var st = mesh(new THREE.CylinderGeometry(0.025, 0.036, 1.15, 8), toon('#3d7a47'));
+    st.position.y = 0.58; br.add(st);
+    // 成对对生椭圆叶
+    for (var pair = 0; pair < 3; pair++) {
+      var py = 0.30 + pair * 0.28;
+      var yaw = pair * 1.15;
+      for (var side = -1; side <= 1; side += 2) {
+        var lf = mesh(ovalGeo, jLeafMat);
+        lf.position.set(0, py, 0);
+        lf.rotation.y = yaw + (side > 0 ? Math.PI * 0.5 : -Math.PI * 0.5);
+        lf.rotation.x = 0.32;
+        br.add(lf);
+      }
+    }
+    leavesG.add(br);
+  });
+  addHitVolume(leavesG, new THREE.CylinderGeometry(1.12, 1.12, 0.96, 16), 0, 1.05, 0);
+  tagPart(leavesG, 'jasmine', 'jasmine_leaf', '油亮椭圆对生叶', '看放大特写！茉莉花的叶子是油亮深绿的椭圆形，一对一对长在细枝两侧！', '🌼 <b>茉莉花</b>：油亮深绿椭圆形对生叶片');
+
+  var flowersG = new THREE.Group(); g.add(flowersG);
+  var jPetGeo = makePetalGeo(0.20, 0.30, 0.05);
+  var jPetMat = new THREE.MeshToonMaterial({ map: makeGradTex('#fefce8', '#ffffff', '#f8fafc'), gradientMap: ramp, side: THREE.DoubleSide });
+  var jSpots = [[0.0, 1.72, 0.02], [-0.46, 1.50, 0.24], [0.46, 1.54, -0.14], [0.22, 1.46, 0.44], [-0.26, 1.42, -0.34], [0.06, 1.58, -0.32]];
+  jSpots.forEach(function (js, idx) {
+    var fl = new THREE.Group(); fl.position.set(js[0], js[1], js[2]);
+    fl.rotation.x = 0.28; fl.rotation.z = (idx - 2.5) * 0.14;
+    for (var layer = 0; layer < 3; layer++) {
+      var cnt = layer === 2 ? 5 : 6, tilt = layer === 0 ? 1.18 : (layer === 1 ? 0.78 : 0.42), sc = layer === 0 ? 1.02 : (layer === 1 ? 0.78 : 0.55);
+      for (var p = 0; p < cnt; p++) {
+        var pg = new THREE.Group(); pg.rotation.y = p * Math.PI * 2 / cnt + layer * 0.52;
+        var pm = mesh(jPetGeo, jPetMat); pm.scale.setScalar(sc);
+        pm.position.set(0, layer * 0.022, 0.028); pm.rotation.x = tilt;
+        pg.add(pm); fl.add(pg);
+      }
+    }
+    var ctr = mesh(new THREE.SphereGeometry(0.052, 8, 8), toon('#fde047'));
+    ctr.position.y = 0.05; fl.add(ctr);
+    flowersG.add(fl);
+  });
+  addHitVolume(flowersG, new THREE.SphereGeometry(0.96, 14, 12), 0, 1.58, 0.04);
+  tagPart(flowersG, 'jasmine', 'jasmine_flower', '洁白多层重瓣花', '茉莉花雪白雪白的，花瓣一层套一层，香气特别浓郁芬芳！快用扇闻小手闻一闻吧！', '🌼 <b>茉莉花</b>：洁白多层重瓣小花，香气浓郁');
+  addPlantFallbackCollider(g, 'jasmine', 1.28, 2.25, 1.12);
+})();
+
+/* 5. 桃树枝：细长尖头披针形桃叶 + 粉红带小叶圆润水蜜桃 */
+(function buildPeach() {
+  var g = new THREE.Group(); g.position.y = 0.22; g.visible = false; turntable.add(g); plantGroups.peach = g;
+  var vase = mesh(new THREE.CylinderGeometry(0.42, 0.56, 0.76, 22), toon('#93c5fd'));
+  vase.position.y = 0.38; g.add(vase);
+  var neck = mesh(new THREE.CylinderGeometry(0.32, 0.42, 0.24, 22), toon('#bfdbfe'));
+  neck.position.y = 0.84; g.add(neck);
+
+  var branchG = new THREE.Group(); g.add(branchG);
+  var mainB = mesh(new THREE.CylinderGeometry(0.055, 0.078, 1.68, 10), toon('#854d27'));
+  mainB.position.set(-0.08, 1.48, 0); mainB.rotation.z = -0.22; branchG.add(mainB);
+  var sideB = mesh(new THREE.CylinderGeometry(0.04, 0.055, 1.08, 8), toon('#854d27'));
+  sideB.position.set(0.36, 1.62, 0.05); sideB.rotation.z = -0.82; branchG.add(sideB);
+
+  // 细长尖头披针形桃叶（长窄带尖尾，与茉莉椭圆叶区分鲜明！）
+  var lanceShp = new THREE.Shape();
+  lanceShp.moveTo(0, 0);
+  lanceShp.bezierCurveTo(-0.14, 0.16, -0.13, 0.52, 0, 0.78);
+  lanceShp.bezierCurveTo(0.13, 0.52, 0.14, 0.16, 0, 0);
+  var lanceGeo = new THREE.ExtrudeGeometry(lanceShp, { depth: 0.014, bevelEnabled: false });
+  var lPos = lanceGeo.attributes.position, lUv = lanceGeo.attributes.uv;
+  for (var li = 0; li < lPos.count; li++) lUv.setXY(li, lPos.getX(li) / 0.30 + 0.5, lPos.getY(li) / 0.78);
+  lUv.needsUpdate = true;
+  lanceGeo.rotateX(-Math.PI / 2);
+
+  var pLeafTex = ctex(128, 256, function (c, w, h) {
+    var gr = c.createLinearGradient(0, h, 0, 0);
+    gr.addColorStop(0, '#2b9348'); gr.addColorStop(0.55, '#4ac45c'); gr.addColorStop(1, '#80ed99');
+    c.fillStyle = gr; c.fillRect(0, 0, w, h);
+    c.strokeStyle = 'rgba(236,253,245,.82)'; c.lineWidth = 4;
+    c.beginPath(); c.moveTo(w/2, h); c.lineTo(w/2, 10); c.stroke();
+  });
+  var pLeafMat = new THREE.MeshToonMaterial({ map: pLeafTex, gradientMap: ramp });
+
+  var plPos = [
+    [-0.18, 1.56, 0.14, 2.3, 0.35], [-0.06, 1.98, -0.10, 2.0, 0.25],
+    [0.14, 2.08, 0.08, -0.4, 0.32], [0.56, 1.88, -0.06, -0.8, 0.35],
+    [0.36, 1.44, 0.22, -0.5, 0.42], [0.02, 2.22, 0.02, 0.9, 0.28],
+    [-0.24, 1.80, 0.18, 2.8, 0.40]
+  ];
+  plPos.forEach(function (lp) {
+    var lf = mesh(lanceGeo, pLeafMat);
+    lf.position.set(lp[0], lp[1], lp[2]); lf.rotation.y = lp[3]; lf.rotation.x = lp[4];
+    branchG.add(lf);
+  });
+  addHitVolume(branchG, new THREE.SphereGeometry(0.98, 14, 12), 0.1, 1.94, 0);
+  tagPart(branchG, 'peach', 'peach_leaf', '细长披针形桃叶', '看放大特写！桃树的叶子细细长长、叶尖尖尖的，边缘还有细小锯齿，像绿色小船！', '🍑 <b>桃树枝</b>：细长尖头披针形桃叶');
+
+  var fruitG = new THREE.Group(); g.add(fruitG);
+  var peachTex = ctex(256, 256, function (c, w, h) {
+    var gr = c.createLinearGradient(0, h, 0, 0);
+    gr.addColorStop(0, '#fef08a'); gr.addColorStop(0.42, '#fda4af'); gr.addColorStop(1, '#f43f5e');
+    c.fillStyle = gr; c.fillRect(0, 0, w, h);
+    c.strokeStyle = 'rgba(190,18,60,.36)'; c.lineWidth = 8;
+    c.beginPath(); c.moveTo(w*0.5, 0); c.lineTo(w*0.5, h); c.stroke();
+  });
+  var peachMat = new THREE.MeshToonMaterial({ map: peachTex, gradientMap: ramp });
+  function makePeach(scale) {
+    var pg = new THREE.Group();
+    var body = mesh(new THREE.SphereGeometry(0.34, 22, 16), peachMat);
+    body.scale.set(1.02, 1.06, 0.96); pg.add(body);
+    var tip = mesh(new THREE.ConeGeometry(0.17, 0.22, 14), toon('#f43f5e'));
+    tip.position.y = 0.29; pg.add(tip);
+    // 桃蒂小叶
+    var tinyLf = mesh(lanceGeo, pLeafMat);
+    tinyLf.scale.setScalar(0.55); tinyLf.position.set(0.04, -0.28, 0.04); tinyLf.rotation.y = -0.6; tinyLf.rotation.x = -0.3;
+    pg.add(tinyLf);
+    pg.scale.setScalar(scale); return pg;
+  }
+  var peach1 = makePeach(1.06); peach1.position.set(0.20, 1.44, 0.24); peach1.rotation.z = -0.25; fruitG.add(peach1);
+  var peach2 = makePeach(0.88); peach2.position.set(-0.34, 1.72, 0.16); peach2.rotation.z = 0.28; fruitG.add(peach2);
+  addHitVolume(fruitG, new THREE.SphereGeometry(0.90, 14, 12), -0.06, 1.56, 0.18);
+  tagPart(fruitG, 'peach', 'peach_fruit', '粉红水蜜桃', '桃树枝上结着圆润饱满的粉红水蜜桃，上面有沟纹和尖尖的小桃嘴！', '🍑 <b>桃树枝</b>：粉红圆润水蜜桃，带桃蒂小叶');
+  addPlantFallbackCollider(g, 'peach', 1.34, 2.55, 1.25);
+})();
+
+/* 6. 彩蛋植物：银杏 */
+(function buildGinkgo() {
+  var g = new THREE.Group(); g.position.y = 0.22; g.visible = false; turntable.add(g); plantGroups.ginkgo = g;
+  var mound = mesh(new THREE.CylinderGeometry(0.88, 1.02, 0.16, 20), toon('#8f683f'));
+  mound.position.y = 0.08; g.add(mound);
+  var trunk = mesh(new THREE.CylinderGeometry(0.16, 0.26, 1.55, 14), toon('#92623c'));
+  trunk.position.y = 0.85; g.add(trunk);
+
+  var fanShp = new THREE.Shape();
+  fanShp.moveTo(0, 0);
+  fanShp.lineTo(-0.28, 0.34);
+  fanShp.quadraticCurveTo(-0.14, 0.46, -0.02, 0.36);
+  fanShp.lineTo(0, 0.27);
+  fanShp.lineTo(0.02, 0.36);
+  fanShp.quadraticCurveTo(0.14, 0.46, 0.28, 0.34);
+  fanShp.closePath();
+  var fanGeo = new THREE.ExtrudeGeometry(fanShp, { depth: 0.015, bevelEnabled: false });
+  var mats = [toon('#facc15'), toon('#a3e635'), toon('#eab308')];
+  for (var i = 0; i < 36; i++) {
+    var ang = i * 2.399, r = 0.22 + (i % 5) * 0.18, y = 1.42 + (i / 36) * 1.15;
+    var lf = mesh(fanGeo, mats[i % 3]);
+    lf.position.set(Math.cos(ang) * r, y, Math.sin(ang) * r);
+    lf.rotation.y = -ang + Math.PI / 2;
+    lf.rotation.x = 0.45 + (i % 3) * 0.2;
+    g.add(lf);
+  }
+  addHitVolume(g, new THREE.SphereGeometry(1.15, 14, 12), 0, 1.8, 0);
+  tagPart(g, 'ginkgo', 'ginkgo_fan', '银杏扇形叶', '银杏是高大的活化石植物，每一片叶子都像一把展开的金黄小扇子！', '🌳 <b>银杏</b>：高大树木，叶子像小扇子');
+  addPlantFallbackCollider(g, 'ginkgo', 1.32, 2.75, 1.38);
+})();
+
+/* 7. 彩蛋植物：蒲公英 */
+var dandelionFluffs = [];
+(function buildDandelion() {
+  var g = new THREE.Group(); g.position.y = 0.22; g.visible = false; turntable.add(g); plantGroups.dandelion = g;
+  var mound = mesh(new THREE.CylinderGeometry(1.05, 1.15, 0.18, 22), toon('#78b857'));
+  mound.position.y = 0.09; g.add(mound);
+
+  var dlGeo = new THREE.BoxGeometry(0.68, 0.03, 0.18);
+  for (var i = 0; i < 7; i++) {
+    var lf = mesh(dlGeo, toon('#3ca84f'));
+    var a = i * Math.PI * 2 / 7;
+    lf.position.set(Math.cos(a) * 0.42, 0.24, Math.sin(a) * 0.42);
+    lf.rotation.y = -a; lf.rotation.z = 0.22; g.add(lf);
+  }
+
+  var stY = mesh(new THREE.CylinderGeometry(0.024, 0.03, 0.92, 8), toon('#65c466'));
+  stY.position.set(-0.34, 0.62, 0.14); stY.rotation.z = 0.16; g.add(stY);
+  var yHead = new THREE.Group(); yHead.position.set(-0.42, 1.08, 0.14); g.add(yHead);
+  yHead.add(mesh(new THREE.SphereGeometry(0.12, 12, 10), toon('#f59e0b')));
+  for (var yp = 0; yp < 14; yp++) {
+    var ya = yp * Math.PI * 2 / 14;
+    var pet = mesh(new THREE.BoxGeometry(0.24, 0.035, 0.06), toon('#facc15'));
+    pet.position.set(Math.cos(ya) * 0.18, 0.02, Math.sin(ya) * 0.18);
+    pet.rotation.y = -ya; yHead.add(pet);
+  }
+
+  var stW = mesh(new THREE.CylinderGeometry(0.024, 0.03, 1.28, 8), toon('#65c466'));
+  stW.position.set(0.24, 0.8, -0.06); stW.rotation.z = -0.1; g.add(stW);
+  var wHead = new THREE.Group(); wHead.position.set(0.3, 1.46, -0.06); g.add(wHead);
+  wHead.add(mesh(new THREE.SphereGeometry(0.11, 10, 10), toon('#d6c5a3')));
+  var fluffMat = toon('#ffffff', { transparent: true, opacity: 0.92 });
+  for (var f = 0; f < 22; f++) {
+    var phi = Math.acos(1 - 2 * (f + 0.5) / 22), th = Math.PI * (1 + Math.sqrt(5)) * f;
+    var dx = Math.sin(phi)*Math.cos(th), dy = Math.cos(phi), dz = Math.sin(phi)*Math.sin(th);
+    var puff = mesh(new THREE.SphereGeometry(0.095, 8, 8), fluffMat);
+    puff.position.set(dx * 0.25, dy * 0.25, dz * 0.25);
+    wHead.add(puff);
+  }
+
+  for (var k = 0; k < 10; k++) {
+    var fp = new THREE.Group();
+    var stem = mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.12, 4), toon('#e2e8f0'));
+    var cap = mesh(new THREE.SphereGeometry(0.055, 7, 6), fluffMat); cap.position.y = 0.07; cap.scale.set(1.2, 0.55, 1.2);
+    fp.add(stem); fp.add(cap);
+    fp.userData = { phase: k * 0.65, speed: 0.35 + (k % 3) * 0.14 };
+    g.add(fp); dandelionFluffs.push(fp);
+  }
+  addHitVolume(g, new THREE.SphereGeometry(1.05, 14, 12), 0, 1.15, 0);
+  tagPart(g, 'dandelion', 'dandelion_fluff', '蒲公英黄花与绒球', '蒲公英是低矮的小草，开黄色的花，成熟后变成白色降落伞绒毛球随风飘散！', '🌼 <b>蒲公英</b>：开黄花、白绒球降落伞随风飘');
+  addPlantFallbackCollider(g, 'dandelion', 1.28, 2.1, 1.0);
+})();
+
+/* ===== 桌面常驻 3D 可拖道具 1：左前 3D 手持放大镜（新增！） ===== */
+var MAG_HOME = new THREE.Vector3(STAGE_X - 1.86, 0.36, 1.44);
+var magCoaster = mesh(new THREE.CylinderGeometry(0.48, 0.52, 0.05, 24), toon('#fef08a'));
+magCoaster.position.set(MAG_HOME.x, 0.025, MAG_HOME.z); magCoaster.castShadow = false;
+live.add(magCoaster);
+
+var magGlowRing = new THREE.Mesh(new THREE.RingGeometry(0.54, 0.68, 28),
+  new THREE.MeshBasicMaterial({ color: 0x22c55e, transparent: true, opacity: 0.38, side: THREE.DoubleSide }));
+magGlowRing.rotation.x = -Math.PI / 2; magGlowRing.position.set(MAG_HOME.x, 0.032, MAG_HOME.z);
+live.add(magGlowRing);
+
+var magG = new THREE.Group();
+magG.position.copy(MAG_HOME);
+magG.rotation.y = 0.36;
+live.add(magG);
+
+var magRim = mesh(new THREE.TorusGeometry(0.36, 0.054, 12, 32), toon('#eab308'));
+magRim.position.y = 0.28; magG.add(magRim);
+var magGlass = new THREE.Mesh(new THREE.CircleGeometry(0.34, 28),
+  new THREE.MeshBasicMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.45, side: THREE.DoubleSide }));
+magGlass.position.y = 0.28; magG.add(magGlass);
+var magGlint = new THREE.Mesh(new THREE.RingGeometry(0.20, 0.26, 16, 1, 0.6, 1.1),
+  new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.72, side: THREE.DoubleSide }));
+magGlint.position.set(0, 0.28, 0.02); magG.add(magGlint);
+var magHandle = mesh(new THREE.CylinderGeometry(0.058, 0.072, 0.60, 12), toon('#8b4513'));
+magHandle.position.set(-0.28, -0.22, 0); magHandle.rotation.z = -0.52; magG.add(magHandle);
+addHitVolume(magG, new THREE.SphereGeometry(0.62, 14, 12), 0, 0.22, 0);
+
+var magHitMeshes = [];
+magG.traverse(function (ch) { if (ch.isMesh) { ch.userData.deskProp = 'mag'; magHitMeshes.push(ch); } });
+magCoaster.userData.deskProp = 'mag';
+magHitMeshes.push(magCoaster);
+var magGoal = MAG_HOME.clone();
+
+/* ===== 桌面常驻 3D 可拖道具 2：左中 3D 扇闻小手 ===== */
+var FAN_HOME = new THREE.Vector3(STAGE_X - 2.92, 0.14, 0.10);
+var fanCoaster = mesh(new THREE.CylinderGeometry(0.48, 0.52, 0.05, 24), toon('#bae6fd'));
+fanCoaster.position.set(FAN_HOME.x, 0.025, FAN_HOME.z); fanCoaster.castShadow = false;
+live.add(fanCoaster);
+
+var fanGlowRing = new THREE.Mesh(new THREE.RingGeometry(0.54, 0.68, 28),
+  new THREE.MeshBasicMaterial({ color: 0x0ea5e9, transparent: true, opacity: 0.35, side: THREE.DoubleSide }));
+fanGlowRing.rotation.x = -Math.PI / 2; fanGlowRing.position.set(FAN_HOME.x, 0.032, FAN_HOME.z);
+live.add(fanGlowRing);
+
+var fanHandG = new THREE.Group();
+fanHandG.position.copy(FAN_HOME);
+fanHandG.rotation.y = 0.45;
+live.add(fanHandG);
+
+var skinMat = toon('#ffbe88');
+var palm = mesh(new THREE.BoxGeometry(0.32, 0.34, 0.11), skinMat);
+palm.position.y = 0.22; fanHandG.add(palm);
+for (var fi = 0; fi < 4; fi++) {
+  var fg = mesh(new THREE.CylinderGeometry(0.036, 0.036, 0.28, 8), skinMat);
+  fg.position.set(-0.105 + fi * 0.07, 0.5, 0); fanHandG.add(fg);
+}
+var thumb = mesh(new THREE.CylinderGeometry(0.038, 0.038, 0.22, 8), skinMat);
+thumb.position.set(-0.21, 0.26, 0.02); thumb.rotation.z = 0.72; fanHandG.add(thumb);
+var fanCuff = mesh(new THREE.CylinderGeometry(0.14, 0.16, 0.14, 12), toon('#38bdf8'));
+fanCuff.position.y = 0.06; fanHandG.add(fanCuff);
+for (var wa = 0; wa < 3; wa++) {
+  var arc = mesh(new THREE.TorusGeometry(0.14 + wa * 0.065, 0.02, 8, 16, Math.PI * 0.72), toon('#38bdf8'));
+  arc.position.set(0.24, 0.40 + (wa - 1) * 0.085, 0.04); arc.rotation.z = -0.45;
+  fanHandG.add(arc);
+}
+addHitVolume(fanHandG, new THREE.SphereGeometry(0.62, 14, 12), 0.04, 0.36, 0);
+
+var fanHitMeshes = [];
+fanHandG.traverse(function (ch) { if (ch.isMesh) { ch.userData.deskProp = 'fan'; fanHitMeshes.push(ch); } });
+fanCoaster.userData.deskProp = 'fan';
+fanHitMeshes.push(fanCoaster);
+var fanGoal = FAN_HOME.clone();
+
+// 专属气味粒子组（香雾圆环 + 飘散微粒，每种植物不同颜色与浓度！）
+var scentParticles = [];
+for (var sp = 0; sp < 22; sp++) {
+  var isRing = (sp < 10);
+  var sGeo = isRing
+    ? new THREE.TorusGeometry(0.08 + (sp % 3) * 0.03, 0.018, 8, 18)
+    : new THREE.SphereGeometry(0.055 + (sp % 3) * 0.022, 10, 8);
+  var sm = new THREE.Mesh(sGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 }));
+  sm.visible = false;
+  live.add(sm);
+  scentParticles.push({ m: sm, t: 0, phase: sp * 0.36, isRing: isRing, idx: sp });
+}
+
+/* ===== 桌面常驻 3D 道具 3：右侧偏下 3D 发光「❓ 特征卡片立牌」（避让右上 #notes） ===== */
+var STAND_POS = new THREE.Vector3(STAGE_X + 2.42, 0, 1.08);
+var riddleStandG = new THREE.Group();
+riddleStandG.position.copy(STAND_POS);
+riddleStandG.rotation.y = -0.42;
+live.add(riddleStandG);
+
+var standBase = mesh(new THREE.BoxGeometry(0.92, 0.12, 0.44), toon('#d97706'));
+standBase.position.y = 0.06; riddleStandG.add(standBase);
+
+var standGlowRing = new THREE.Mesh(new THREE.RingGeometry(0.54, 0.66, 28),
+  new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.45, side: THREE.DoubleSide }));
+standGlowRing.rotation.x = -Math.PI / 2; standGlowRing.position.y = 0.02;
+riddleStandG.add(standGlowRing);
+
+var cardFaceTex = ctex(256, 320, function (c, w, h) {
+  var gr = c.createLinearGradient(0, 0, 0, h);
+  gr.addColorStop(0, '#fffbeb'); gr.addColorStop(1, '#fef3c7');
+  c.fillStyle = gr; c.fillRect(0, 0, w, h);
+  c.strokeStyle = '#f59e0b'; c.lineWidth = 14; c.strokeRect(10, 10, w - 20, h - 20);
+  c.fillStyle = '#d97706'; c.font = 'bold 136px "Microsoft YaHei",sans-serif'; c.textAlign = 'center';
+  c.fillText('?', w/2, 166);
+  // 荷叶 V 缺口小图标 + 银杏扇叶 + 蒲公英
+  c.fillStyle = '#22c55e';
+  c.beginPath(); c.moveTo(64, 232); c.arc(64, 232, 22, 0.45, Math.PI*2 - 0.45); c.closePath(); c.fill();
+  c.fillStyle = '#eab308';
+  c.beginPath(); c.moveTo(128, 258); c.lineTo(104, 214); c.quadraticCurveTo(128, 198, 152, 214); c.closePath(); c.fill();
+  c.fillStyle = '#16a34a'; c.fillRect(190, 228, 5, 34);
+  c.fillStyle = '#ffffff'; c.strokeStyle = '#94a3b8'; c.lineWidth = 3;
+  c.beginPath(); c.arc(192, 218, 18, 0, Math.PI*2); c.fill(); c.stroke();
+});
+var cardFrame = mesh(new THREE.BoxGeometry(0.82, 1.06, 0.08), [
+  toon('#f59e0b'), toon('#f59e0b'), toon('#f59e0b'), toon('#f59e0b'),
+  new THREE.MeshToonMaterial({ map: cardFaceTex, gradientMap: ramp }),
+  toon('#fde68a')
+]);
+cardFrame.position.set(0, 0.62, 0); cardFrame.rotation.x = -0.18;
+riddleStandG.add(cardFrame);
+addHitVolume(riddleStandG, new THREE.BoxGeometry(1.36, 1.52, 0.95), 0, 0.68, 0);
+
+var standHitMeshes = [];
+riddleStandG.traverse(function (ch) { if (ch.isMesh) { ch.userData.deskProp = 'riddle'; standHitMeshes.push(ch); } });
+
+// 桌面 3D 道具轻量非按钮提示签
+var magTag = document.createElement('div'); magTag.className = 'ttag'; magTag.textContent = '🔍 拖/点看特写'; $('#toolTags').appendChild(magTag);
+var fanTag = document.createElement('div'); fanTag.className = 'ttag'; fanTag.textContent = '✋ 拖/点扇闻'; $('#toolTags').appendChild(fanTag);
+var standTag = document.createElement('div'); standTag.className = 'ttag'; standTag.textContent = '❓ 点我猜植物'; $('#toolTags').appendChild(standTag);
+
+/* ===== 高清 2D Canvas 植物特征矢量绘制引擎（用于左上圆形特写窗 + 猜植物卡片！） ===== */
+var lensCv = $('#lensCv'), lCtx = lensCv.getContext('2d');
+
+var LENS_META = {
+  pine:      { tag: '🌲 针状松叶 · 鳞片松果', cap: '🔍 松树：成束细长尖针叶 + 鳞片松果' },
+  lotus:     { tag: '🌺 V形缺口荷叶 · 莲蓬', cap: '🔍 荷花：V形大缺口荷叶 + 金黄莲蓬' },
+  sorrel:    { tag: '🍀 三片爱心叶 · 五瓣花', cap: '🔍 酢浆草：3 片爱心小叶 + 五瓣小花' },
+  jasmine:   { tag: '🌼 重瓣白花 · 椭圆对生叶', cap: '🔍 茉莉：洁白重瓣花 + 椭圆对生叶' },
+  peach:     { tag: '🍑 细长桃叶 · 水蜜桃', cap: '🔍 桃树：细长锯齿桃叶 + 粉红水蜜桃' },
+  ginkgo:    { tag: '🌳 银杏 · 金黄扇形叶', cap: '🔍 银杏：展开小扇子状金黄叶片' },
+  dandelion: { tag: '🌼 蒲公英 · 降落伞绒球', cap: '🔍 蒲公英：带白色降落伞的绒毛种子' }
+};
+
+function drawPlantCloseupTo(ctx, size, plantId) {
+  var g = ctx;
+  g.save();
+  g.clearRect(0, 0, size, size);
+  g.scale(size / 280, size / 280);
+
+  if (plantId === 'pine') {
+    // 柔和林间暖底
+    var bg = g.createRadialGradient(140, 140, 20, 140, 140, 150);
+    bg.addColorStop(0, '#f0fdf4'); bg.addColorStop(1, '#dcfce7');
+    g.fillStyle = bg; g.fillRect(0, 0, 280, 280);
+
+    // 褐色木质松枝
+    g.strokeStyle = '#78350f'; g.lineWidth = 18; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(26, 214); g.quadraticCurveTo(106, 178, 176, 152); g.stroke();
+    g.strokeStyle = '#92400e'; g.lineWidth = 10;
+    g.beginPath(); g.moveTo(28, 210); g.quadraticCurveTo(106, 174, 174, 148); g.stroke();
+
+    // 3 束清晰的细长尖头针状松叶（每束多根细长尖针！）
+    var bundles = [
+      { x: 92, y: 174, ang0: -2.42, ang1: -1.12, len: 112, cnt: 13 },
+      { x: 146, y: 156, ang0: -2.05, ang1: -0.52, len: 118, cnt: 15 },
+      { x: 72, y: 188, ang0: 1.95, ang1: 2.75, len: 74, cnt: 7 }
+    ];
+    bundles.forEach(function (bd) {
+      for (var i = 0; i < bd.cnt; i++) {
+        var t = i / Math.max(1, bd.cnt - 1);
+        var a = bd.ang0 + t * (bd.ang1 - bd.ang0);
+        var l = bd.len * (0.85 + Math.sin(t * Math.PI) * 0.22);
+        var ex = bd.x + Math.cos(a) * l, ey = bd.y + Math.sin(a) * l;
+        g.strokeStyle = (i % 3 === 0) ? '#14532d' : ((i % 3 === 1) ? '#15803d' : '#22c55e');
+        g.lineWidth = 3.6; g.lineCap = 'round';
+        g.beginPath(); g.moveTo(bd.x, bd.y); g.lineTo(ex, ey); g.stroke();
+        // 尖端亮绿高光
+        g.strokeStyle = '#86efac'; g.lineWidth = 1.4;
+        g.beginPath(); g.moveTo(bd.x + Math.cos(a)*l*0.6, bd.y + Math.sin(a)*l*0.6); g.lineTo(ex, ey); g.stroke();
+      }
+      // 针叶基部棕色叶鞘
+      g.fillStyle = '#9a5b2c';
+      g.beginPath(); g.arc(bd.x, bd.y, 8, 0, Math.PI * 2); g.fill();
+    });
+
+    // 右下角高清鳞片松果
+    g.save();
+    g.translate(192, 184); g.rotate(0.24);
+    var rows = [
+      { y: -38, w: 18, n: 2 }, { y: -24, w: 30, n: 3 }, { y: -8, w: 38, n: 4 },
+      { y: 10, w: 36, n: 4 }, { y: 26, w: 28, n: 3 }, { y: 38, w: 16, n: 2 }
+    ];
+    rows.forEach(function (rw) {
+      for (var s = 0; s < rw.n; s++) {
+        var sx = rw.n === 1 ? 0 : (-rw.w + (s / (rw.n - 1)) * rw.w * 2) * 0.72;
+        g.fillStyle = (s % 2 === 0) ? '#8b5126' : '#a1622f';
+        g.strokeStyle = '#451a03'; g.lineWidth = 2.2;
+        g.beginPath();
+        g.moveTo(sx, rw.y - 12);
+        g.quadraticCurveTo(sx + 16, rw.y, sx, rw.y + 13);
+        g.quadraticCurveTo(sx - 16, rw.y, sx, rw.y - 12);
+        g.fill(); g.stroke();
+      }
+    });
+    g.restore();
+
+  } else if (plantId === 'lotus') {
+    // 湛蓝池塘水面底色
+    var lbg = g.createRadialGradient(140, 140, 18, 140, 140, 155);
+    lbg.addColorStop(0, '#bae6fd'); lbg.addColorStop(0.65, '#38bdf8'); lbg.addColorStop(1, '#0284c7');
+    g.fillStyle = lbg; g.fillRect(0, 0, 280, 280);
+    g.strokeStyle = 'rgba(255,255,255,.36)'; g.lineWidth = 2.5;
+    g.beginPath(); g.arc(140, 140, 126, 0.1, 1.4); g.stroke();
+    g.beginPath(); g.arc(140, 140, 114, 3.2, 4.7); g.stroke();
+
+    // 左上方超大 V 形深缺口荷叶（约 52° 清晰 V 缺口朝左下打开，完全无遮挡！）
+    var lx = 114, ly = 116, lr = 86;
+    var notchCenter = 2.02; // 缺口朝向左下方湛蓝水面，与右下莲蓬完全分离零遮挡！
+    var halfV = 0.45; // 约 52° 大 V 形缺口
+    g.save();
+    g.beginPath();
+    g.moveTo(lx, ly);
+    var steps = 42;
+    for (var i = 0; i <= steps; i++) {
+      var a = (notchCenter + halfV) + (i / steps) * (Math.PI * 2 - halfV * 2);
+      var rad = lr * (1 + Math.sin(a * 10) * 0.02);
+      g.lineTo(lx + Math.cos(a) * rad, ly + Math.sin(a) * rad);
+    }
+    g.closePath();
+    var padGr = g.createRadialGradient(lx, ly, 8, lx, ly, lr);
+    padGr.addColorStop(0, '#1e8a3b'); padGr.addColorStop(0.65, '#3fc25b'); padGr.addColorStop(1, '#166534');
+    g.fillStyle = padGr; g.fill();
+    g.strokeStyle = '#14532d'; g.lineWidth = 3.5; g.stroke();
+
+    // 13 条放射状亮绿叶脉
+    g.strokeStyle = '#d9f99d'; g.lineCap = 'round';
+    for (var v = 0; v < 13; v++) {
+      var va = (notchCenter + halfV + 0.14) + (v / 12) * (Math.PI * 2 - halfV * 2 - 0.28);
+      g.lineWidth = 2.6;
+      g.beginPath(); g.moveTo(lx, ly); g.lineTo(lx + Math.cos(va)*lr*0.88, ly + Math.sin(va)*lr*0.88); g.stroke();
+      g.lineWidth = 1.4;
+      g.beginPath();
+      g.moveTo(lx + Math.cos(va)*lr*0.64, ly + Math.sin(va)*lr*0.64);
+      g.lineTo(lx + Math.cos(va + 0.12)*lr*0.84, ly + Math.sin(va + 0.12)*lr*0.84);
+      g.stroke();
+    }
+    g.fillStyle = '#ecfccb'; g.beginPath(); g.arc(lx, ly, 7.5, 0, Math.PI * 2); g.fill();
+    g.fillStyle = 'rgba(255,255,255,.88)';
+    g.beginPath(); g.arc(lx + 18, ly - 44, 6, 0, Math.PI*2); g.fill();
+    g.beginPath(); g.arc(lx + 34, ly - 32, 3.8, 0, Math.PI*2); g.fill();
+    g.restore();
+
+    // 右下角粉红莲瓣 + 带黑色莲子孔的金黄莲蓬
+    g.save();
+    g.translate(196, 178); g.scale(0.88, 0.88);
+    for (var p = 0; p < 5; p++) {
+      var pa = -1.2 + p * 0.58;
+      g.save(); g.rotate(pa);
+      g.fillStyle = '#fda4af'; g.strokeStyle = '#db2777'; g.lineWidth = 2;
+      g.beginPath(); g.ellipse(0, -34, 15, 30, 0, 0, Math.PI*2); g.fill(); g.stroke();
+      g.restore();
+    }
+    // 莲蓬锥体与平顶
+    g.fillStyle = '#ca8a04';
+    g.beginPath(); g.moveTo(-26, -6); g.lineTo(26, -6); g.lineTo(13, 32); g.lineTo(-13, 32); g.closePath(); g.fill();
+    g.fillStyle = '#facc15'; g.strokeStyle = '#a16207'; g.lineWidth = 3;
+    g.beginPath(); g.ellipse(0, -8, 31, 22, 0, 0, Math.PI * 2); g.fill(); g.stroke();
+    // 7 个黑色莲子孔 + 莲子
+    var holes = [[0,-8],[-15,-12],[15,-12],[-14,2],[14,2],[0,-20],[0,5]];
+    holes.forEach(function (h) {
+      g.fillStyle = '#291507';
+      g.beginPath(); g.ellipse(h[0], h[1], 5.5, 4.2, 0, 0, Math.PI*2); g.fill();
+      g.fillStyle = '#92400e';
+      g.beginPath(); g.ellipse(h[0], h[1] - 0.8, 3.0, 2.3, 0, 0, Math.PI*2); g.fill();
+    });
+    g.restore();
+
+  } else if (plantId === 'sorrel') {
+    var sbg = g.createRadialGradient(140, 140, 20, 140, 140, 150);
+    sbg.addColorStop(0, '#fefce8'); sbg.addColorStop(1, '#dcfce7');
+    g.fillStyle = sbg; g.fillRect(0, 0, 280, 280);
+
+    // 细长绿茎
+    g.strokeStyle = '#16a34a'; g.lineWidth = 6; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(106, 256); g.quadraticCurveTo(108, 194, 114, 134); g.stroke();
+    g.beginPath(); g.moveTo(192, 248); g.quadraticCurveTo(196, 184, 204, 118); g.stroke();
+
+    // 三片超大对称爱心形小叶（三出复叶）
+    g.save(); g.translate(114, 134);
+    for (var k = 0; k < 3; k++) {
+      g.save();
+      g.rotate(k * Math.PI * 2 / 3 - Math.PI / 2);
+      g.beginPath();
+      g.moveTo(0, 0);
+      g.bezierCurveTo(-48, -18, -58, -76, -24, -84);
+      g.bezierCurveTo(-7, -88, -2, -66, 0, -60);
+      g.bezierCurveTo(2, -66, 7, -88, 24, -84);
+      g.bezierCurveTo(58, -76, 48, -18, 0, 0);
+      g.closePath();
+      var hg = g.createLinearGradient(0, 0, 0, -84);
+      hg.addColorStop(0, '#15803d'); hg.addColorStop(0.55, '#4ade80'); hg.addColorStop(1, '#22c55e');
+      g.fillStyle = hg; g.fill();
+      g.strokeStyle = '#14532d'; g.lineWidth = 2.6; g.stroke();
+      // 爱心叶中折痕
+      g.strokeStyle = 'rgba(236,253,245,.82)'; g.lineWidth = 2.2;
+      g.beginPath(); g.moveTo(0, -4); g.lineTo(0, -58); g.stroke();
+      g.restore();
+    }
+    g.fillStyle = '#dcfce7'; g.beginPath(); g.arc(0, 0, 5, 0, Math.PI*2); g.fill();
+    g.restore();
+
+    // 右侧粉红五瓣小花（5 片花瓣一数就清！）
+    g.save(); g.translate(204, 118);
+    for (var p = 0; p < 5; p++) {
+      g.save(); g.rotate(p * Math.PI * 2 / 5 - Math.PI / 2);
+      var pg = g.createLinearGradient(0, 0, 0, -44);
+      pg.addColorStop(0, '#fef08a'); pg.addColorStop(0.45, '#f9a8d4'); pg.addColorStop(1, '#db2777');
+      g.fillStyle = pg; g.strokeStyle = '#be185d'; g.lineWidth = 2;
+      g.beginPath();
+      g.moveTo(0, 0);
+      g.bezierCurveTo(-18, -12, -22, -40, 0, -44);
+      g.bezierCurveTo(22, -40, 18, -12, 0, 0);
+      g.fill(); g.stroke();
+      g.restore();
+    }
+    g.fillStyle = '#facc15'; g.strokeStyle = '#ca8a04'; g.lineWidth = 2;
+    g.beginPath(); g.arc(0, 0, 10, 0, Math.PI * 2); g.fill(); g.stroke();
+    g.restore();
+
+  } else if (plantId === 'jasmine') {
+    var jbg = g.createRadialGradient(140, 140, 20, 140, 140, 150);
+    jbg.addColorStop(0, '#ecfdf5'); jbg.addColorStop(1, '#a7f3d0');
+    g.fillStyle = jbg; g.fillRect(0, 0, 280, 280);
+
+    // 绿色细枝 + 两对油亮深绿椭圆形对生叶片
+    g.strokeStyle = '#166534'; g.lineWidth = 7; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(42, 232); g.lineTo(224, 68); g.stroke();
+
+    function drawOvalLeaf(cx, cy, ang, sc) {
+      g.save(); g.translate(cx, cy); g.rotate(ang); g.scale(sc, sc);
+      g.beginPath();
+      g.moveTo(0, 0);
+      g.bezierCurveTo(-30, -18, -32, -62, 0, -82);
+      g.bezierCurveTo(32, -62, 30, -18, 0, 0);
+      var lg = g.createLinearGradient(0, 0, 0, -82);
+      lg.addColorStop(0, '#14532d'); lg.addColorStop(0.55, '#15803d'); lg.addColorStop(1, '#22c55e');
+      g.fillStyle = lg; g.fill();
+      g.strokeStyle = '#052e16'; g.lineWidth = 2.4; g.stroke();
+      // 主叶脉 + 侧叶脉
+      g.strokeStyle = 'rgba(209,250,229,.88)'; g.lineWidth = 2.6;
+      g.beginPath(); g.moveTo(0, -2); g.lineTo(0, -76); g.stroke();
+      g.lineWidth = 1.6;
+      for (var i = 1; i <= 4; i++) {
+        var yy = -14 * i;
+        g.beginPath(); g.moveTo(0, yy); g.quadraticCurveTo(-14, yy - 6, -20, yy - 16); g.stroke();
+        g.beginPath(); g.moveTo(0, yy); g.quadraticCurveTo(14, yy - 6, 20, yy - 16); g.stroke();
+      }
+      g.restore();
+    }
+    // 成对对生椭圆叶
+    drawOvalLeaf(96, 184, -0.58, 0.96);
+    drawOvalLeaf(96, 184, 1.92, 0.96);
+    drawOvalLeaf(178, 110, -0.58, 0.85);
+    drawOvalLeaf(178, 110, 1.92, 0.85);
+
+    // 中心洁白多层重瓣茉莉花朵
+    g.save(); g.translate(142, 134);
+    var layers = [
+      { cnt: 8, rx: 18, ry: 34, dist: 28, fill: '#f8fafc', stroke: '#cbd5e1', off: 0 },
+      { cnt: 7, rx: 14, ry: 26, dist: 20, fill: '#ffffff', stroke: '#94a3b8', off: 0.42 },
+      { cnt: 6, rx: 10, ry: 18, dist: 12, fill: '#fefce8', stroke: '#cbd5e1', off: 0.85 }
+    ];
+    layers.forEach(function (ly) {
+      for (var p = 0; p < ly.cnt; p++) {
+        g.save(); g.rotate(p * Math.PI * 2 / ly.cnt + ly.off);
+        g.fillStyle = ly.fill; g.strokeStyle = ly.stroke; g.lineWidth = 1.8;
+        g.beginPath(); g.ellipse(0, -ly.dist, ly.rx, ly.ry, 0, 0, Math.PI*2); g.fill(); g.stroke();
+        g.restore();
+      }
+    });
+    g.fillStyle = '#fde047'; g.beginPath(); g.arc(0, 0, 10, 0, Math.PI*2); g.fill();
+    g.restore();
+
+  } else if (plantId === 'peach') {
+    var pbg = g.createRadialGradient(140, 140, 20, 140, 140, 150);
+    pbg.addColorStop(0, '#fff7ed'); pbg.addColorStop(1, '#ffedd5');
+    g.fillStyle = pbg; g.fillRect(0, 0, 280, 280);
+
+    // 细长尖头带小锯齿的披针形桃叶
+    function drawPeachLeaf(cx, cy, ang, len) {
+      g.save(); g.translate(cx, cy); g.rotate(ang);
+      g.beginPath();
+      g.moveTo(0, 0);
+      var teeth = 7;
+      for (var i = 1; i <= teeth; i++) {
+        var t0 = (i - 0.5) / teeth, t1 = i / teeth;
+        var w0 = Math.sin(t0 * Math.PI) * 24;
+        var w1 = Math.sin(t1 * Math.PI) * 20;
+        g.lineTo(-w0 - 3, -t0 * len);
+        g.lineTo(-w1, -t1 * len);
+      }
+      g.lineTo(0, -len - 12); // 尖尖叶尾！
+      for (var j = teeth; j >= 1; j--) {
+        var s0 = (j - 0.5) / teeth, s1 = (j - 1) / teeth;
+        var rw0 = Math.sin(s0 * Math.PI) * 24;
+        var rw1 = Math.sin(s1 * Math.PI) * 20;
+        g.lineTo(rw0 + 3, -s0 * len);
+        g.lineTo(rw1, -s1 * len);
+      }
+      g.closePath();
+      var lg = g.createLinearGradient(0, 0, 0, -len);
+      lg.addColorStop(0, '#15803d'); lg.addColorStop(0.55, '#22c55e'); lg.addColorStop(1, '#4ade80');
+      g.fillStyle = lg; g.fill();
+      g.strokeStyle = '#14532d'; g.lineWidth = 2.2; g.stroke();
+      g.strokeStyle = '#dcfce7'; g.lineWidth = 2.8;
+      g.beginPath(); g.moveTo(0, -4); g.lineTo(0, -len - 4); g.stroke();
+      g.restore();
+    }
+    drawPeachLeaf(126, 150, -0.78, 128);
+    drawPeachLeaf(122, 166, -1.35, 112);
+
+    // 粉红带沟纹大水蜜桃
+    g.save(); g.translate(168, 152);
+    g.beginPath();
+    g.moveTo(0, -68); // 尖桃嘴
+    g.bezierCurveTo(64, -46, 72, 42, 0, 58);
+    g.bezierCurveTo(-72, 42, -64, -46, 0, -68);
+    g.closePath();
+    var pgr = g.createRadialGradient(-16, -24, 8, 0, 0, 74);
+    pgr.addColorStop(0, '#fff1f2'); pgr.addColorStop(0.32, '#fda4af'); pgr.addColorStop(0.72, '#fb7185'); pgr.addColorStop(1, '#fde68a');
+    g.fillStyle = pgr; g.fill();
+    g.strokeStyle = '#e11d48'; g.lineWidth = 2.8; g.stroke();
+    // 水蜜桃中线沟纹
+    g.strokeStyle = 'rgba(190,18,60,.45)'; g.lineWidth = 3.5; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(0, -64); g.quadraticCurveTo(16, 0, 2, 54); g.stroke();
+    // 柔嫩光泽高光
+    g.fillStyle = 'rgba(255,255,255,.55)';
+    g.beginPath(); g.ellipse(-22, -20, 12, 22, -0.35, 0, Math.PI*2); g.fill();
+    g.restore();
+
+  } else if (plantId === 'ginkgo') {
+    var gbg = g.createRadialGradient(140, 140, 20, 140, 140, 150);
+    gbg.addColorStop(0, '#fefce8'); gbg.addColorStop(1, '#fef08a');
+    g.fillStyle = gbg; g.fillRect(0, 0, 280, 280);
+    // 叶柄
+    g.strokeStyle = '#92400e'; g.lineWidth = 7; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(140, 246); g.quadraticCurveTo(138, 206, 140, 174); g.stroke();
+    // 金黄扇形叶（中间典型二裂缺口）
+    g.beginPath();
+    g.moveTo(140, 178);
+    g.lineTo(44, 92);
+    g.quadraticCurveTo(84, 34, 134, 68);
+    g.lineTo(140, 108);
+    g.lineTo(146, 68);
+    g.quadraticCurveTo(196, 34, 236, 92);
+    g.closePath();
+    var fg = g.createLinearGradient(140, 180, 140, 48);
+    fg.addColorStop(0, '#ca8a04'); fg.addColorStop(0.55, '#facc15'); fg.addColorStop(1, '#fef08a');
+    g.fillStyle = fg; g.fill();
+    g.strokeStyle = '#a16207'; g.lineWidth = 3; g.stroke();
+    // 扇形放射平行叶脉
+    g.strokeStyle = 'rgba(161,98,7,.45)'; g.lineWidth = 1.8;
+    for (var fi = -8; fi <= 8; fi++) {
+      if (fi === 0) continue;
+      var fa = -Math.PI / 2 + fi * 0.11;
+      g.beginPath(); g.moveTo(140, 174); g.lineTo(140 + Math.cos(fa)*110, 174 + Math.sin(fa)*110); g.stroke();
+    }
+
+  } else if (plantId === 'dandelion') {
+    var dbg = g.createRadialGradient(140, 140, 20, 140, 140, 150);
+    dbg.addColorStop(0, '#f0f9ff'); dbg.addColorStop(1, '#7dd3fc');
+    g.fillStyle = dbg; g.fillRect(0, 0, 280, 280);
+    // 绿色花茎
+    g.strokeStyle = '#16a34a'; g.lineWidth = 8; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(116, 256); g.quadraticCurveTo(118, 204, 126, 146); g.stroke();
+    // 白色毛绒球
+    g.fillStyle = 'rgba(255,255,255,.55)';
+    g.beginPath(); g.arc(126, 136, 62, 0, Math.PI*2); g.fill();
+    for (var di = 0; di < 18; di++) {
+      var da = di * Math.PI * 2 / 18;
+      var ex = 126 + Math.cos(da)*56, ey = 136 + Math.sin(da)*56;
+      g.strokeStyle = '#e2e8f0'; g.lineWidth = 2;
+      g.beginPath(); g.moveTo(126, 136); g.lineTo(ex, ey); g.stroke();
+      g.strokeStyle = '#ffffff'; g.lineWidth = 2.4;
+      g.beginPath(); g.moveTo(ex, ey); g.lineTo(ex + Math.cos(da - 0.5)*14, ey + Math.sin(da - 0.5)*14); g.stroke();
+      g.beginPath(); g.moveTo(ex, ey); g.lineTo(ex + Math.cos(da + 0.5)*14, ey + Math.sin(da + 0.5)*14); g.stroke();
+    }
+    g.fillStyle = '#a16207'; g.beginPath(); g.arc(126, 136, 14, 0, Math.PI*2); g.fill();
+    // 右上 2 颗飞起的毛绒降落伞种子
+    [[212, 84, 0.35], [228, 148, 0.55]].forEach(function (pr) {
+      g.save(); g.translate(pr[0], pr[1]); g.rotate(pr[2]);
+      g.fillStyle = '#78350f'; g.beginPath(); g.ellipse(0, 18, 3.5, 8, 0, 0, Math.PI*2); g.fill();
+      g.strokeStyle = '#ffffff'; g.lineWidth = 2.2;
+      g.beginPath(); g.moveTo(0, 10); g.lineTo(0, -10); g.stroke();
+      for (var k = -3; k <= 3; k++) {
+        g.beginPath(); g.moveTo(0, -10); g.lineTo(k * 6, -24 + Math.abs(k)*1.5); g.stroke();
+      }
+      g.restore();
+    });
+  }
+  g.restore();
+}
+
+var curLensPlant = '', lensHoldTimer = 0;
+function showPlantLens(plantId, holdSec, blurPx) {
+  var meta = LENS_META[plantId] || LENS_META.pine;
+  if (curLensPlant !== plantId) {
+    curLensPlant = plantId;
+    drawPlantCloseupTo(lCtx, lensCv.width, plantId);
+  }
+  $('#lensTag').textContent = meta.tag;
+  $('#lensCap').textContent = meta.cap;
+  lensCv.style.filter = blurPx ? ('blur(' + blurPx.toFixed(1) + 'px)') : 'none';
+  $('#lensRing').classList.toggle('focusing', !!blurPx);
+  $('#lensWrap').classList.add('show');
+  document.body.classList.add('lens-open');
+  if (holdSec) lensHoldTimer = Math.max(lensHoldTimer, holdSec);
+}
+function hidePlantLens() {
+  lensHoldTimer = 0;
+  $('#lensWrap').classList.remove('show');
+  document.body.classList.remove('lens-open');
+}
+
+/* ===== 状态与严格通关逻辑 ===== */
+var CORE_PLANTS = ['pine', 'lotus', 'sorrel', 'jasmine', 'peach'];
+var PLANT_NAMES = { pine: '松树', lotus: '荷花', sorrel: '酢浆草', jasmine: '茉莉花', peach: '桃树枝', ginkgo: '银杏', dandelion: '蒲公英' };
+var currentPlant = 'pine';
+var observedPlants = {};
+var smelledPlants = {};
+var jasmineSmelled = false;
+var riddleSolved = [false, false, false];
+var found = {}, stamps = { s1: false, s2: false, s3: false }, celebrated = false, demo = false;
+var resetGen = 0;
+var fanAnimT = 0, fanAutoFlyT = 0, magAutoFlyT = 0, plantSwayT = 0;
+var curGuideSpeech = '第1步：拖起左侧 3D 放大镜或直接点击植物，看清 5 种植物的高清特征特写！';
+
+function markInteracted() { document.body.classList.add('interacted'); }
+
+function popLabelAt3D(worldPos, text, extraCls) {
+  var v = worldPos.clone().project(camera);
+  var x = (v.x * 0.5 + 0.5) * window.innerWidth;
+  var y = (-v.y * 0.5 + 0.5) * window.innerHeight;
+  var el = document.createElement('div');
+  el.className = 'popword' + (extraCls ? ' ' + extraCls : '');
+  el.textContent = text;
+  el.style.left = Math.max(100, Math.min(window.innerWidth - 100, x)) + 'px';
+  el.style.top = Math.max(74, Math.min(window.innerHeight - 110, y - 16)) + 'px';
+  $('#labels').appendChild(el);
+  setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1680);
+}
+
+function addDiscovery(key, html, spoken) {
+  if (!found[key]) {
+    found[key] = true;
+    var el = document.createElement('div');
+    el.className = 'stk';
+    el.innerHTML = html;
+    $('#ntList').prepend(el);
+    $('#ntCnt').textContent = Object.keys(found).length;
+  }
+  checkStamps();
+  if (spoken && !demo) speak(spoken);
+}
+
+function lightStamp(id, key) {
+  if (!stamps[key]) {
+    stamps[key] = true;
+    var el = $('#' + id);
+    if (el) el.classList.add('lit');
+    beep([523, 659, 784], 0.22);
+  }
+}
+
+function checkStamps() {
+  var obsCount = CORE_PLANTS.filter(function (p) { return observedPlants[p]; }).length;
+  if (obsCount === CORE_PLANTS.length) lightStamp('st1', 's1');
+  if (jasmineSmelled) lightStamp('st2', 's2');
+  if (riddleSolved[0] && riddleSolved[1] && riddleSolved[2]) lightStamp('st3', 's3');
+
+  magTag.classList.toggle('done', obsCount === CORE_PLANTS.length);
+  fanTag.classList.toggle('done', jasmineSmelled);
+  standTag.classList.toggle('done', riddleSolved[0] && riddleSolved[1] && riddleSolved[2]);
+  updateGuide(false);
+
+  if (!demo && !celebrated && stamps.s1 && stamps.s2 && stamps.s3) {
+    celebrated = true;
+    saveProgress(LESSON_ID, true);
+    fireConfetti();
+    beep([523, 659, 784, 1046], 0.28);
+    var g = resetGen;
+    setTimeout(function () {
+      if (g !== resetGen) return;
+      $('#winToast').classList.add('show');
+      speak('太棒啦！五种身边植物的高清特征、扇闻法和特征辨认全部完成，快来看看科学小结论并领小红花吧！', true);
+    }, 650);
+  }
+}
+
+var PLANT_GUIDE_SPEECH = {
+  pine: '第1步：用放大镜或点松树，看清针状松叶和鳞片松果！',
+  lotus: '第1步：切到荷花，用放大镜看清带 V 形缺口的荷叶和金黄莲蓬！',
+  sorrel: '第1步：切到酢浆草，用放大镜看清三片爱心形小叶和五瓣小花！',
+  jasmine: '第1步：切到茉莉花，用放大镜看清洁白重瓣花和椭圆形对生叶！',
+  peach: '第1步：切到桃树枝，用放大镜看清细长桃叶和粉红水蜜桃！'
+};
+
+function updateGuide(speakIt) {
+  var obsCount = CORE_PLANTS.filter(function (p) { return observedPlants[p]; }).length;
+  magTag.classList.remove('pulse');
+  fanTag.classList.remove('pulse');
+  standTag.classList.remove('pulse');
+  $$('.pcard').forEach(function (b) { b.classList.remove('pulse'); });
+  var displayTxt = '';
+
+  if (!stamps.s1) {
+    var nextP = CORE_PLANTS.find(function (p) { return !observedPlants[p]; }) || 'pine';
+    curGuideSpeech = PLANT_GUIDE_SPEECH[nextP];
+    displayTxt = '第1步（' + obsCount + '/5）：' + (currentPlant === nextP
+      ? ('拖放大镜或点「' + PLANT_NAMES[nextP] + '」看高清特写！')
+      : ('点下方图标切到「' + PLANT_NAMES[nextP] + '」看特写！'));
+    if (currentPlant !== nextP) {
+      var nc = document.querySelector('.pcard[data-plant="' + nextP + '"]');
+      if (nc) nc.classList.add('pulse');
+    } else {
+      magTag.classList.add('pulse');
+    }
+  } else if (!stamps.s2) {
+    curGuideSpeech = '第2步：切到茉莉花，把左侧 3D 扇闻小手拖到花旁轻轻扇闻花香（其他植物也可以闻闻看哦）！';
+    displayTxt = '第2步：切到茉莉花，拖起 3D 扇闻小手轻轻扇闻浓郁花香！';
+    if (currentPlant !== 'jasmine') {
+      var jc = document.querySelector('.pcard[data-plant="jasmine"]');
+      if (jc) jc.classList.add('pulse');
+    } else {
+      fanTag.classList.add('pulse');
+    }
+  } else if (!stamps.s3) {
+    curGuideSpeech = '第3步：点右侧桌面发光的问号特征立牌，根据高清特写图猜出 3 种植物！';
+    displayTxt = curGuideSpeech;
+    standTag.classList.add('pulse');
+  } else {
+    curGuideSpeech = '太棒啦！全部发现已集齐，可以继续用放大镜和扇闻手观察各种植物！';
+    displayTxt = curGuideSpeech;
+  }
+  $('#guideTxt').textContent = displayTxt;
+  $('#guideBar').classList.remove('flash');
+  void $('#guideBar').offsetWidth;
+  $('#guideBar').classList.add('flash');
+  if (speakIt) speak(curGuideSpeech, true);
+}
+
+/* ===== 切换展台植物 ===== */
+function selectPlant(id, silent) {
+  currentPlant = id;
+  Object.keys(plantGroups).forEach(function (k) { plantGroups[k].visible = (k === id); });
+  $$('.pcard').forEach(function (b) { b.classList.toggle('active', b.dataset.plant === id); });
+  $$('#labels .popword').forEach(function (el) { el.remove(); });
+  hidePlantLens();
+  turntable.scale.setScalar(0.86);
+  // 切到荷花时自动把最正面的 V 形缺口角度摆向镜头，一眼看清！
+  if (id === 'lotus') {
+    targetRotY = 0.05;
+    turntable.rotation.y = 0.05;
+  }
+  updateGuide(false);
+  if (!silent && !demo) {
+    var intro = {
+      pine: '这是松树，用放大镜或点一点它，看看细尖的针状松叶和松果吧！',
+      lotus: '这是荷花，快看荷叶边上的 V 形大缺口，用放大镜看看特写吧！',
+      sorrel: '这是酢浆草，用放大镜仔细看看三片爱心形小叶和五瓣小花吧！',
+      jasmine: '这是茉莉花，用放大镜看椭圆叶和重瓣白花，再拖起扇闻小手闻闻香气！',
+      peach: '这是桃树枝，用放大镜看看细长尖头桃叶和粉红水蜜桃吧！',
+      ginkgo: '哇，变出高大的银杏树啦！看看它像金黄小扇子一样的叶子！',
+      dandelion: '哇，变出蒲公英啦！白色降落伞绒毛球正在随风飘散呢！'
+    };
+    speak(intro[id] || '');
+  }
+}
+
+/* ===== 5+2 种植物专属扇闻气味配置（每种都有独特粒子颜色 + 晃动 + 真实气味描述！） ===== */
+var PLANT_SCENT = {
+  pine: {
+    colors: [0x86efac, 0x4ade80, 0xdcfce7],
+    count: 14,
+    label: '🌲 淡淡松树树脂清香',
+    recordHtml: '🌲 <b>扇闻松树</b>：淡淡的松树树脂清香',
+    speech: '轻轻扇一扇，闻到淡淡的松树树脂清香！'
+  },
+  lotus: {
+    colors: [0xfbcfe8, 0xe0f2fe, 0xffffff],
+    count: 16,
+    label: '🌺 清幽淡雅水中清香',
+    recordHtml: '🌺 <b>扇闻荷花</b>：清幽淡雅的水中清香',
+    speech: '轻轻扇一扇，闻到荷花清幽淡雅的水中清香！'
+  },
+  sorrel: {
+    colors: [0xbef264, 0x86efac, 0xecfccb],
+    count: 14,
+    label: '🍀 淡淡青草与微酸甜味',
+    recordHtml: '🍀 <b>扇闻酢浆草</b>：淡淡青草与微酸甜味',
+    speech: '轻轻扇一扇，闻到淡淡的青草和微微酸甜味！'
+  },
+  jasmine: {
+    colors: [0xffffff, 0xfef08a, 0xe0f2fe],
+    count: 22,
+    label: '🌼 哇！茉莉花香气最浓郁芬芳！',
+    recordHtml: '✋ <b>扇闻茉莉花</b>：香气最浓郁芬芳，学会扇闻法',
+    speech: '哇！茉莉花香气最浓郁芬芳！记住闻植物气味要用扇闻法，不凑近鼻子更安全！'
+  },
+  peach: {
+    colors: [0xfda4af, 0xfde68a, 0xffe4e6],
+    count: 16,
+    label: '🍑 水蜜桃甜甜的果香味',
+    recordHtml: '🍑 <b>扇闻桃树枝</b>：水蜜桃甜甜的果香味',
+    speech: '轻轻扇一扇，闻到水蜜桃甜甜的果香味！'
+  },
+  ginkgo: {
+    colors: [0xfef08a, 0xd9f99d, 0xffffff],
+    count: 14,
+    label: '🌳 淡淡树叶清香',
+    recordHtml: '🌳 <b>扇闻银杏</b>：淡淡的银杏树叶清香',
+    speech: '轻轻扇一扇，闻到淡淡的秋日树叶清香！'
+  },
+  dandelion: {
+    colors: [0xffffff, 0xfef9c3, 0xe0f2fe],
+    count: 16,
+    label: '🌼 轻盈青草花香',
+    recordHtml: '🌼 <b>扇闻蒲公英</b>：轻盈的田野青草花香',
+    speech: '轻轻扇一扇，闻到轻盈的田野青草花香，绒毛球也要随风起舞啦！'
+  }
+};
+
+function triggerFanSmell() {
+  markInteracted();
+  var sc = PLANT_SCENT[currentPlant] || PLANT_SCENT.jasmine;
+  beep(currentPlant === 'jasmine' ? [523, 659, 784] : [440, 587], 0.19);
+  fanAnimT = currentPlant === 'jasmine' ? 3.2 : 2.6;
+  plantSwayT = 2.4;
+  smelledPlants[currentPlant] = true;
+
+  scentParticles.forEach(function (sp, idx) {
+    var active = idx < sc.count;
+    sp.m.visible = active;
+    sp.t = idx * 0.12;
+    sp.m.material.color.setHex(sc.colors[idx % sc.colors.length]);
+  });
+
+  if (currentPlant === 'jasmine') jasmineSmelled = true;
+  popLabelAt3D(new THREE.Vector3(STAGE_X, 2.08, 0.2), sc.label, 'scent');
+  var extraHint = (!jasmineSmelled && currentPlant !== 'jasmine') ? ' 再切到茉莉花扇闻一次，比比谁最香吧！' : '';
+  addDiscovery('fan_' + currentPlant, sc.recordHtml, sc.speech + extraHint);
+}
+
+/* ===== 视觉特征辨认 2 选 1 卡片（3 题，均用高清 Canvas 放大镜特征图！） ===== */
+var RIDDLES = [
+  {
+    art: 'lotus',
+    clue: '放大镜里看到：圆圆大大的绿叶，边上有明显的 V 形大缺口！它是谁？',
+    ans: 'lotus',
+    choices: [
+      { id: 'lotus', em: '🌺', name: '荷花', sub: 'V形缺口荷叶' },
+      { id: 'pine', em: '🌲', name: '松树', sub: '针状松叶' }
+    ],
+    okMsg: '🎉 猜对啦！有 V 形大缺口的大圆叶就是荷花！',
+    okVoice: '猜对啦！有 V 形大缺口的大圆叶就是荷花！你刚才观察得真仔细！',
+    wrongHint: '松树的叶子是细尖的针状哦，再看看图里的 V 形大缺口圆叶吧！',
+    recordHtml: '🌺 <b>特征辨认</b>：V形缺口大圆叶 → 荷花'
+  },
+  {
+    art: 'ginkgo',
+    clue: '叶子像一把展开的金黄小扇子，高大挺拔。它是谁？',
+    ans: 'ginkgo',
+    choices: [
+      { id: 'ginkgo', em: '🌳', name: '银杏', sub: '金黄扇子叶' },
+      { id: 'dandelion', em: '🌼', name: '蒲公英', sub: '白色绒毛球' }
+    ],
+    okMsg: '🎉 猜对啦！变出扇子叶银杏树！',
+    okVoice: '猜对啦！叶子像金黄小扇子的是银杏！快看展台上变出的银杏树吧！',
+    wrongHint: '蒲公英是低矮小草、有白色绒毛球哦，再看看扇子形叶子吧！',
+    recordHtml: '🌳 <b>特征辨认</b>：金黄扇形叶 → 银杏'
+  },
+  {
+    art: 'dandelion',
+    clue: '开黄色小花，成熟后变成带毛绒降落伞的白色绒球随风飘散。它是谁？',
+    ans: 'dandelion',
+    choices: [
+      { id: 'ginkgo', em: '🌳', name: '银杏', sub: '金黄扇子叶' },
+      { id: 'dandelion', em: '🌼', name: '蒲公英', sub: '毛绒降落伞' }
+    ],
+    okMsg: '🎉 猜对啦！变出随风飘散的蒲公英！',
+    okVoice: '猜对啦！带毛绒降落伞随风飘散的是蒲公英！快看展台上的蒲公英吧！',
+    wrongHint: '银杏是高大树木、叶子像小扇子哦，再看看图里的毛绒降落伞种子吧！',
+    recordHtml: '🌼 <b>特征辨认</b>：毛绒降落伞种子 → 蒲公英'
+  }
+];
+var curRiddle = 0;
+
+function renderRiddle() {
+  var rd = RIDDLES[curRiddle];
+  $('#rdTitle').textContent = '❓ 特征卡 ' + (curRiddle + 1) + ' / ' + RIDDLES.length + ' · 看特写猜植物';
+  $('#rdClue').textContent = rd.clue;
+  var artCv = $('#rdArtCv');
+  drawPlantCloseupTo(artCv.getContext('2d'), artCv.width, rd.art);
+  $('#rdFb').textContent = riddleSolved[curRiddle] ? rd.okMsg : '';
+
+  var box = $('#rdOpts'); box.innerHTML = '';
+  rd.choices.forEach(function (op) {
+    var isOk = (op.id === rd.ans);
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'rd-opt' + (riddleSolved[curRiddle] && isOk ? ' ok' : '');
+    b.dataset.choice = op.id;
+    b.innerHTML = '<span class="em">' + op.em + '</span><span>' + op.name + '</span><span class="sub">' + op.sub + '</span>';
+    b.addEventListener('click', function () {
+      markInteracted();
+      if (isOk) {
+        riddleSolved[curRiddle] = true;
+        b.classList.add('ok');
+        $('#rdFb').textContent = rd.okMsg;
+        beep([523, 659, 784], 0.22);
+        selectPlant(rd.ans, true);
+        addDiscovery('riddle_' + curRiddle, rd.recordHtml, rd.okVoice);
+        var nextIdx = riddleSolved.findIndex(function (v) { return !v; });
+        var g = resetGen;
+        if (nextIdx !== -1) {
+          setTimeout(function () { if (g === resetGen && !riddleSolved[nextIdx]) { curRiddle = nextIdx; renderRiddle(); } }, 1250);
+        } else {
+          setTimeout(function () { if (g === resetGen) $('#riddlePanel').classList.remove('show'); }, 1500);
+        }
+      } else {
+        b.classList.add('bad');
+        beep([260, 220], 0.16);
+        $('#rdFb').textContent = '💡 ' + rd.wrongHint;
+        speak(rd.wrongHint, true);
+      }
+    });
+    box.appendChild(b);
+  });
+}
+
+/* ===== 指针交互：拖起 3D 放大镜 / 3D 扇闻手 / 点 3D 特征立牌 / 360° 旋转展台 / 点植物 ===== */
+var ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+var toolDragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -0.45);
+var toolDragPt = new THREE.Vector3();
+var dragMode = ''; // '' | 'mag' | 'fan' | 'spin'
+var downX = 0, downY = 0, moved = false, targetRotY = 0.2;
+var fanWaveAcc = 0, lastFanX = 0, magInspectedThisDrag = false;
+
+function getNDC(e) {
+  var r = cv.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+}
+
+cv.addEventListener('pointerdown', function (e) {
+  markInteracted();
+  if (demo) return;
+  getNDC(e);
+  ray.setFromCamera(ptr, camera);
+  downX = e.clientX; downY = e.clientY; moved = false;
+
+  // 1. 统一按最近射线距离拾取桌面 3 件 3D 道具（绝不互相抢点！）
+  var allDeskProps = magHitMeshes.concat(fanHitMeshes, standHitMeshes);
+  var propHits = ray.intersectObjects(allDeskProps, false);
+  if (propHits.length) {
+    var dp = propHits[0].object.userData.deskProp;
+    if (dp === 'mag') {
+      dragMode = 'mag';
+      magAutoFlyT = 0;
+      magInspectedThisDrag = false;
+      cv.classList.add('grabbing');
+      $('#riddlePanel').classList.remove('show');
+      beep([520], 0.08);
+      return;
+    }
+    if (dp === 'fan') {
+      dragMode = 'fan';
+      fanAutoFlyT = 0;
+      fanWaveAcc = 0; lastFanX = e.clientX;
+      cv.classList.add('grabbing');
+      $('#riddlePanel').classList.remove('show');
+      beep([480], 0.08);
+      return;
+    }
+    if (dp === 'riddle') {
+      beep([587, 740], 0.14);
+      riddleStandG.scale.set(1.12, 0.9, 1.12);
+      hidePlantLens();
+      var firstUnsolved = riddleSolved.findIndex(function (v) { return !v; });
+      curRiddle = firstUnsolved !== -1 ? firstUnsolved : 0;
+      var p = $('#riddlePanel');
+      var open = !p.classList.contains('show');
+      p.classList.toggle('show', open);
+      if (open) {
+        renderRiddle();
+        speak('翻开特征卡片啦！仔细看放大特写图，猜猜它是哪种植物吧！');
+      }
+      return;
+    }
+  }
+
+  // 4. 其余区域用于拖拽旋转展台或点击植物部位
+  dragMode = 'spin';
+});
+
+window.addEventListener('pointermove', function (e) {
+  if (!dragMode) return;
+  var thresh = (dragMode === 'spin') ? 14 : 7;
+  if (Math.hypot(e.clientX - downX, e.clientY - downY) > thresh) moved = true;
+
+  if (dragMode === 'mag') {
+    if (!moved) return;
+    getNDC(e);
+    ray.setFromCamera(ptr, camera);
+    if (ray.ray.intersectPlane(toolDragPlane, toolDragPt)) {
+      magGoal.set(
+        Math.max(-3.1, Math.min(2.3, toolDragPt.x)),
+        Math.max(0.28, Math.min(2.95, toolDragPt.y)),
+        0.52
+      );
+      var distP = Math.hypot(magGoal.x - STAGE_X, (magGoal.y + 0.25) - 1.38);
+      if (distP < 1.85) {
+        var blur = distP <= 1.12 ? 0 : Math.min(6.0, (distP - 1.12) * 7.5);
+        showPlantLens(currentPlant, 0, blur);
+        if (distP <= 1.12 && !magInspectedThisDrag) {
+          magInspectedThisDrag = true;
+          inspectCurrentPlantByMagnifier();
+        }
+      } else if (lensHoldTimer <= 0) {
+        hidePlantLens();
+      }
+    }
+  } else if (dragMode === 'fan') {
+    if (!moved) return;
+    getNDC(e);
+    ray.setFromCamera(ptr, camera);
+    if (ray.ray.intersectPlane(toolDragPlane, toolDragPt)) {
+      fanGoal.set(
+        Math.max(-3.1, Math.min(2.3, toolDragPt.x)),
+        Math.max(0.2, Math.min(2.95, toolDragPt.y)),
+        0.48
+      );
+      var distPlant = Math.hypot(fanGoal.x - STAGE_X, fanGoal.y - 1.50);
+      if (distPlant < 2.15) {
+        fanWaveAcc += Math.abs(e.clientX - lastFanX) + Math.abs(e.clientY - downY) * 0.25;
+        lastFanX = e.clientX;
+        fanHandG.rotation.y = 0.35 + Math.sin(performance.now() * 0.022) * 0.55;
+        if (fanWaveAcc > 14 && fanAnimT < 1.2) {
+          triggerFanSmell();
+        }
+      }
+    }
+  } else if (dragMode === 'spin' && moved) {
+    targetRotY += (e.clientX - downX) * 0.011;
+    downX = e.clientX; downY = e.clientY;
+  }
+});
+
+window.addEventListener('pointerup', function (e) {
+  if (!dragMode) return;
+  var mode = dragMode;
+  dragMode = '';
+  cv.classList.remove('grabbing');
+
+  if (mode === 'mag') {
+    if (!moved) {
+      // 轻点放大镜：自动飞到当前植物旁并弹出高清圆形特征特写！
+      magAutoFlyT = 2.6;
+      inspectCurrentPlantByMagnifier();
+    } else {
+      var distP = Math.hypot(magGoal.x - STAGE_X, (magGoal.y + 0.25) - 1.38);
+      if (distP < 1.45 && !magInspectedThisDrag) {
+        inspectCurrentPlantByMagnifier();
+      }
+      magGoal.copy(MAG_HOME);
+      if (lensHoldTimer <= 0) hidePlantLens();
+    }
+    return;
+  }
+
+  if (mode === 'fan') {
+    if (!moved) {
+      fanAutoFlyT = 2.2;
+      triggerFanSmell();
+    } else {
+      if (Math.hypot(fanGoal.x - STAGE_X, fanGoal.y - 1.50) < 2.25 && fanAnimT <= 0.35) {
+        triggerFanSmell();
+      }
+      fanGoal.copy(FAN_HOME);
+    }
+    return;
+  }
+
+  if (moved) return;
+  getNDC(e);
+  ray.setFromCamera(ptr, camera);
+  var visibleHits = hitMeshes.filter(function (m) {
+    var pg = plantGroups[m.userData.partInfo.plantId];
+    return pg && pg.visible;
+  });
+  var hits = ray.intersectObjects(visibleHits, false);
+  var chosenInfo = null;
+  var hitPt = null;
+  if (hits.length) {
+    chosenInfo = hits[0].object.userData.partInfo;
+    hitPt = hits[0].point;
+  } else {
+    var visFallback = fallbackHitMeshes.filter(function (m) {
+      var pg = plantGroups[m.userData.fallbackPlantId];
+      return pg && pg.visible;
+    });
+    var fHits = ray.intersectObjects(visFallback, false);
+    if (fHits.length || ray.intersectObject(platter).length) {
+      var list = plantParts[currentPlant] || [];
+      chosenInfo = list.find(function (p) { return !found[p.partKey]; }) || list[0];
+      hitPt = fHits.length ? fHits[0].point : new THREE.Vector3(STAGE_X, 1.5, 0.2);
+    }
+  }
+  if (chosenInfo) {
+    if (found[chosenInfo.partKey]) {
+      var plist = plantParts[chosenInfo.plantId] || [];
+      var unseen = plist.find(function (p) { return !found[p.partKey]; });
+      if (unseen) chosenInfo = unseen;
+    }
+    magAutoFlyT = 2.2;
+    inspectPlantPart(chosenInfo, hitPt);
+  }
+});
+
+function inspectCurrentPlantByMagnifier() {
+  var list = plantParts[currentPlant] || [];
+  var chosen = list.find(function (p) { return !found[p.partKey]; }) || list[0];
+  if (chosen) inspectPlantPart(chosen, new THREE.Vector3(STAGE_X, 1.55, 0.25));
+}
+
+function inspectPlantPart(info, worldPt) {
+  beep([587, 740, 880], 0.16);
+  showPlantLens(info.plantId, 5.5, 0);
+  if (CORE_PLANTS.indexOf(info.plantId) !== -1) {
+    observedPlants[info.plantId] = true;
+    var card = document.querySelector('.pcard[data-plant="' + info.plantId + '"]');
+    if (card) card.classList.add('done');
+  }
+  var grp = plantGroups[info.plantId];
+  if (grp) grp.scale.set(1.06, 0.94, 1.06);
+  popLabelAt3D(worldPt || new THREE.Vector3(STAGE_X, 1.6, 0.2), '🔍 ' + info.label);
+  addDiscovery(info.partKey, info.recordHtml, info.speech);
+}
+
+/* ===== 控件事件 ===== */
+$$('.pcard').forEach(function (b) {
+  b.addEventListener('click', function () {
+    markInteracted();
+    $('#riddlePanel').classList.remove('show');
+    beep([494], 0.12);
+    selectPlant(b.dataset.plant, false);
+  });
+});
+$('#rdClose').addEventListener('click', function () { $('#riddlePanel').classList.remove('show'); });
+$('#backBtn').addEventListener('click', function () {
+  try { sessionStorage.setItem('xk_last_vol', 'k1b'); } catch (e) {}
+});
+$('#voiceBtn').addEventListener('click', function () {
+  markInteracted();
+  voiceOn = !voiceOn;
+  this.classList.toggle('on', voiceOn);
+  if (voiceOn) updateGuide(true); else stopVoice();
+});
+$('#guideBar').addEventListener('click', function () { markInteracted(); updateGuide(true); });
+$('#resetBtn').addEventListener('click', resetAll);
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+$('#winKeepBtn').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgainBtn').addEventListener('click', resetAll);
+$('#qOpts').addEventListener('click', function (e) {
+  var b = e.target.closest('.qopt'); if (!b) return;
+  if (b.dataset.ok === '1') {
+    b.classList.add('ok');
+    $('#qFb').textContent = '🌸 答对啦！获得本课小红花！';
+    saveProgress(LESSON_ID, true);
+    beep([523, 659, 784, 1046], 0.24);
+    speak('答对啦！闻植物气味要用扇闻法，获得本课小红花！', true);
+  } else {
+    b.classList.add('bad');
+    beep([260, 220], 0.16);
+    var h = b.dataset.hint || '再想想哦！';
+    $('#qFb').textContent = '💡 ' + h;
+    speak(h, true);
+  }
+});
+
+/* ===== 演示模式（不触发通关） ===== */
+function startDemo() {
+  markInteracted();
+  resetAll();
+  demo = true;
+  $('#demoBtn').classList.add('on');
+  var g = resetGen;
+  var steps = [
+    function () {
+      selectPlant('pine', true); magAutoFlyT = 2.4; showPlantLens('pine', 2.8, 0);
+      speak('演示开始！把放大镜拖到松树旁，左上角高清特写能看清细尖的针状松叶和松果！', true);
+      popLabelAt3D(new THREE.Vector3(STAGE_X, 1.9, 0), '🔍 针状松叶与松果');
+    },
+    function () {
+      selectPlant('lotus', true); magAutoFlyT = 2.4; showPlantLens('lotus', 2.8, 0);
+      speak('切到荷花，放大镜下可以清楚看到带 V 形大缺口的荷叶和带莲子孔的莲蓬！', true);
+      popLabelAt3D(new THREE.Vector3(STAGE_X, 1.7, 0), '🔍 V形缺口荷叶与莲蓬');
+    },
+    function () {
+      selectPlant('jasmine', true); fanAutoFlyT = 2.3; triggerFanSmell();
+      speak('再拖起扇闻小手到茉莉花旁轻轻扇动，闻到浓郁芬芳的花香！每种植物都有独特气味哦！', true);
+    },
+    function () {
+      hidePlantLens(); selectPlant('ginkgo', true);
+      speak('最后点右边发光的问号立牌，看高清特写图猜出 3 种植物就通关啦！轮到你试试！', true);
+    },
+    function () { demo = false; $('#demoBtn').classList.remove('on'); resetAll(); }
+  ];
+  steps.forEach(function (fn, idx) {
+    setTimeout(function () { if (g === resetGen) fn(); }, idx * 3100);
+  });
+}
+$('#demoBtn').addEventListener('click', startDemo);
+
+function resetAll() {
+  resetGen++;
+  stopVoice();
+  demo = false;
+  $('#demoBtn').classList.remove('on');
+  found = {}; observedPlants = {}; smelledPlants = {}; jasmineSmelled = false;
+  riddleSolved = [false, false, false];
+  stamps = { s1: false, s2: false, s3: false }; celebrated = false;
+  fanAnimT = 0; fanAutoFlyT = 0; magAutoFlyT = 0; plantSwayT = 0; dragMode = '';
+  cv.classList.remove('grabbing');
+  magGoal.copy(MAG_HOME); magG.position.copy(MAG_HOME); magG.rotation.y = 0.36;
+  fanGoal.copy(FAN_HOME); fanHandG.position.copy(FAN_HOME); fanHandG.rotation.y = 0.45;
+  scentParticles.forEach(function (sp) { sp.m.visible = false; });
+  hidePlantLens();
+  curLensPlant = '';
+  $('#ntList').innerHTML = ''; $('#ntCnt').textContent = '0';
+  $$('.st').forEach(function (s) { s.classList.remove('lit'); });
+  $$('.pcard').forEach(function (b) { b.classList.remove('done'); });
+  magTag.classList.remove('done', 'pulse');
+  fanTag.classList.remove('done', 'pulse');
+  standTag.classList.remove('done', 'pulse');
+  $('#riddlePanel').classList.remove('show');
+  $('#winToast').classList.remove('show');
+  $('#qFb').textContent = '';
+  $$('.qopt').forEach(function (b) { b.classList.remove('ok', 'bad'); });
+  targetRotY = 0.2;
+  selectPlant('pine', true);
+  updateGuide(false);
+}
+
+/* ===== 帧循环 ===== */
+var introT0 = performance.now(), lastT = performance.now();
+var projV = new THREE.Vector3();
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', fit);
+fit();
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (now - lastT) / 1000));
+  lastT = now;
+  var tSec = now * 0.001;
+
+  var pop = Math.min(1, (performance.now() - introT0) / 680);
+  live.scale.setScalar(0.01 + 0.99 * (1 - Math.pow(1 - pop, 3)));
+
+  // 转盘缓慢自转（展示荷花时放慢方便看清 V 形缺口！）
+  if (dragMode !== 'spin') targetRotY += dt * (currentPlant === 'lotus' ? 0.045 : 0.11);
+  turntable.rotation.y += (targetRotY - turntable.rotation.y) * Math.min(1, dt * 8);
+  turntable.scale.lerp(new THREE.Vector3(1, 1, 1), Math.min(1, dt * 10));
+  riddleStandG.scale.lerp(new THREE.Vector3(1, 1, 1), Math.min(1, dt * 10));
+
+  // 扇闻时植物柔和摇曳动画
+  if (plantSwayT > 0) plantSwayT = Math.max(0, plantSwayT - dt);
+  Object.keys(plantGroups).forEach(function (k) {
+    var pg = plantGroups[k];
+    pg.scale.lerp(new THREE.Vector3(1, 1, 1), Math.min(1, dt * 9));
+    if (k === currentPlant && plantSwayT > 0) {
+      var sw = Math.sin(tSec * 9.5) * 0.075 * Math.min(1, plantSwayT);
+      pg.rotation.z = sw;
+      pg.rotation.x = Math.cos(tSec * 7.2) * 0.035 * Math.min(1, plantSwayT);
+    } else {
+      pg.rotation.z *= 0.86;
+      pg.rotation.x *= 0.86;
+    }
+  });
+
+  // 3 件桌面道具底座光圈发光呼吸
+  var wantMag = !stamps.s1 && CORE_PLANTS.indexOf(currentPlant) !== -1 && !observedPlants[currentPlant];
+  var wantFan = stamps.s1 && !stamps.s2 && currentPlant === 'jasmine';
+  var wantStand = stamps.s1 && stamps.s2 && !stamps.s3;
+  magGlowRing.material.opacity = wantMag ? (0.58 + Math.sin(tSec * 5.2) * 0.34) : 0.24;
+  magGlowRing.scale.setScalar(wantMag ? (1.08 + Math.sin(tSec * 5.2) * 0.14) : 1.0);
+  fanGlowRing.material.opacity = wantFan ? (0.58 + Math.sin(tSec * 5.2) * 0.35) : 0.22;
+  fanGlowRing.scale.setScalar(wantFan ? (1.08 + Math.sin(tSec * 5.2) * 0.14) : 1.0);
+  standGlowRing.material.opacity = wantStand ? (0.55 + Math.sin(tSec * 5.2) * 0.35) : (0.30 + Math.sin(tSec * 3.0) * 0.16);
+  standGlowRing.scale.setScalar(wantStand ? (1.08 + Math.sin(tSec * 5.2) * 0.14) : 1.0);
+
+  // 蒲公英飘散动画
+  if (plantGroups.dandelion.visible) {
+    dandelionFluffs.forEach(function (fp) {
+      var u = (tSec * fp.userData.speed + fp.userData.phase) % 1;
+      fp.position.set(0.3 + u * 1.45, 1.46 + Math.sin(u * Math.PI) * 0.55 + u * 0.25, -0.06 + Math.sin(u * 5 + fp.userData.phase) * 0.38);
+      fp.rotation.z = Math.sin(tSec * 2 + fp.userData.phase) * 0.28;
+      fp.scale.setScalar(Math.max(0.01, Math.sin(u * Math.PI)));
+    });
+  }
+
+  // 3D 放大镜自动飞去与平滑插值
+  if (magAutoFlyT > 0) {
+    magAutoFlyT -= dt;
+    magGoal.set(STAGE_X - 0.62, 1.38, 0.72);
+    magG.rotation.y = 0.15 + Math.sin(tSec * 3.5) * 0.12;
+    if (magAutoFlyT <= 0) { magGoal.copy(MAG_HOME); magG.rotation.y = 0.36; }
+  } else if (dragMode !== 'mag') {
+    magG.rotation.y += (0.36 - magG.rotation.y) * Math.min(1, dt * 8);
+  }
+  var magBob = (dragMode !== 'mag' && magAutoFlyT <= 0) ? Math.sin(tSec * 2.3 + 1.0) * 0.032 : 0;
+  magG.position.x += (magGoal.x - magG.position.x) * Math.min(1, dt * 12);
+  magG.position.y += ((magGoal.y + magBob) - magG.position.y) * Math.min(1, dt * 12);
+  magG.position.z += (magGoal.z - magG.position.z) * Math.min(1, dt * 12);
+
+  // 3D 扇闻小手自动飞去与挥动
+  if (fanAutoFlyT > 0) {
+    fanAutoFlyT -= dt;
+    fanGoal.set(STAGE_X - 1.06, 1.65, 0.56);
+    fanHandG.rotation.y = 0.35 + Math.sin(tSec * 16) * 0.55;
+    if (fanAutoFlyT <= 0) { fanGoal.copy(FAN_HOME); fanHandG.rotation.y = 0.45; }
+  } else if (dragMode !== 'fan') {
+    fanHandG.rotation.y += (0.45 - fanHandG.rotation.y) * Math.min(1, dt * 8);
+  }
+  var fanBob = (dragMode !== 'fan' && fanAutoFlyT <= 0) ? Math.sin(tSec * 2.5) * 0.035 : 0;
+  fanHandG.position.x += (fanGoal.x - fanHandG.position.x) * Math.min(1, dt * 12);
+  fanHandG.position.y += ((fanGoal.y + fanBob) - fanHandG.position.y) * Math.min(1, dt * 12);
+  fanHandG.position.z += (fanGoal.z - fanHandG.position.z) * Math.min(1, dt * 12);
+
+  // 高清特写镜自动收起计时（D4 无残留）
+  if (lensHoldTimer > 0) {
+    lensHoldTimer -= dt;
+    if (lensHoldTimer <= 0 && dragMode !== 'mag') {
+      hidePlantLens();
+    }
+  }
+
+  // 同步桌面道具提示签 + 单焦点跳动提示气泡 #targetCue（绝不重叠！）
+  var cueEl = $('#targetCue');
+  var notesRect = $('#notes').getBoundingClientRect();
+  var cueTargetProp = '';
+  function placeCueSafe(sx, sy, txt) {
+    cueEl.textContent = txt;
+    var x = Math.max(105, Math.min(window.innerWidth - 110, sx));
+    var y = Math.max(82, Math.min(window.innerHeight - 66, sy));
+    if (x + 95 > notesRect.left && y - 34 < notesRect.bottom + 8) {
+      x = Math.min(x, notesRect.left - 105);
+    }
+    cueEl.style.left = x + 'px';
+    cueEl.style.top = y + 'px';
+    cueEl.classList.add('show');
+  }
+
+  if (demo || celebrated || $('#riddlePanel').classList.contains('show')) {
+    cueEl.classList.remove('show');
+  } else if (!stamps.s1) {
+    if (CORE_PLANTS.indexOf(currentPlant) !== -1 && !observedPlants[currentPlant]) {
+      if (dragMode === 'mag') {
+        projV.set(STAGE_X, 2.25, 0.1).project(camera);
+        placeCueSafe((projV.x * 0.5 + 0.5) * window.innerWidth, (-projV.y * 0.5 + 0.5) * window.innerHeight,
+          '🔍 对准「' + PLANT_NAMES[currentPlant] + '」看特写');
+      } else {
+        projV.set(STAGE_X, 2.30, 0.1).project(camera);
+        placeCueSafe((projV.x * 0.5 + 0.5) * window.innerWidth, (-projV.y * 0.5 + 0.5) * window.innerHeight,
+          '🔍 点植物或拖放大镜看「' + PLANT_NAMES[currentPlant] + '」');
+      }
+    } else {
+      var nextP = CORE_PLANTS.find(function (p) { return !observedPlants[p]; });
+      var btnEl = nextP ? document.querySelector('.pcard[data-plant="' + nextP + '"]') : null;
+      if (btnEl) {
+        var br = btnEl.getBoundingClientRect();
+        cueEl.textContent = '👇 点这里看「' + PLANT_NAMES[nextP] + '」';
+        cueEl.style.left = (br.left + br.width * 0.5) + 'px';
+        cueEl.style.top = (br.top - 10) + 'px';
+        cueEl.classList.add('show');
+      }
+    }
+  } else if (!stamps.s2) {
+    if (currentPlant !== 'jasmine') {
+      var jb = document.querySelector('.pcard[data-plant="jasmine"]');
+      if (jb) {
+        var jr = jb.getBoundingClientRect();
+        cueEl.textContent = '👇 点「茉莉花」准备扇闻';
+        cueEl.style.left = (jr.left + jr.width * 0.5) + 'px';
+        cueEl.style.top = (jr.top - 10) + 'px';
+        cueEl.classList.add('show');
+      }
+    } else if (dragMode === 'fan') {
+      projV.set(STAGE_X, 2.15, 0.25).project(camera);
+      placeCueSafe((projV.x * 0.5 + 0.5) * window.innerWidth, (-projV.y * 0.5 + 0.5) * window.innerHeight, '🌬️ 在花旁轻轻扇一扇');
+    } else {
+      cueTargetProp = 'fan';
+      projV.set(fanHandG.position.x, fanHandG.position.y + 0.96, fanHandG.position.z).project(camera);
+      placeCueSafe((projV.x * 0.5 + 0.5) * window.innerWidth, (-projV.y * 0.5 + 0.5) * window.innerHeight, '👆 拖或点小手扇闻花香');
+    }
+  } else if (!stamps.s3) {
+    cueTargetProp = 'stand';
+    projV.set(STAND_POS.x, STAND_POS.y + 1.32, STAND_POS.z).project(camera);
+    placeCueSafe((projV.x * 0.5 + 0.5) * window.innerWidth, (-projV.y * 0.5 + 0.5) * window.innerHeight, '👆 点立牌看特写猜植物');
+  } else {
+    cueEl.classList.remove('show');
+  }
+
+  if (dragMode === 'mag' || magAutoFlyT > 0 || cueTargetProp === 'mag') {
+    magTag.style.opacity = '0';
+  } else {
+    magTag.style.opacity = '1';
+    projV.set(magG.position.x, magG.position.y + 0.80, magG.position.z).project(camera);
+    magTag.style.left = ((projV.x * 0.5 + 0.5) * window.innerWidth) + 'px';
+    magTag.style.top = ((-projV.y * 0.5 + 0.5) * window.innerHeight) + 'px';
+  }
+  if (dragMode === 'fan' || fanAutoFlyT > 0 || cueTargetProp === 'fan') {
+    fanTag.style.opacity = '0';
+  } else {
+    fanTag.style.opacity = '1';
+    projV.set(fanHandG.position.x, fanHandG.position.y + 0.88, fanHandG.position.z).project(camera);
+    fanTag.style.left = ((projV.x * 0.5 + 0.5) * window.innerWidth) + 'px';
+    fanTag.style.top = ((-projV.y * 0.5 + 0.5) * window.innerHeight) + 'px';
+  }
+  if (cueTargetProp === 'stand') {
+    standTag.style.opacity = '0';
+  } else {
+    standTag.style.opacity = '1';
+    projV.set(STAND_POS.x, STAND_POS.y + 1.24, STAND_POS.z).project(camera);
+    standTag.style.left = ((projV.x * 0.5 + 0.5) * window.innerWidth) + 'px';
+    standTag.style.top = ((-projV.y * 0.5 + 0.5) * window.innerHeight) + 'px';
+  }
+
+  // 清香微粒动画（D4 自动结束无残留）
+  if (fanAnimT > 0) {
+    fanAnimT -= dt;
+    scentParticles.forEach(function (sp) {
+      if (!sp.m.visible) return;
+      sp.t += dt * 0.92;
+      var u = sp.t % 1;
+      sp.m.position.set(
+        STAGE_X + 0.08 + Math.sin(u * 6.5 + sp.phase) * (sp.isRing ? 0.36 : 0.58),
+        1.48 + u * 1.05 + (sp.isRing ? 0 : Math.cos(u * 5 + sp.phase) * 0.14),
+        0.15 + u * 2.15
+      );
+      if (sp.isRing) {
+        sp.m.rotation.x = 0.4 + u * 0.6;
+        sp.m.rotation.y = u * 1.4;
+      }
+      sp.m.material.opacity = Math.sin(u * Math.PI) * Math.min(1, fanAnimT * 1.1) * (sp.isRing ? 0.78 : 0.88);
+      sp.m.scale.setScalar(sp.isRing ? (0.55 + u * 1.18) : (0.55 + Math.sin(u * Math.PI) * 0.8));
+    });
+    if (fanAnimT <= 0) {
+      scentParticles.forEach(function (sp) { sp.m.visible = false; });
+    }
+  }
+
+  // 彩带绘制
+  if (cfOn) {
+    cfCtx.clearRect(0, 0, cfCanvas.width, cfCanvas.height);
+    var alive = 0;
+    cfParts.forEach(function (p) {
+      p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 240 * dt; p.a += p.va * dt;
+      if (p.y < cfCanvas.height + 24) {
+        alive++;
+        cfCtx.save(); cfCtx.translate(p.x, p.y); cfCtx.rotate(p.a);
+        cfCtx.fillStyle = p.c; cfCtx.fillRect(-p.r, -p.r * 0.5, p.r * 2, p.r);
+        cfCtx.restore();
+      }
+    });
+    if (!alive) { cfOn = false; cfCtx.clearRect(0, 0, cfCanvas.width, cfCanvas.height); }
+  }
+
+  renderer.render(scene, camera);
+}
+
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () {
+    return {
+      triangles: renderer.info.render.triangles,
+      celebrated: celebrated,
+      currentPlant: currentPlant,
+      observed: Object.keys(observedPlants).length,
+      smelledPlants: Object.keys(smelledPlants),
+      jasmineSmelled: jasmineSmelled,
+      riddleSolved: riddleSolved.slice(),
+      lensVisible: $('#lensWrap').classList.contains('show'),
+      lensPlant: curLensPlant
+    };
+  },
+  screenTargets: function () {
+    function proj(v) {
+      var p = v.clone().project(camera);
+      return { x: (p.x * 0.5 + 0.5) * window.innerWidth, y: (-p.y * 0.5 + 0.5) * window.innerHeight };
+    }
+    return {
+      plant: proj(new THREE.Vector3(STAGE_X, 1.45, 0)),
+      mag: proj(new THREE.Vector3(MAG_HOME.x, MAG_HOME.y + 0.25, MAG_HOME.z)),
+      fan: proj(new THREE.Vector3(FAN_HOME.x, FAN_HOME.y + 0.34, FAN_HOME.z)),
+      stand: proj(new THREE.Vector3(STAND_POS.x, STAND_POS.y + 0.62, STAND_POS.z))
+    };
+  },
+  startDemo: startDemo,
+  resetAll: resetAll
+};
+selectPlant('pine', true);
+updateGuide(false);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

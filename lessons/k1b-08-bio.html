@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第8课 白天与黑夜（生物篇） · 昼夜生物作息对比剧场</title>
+<style>
+:root{--accent:#2b8a3e;--ink:#242b22;--line:#d5dfcc;--card:rgba(255,253,248,.94)}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#86caf6;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.46em;color:#62755b;font-weight:600}
+body.no-py rt{display:none}
+
+/* 左上标题卡片 */
+#hudTL{position:fixed;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:10px;
+  padding:7px 14px 7px 9px;border-radius:16px;background:var(--card);border:1.5px solid var(--line);
+  box-shadow:0 4px 16px rgba(24,45,20,.16)}
+#backBtn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:#40543a;font-size:19px;font-weight:900}
+#backBtn:hover{border-color:var(--accent);color:var(--accent)}
+.hd-t{font-size:16px;font-weight:900;line-height:1.5}
+.hd-sub{font-size:11.5px;color:#5c6e56;font-weight:700}
+
+/* 顶部中央动态分步小助手（U2） */
+#guideBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:6;
+  max-width:min(470px,calc(100vw - 650px));display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:15px;background:rgba(255,252,242,.96);
+  border:2px solid #e58e17;box-shadow:0 6px 18px rgba(100,68,12,.16);
+  font-size:13.5px;font-weight:800;color:#6e3f07;cursor:pointer;line-height:1.38;transition:all .2s}
+#guideBar:active{transform:translateX(-50%) scale(.98)}
+#guideBar.switch-now{border-color:#2563eb;background:#eff6ff;color:#1e3a8a;box-shadow:0 6px 22px rgba(37,99,235,.28)}
+#guideBar.done{border-color:#16a34a;background:#f0fdf4;color:#166534}
+@media (max-width:1180px){
+  #guideBar{top:62px;left:12px;transform:none;max-width:min(460px,calc(100vw - 260px))}
+  #guideBar:active{transform:scale(.98)}
+}
+
+/* 右上工具条 + top:-11px 入口微标签 */
+#hudTR{position:fixed;top:12px;right:12px;z-index:7;display:flex;align-items:center;gap:6px}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:38px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);
+  background:var(--card);font-family:inherit;font-size:13.5px;font-weight:800;color:#33442e;cursor:pointer;
+  box-shadow:0 3px 0 #c6d4bb;transition:all .14s;white-space:nowrap}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:#1e6b2e;color:#fff;box-shadow:0 3px 0 #1e6b2e}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#dcfce7;border:1.5px solid var(--accent);color:#166534;font-size:10.5px;font-weight:900;
+  white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(43,138,62,.24);
+  animation:cuePop 1.6s ease-in-out infinite;transition:opacity .25s}
+body.interacted .entry-cue{opacity:0;animation:none}
+@keyframes cuePop{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+
+/* 右上可收起窄版发现栏（D3） */
+#notes{position:fixed;top:60px;right:12px;z-index:6;width:224px;padding:9px 11px;border-radius:15px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 6px 18px rgba(24,45,20,.14)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+.nt-title{font-size:13.5px;font-weight:900}
+.nt-cnt{font-size:12.5px;font-weight:900;color:var(--accent)}
+.nt-tog{padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:11px;font-weight:800;color:#55664e;cursor:pointer}
+.stamps{display:flex;gap:4px;margin-bottom:6px}
+.st{flex:1;text-align:center;padding:3px 2px;border-radius:8px;font-size:11px;font-weight:800;
+  border:1.5px dashed #bfd0b4;color:#7f9277;background:#f4f9f0;transition:all .2s;line-height:1.45}
+.st.lit{border-style:solid;border-color:var(--accent);background:#dcfce7;color:#166534;animation:pop .4s cubic-bezier(.2,1.6,.4,1)}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList,#notes.collapsed .stamps{display:none}
+#notes.collapsed .nt-head{margin-bottom:0}
+.stk{padding:5px 8px;border-radius:10px;background:#fff;border:1px solid #dde7d5;font-size:12px;font-weight:700;line-height:1.42;animation:pop .4s cubic-bezier(.2,1.5,.4,1)}
+@keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* 单焦点 3D/按钮 跳动指引气泡（pointer-events:none 绝不遮挡点击） */
+#targetCue{position:fixed;left:0;top:0;transform:translate(-50%,-100%);z-index:8;pointer-events:none;
+  padding:6px 14px;border-radius:99px;background:#fff7ed;border:2px solid #ea580c;color:#9a3412;
+  font-size:13.5px;font-weight:900;white-space:nowrap;box-shadow:0 4px 16px rgba(234,88,12,.34);
+  animation:cueBob 1.25s ease-in-out infinite;display:none}
+#targetCue.show{display:block}
+#targetCue.cue-switch{padding:8px 16px;font-size:14.5px;background:linear-gradient(135deg,#1e3a8a,#2563eb);
+  border:2.5px solid #fde047;color:#fffbeb;box-shadow:0 6px 24px rgba(37,99,235,.48);
+  animation:cueSwitchPulse 1.05s ease-in-out infinite}
+#targetCue.cue-switch::after{content:'';position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);
+  border-left:8px solid transparent;border-right:8px solid transparent;border-top:9px solid #fde047}
+@keyframes cueBob{0%,100%{transform:translate(-50%,-100%) translateY(0)}50%{transform:translate(-50%,-100%) translateY(-6px)}}
+@keyframes cueSwitchPulse{0%,100%{transform:translate(-50%,-100%) scale(1)}50%{transform:translate(-50%,-100%) scale(1.07) translateY(-5px)}}
+
+/* 飘浮反馈词 + 鲜明「白天 vs 黑夜」双栏对比结论浮标 */
+#floatLayer{position:fixed;inset:0;pointer-events:none;z-index:7;overflow:hidden}
+.fword{position:absolute;transform:translate(-50%,-100%);padding:5px 13px;border-radius:99px;
+  background:rgba(255,253,246,.96);border:2px solid var(--accent);color:#166534;
+  font-size:14.5px;font-weight:900;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.18);
+  animation:floatUp 1.75s ease-out forwards}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-60%) scale(.7)}18%{opacity:1;transform:translate(-50%,-100%) scale(1.05)}100%{opacity:0;transform:translate(-50%,-185%) scale(1)}}
+
+.compare-card{position:absolute;transform:translate(-50%,-100%);min-width:296px;max-width:348px;
+  padding:8px 11px 10px;border-radius:16px;background:rgba(255,253,248,.98);
+  border:2.5px solid #16a34a;box-shadow:0 12px 30px rgba(15,35,20,.28);pointer-events:none;
+  animation:cmpPop .36s cubic-bezier(.2,1.4,.4,1)}
+.compare-card.fadeout{opacity:0;transform:translate(-50%,-112%) scale(.94);transition:all .35s}
+.cmp-hd{display:flex;align-items:center;justify-content:center;gap:6px;font-size:13.5px;font-weight:900;
+  color:#14532d;margin-bottom:6px}
+.cmp-cols{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px}
+.cmp-col{padding:6px 8px;border-radius:11px;font-size:12.5px;font-weight:800;line-height:1.35;text-align:center}
+.cmp-day{background:#fef3c7;border:1.5px solid #f59e0b;color:#92400e}
+.cmp-night{background:#1e2952;border:1.5px solid #60a5fa;color:#f8fafc}
+.cmp-vs{font-size:15px;font-weight:900;color:#16a34a}
+@keyframes cmpPop{0%{opacity:0;transform:translate(-50%,-80%) scale(.78)}100%{opacity:1;transform:translate(-50%,-100%) scale(1)}}
+
+/* 底部极简昼夜图标切换 + 非按钮生物观察圆点（U7：extraBtns === 0） */
+#bottomDock{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:6;
+  padding:7px 14px;border-radius:20px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 8px 24px rgba(20,38,18,.18);
+  display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;max-width:calc(100vw - 24px)}
+.mode-pair{display:flex;gap:8px;padding:4px;border-radius:14px;background:#eef3ea;border:1px solid #d2dec9}
+.mbtn{width:52px;height:40px;border-radius:11px;border:2px solid transparent;background:transparent;
+  font-family:inherit;font-size:22px;line-height:1;cursor:pointer;transition:all .16s;display:grid;place-items:center}
+.mbtn:hover{border-color:#d97706}
+.mbtn.on.day{background:#f59e0b;border-color:#d97706;color:#fff;box-shadow:0 2px 8px rgba(245,158,11,.35)}
+.mbtn.on.night{background:#314275;border-color:#1e2952;color:#fff;box-shadow:0 2px 8px rgba(30,41,82,.35)}
+.mbtn.pulse{background:#dbeafe;border-color:#2563eb;animation:mPulse 1.05s ease-in-out infinite}
+@keyframes mPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(37,99,235,.75)}50%{transform:scale(1.16);box-shadow:0 0 0 12px rgba(37,99,235,0)}}
+
+.bio-progress{display:flex;align-items:center;gap:10px}
+.bstat{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:12px;
+  background:#f8fbf5;border:1.5px solid #d8e4cf;font-size:14px;font-weight:800;color:var(--ink)}
+.bstat.done{border-color:#16a34a;background:#dcfce7}
+.dots{display:inline-flex;gap:4px;align-items:center}
+.dot{width:10px;height:10px;border-radius:50%;background:#cbd5e1;border:1.5px solid #94a3b8;display:inline-block;transition:all .2s}
+.dot.day-dot.ok{background:#f59e0b;border-color:#d97706;box-shadow:0 0 6px rgba(245,158,11,.6)}
+.dot.night-dot.ok{background:#3b82f6;border-color:#1d4ed8;box-shadow:0 0 6px rgba(59,130,246,.6)}
+
+/* 通关弹窗 */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+#winToast{position:fixed;inset:0;z-index:35;display:none;place-items:center;background:rgba(20,30,18,.38);padding:16px}
+#winToast.show{display:grid}
+.win-card{width:min(460px,100%);max-height:86vh;overflow-y:auto;background:#fffdf8;
+  border:2.5px solid var(--accent);border-radius:22px;padding:18px 20px;text-align:center;
+  box-shadow:0 20px 50px rgba(20,35,16,.28);animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+.win-concl{margin:10px 0;padding:10px 12px;border-radius:13px;background:#f0fdf4;border:1.5px solid #86efac;
+  text-align:left;font-size:13.5px;line-height:1.6;color:#14532d}
+.win-quiz{margin:10px 0;padding:10px 12px;border-radius:13px;background:#fffbeb;border:1.5px solid #fcd34d;text-align:left}
+.win-quiz h4{margin:0 0 7px;font-size:13.5px;color:#92400e}
+.qopts{display:flex;flex-direction:column;gap:7px}
+.qopt{padding:8px 11px;border-radius:11px;border:1.5px solid #d9d0be;background:#fff;
+  font-family:inherit;font-size:13.5px;font-weight:800;text-align:left;cursor:pointer;transition:all .14s;color:var(--ink)}
+.qopt:hover{border-color:var(--accent);background:#f7fee7}
+.qopt.ok{border-color:#2b8a3e;background:#ebfbee;color:#2b8a3e}
+.qopt.bad{border-color:#e03131;background:#fff5f5;color:#c92a2a}
+.qfb{margin-top:7px;font-size:12.5px;font-weight:800;min-height:18px;color:#b45309}
+.qfb.ok{color:#2b8a3e}
+.win-acts{display:flex;justify-content:center;gap:10px;margin-top:12px}
+
+@media (max-width:760px){
+  #hudTL{top:8px;left:8px;padding:5px 10px 5px 6px}
+  .hd-t{font-size:14px}.hd-sub{display:none}
+  #hudTR{top:8px;right:8px;gap:4px}.tbtn{height:32px;padding:0 8px;font-size:12px}
+  .entry-cue{display:none}
+  #guideBar{top:48px;left:8px;right:8px;max-width:none;font-size:12px;padding:5px 10px}
+  #notes{top:auto;bottom:124px;right:8px;width:200px}
+  #ntList{max-height:70px}
+  #bottomDock{bottom:8px;padding:6px 10px;gap:8px}
+  .mbtn{width:42px;height:34px;font-size:18px}
+  .bstat{padding:3px 7px;font-size:12.5px}
+}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="targetCue">👆 点白天含羞草看叶片</div>
+<div id="floatLayer"></div>
+<canvas id="confetti"></canvas>
+
+<div id="hudTL">
+  <a id="backBtn" href="../index.html" title="返回书包">‹</a>
+  <div>
+    <div class="hd-t" data-py="dì kè bái tiān yǔ hēi yè shēng wù piān">第8课 白天与黑夜·生物篇</div>
+    <div class="hd-sub">活页 · 课本第 36 页「昼夜生物作息前后对比剧场」</div>
+  </div>
+</div>
+
+<div id="guideBar" title="点我重听当前步骤">
+  <span id="guideIco">☀️</span>
+  <span id="guideTxt">白天观察（0/3）：先点左侧发光的含羞草，看看它白天的叶片！</span>
+</div>
+
+<div id="hudTR">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<aside id="notes">
+  <div class="nt-head">
+    <span class="nt-title" data-py="wǒ de fā xiàn">我的发现</span>
+    <span class="nt-cnt" id="ntCnt">0/6</span>
+    <button class="nt-tog" id="ntTog" type="button">收起</button>
+  </div>
+  <div class="stamps">
+    <span class="st" id="st1" data-py="hán xiū cǎo">含羞草</span>
+    <span class="st" id="st2" data-py="má què">麻雀</span>
+    <span class="st" id="st3" data-py="biān fú">蝙蝠</span>
+  </div>
+  <div id="ntList"></div>
+</aside>
+
+<div id="bottomDock">
+  <div class="mode-pair">
+    <div class="mbtn on day" id="dayBtn" role="button" tabindex="0" title="切换到白天" aria-label="白天">☀️</div>
+    <div class="mbtn night" id="nightBtn" role="button" tabindex="0" title="切换到黑夜" aria-label="黑夜">🌙</div>
+  </div>
+  <div class="bio-progress" aria-label="三种生物昼夜观察进度">
+    <span class="bstat" id="bsMimosa" title="含羞草白天/黑夜进度">🌿<span class="dots"><span class="dot day-dot" id="dm_d"></span><span class="dot night-dot" id="dm_n"></span></span></span>
+    <span class="bstat" id="bsSparrow" title="麻雀白天/黑夜进度">🐦<span class="dots"><span class="dot day-dot" id="ds_d"></span><span class="dot night-dot" id="ds_n"></span></span></span>
+    <span class="bstat" id="bsBat" title="蝙蝠白天/黑夜进度">🦇<span class="dots"><span class="dot day-dot" id="db_d"></span><span class="dot night-dot" id="db_n"></span></span></span>
+  </div>
+</div>
+
+<div id="winToast">
+  <div class="win-card">
+    <div style="font-size:40px">🏆</div>
+    <h3 style="margin:4px 0" data-py="tài bàng la zhòu yè duì bǐ quán wán chéng">太棒啦！昼夜对比全完成！</h3>
+    <div class="win-concl">
+      <b>✨ 科学小结论：</b>不同生物对白天和黑夜的作息不一样：含羞草白天展开晒太阳、夜晚合拢睡觉；麻雀白天飞出觅食、夜晚回巢闭眼；蝙蝠正好相反，白天倒挂睡觉、夜晚出来捕虫！
+    </div>
+    <div class="win-quiz">
+      <h4>💡 考考你 · 答对领小红花 🌸</h4>
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:8px">天黑以后，庭院里的含羞草、麻雀和蝙蝠分别是怎么表现的？</div>
+      <div class="qopts" id="qOpts">
+        <button class="qopt" type="button" data-ok="1">🌙 含羞草合拢叶片、麻雀回巢闭眼，蝙蝠飞出岩洞捕虫</button>
+        <button class="qopt" type="button" data-hint="再想想哦！那是白天的景象，天黑以后它们会反过来呢。">☀️ 含羞草展开晒太阳、麻雀枝头觅食，蝙蝠倒挂睡觉</button>
+        <button class="qopt" type="button" data-hint="再想想哦！不同生物在白天和黑夜的作息变化很明显呢。">😴 三种生物白天和黑夜的表现完全一样</button>
+      </div>
+      <div class="qfb" id="qFb"></div>
+    </div>
+    <div class="win-acts">
+      <button class="tbtn" id="winKeepBtn" type="button">继续玩</button>
+      <button class="tbtn on" id="winAgainBtn" type="button">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js"></script>
+<script src="../vendor/voice.js"></script>
+<script>
+(function () {
+'use strict';
+
+try { sessionStorage.setItem('xk_last_vol', 'k1b'); } catch (e) {}
+
+var LESSON_ID = 'k1b-08-bio';
+var BOOK_PROGRESS_KEY = 'xk_k1b_progress';
+
+var $ = function (s) { return document.querySelector(s); };
+var HAN = /[\u3400-\u9fff]/;
+var pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function ruby(text, py) {
+  if (!py) return esc(text);
+  var syl = py.trim().split(/\s+/), i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) {
+      var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; }
+      out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>';
+    } else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+document.querySelectorAll('[data-py]').forEach(function (el) { el.innerHTML = ruby(el.textContent, el.dataset.py); });
+
+$('#backBtn').addEventListener('click', function () {
+  try { sessionStorage.setItem('xk_last_vol', 'k1b'); } catch (e) {}
+});
+
+/* ===== 语音与轻柔音效 ===== */
+var voiceOn = true;
+function stopVoice() {
+  if (window.__xkVoice) window.__xkVoice.stop();
+  else if (window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
+}
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
+  if (!('speechSynthesis' in window)) return;
+  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+}
+var audioCtx = null;
+function playChime(freqs) {
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!audioCtx) audioCtx = new AC();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    var now = audioCtx.currentTime;
+    freqs.forEach(function (f, idx) {
+      var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(f, now + idx * 0.08);
+      g.gain.setValueAtTime(0.001, now + idx * 0.08);
+      g.gain.exponentialRampToValueAtTime(0.11, now + idx * 0.08 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.24);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(now + idx * 0.08); o.stop(now + idx * 0.08 + 0.26);
+    });
+  } catch (e) {}
+}
+
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem(BOOK_PROGRESS_KEY) || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem(BOOK_PROGRESS_KEY, JSON.stringify(d));
+  } catch (e) {}
+}
+
+/* ===== 彩带 ===== */
+var cCv = $('#confetti'), cCtx = cCv.getContext('2d'), confettiParts = [];
+function resizeConfetti() { cCv.width = window.innerWidth; cCv.height = window.innerHeight; }
+function burstConfetti() {
+  confettiParts = [];
+  var cols = ['#22c55e', '#f59e0b', '#3b82f6', '#ec4899', '#eab308', '#a855f7'];
+  for (var i = 0; i < 85; i++) {
+    confettiParts.push({
+      x: cCv.width * (0.2 + Math.random() * 0.6), y: cCv.height * 0.3,
+      vx: (Math.random() - 0.5) * 9, vy: -4 - Math.random() * 7,
+      s: 6 + Math.random() * 6, r: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.25,
+      col: cols[i % cols.length], life: 1
+    });
+  }
+}
+function tickConfetti() {
+  if (!confettiParts.length) return;
+  cCtx.clearRect(0, 0, cCv.width, cCv.height);
+  for (var i = confettiParts.length - 1; i >= 0; i--) {
+    var p = confettiParts[i];
+    p.x += p.vx; p.y += p.vy; p.vy += 0.22; p.r += p.vr; p.life -= 0.008;
+    if (p.life <= 0 || p.y > cCv.height + 20) { confettiParts.splice(i, 1); continue; }
+    cCtx.save(); cCtx.globalAlpha = Math.max(0, p.life);
+    cCtx.translate(p.x, p.y); cCtx.rotate(p.r);
+    cCtx.fillStyle = p.col; cCtx.fillRect(-p.s * 0.5, -p.s * 0.3, p.s, p.s * 0.6);
+    cCtx.restore();
+  }
+}
+
+/* ===== Three.js r147 昼夜生物庭院 3D 剧场 ===== */
+var cv = $('#cv');
+var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color('#80c8f6');
+
+var camera = new THREE.PerspectiveCamera(36, 16 / 9, 0.1, 80);
+camera.position.set(0.45, 4.3, 12.2);
+camera.lookAt(0.42, 1.48, -0.4);
+
+var hemiL = new THREE.HemisphereLight('#fff9eb', '#6a8d58', 0.9);
+scene.add(hemiL);
+var sunL = new THREE.DirectionalLight('#fff5da', 0.92);
+sunL.position.set(-4.5, 9.5, 6.5);
+sunL.castShadow = true;
+sunL.shadow.mapSize.set(1024, 1024);
+sunL.shadow.camera.left = -9; sunL.shadow.camera.right = 9;
+sunL.shadow.camera.top = 9; sunL.shadow.camera.bottom = -9;
+scene.add(sunL);
+
+var toon = function (col, opts) { return new THREE.MeshToonMaterial(Object.assign({ color: col }, opts || {})); };
+var live = new THREE.Group();
+scene.add(live);
+
+/* 1. 可点击天空 + 太阳/月亮 + 星星 */
+var skyPlane = new THREE.Mesh(
+  new THREE.PlaneGeometry(40, 20),
+  new THREE.MeshBasicMaterial({ color: '#80c8f6', depthWrite: false })
+);
+skyPlane.position.set(0, 6.8, -12.5);
+skyPlane.userData.hit = 'sky';
+live.add(skyPlane);
+
+var skySun = new THREE.Group();
+var sunSphere = new THREE.Mesh(new THREE.SphereGeometry(0.82, 20, 16), new THREE.MeshBasicMaterial({ color: '#ffdf4d' }));
+sunSphere.userData.hit = 'sun'; skySun.add(sunSphere);
+var sunRing = new THREE.Mesh(new THREE.SphereGeometry(1.18, 18, 12), new THREE.MeshBasicMaterial({ color: '#ffbe42', transparent: true, opacity: 0.36 }));
+sunRing.userData.hit = 'sun'; skySun.add(sunRing);
+var sunDragHaloMat = new THREE.MeshBasicMaterial({ color: '#fffbeb', transparent: true, opacity: 0.55, side: THREE.DoubleSide });
+var sunDragHalo = new THREE.Mesh(new THREE.RingGeometry(1.26, 1.48, 28), sunDragHaloMat);
+sunDragHalo.userData.hit = 'sun'; skySun.add(sunDragHalo);
+var sunHit = new THREE.Mesh(new THREE.SphereGeometry(2.25, 14, 12), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false }));
+sunHit.userData.hit = 'sun'; skySun.add(sunHit);
+skySun.position.set(-3.2, 4.65, -8.8);
+live.add(skySun);
+
+var skyMoon = new THREE.Group();
+var moonSphere = new THREE.Mesh(new THREE.SphereGeometry(0.76, 20, 16), new THREE.MeshBasicMaterial({ color: '#fff4bc' }));
+moonSphere.userData.hit = 'moon'; skyMoon.add(moonSphere);
+var moonRing = new THREE.Mesh(new THREE.SphereGeometry(1.10, 16, 12), new THREE.MeshBasicMaterial({ color: '#bfdbfe', transparent: true, opacity: 0.28 }));
+moonRing.userData.hit = 'moon'; skyMoon.add(moonRing);
+var moonDragHaloMat = new THREE.MeshBasicMaterial({ color: '#dbeafe', transparent: true, opacity: 0.55, side: THREE.DoubleSide });
+var moonDragHalo = new THREE.Mesh(new THREE.RingGeometry(1.18, 1.40, 28), moonDragHaloMat);
+moonDragHalo.userData.hit = 'moon'; skyMoon.add(moonDragHalo);
+var moonHit = new THREE.Mesh(new THREE.SphereGeometry(2.15, 14, 12), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false }));
+moonHit.userData.hit = 'moon'; skyMoon.add(moonHit);
+skyMoon.position.set(-2.8, 4.65, -8.8);
+live.add(skyMoon);
+
+var starMeshes = [];
+for (var i = 0; i < 42; i++) {
+  var st = new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.065, 0),
+    new THREE.MeshBasicMaterial({ color: i % 3 === 0 ? '#fde68a' : '#ffffff', transparent: true, opacity: 0 })
+  );
+  st.position.set(-9.5 + ((i * 37) % 190) / 10, 3.0 + ((i * 23) % 44) / 10, -10.5);
+  st.userData.phase = i * 0.65;
+  live.add(st);
+  starMeshes.push(st);
+}
+
+/* 2. 庭院草地、石板小径与远景道路 */
+var grass = new THREE.Mesh(new THREE.BoxGeometry(22, 0.5, 13), toon('#78bd5c'));
+grass.position.set(0, -0.25, -1.0); grass.receiveShadow = true;
+live.add(grass);
+
+var road = new THREE.Mesh(new THREE.BoxGeometry(22, 0.06, 1.3), toon('#6e7580'));
+road.position.set(0, 0.02, -3.5); road.receiveShadow = true;
+live.add(road);
+
+/* 3. 背景小屋与夜间亮车灯的小汽车 */
+var cottage = new THREE.Group();
+var cWall = new THREE.Mesh(new THREE.BoxGeometry(2.3, 1.65, 1.6), toon('#f8ead6'));
+cWall.position.y = 0.82; cWall.castShadow = true; cWall.receiveShadow = true; cWall.userData.hit = 'cottage';
+cottage.add(cWall);
+var cRoof = new THREE.Mesh(new THREE.ConeGeometry(1.9, 1.0, 4), toon('#d9664a'));
+cRoof.position.y = 2.12; cRoof.rotation.y = Math.PI / 4; cRoof.castShadow = true; cRoof.userData.hit = 'cottage';
+cottage.add(cRoof);
+var winMat = new THREE.MeshBasicMaterial({ color: '#9ed8f8' });
+var cWin = new THREE.Mesh(new THREE.PlaneGeometry(0.76, 0.62), winMat);
+cWin.position.set(0, 0.96, 0.82); cWin.userData.hit = 'cottage';
+cottage.add(cWin);
+var curtainL = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.62), toon('#e29a6d'));
+curtainL.position.set(-0.32, 0.96, 0.84); cottage.add(curtainL);
+var curtainR = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.62), toon('#e29a6d'));
+curtainR.position.set(0.32, 0.96, 0.84); cottage.add(curtainR);
+cottage.position.set(-4.3, 0, -5.2);
+live.add(cottage);
+
+var carGroup = new THREE.Group();
+var carBody = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.38, 0.62), toon('#ef5350'));
+carBody.position.y = 0.28; carBody.castShadow = true; carBody.userData.hit = 'car'; carGroup.add(carBody);
+var carTop = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.3, 0.56), toon('#f87171'));
+carTop.position.set(-0.06, 0.58, 0); carTop.userData.hit = 'car'; carGroup.add(carTop);
+[[-0.36, 0.14, 0.32], [0.36, 0.14, 0.32], [-0.36, 0.14, -0.32], [0.36, 0.14, -0.32]].forEach(function (w) {
+  var wh = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.09, 12), toon('#262c36'));
+  wh.rotation.x = Math.PI / 2; wh.position.set(w[0], w[1], w[2]); carGroup.add(wh);
+});
+var headLightMat = new THREE.MeshBasicMaterial({ color: '#fff3a1', transparent: true, opacity: 0 });
+var beamL = new THREE.Mesh(new THREE.ConeGeometry(0.38, 1.45, 12, 1, true), headLightMat);
+beamL.rotation.z = Math.PI / 2; beamL.position.set(1.3, 0.28, 0.18); carGroup.add(beamL);
+var beamR = new THREE.Mesh(new THREE.ConeGeometry(0.38, 1.45, 12, 1, true), headLightMat);
+beamR.rotation.z = Math.PI / 2; beamR.position.set(1.3, 0.28, -0.18); carGroup.add(beamR);
+carGroup.position.set(-2.5, 0.04, -3.5);
+live.add(carGroup);
+
+/* 4. 左侧：精致羽状复叶 3D 含羞草 */
+var mimosaGroup = new THREE.Group();
+mimosaGroup.position.set(-3.2, 0, 1.15);
+live.add(mimosaGroup);
+
+var pot = new THREE.Mesh(new THREE.CylinderGeometry(0.66, 0.48, 0.78, 18), toon('#cc6d43'));
+pot.position.y = 0.39; pot.castShadow = true; pot.receiveShadow = true; pot.userData.hit = 'mimosa';
+mimosaGroup.add(pot);
+var potRim = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.7, 0.14, 18), toon('#db7b4f'));
+potRim.position.y = 0.76; potRim.userData.hit = 'mimosa'; mimosaGroup.add(potRim);
+var soil = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 0.06, 16), toon('#5d4037'));
+soil.position.y = 0.8; mimosaGroup.add(soil);
+
+var mainStem = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.08, 1.05, 8), toon('#498e3b'));
+mainStem.position.y = 1.25; mainStem.castShadow = true; mainStem.userData.hit = 'mimosa';
+mimosaGroup.add(mainStem);
+
+var mimosaStalks = [];
+var leafletMat = toon('#56b847');
+var stalkConfigs = [
+  { yaw: -0.45, basePitch: 0.48, len: 1.22, y: 1.65 },
+  { yaw: 0.42,  basePitch: 0.52, len: 1.18, y: 1.72 },
+  { yaw: 2.15,  basePitch: 0.56, len: 1.08, y: 1.58 },
+  { yaw: -2.1,  basePitch: 0.54, len: 1.08, y: 1.60 }
+];
+stalkConfigs.forEach(function (cfg) {
+  var holder = new THREE.Group();
+  holder.position.set(0, cfg.y, 0);
+  holder.rotation.y = cfg.yaw;
+  mimosaGroup.add(holder);
+
+  var pivot = new THREE.Group();
+  holder.add(pivot);
+
+  var rachis = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.032, cfg.len, 6), toon('#4b9c3e'));
+  rachis.rotation.z = -Math.PI / 2;
+  rachis.position.x = cfg.len * 0.5;
+  rachis.userData.hit = 'mimosa';
+  pivot.add(rachis);
+
+  var pairs = [];
+  for (var k = 0; k < 6; k++) {
+    var xPos = 0.22 + k * ((cfg.len - 0.28) / 5.2);
+    var leafScale = 1 - Math.abs(k - 2.6) * 0.12;
+    var leftPiv = new THREE.Group(); leftPiv.position.set(xPos, 0, 0);
+    var rightPiv = new THREE.Group(); rightPiv.position.set(xPos, 0, 0);
+
+    var lMesh = new THREE.Mesh(new THREE.BoxGeometry(0.11 * leafScale, 0.024, 0.32 * leafScale), leafletMat);
+    lMesh.position.z = 0.17 * leafScale; lMesh.castShadow = true; lMesh.userData.hit = 'mimosa';
+    leftPiv.add(lMesh);
+
+    var rMesh = new THREE.Mesh(new THREE.BoxGeometry(0.11 * leafScale, 0.024, 0.32 * leafScale), leafletMat);
+    rMesh.position.z = -0.17 * leafScale; rMesh.castShadow = true; rMesh.userData.hit = 'mimosa';
+    rightPiv.add(rMesh);
+
+    pivot.add(leftPiv);
+    pivot.add(rightPiv);
+    pairs.push({ l: leftPiv, r: rightPiv });
+  }
+  mimosaStalks.push({ pivot: pivot, basePitch: cfg.basePitch, pairs: pairs });
+});
+
+var mimosaHit = new THREE.Mesh(
+  new THREE.SphereGeometry(1.75, 14, 12),
+  new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false })
+);
+mimosaHit.position.set(0, 1.35, 0); mimosaHit.userData.hit = 'mimosa';
+mimosaGroup.add(mimosaHit);
+
+/* 5. 中央：庭院大树 + 鸟巢 + 3D 小麻雀 */
+var treeGroup = new THREE.Group();
+treeGroup.position.set(-0.2, 0, -0.5);
+live.add(treeGroup);
+
+var trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.42, 2.55, 10), toon('#7b5130'));
+trunk.position.y = 1.25; trunk.castShadow = true; trunk.receiveShadow = true; treeGroup.add(trunk);
+
+var mainBranch = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.14, 2.65, 8), toon('#7b5130'));
+mainBranch.rotation.z = Math.PI / 2 - 0.08;
+mainBranch.position.set(0.15, 2.08, 0.45); mainBranch.castShadow = true;
+treeGroup.add(mainBranch);
+
+[[0, 3.35, -0.45, 1.25], [-1.0, 3.05, -0.55, 0.95], [1.05, 3.0, -0.5, 1.0], [0.15, 3.75, -0.7, 0.95]].forEach(function (c) {
+  var lf = new THREE.Mesh(new THREE.SphereGeometry(c[3], 14, 12), toon('#4d9d43'));
+  lf.position.set(c[0], c[1], c[2]); lf.castShadow = true; treeGroup.add(lf);
+});
+
+var nestPos = new THREE.Vector3(-0.78, 2.16, 0.56);
+var nest = new THREE.Group();
+nest.position.copy(nestPos);
+var nestBowl = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.32, 0.28, 14), toon('#b07d48'));
+nestBowl.castShadow = true; nestBowl.userData.hit = 'sparrow'; nest.add(nestBowl);
+var nestRim = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.08, 8, 16), toon('#966634'));
+nestRim.rotation.x = Math.PI / 2; nestRim.position.y = 0.13; nestRim.userData.hit = 'sparrow'; nest.add(nestRim);
+var nestHit = new THREE.Mesh(
+  new THREE.SphereGeometry(1.15, 12, 10),
+  new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false })
+);
+nestHit.userData.hit = 'sparrow'; nest.add(nestHit);
+treeGroup.add(nest);
+
+var sparrow = new THREE.Group();
+var spBody = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 14), toon('#8f623d'));
+spBody.scale.set(1.15, 0.92, 0.95); spBody.castShadow = true; spBody.userData.hit = 'sparrow'; sparrow.add(spBody);
+var spBelly = new THREE.Mesh(new THREE.SphereGeometry(0.26, 14, 12), toon('#f5ebd6'));
+spBelly.position.set(0.06, -0.07, 0.14); spBelly.userData.hit = 'sparrow'; sparrow.add(spBelly);
+var spHead = new THREE.Group(); spHead.position.set(0.24, 0.24, 0.05);
+var spHeadMesh = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 12), toon('#7d4f2d'));
+spHeadMesh.userData.hit = 'sparrow'; spHead.add(spHeadMesh);
+var spCheek = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 8), toon('#f5ebd6'));
+spCheek.position.set(0.06, -0.03, 0.14); spHead.add(spCheek);
+var spEyeOpen = new THREE.Mesh(new THREE.SphereGeometry(0.042, 8, 8), new THREE.MeshBasicMaterial({ color: '#111827' }));
+spEyeOpen.position.set(0.11, 0.05, 0.17); spHead.add(spEyeOpen);
+var spEyeShut = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.02, 0.03), new THREE.MeshBasicMaterial({ color: '#111827' }));
+spEyeShut.position.set(0.11, 0.04, 0.18); spEyeShut.visible = false; spHead.add(spEyeShut);
+var spBeak = new THREE.Mesh(new THREE.ConeGeometry(0.065, 0.2, 8), toon('#f59e0b'));
+spBeak.rotation.z = -Math.PI / 2; spBeak.position.set(0.26, 0.0, 0); spHead.add(spBeak);
+sparrow.add(spHead);
+var spTail = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.06, 0.18), toon('#6e482b'));
+spTail.position.set(-0.4, 0.08, 0); spTail.rotation.z = 0.28; sparrow.add(spTail);
+var spWingL = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.05, 0.26), toon('#785030'));
+spWingL.position.set(-0.02, 0.06, 0.28); sparrow.add(spWingL);
+var spWingR = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.05, 0.26), toon('#785030'));
+spWingR.position.set(-0.02, 0.06, -0.28); sparrow.add(spWingR);
+var spHit = new THREE.Mesh(
+  new THREE.SphereGeometry(1.25, 14, 12),
+  new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false })
+);
+spHit.userData.hit = 'sparrow'; sparrow.add(spHit);
+treeGroup.add(sparrow);
+
+/* 6. 右侧下区（避让右上 #notes）：树荫岩洞 + 3D 蝙蝠 */
+var caveGroup = new THREE.Group();
+caveGroup.position.set(2.68, 0, 0.72);
+live.add(caveGroup);
+
+var rockMat = toon('#78726c');
+var rockL = new THREE.Mesh(new THREE.DodecahedronGeometry(0.84, 0), rockMat);
+rockL.position.set(-0.92, 0.74, -0.04); rockL.scale.set(0.78, 1.18, 0.92); rockL.castShadow = true; rockL.userData.hit = 'bat'; caveGroup.add(rockL);
+var rockR = new THREE.Mesh(new THREE.DodecahedronGeometry(0.84, 0), rockMat);
+rockR.position.set(0.92, 0.74, -0.04); rockR.scale.set(0.78, 1.18, 0.92); rockR.castShadow = true; rockR.userData.hit = 'bat'; caveGroup.add(rockR);
+var rockTop = new THREE.Mesh(new THREE.DodecahedronGeometry(1.06, 0), toon('#6b6660'));
+rockTop.position.set(0, 1.84, -0.08); rockTop.scale.set(1.32, 0.58, 0.96); rockTop.castShadow = true; rockTop.userData.hit = 'bat'; caveGroup.add(rockTop);
+var caveBack = new THREE.Mesh(new THREE.BoxGeometry(1.72, 1.75, 0.42), toon('#332c3e'));
+caveBack.position.set(0, 0.88, -0.58); caveBack.userData.hit = 'bat'; caveGroup.add(caveBack);
+
+var caveHit = new THREE.Mesh(
+  new THREE.SphereGeometry(1.75, 14, 12),
+  new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false })
+);
+caveHit.position.set(0, 1.05, 0.15);
+caveHit.userData.hit = 'bat';
+caveGroup.add(caveHit);
+
+var bat = new THREE.Group();
+var batBody = new THREE.Mesh(new THREE.SphereGeometry(0.28, 14, 12), toon('#7c6fa0', { emissive: '#2e2447' }));
+batBody.scale.set(0.92, 1.22, 0.88); batBody.castShadow = true; batBody.userData.hit = 'bat'; bat.add(batBody);
+var batBelly = new THREE.Mesh(new THREE.SphereGeometry(0.19, 12, 10), toon('#d8ccff', { emissive: '#4c3f73' }));
+batBelly.position.set(0, -0.02, 0.16); batBelly.userData.hit = 'bat'; bat.add(batBelly);
+var batEarL = new THREE.Mesh(new THREE.ConeGeometry(0.085, 0.22, 6), toon('#7c6fa0', { emissive: '#2e2447' }));
+batEarL.position.set(-0.12, 0.31, 0.04); bat.add(batEarL);
+var batEarR = new THREE.Mesh(new THREE.ConeGeometry(0.085, 0.22, 6), toon('#7c6fa0', { emissive: '#2e2447' }));
+batEarR.position.set(0.12, 0.31, 0.04); bat.add(batEarR);
+var batEyeL = new THREE.Mesh(new THREE.SphereGeometry(0.042, 8, 8), new THREE.MeshBasicMaterial({ color: '#fef08a' }));
+batEyeL.position.set(-0.085, 0.09, 0.23); bat.add(batEyeL);
+var batEyeR = new THREE.Mesh(new THREE.SphereGeometry(0.042, 8, 8), new THREE.MeshBasicMaterial({ color: '#fef08a' }));
+batEyeR.position.set(0.085, 0.09, 0.23); bat.add(batEyeR);
+
+var batWingLPiv = new THREE.Group(); batWingLPiv.position.set(-0.16, 0.04, 0);
+var batWingL = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.40, 0.045), toon('#8e7db8', { emissive: '#352a54' }));
+batWingL.position.x = -0.39; batWingL.userData.hit = 'bat'; batWingLPiv.add(batWingL);
+bat.add(batWingLPiv);
+
+var batWingRPiv = new THREE.Group(); batWingRPiv.position.set(0.16, 0.04, 0);
+var batWingR = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.40, 0.045), toon('#8e7db8', { emissive: '#352a54' }));
+batWingR.position.x = 0.39; batWingR.userData.hit = 'bat'; batWingRPiv.add(batWingR);
+bat.add(batWingRPiv);
+
+var batHit = new THREE.Mesh(
+  new THREE.SphereGeometry(1.48, 14, 12),
+  new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false })
+);
+batHit.userData.hit = 'bat'; bat.add(batHit);
+live.add(bat);
+
+var insects = [];
+for (var bi = 0; bi < 4; bi++) {
+  var bug = new THREE.Mesh(
+    new THREE.SphereGeometry(0.065, 8, 8),
+    new THREE.MeshBasicMaterial({ color: '#fef08a', transparent: true, opacity: 0 })
+  );
+  bug.userData.seed = bi * 1.7;
+  live.add(bug);
+  insects.push(bug);
+}
+
+/* 7. 未观察生物的柔和呼吸提示光环 */
+function makeCueRing(innerR, outerR, col, flat) {
+  var mat = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.72, side: THREE.DoubleSide });
+  var mesh = new THREE.Mesh(new THREE.RingGeometry(innerR, outerR, 32), mat);
+  if (flat) mesh.rotation.x = -Math.PI / 2;
+  return { mesh: mesh, mat: mat };
+}
+var haloMimosa = makeCueRing(0.84, 1.08, '#fde047', true);
+haloMimosa.mesh.position.set(-3.2, 0.05, 1.15);
+live.add(haloMimosa.mesh);
+
+var haloSparrow = makeCueRing(0.52, 0.68, '#fde047', false);
+treeGroup.add(haloSparrow.mesh);
+
+var haloBat = makeCueRing(0.62, 0.80, '#fde047', false);
+live.add(haloBat.mesh);
+
+var haloCaveGround = makeCueRing(0.95, 1.18, '#fbbf24', true);
+haloCaveGround.mesh.position.set(2.68, 0.05, 0.72);
+live.add(haloCaveGround.mesh);
+
+/* ===== 昼夜状态平滑过渡 ===== */
+var isNight = false, nightBlend = 0;
+var draggingOrb = null, dragStartX = 0, dragStartY = 0, dragStartNb = 0, dragMoved = false;
+var cA = new THREE.Color(), cB = new THREE.Color();
+function lerpCol(hexA, hexB, t, out) { cA.set(hexA); cB.set(hexB); return out.copy(cA).lerp(cB, t); }
+
+var cueVec = new THREE.Vector3();
+function placeTargetCueAtScreen(x, y, text, isSwitch) {
+  var el = $('#targetCue');
+  el.textContent = text;
+  el.classList.toggle('cue-switch', !!isSwitch);
+  var w = window.innerWidth, h = window.innerHeight;
+  var padX = isSwitch ? 200 : 120;
+  x = Math.max(padX, Math.min(w - padX, x));
+  y = Math.max(96, Math.min(h - 76, y));
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  el.classList.add('show');
+}
+function placeTargetCue(worldVec, text, show) {
+  var el = $('#targetCue');
+  if (!show || !worldVec) { el.classList.remove('show', 'cue-switch'); return; }
+  el.classList.remove('cue-switch');
+  el.textContent = text;
+  cueVec.copy(worldVec).project(camera);
+  var w = window.innerWidth, h = window.innerHeight;
+  var x = (cueVec.x * 0.5 + 0.5) * w;
+  var y = (-cueVec.y * 0.5 + 0.5) * h;
+  x = Math.max(125, Math.min(w - 125, x));
+  y = Math.max(98, Math.min(h - 115, y));
+  var notesEl = $('#notes');
+  if (notesEl) {
+    var nr = notesEl.getBoundingClientRect();
+    var halfW = Math.max(95, (el.offsetWidth || 190) * 0.5) + 14;
+    if (x + halfW > nr.left && y < nr.bottom + 42) {
+      x = Math.min(x, nr.left - halfW);
+    }
+  }
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  el.classList.add('show');
+}
+
+function updateEnvironment(nb, t) {
+  lerpCol('#80c8f6', '#152242', nb, scene.background);
+  skyPlane.material.color.copy(scene.background);
+  lerpCol('#fff9eb', '#2a3d6e', nb, hemiL.color);
+  lerpCol('#6a8d58', '#16241d', nb, hemiL.groundColor);
+  lerpCol('#fff5da', '#7c9ed9', nb, sunL.color);
+  sunL.intensity = 0.94 - nb * 0.62;
+
+  skySun.position.y = 4.65 - nb * 5.1;
+  skySun.position.x = -3.2 + nb * 1.4;
+  skySun.visible = nb < 0.88;
+  skyMoon.position.y = 0.15 + nb * 4.5;
+  skyMoon.position.x = -2.8 - (1 - nb) * 1.2;
+  skyMoon.visible = nb > 0.12;
+  var orbPulse = 1 + Math.sin(t * 4.0) * 0.08;
+  sunDragHalo.scale.setScalar(draggingOrb === 'sun' ? 1.2 : orbPulse);
+  sunDragHaloMat.opacity = draggingOrb === 'sun' ? 0.9 : (0.36 + 0.24 * Math.sin(t * 4.0));
+  moonDragHalo.scale.setScalar(draggingOrb === 'moon' ? 1.2 : orbPulse);
+  moonDragHaloMat.opacity = draggingOrb === 'moon' ? 0.9 : (0.36 + 0.24 * Math.sin(t * 4.0));
+  starMeshes.forEach(function (sm) {
+    sm.material.opacity = nb * (0.45 + 0.55 * Math.abs(Math.sin(t * 2.4 + sm.userData.phase)));
+  });
+
+  // 含羞草：白天舒展平摊，黑夜叶轴下垂、对生小叶向上合拢
+  var openAmt = 1 - nb;
+  mimosaStalks.forEach(function (st, idx) {
+    st.pivot.rotation.z = st.basePitch * openAmt - 0.55 * nb + Math.sin(t * 1.6 + idx) * 0.03 * openAmt;
+    st.pairs.forEach(function (pr) {
+      pr.l.rotation.x = -1.32 * nb;
+      pr.r.rotation.x = 1.32 * nb;
+    });
+  });
+
+  // 麻雀：白天枝头欢跳，黑夜回巢闭眼
+  var dayPosX = 0.82 + Math.sin(t * 2.2) * 0.16;
+  var dayPosY = 2.44 + Math.abs(Math.sin(t * 5.8)) * 0.18 * (1 - nb);
+  var dayPosZ = 0.52;
+  var sleepX = nestPos.x, sleepY = nestPos.y + 0.22, sleepZ = nestPos.z;
+  sparrow.position.set(
+    dayPosX * (1 - nb) + sleepX * nb,
+    dayPosY * (1 - nb) + sleepY * nb + Math.sin(nb * Math.PI) * 0.65,
+    dayPosZ * (1 - nb) + sleepZ * nb
+  );
+  sparrow.rotation.y = -0.35 * (1 - nb) + 0.3 * nb;
+  var flap = Math.sin(t * 15) * 0.45 * (1 - nb);
+  spWingL.rotation.x = flap; spWingR.rotation.x = -flap;
+  spHead.rotation.z = (1 - nb) * Math.sin(t * 4) * 0.14 - nb * 0.22;
+  spEyeOpen.visible = nb < 0.6;
+  spEyeShut.visible = nb >= 0.6;
+
+  // 蝙蝠：白天倒挂岩洞睡觉，黑夜展翅夜空绕圈捕虫
+  var caveHangX = 2.68, caveHangY = 1.24, caveHangZ = 0.68;
+  var flyX = 1.85 + Math.cos(t * 0.95) * 0.95;
+  var flyY = 2.95 + Math.sin(t * 1.9) * 0.26;
+  var flyZ = 1.15 + Math.sin(t * 0.95) * 0.45;
+  bat.position.set(
+    caveHangX * (1 - nb) + flyX * nb,
+    caveHangY * (1 - nb) + flyY * nb,
+    caveHangZ * (1 - nb) + flyZ * nb
+  );
+  bat.rotation.z = Math.PI * (1 - nb);
+  bat.rotation.y = nb > 0.3 ? Math.atan2(-Math.sin(t * 0.95) * 1.35, Math.cos(t * 0.95) * 0.55) : 0;
+  var batFlap = Math.sin(t * 13) * 0.72 * nb;
+  batWingLPiv.rotation.z = (1 - nb) * 1.32 + batFlap;
+  batWingRPiv.rotation.z = -(1 - nb) * 1.32 - batFlap;
+  batEyeL.visible = nb > 0.35; batEyeR.visible = nb > 0.35;
+
+  insects.forEach(function (bug, idx) {
+    bug.material.opacity = nb * (0.65 + 0.35 * Math.sin(t * 6 + idx));
+    bug.position.set(1.0 + Math.cos(t * 1.6 + bug.userData.seed) * 1.45, 2.45 + Math.sin(t * 2.8 + idx) * 0.45, 1.15 + Math.sin(t * 1.3 + idx) * 0.55);
+  });
+
+  curtainL.position.x = -0.34 + nb * 0.15;
+  curtainR.position.x = 0.34 - nb * 0.15;
+  winMat.color.set(nb > 0.5 ? '#263554' : '#9ed8f8');
+  headLightMat.opacity = nb * 0.52;
+  carGroup.position.x += 0.015;
+  if (carGroup.position.x > 6.5) carGroup.position.x = -6.8;
+
+  // 未观察生物呼吸光环
+  var suf = isNight ? '_night' : '_day';
+  var pulse = 0.94 + Math.sin(t * 4.4) * 0.11;
+  var op = 0.42 + 0.36 * (0.5 + 0.5 * Math.sin(t * 4.4));
+
+  var needM = !found['mimosa' + suf];
+  haloMimosa.mesh.visible = needM;
+  if (needM) { haloMimosa.mesh.scale.setScalar(pulse); haloMimosa.mat.opacity = op; }
+
+  var needS = !found['sparrow' + suf];
+  haloSparrow.mesh.visible = needS;
+  if (needS) {
+    haloSparrow.mesh.position.set(sparrow.position.x, sparrow.position.y, sparrow.position.z + 0.12);
+    haloSparrow.mesh.lookAt(camera.position);
+    haloSparrow.mesh.scale.setScalar(pulse);
+    haloSparrow.mat.opacity = op;
+  }
+
+  var needB = !found['bat' + suf];
+  haloBat.mesh.visible = needB && isNight;
+  haloCaveGround.mesh.visible = needB && !isNight;
+  if (needB) {
+    if (isNight) {
+      haloBat.mesh.position.set(bat.position.x, bat.position.y, bat.position.z + 0.12);
+      haloBat.mesh.lookAt(camera.position);
+      haloBat.mesh.scale.setScalar(pulse);
+      haloBat.mat.opacity = op;
+    } else {
+      haloCaveGround.mesh.scale.setScalar(pulse);
+      haloCaveGround.mat.opacity = op;
+    }
+  }
+
+  // 永远清晰的单焦点 #targetCue 指路
+  var allDone = stamps.s1 && stamps.s2 && stamps.s3;
+  if (allDone || demo) {
+    placeTargetCue(null, '', false);
+  } else if (needM) {
+    placeTargetCue(
+      new THREE.Vector3(-3.2, 2.38, 1.15),
+      isNight ? '👆 点夜晚含羞草（看叶子变啦！）' : '👆 点白天含羞草看叶片',
+      true
+    );
+  } else if (needS) {
+    var spW = new THREE.Vector3();
+    sparrow.getWorldPosition(spW);
+    spW.y += 0.68;
+    placeTargetCue(
+      spW,
+      isNight ? '👆 点鸟巢里睡觉的麻雀' : '👆 点树上麻雀看白天活动',
+      true
+    );
+  } else if (needB) {
+    if (isNight) {
+      var batW = new THREE.Vector3();
+      bat.getWorldPosition(batW);
+      batW.y += 0.72;
+      placeTargetCue(batW, '👆 点夜空飞翔的蝙蝠', true);
+    } else {
+      placeTargetCue(new THREE.Vector3(2.68, 2.30, 0.72), '👆 点岩洞里的蝙蝠', true);
+    }
+  } else {
+    // 当前昼/夜 3 种生物全部看完 → 立刻大号脉冲精准指到底部月亮/太阳切换按钮正上方！
+    var btnEl = isNight ? $('#dayBtn') : $('#nightBtn');
+    var br = btnEl.getBoundingClientRect();
+    placeTargetCueAtScreen(
+      br.left + br.width * 0.5,
+      br.top - 16,
+      isNight
+        ? '☀️ 黑夜看完啦！点太阳切换白天，对比看看有啥变化！'
+        : '🌙 白天看完啦！点月亮切换黑夜，看看它们有啥变化！',
+      true
+    );
+  }
+}
+
+/* ===== 6/6 严格昼夜对比观察 + 双栏对比结论浮标（D7, U1, U2） ===== */
+var found = {}, stamps = { s1: false, s2: false, s3: false }, celebrated = false, demo = false;
+var resetGen = 0;
+var curGuideSpeech = '白天观察（0/3）：先点左侧发光的含羞草，看看它白天的叶片！';
+var activeCompareEl = null, activeCompareTimer = null;
+
+var OBS = {
+  mimosa_day:   { bio: 'mimosa', dot: '#dm_d', card: '🌿 白天含羞草：叶片展开晒太阳！', spoken: '看！白天阳光照耀下，含羞草的叶片展开晒太阳啦！', fw: '🌿 白天：含羞草展开晒太阳！', xy: [26, 54] },
+  mimosa_night: { bio: 'mimosa', dot: '#dm_n', card: '🌿 夜晚含羞草：叶片合拢睡觉！', spoken: '快看！天黑以后，含羞草的叶片自动合拢下垂睡觉啦！', fw: '🌿 夜晚：含羞草合拢睡觉！', xy: [26, 54] },
+  sparrow_day:  { bio: 'sparrow', dot: '#ds_d', card: '🐦 白天麻雀：在树上欢跳、飞出觅食！', spoken: '白天阳光明媚，小麻雀在树枝上欢快跳动、飞出觅食！', fw: '🐦 白天：麻雀飞出觅食！', xy: [50, 42] },
+  sparrow_night:{ bio: 'sparrow', dot: '#ds_n', card: '🐦 夜晚麻雀：回鸟巢闭眼睡觉！', spoken: '到了黑夜，小麻雀飞回鸟巢里闭眼睡觉啦！', fw: '🐦 夜晚：麻雀回巢闭眼！', xy: [45, 42] },
+  bat_day:      { bio: 'bat', dot: '#db_d', card: '🦇 白天蝙蝠：倒挂在岩洞里静静睡觉！', spoken: '白天光线亮，小蝙蝠倒挂在岩洞里静静睡觉！', fw: '🦇 白天：蝙蝠倒挂睡觉！', xy: [68, 56] },
+  bat_night:    { bio: 'bat', dot: '#db_n', card: '🦇 夜晚蝙蝠：展翅飞出岩洞捕虫！', spoken: '黑夜降临啦！小蝙蝠展翅飞出岩洞出来捕虫啦！', fw: '🦇 夜晚：蝙蝠出来捕虫！', xy: [60, 42] }
+};
+
+var COMPARE_DATA = {
+  mimosa:  {
+    title: '🌿 含羞草 · 昼夜大对比',
+    dayTxt: '☀️ 白天<br>展开晒太阳',
+    nightTxt: '🌙 夜晚<br>合拢睡觉！',
+    spoken: '对比发现！含羞草白天展开晒太阳，夜晚合拢睡觉！',
+    anchor: function () { return new THREE.Vector3(-3.2, 2.3, 1.15); }
+  },
+  sparrow: {
+    title: '🐦 麻雀 · 昼夜大对比',
+    dayTxt: '☀️ 白天<br>飞出觅食',
+    nightTxt: '🌙 夜晚<br>回巢闭眼！',
+    spoken: '对比发现！麻雀白天飞出觅食，夜晚回巢闭眼睡觉！',
+    anchor: function () { var v = new THREE.Vector3(); sparrow.getWorldPosition(v); v.y += 0.7; return v; }
+  },
+  bat:     {
+    title: '🦇 蝙蝠 · 昼夜大对比',
+    dayTxt: '☀️ 白天<br>倒挂睡觉',
+    nightTxt: '🌙 夜晚<br>出来捕虫！',
+    spoken: '对比发现！蝙蝠和麻雀正好相反，白天倒挂睡觉，夜晚出来捕虫！',
+    anchor: function () { var v = new THREE.Vector3(); bat.getWorldPosition(v); v.y += 0.7; return v; }
+  }
+};
+
+function spawnFloat(text, xPct, yPct) {
+  var el = document.createElement('div');
+  el.className = 'fword';
+  el.textContent = text;
+  el.style.left = (xPct || 48) + '%';
+  el.style.top = (yPct || 46) + '%';
+  $('#floatLayer').appendChild(el);
+  setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1800);
+}
+
+function showCompareCard(bio) {
+  var data = COMPARE_DATA[bio];
+  if (!data) return;
+  if (activeCompareEl && activeCompareEl.parentNode) activeCompareEl.parentNode.removeChild(activeCompareEl);
+  if (activeCompareTimer) clearTimeout(activeCompareTimer);
+
+  var card = document.createElement('div');
+  card.className = 'compare-card';
+  card.innerHTML = '<div class="cmp-hd">' + data.title + '</div>' +
+    '<div class="cmp-cols">' +
+      '<div class="cmp-col cmp-day">' + data.dayTxt + '</div>' +
+      '<div class="cmp-vs">↔</div>' +
+      '<div class="cmp-col cmp-night">' + data.nightTxt + '</div>' +
+    '</div>';
+  $('#floatLayer').appendChild(card);
+
+  var p = data.anchor().project(camera);
+  var w = window.innerWidth, h = window.innerHeight;
+  var x = (p.x * 0.5 + 0.5) * w;
+  var y = (-p.y * 0.5 + 0.5) * h - 18;
+  var notesEl = $('#notes');
+  if (notesEl) {
+    var nr = notesEl.getBoundingClientRect();
+    if (x + 185 > nr.left && y < nr.bottom + 90) x = Math.min(x, nr.left - 190);
+  }
+  x = Math.max(185, Math.min(w - 185, x));
+  y = Math.max(188, Math.min(h - 145, y));
+  card.style.left = x + 'px';
+  card.style.top = y + 'px';
+  activeCompareEl = card;
+
+  var g = resetGen;
+  activeCompareTimer = setTimeout(function () {
+    if (g !== resetGen) return;
+    if (card.parentNode) {
+      card.classList.add('fadeout');
+      setTimeout(function () { if (card.parentNode) card.parentNode.removeChild(card); }, 380);
+    }
+    if (activeCompareEl === card) activeCompareEl = null;
+  }, 4600);
+}
+
+function observeBio(bio) {
+  var key = bio + '_' + (isNight ? 'night' : 'day');
+  var info = OBS[key];
+  if (!info) return;
+  var isNew = !found[key];
+  if (isNew) {
+    found[key] = true;
+    var el = document.createElement('div');
+    el.className = 'stk';
+    el.textContent = info.card;
+    $('#ntList').prepend(el);
+    $('#ntCnt').textContent = Object.keys(found).length + '/6';
+    $(info.dot).classList.add('ok');
+    playChime(bio === 'sparrow' && !isNight ? [784, 988, 1175] : [523, 659, 784]);
+  }
+
+  var justPaired = false;
+  if (bio === 'mimosa' && found.mimosa_day && found.mimosa_night) {
+    $('#bsMimosa').classList.add('done');
+    if (!stamps.s1) { stamps.s1 = true; $('#st1').classList.add('lit'); justPaired = true; }
+  }
+  if (bio === 'sparrow' && found.sparrow_day && found.sparrow_night) {
+    $('#bsSparrow').classList.add('done');
+    if (!stamps.s2) { stamps.s2 = true; $('#st2').classList.add('lit'); justPaired = true; }
+  }
+  if (bio === 'bat' && found.bat_day && found.bat_night) {
+    $('#bsBat').classList.add('done');
+    if (!stamps.s3) { stamps.s3 = true; $('#st3').classList.add('lit'); justPaired = true; }
+  }
+
+  // 如果该生物白天与黑夜都观察过，弹出鲜明的双栏对比结论浮标！
+  var bothSeen = found[bio + '_day'] && found[bio + '_night'];
+  if (bothSeen) {
+    showCompareCard(bio);
+  } else {
+    spawnFloat(info.fw, info.xy[0], info.xy[1]);
+  }
+
+  updateGuide(false);
+
+  var allDone = stamps.s1 && stamps.s2 && stamps.s3;
+  if (!demo && !celebrated && allDone) {
+    celebrated = true;
+    saveProgress(LESSON_ID, true);
+    burstConfetti();
+    playChime([523, 659, 784, 1046]);
+    var g = resetGen;
+    setTimeout(function () {
+      if (g !== resetGen) return;
+      $('#winToast').classList.add('show');
+      speak('太棒啦！你把含羞草、麻雀和蝙蝠在白天和黑夜的对比全都完成啦！快来看科学小结论领小红花吧！', true);
+    }, 1500);
+    return;
+  }
+
+  // 检查是否刚刚看完了当前昼/夜的全部 3 种生物 → 立刻大声提醒切换！
+  var suf = isNight ? '_night' : '_day';
+  var curAllThree = !!(found['mimosa' + suf] && found['sparrow' + suf] && found['bat' + suf]);
+  if (!demo) {
+    if (curAllThree && !allDone) {
+      playChime([659, 880, 1046]);
+      var swMsg = isNight
+        ? '黑夜三种生物都看完啦！快点下面发光的太阳，切换白天对比看看吧！'
+        : '白天三种生物都看完啦！快点下面发光的月亮，切换黑夜看看它们有啥变化吧！';
+      speak(info.spoken + swMsg, true);
+    } else if (justPaired) {
+      speak(COMPARE_DATA[bio].spoken, true);
+    } else {
+      speak(info.spoken);
+    }
+  }
+}
+
+function setMode(night, announce) {
+  isNight = !!night;
+  $('#dayBtn').classList.toggle('on', !isNight);
+  $('#nightBtn').classList.toggle('on', isNight);
+  updateGuide(false);
+  if (announce && !demo) {
+    speak(isNight
+      ? '切换到黑夜啦！快依次点夜晚的含羞草、鸟巢麻雀和夜空蝙蝠，看看它们和白天有啥变化吧！'
+      : '切换到白天啦！阳光照进庭院，依次点含羞草、树上麻雀和岩洞蝙蝠对比看看吧！');
+  }
+}
+
+function updateGuide(speakIt) {
+  document.querySelectorAll('.mbtn').forEach(function (b) { b.classList.remove('pulse'); });
+  $('#guideBar').classList.remove('switch-now');
+  var suf = isNight ? '_night' : '_day';
+  var curDone = (found['mimosa' + suf] ? 1 : 0) + (found['sparrow' + suf] ? 1 : 0) + (found['bat' + suf] ? 1 : 0);
+  var allDone = stamps.s1 && stamps.s2 && stamps.s3;
+  var ico = isNight ? '🌙' : '☀️';
+
+  if (allDone) {
+    ico = '🏆';
+    curGuideSpeech = '太棒啦！3 种生物的白天 vs 黑夜对比全部完成，随时可以再切换观察！';
+  } else if (curDone < 3) {
+    var nextStepTxt;
+    if (!found['mimosa' + suf]) {
+      nextStepTxt = isNight ? '点夜晚含羞草，看叶子怎么变啦！' : '点左侧含羞草，看它白天的叶片！';
+    } else if (!found['sparrow' + suf]) {
+      nextStepTxt = isNight ? '点鸟巢里睡觉的麻雀！' : '点树上欢跳的麻雀看白天活动！';
+    } else {
+      nextStepTxt = isNight ? '点夜空飞翔捕虫的蝙蝠！' : '点右侧岩洞里倒挂的蝙蝠！';
+    }
+    curGuideSpeech = (isNight ? '黑夜对比（' : '白天观察（') + curDone + '/3）：' + nextStepTxt;
+  } else {
+    var otherBtn = isNight ? '#dayBtn' : '#nightBtn';
+    $(otherBtn).classList.add('pulse');
+    $('#guideBar').classList.add('switch-now');
+    ico = isNight ? '☀️' : '🌙';
+    curGuideSpeech = isNight
+      ? '黑夜看完啦！点下方发光的太阳 ☀️ 切回白天，对比看看有啥不同！'
+      : '白天看完啦！点下方发光的月亮 🌙 切换黑夜，看看它们有啥变化！';
+  }
+  $('#guideIco').textContent = ico;
+  $('#guideTxt').textContent = curGuideSpeech;
+  $('#guideBar').classList.toggle('done', allDone);
+  if (speakIt) speak(curGuideSpeech, true);
+}
+
+/* ===== 演示模式（不触发通关） ===== */
+function stopDemo() {
+  if (!demo) return;
+  demo = false;
+  $('#demoBtn').classList.remove('on');
+  $('#demoBtn').textContent = '▶ 演示';
+}
+function startDemo() {
+  markInteracted();
+  if (demo) { stopDemo(); stopVoice(); return; }
+  demo = true;
+  resetGen++;
+  var g = resetGen;
+  $('#demoBtn').classList.add('on');
+  $('#demoBtn').textContent = '⏸ 停止';
+  var steps = [
+    { night: false, cmp: null, fw: '🌿 白天：含羞草展开晒太阳！', xy: [26, 54], msg: '第1步，白天依次点含羞草、树上麻雀和岩洞蝙蝠，记住它们白天的样子。' },
+    { night: true,  cmp: 'mimosa', fw: null, xy: [26, 54], msg: '第2步，点月亮切换到黑夜！含羞草立刻合拢睡觉，弹出白天和黑夜大对比！' },
+    { night: true,  cmp: 'bat', fw: null, xy: [60, 42], msg: '小麻雀回巢闭眼睡觉，而蝙蝠正好相反，晚上飞出来捕虫！' }
+  ];
+  steps.forEach(function (st, idx) {
+    setTimeout(function () {
+      if (g !== resetGen || !demo) return;
+      isNight = st.night;
+      $('#dayBtn').classList.toggle('on', !isNight);
+      $('#nightBtn').classList.toggle('on', isNight);
+      if (st.cmp) showCompareCard(st.cmp);
+      else if (st.fw) spawnFloat(st.fw, st.xy[0], st.xy[1]);
+      speak(st.msg, true);
+    }, idx * 3800);
+  });
+  setTimeout(function () {
+    if (g !== resetGen) return;
+    stopDemo();
+    speak('演示结束！现在请你先在白天点完三种生物，再点月亮切到黑夜对比看看吧！', true);
+  }, steps.length * 3800 + 300);
+}
+
+function resetAll() {
+  resetGen++;
+  stopDemo();
+  stopVoice();
+  draggingOrb = null;
+  if (activeCompareEl && activeCompareEl.parentNode) activeCompareEl.parentNode.removeChild(activeCompareEl);
+  activeCompareEl = null;
+  if (activeCompareTimer) { clearTimeout(activeCompareTimer); activeCompareTimer = null; }
+  found = {}; stamps = { s1: false, s2: false, s3: false }; celebrated = false;
+  isNight = false; nightBlend = 0;
+  $('#dayBtn').classList.add('on'); $('#nightBtn').classList.remove('on');
+  $('#ntList').innerHTML = ''; $('#ntCnt').textContent = '0/6';
+  document.querySelectorAll('.st').forEach(function (s) { s.classList.remove('lit'); });
+  document.querySelectorAll('.dot').forEach(function (d) { d.classList.remove('ok'); });
+  document.querySelectorAll('.bstat').forEach(function (b) { b.classList.remove('done'); });
+  $('#winToast').classList.remove('show');
+  $('#qFb').textContent = ''; $('#qFb').className = 'qfb';
+  document.querySelectorAll('.qopt').forEach(function (b) { b.classList.remove('ok', 'bad'); });
+  updateGuide(false);
+}
+
+/* ===== 交互与 3D 太阳/月亮拖拽 + 优先级直点三生物 ===== */
+function markInteracted() { document.body.classList.add('interacted'); }
+var ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+var bioPickMeshes = [mimosaHit, spHit, nestHit, batHit, caveHit];
+function pickHit(e) {
+  var r = cv.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+
+  var hBio = ray.intersectObjects(bioPickMeshes, false);
+  if (hBio.length) return hBio[0].object.userData.hit;
+
+  var orbPicks = [];
+  if (skySun.visible) orbPicks.push(sunHit);
+  if (skyMoon.visible) orbPicks.push(moonHit);
+  if (orbPicks.length) {
+    var hOrb = ray.intersectObjects(orbPicks, false);
+    if (hOrb.length) return hOrb[0].object.userData.hit;
+  }
+
+  var hProps = ray.intersectObjects([cottage, carGroup], true);
+  for (var i = 0; i < hProps.length; i++) {
+    if (hProps[i].object.userData && hProps[i].object.userData.hit) return hProps[i].object.userData.hit;
+  }
+
+  var hSky = ray.intersectObject(skyPlane, false);
+  if (hSky.length && hSky[0].point.y > 2.2) return 'sky';
+  return null;
+}
+
+cv.addEventListener('pointerdown', function (e) {
+  markInteracted();
+  if (demo) stopDemo();
+  var tag = pickHit(e);
+  if (tag === 'sun' || tag === 'moon') {
+    draggingOrb = tag;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    dragStartNb = nightBlend;
+    dragMoved = false;
+    cv.style.cursor = 'grabbing';
+    if (cv.setPointerCapture) try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+    return;
+  }
+  if (tag === 'mimosa' || tag === 'sparrow' || tag === 'bat') {
+    observeBio(tag);
+  } else if (tag === 'cottage') {
+    spawnFloat(isNight ? '😴 夜晚关灯早睡，保证充足睡眠！' : '🏠 白天拉开窗帘，迎接阳光！', 24, 38);
+    speak(isNight ? '天黑了，小朋友晚上要早点关灯睡觉，保证充足的睡眠哦！' : '白天拉开窗帘，大家学习玩耍精力充沛！');
+  } else if (tag === 'car') {
+    spawnFloat(isNight ? '🚗 夜间开车亮大灯，注意安全！' : '🚗 白天视野明亮，开车看得清！', 48, 34);
+    speak(isNight ? '夜间开车能见度低，要打开车灯注意交通安全！' : '白天阳光明亮，道路看得清清楚楚！');
+  } else if (tag === 'sky') {
+    setMode(!isNight, true);
+  }
+});
+
+cv.addEventListener('pointermove', function (e) {
+  if (!draggingOrb) {
+    var hover = pickHit(e);
+    cv.style.cursor = (hover === 'sun' || hover === 'moon') ? 'grab' : 'pointer';
+    return;
+  }
+  var dx = e.clientX - dragStartX;
+  var dy = e.clientY - dragStartY;
+  if (!dragMoved && Math.hypot(dx, dy) > 8) dragMoved = true;
+  if (dragMoved) {
+    var r = cv.getBoundingClientRect();
+    var span = Math.max(150, r.height * 0.30);
+    var delta = (dy + dx * 0.65) / span;
+    if (draggingOrb === 'sun') {
+      nightBlend = Math.max(0, Math.min(1, dragStartNb + delta));
+    } else {
+      nightBlend = Math.max(0, Math.min(1, dragStartNb - delta));
+    }
+  }
+});
+
+function finishOrbDrag(e) {
+  if (!draggingOrb) return;
+  draggingOrb = null;
+  cv.style.cursor = 'pointer';
+  if (cv.releasePointerCapture && e && e.pointerId !== undefined) try { cv.releasePointerCapture(e.pointerId); } catch (err) {}
+  if (!dragMoved) {
+    setMode(!isNight, true);
+  } else {
+    var wantNight = nightBlend >= 0.45;
+    setMode(wantNight, wantNight !== isNight);
+  }
+}
+cv.addEventListener('pointerup', finishOrbDrag);
+cv.addEventListener('pointercancel', finishOrbDrag);
+
+$('#dayBtn').addEventListener('click', function () { markInteracted(); if (demo) stopDemo(); setMode(false, true); });
+$('#nightBtn').addEventListener('click', function () { markInteracted(); if (demo) stopDemo(); setMode(true, true); });
+
+$('#voiceBtn').addEventListener('click', function () {
+  markInteracted();
+  voiceOn = !voiceOn;
+  this.classList.toggle('on', voiceOn);
+  if (voiceOn) updateGuide(true); else stopVoice();
+});
+$('#demoBtn').addEventListener('click', startDemo);
+$('#guideBar').addEventListener('click', function () { markInteracted(); updateGuide(true); });
+$('#resetBtn').addEventListener('click', resetAll);
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+$('#winKeepBtn').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgainBtn').addEventListener('click', resetAll);
+$('#qOpts').addEventListener('click', function (e) {
+  var b = e.target.closest('.qopt');
+  if (!b) return;
+  if (b.dataset.ok === '1') {
+    b.classList.add('ok');
+    $('#qFb').textContent = '🌸 答对啦！含羞草合拢、麻雀回巢闭眼，蝙蝠夜晚出来捕虫！获得小红花！';
+    $('#qFb').className = 'qfb ok';
+    saveProgress(LESSON_ID, true);
+    playChime([659, 784, 1046]);
+    speak('答对啦！获得本课小红花！', true);
+  } else {
+    b.classList.add('bad');
+    var h = b.dataset.hint || '再想想哦！';
+    $('#qFb').textContent = h;
+    $('#qFb').className = 'qfb';
+    speak(h, true);
+  }
+});
+
+/* ===== 帧循环 ===== */
+var introT0 = performance.now(), lastT = performance.now();
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  camera.updateProjectionMatrix();
+  resizeConfetti();
+}
+window.addEventListener('resize', fit);
+fit();
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (now - lastT) / 1000));
+  lastT = now;
+  var pop = Math.min(1, (performance.now() - introT0) / 680);
+  live.scale.setScalar(0.01 + 0.99 * (1 - Math.pow(1 - pop, 3)));
+
+  if (!draggingOrb) {
+    var targetNb = isNight ? 1 : 0;
+    nightBlend += (targetNb - nightBlend) * Math.min(1, dt * 4.2);
+  }
+  updateEnvironment(nightBlend, now * 0.001);
+  tickConfetti();
+  renderer.render(scene, camera);
+}
+
+function projObj(obj, dy) {
+  var v = new THREE.Vector3();
+  obj.getWorldPosition(v);
+  if (dy) v.y += dy;
+  v.project(camera);
+  return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight };
+}
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () {
+    return {
+      triangles: renderer.info.render.triangles,
+      celebrated: celebrated,
+      isNight: isNight,
+      foundCount: Object.keys(found).length,
+      cueText: $('#targetCue').textContent,
+      cueSwitch: $('#targetCue').classList.contains('cue-switch'),
+      compareVisible: !!activeCompareEl
+    };
+  },
+  targets: function () {
+    var nr = $('#nightBtn').getBoundingClientRect();
+    var dr = $('#dayBtn').getBoundingClientRect();
+    return {
+      mimosa: projObj(mimosaHit),
+      sparrow: projObj(sparrow),
+      bat: isNight ? projObj(bat) : projObj(caveHit),
+      sun: projObj(skySun),
+      moon: projObj(skyMoon),
+      nightBtn: { x: nr.left + nr.width * 0.5, y: nr.top + nr.height * 0.5 },
+      dayBtn: { x: dr.left + dr.width * 0.5, y: dr.top + dr.height * 0.5 }
+    };
+  },
+  startDemo: startDemo,
+  resetAll: resetAll
+};
+updateGuide(false);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

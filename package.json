@@ -1,0 +1,13 @@
+{
+  "name": "bloompack",
+  "version": "2.0.0",
+  "private": true,
+  "license": "SEE LICENSE IN LICENSE",
+  "description": "绽放书包（BloomPack）· 小学科学 3D 离线互动书包与本地造书工作台（非商用）",
+  "scripts": {
+    "studio": "node studio/server.mjs",
+    "tts:dry": "node tools/doubao_tts_sync.mjs --dry",
+    "tts:sync": "node tools/doubao_tts_sync.mjs",
+    "tts:wire": "node tools/wire_doubao_voice.mjs"
+  }
+}

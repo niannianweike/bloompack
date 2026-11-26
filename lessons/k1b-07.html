@@ -1,0 +1,1772 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第7课 动植物的异同 · 动植物与非生物鉴别分类台</title>
+<style>
+:root{--accent:#2563eb;--accent-dark:#1d4ed8;--ink:#2a2218;--line:#e4d5ba;--card:rgba(255,253,248,.94)}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#c59b6d;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas#cv.grabbing{cursor:grabbing}
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.46em;color:#7a6a52;font-weight:600}
+body.no-py rt{display:none}
+
+/* 左上标题 */
+#hudTL{position:fixed;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:10px;
+  padding:7px 14px 7px 9px;border-radius:16px;background:var(--card);border:1.5px solid var(--line);
+  box-shadow:0 4px 16px rgba(60,36,12,.14)}
+#backBtn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:#5c4b34;font-size:19px;font-weight:900}
+#backBtn:hover{border-color:var(--accent);color:var(--accent)}
+.hd-t{font-size:16px;font-weight:900;line-height:1.5}
+.hd-sub{font-size:11.5px;color:#7b6c56;font-weight:700}
+
+/* 顶部中央动态引导 */
+#guideBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:6;
+  max-width:min(470px,calc(100vw - 630px));display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:15px;background:rgba(255,252,244,.96);
+  border:2px solid var(--accent);box-shadow:0 6px 18px rgba(37,99,235,.16);
+  font-size:13.5px;font-weight:800;color:#1e3a8a;cursor:pointer;line-height:1.38;transition:all .2s}
+#guideBar.flash{transform:translateX(-50%) scale(1.04)}
+#guideBar.unlocked{border-color:#16a34a;background:#f0fdf4;color:#166534}
+
+/* 右上工具条 */
+#hudTR{position:fixed;top:12px;right:12px;z-index:7;display:flex;align-items:center;gap:6px}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:38px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);
+  background:var(--card);font-size:13.5px;font-weight:800;color:#4a3c28;cursor:pointer;
+  box-shadow:0 3px 0 #d9c8ab;transition:all .14s;white-space:nowrap}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:var(--accent-dark);color:#fff;box-shadow:0 3px 0 var(--accent-dark)}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#dbeafe;border:1.5px solid var(--accent);color:#1e40af;font-size:10.5px;font-weight:900;
+  white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(37,99,235,.24);
+  animation:cuePop 1.6s ease-in-out infinite;transition:opacity .25s}
+body.interacted .entry-cue{opacity:0;animation:none}
+@keyframes cuePop{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+
+/* 右上可收起窄版发现栏（D3） */
+#notes{position:fixed;top:60px;right:12px;z-index:6;width:224px;padding:9px 11px;border-radius:15px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 6px 18px rgba(60,36,12,.12)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+.nt-title{font-size:13.5px;font-weight:900}
+.nt-cnt{font-size:12.5px;font-weight:900;color:var(--accent)}
+.nt-tog{padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:11px;font-weight:800;color:#6c5c45;cursor:pointer}
+.stamps{display:flex;gap:4px;margin-bottom:6px}
+.st{flex:1;text-align:center;padding:3px 2px;border-radius:8px;font-size:11px;font-weight:800;
+  border:1.5px dashed #d7c5a4;color:#9b8a70;background:#faf4e8;transition:all .2s;line-height:1.4}
+.st.lit{border-style:solid;border-color:var(--accent);background:#eff6ff;color:#1d4ed8}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList,#notes.collapsed .stamps{display:none}
+#notes.collapsed .nt-head{margin-bottom:0}
+.stk{padding:5px 8px;border-radius:10px;background:#fff;border:1px solid #ece0c9;font-size:12px;font-weight:700;line-height:1.4}
+.stk b{color:#1d4ed8}
+
+/* 左侧阶段与进度胶囊 */
+#scoreBadge{position:fixed;left:14px;top:74px;z-index:5;display:flex;align-items:center;gap:8px;
+  padding:6px 12px;border-radius:99px;background:rgba(255,253,248,.94);border:1.5px solid var(--line);
+  font-size:12.5px;font-weight:900;color:#3f311e;box-shadow:0 4px 12px rgba(60,36,12,.1)}
+#scoreBadge span.num{color:#2563eb;font-size:14px}
+
+/* 3D 静态名称小标签 + 持久实验徽章 + 工具提示签 + 待解锁木盘横幅 */
+#nameTags{position:fixed;inset:0;pointer-events:none;z-index:3}
+.nwrap{position:absolute;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none}
+.ebadge-row{display:flex;gap:3px;flex-wrap:nowrap;justify-content:center}
+.ebadge{padding:1px 6px;border-radius:99px;font-size:10.5px;font-weight:900;white-space:nowrap;
+  box-shadow:0 2px 6px rgba(0,0,0,.18);border:1.5px solid #fff;animation:badgePop .35s cubic-bezier(.2,1.5,.4,1)}
+.eb-grow{background:#16a34a;color:#fff}
+.eb-drink{background:#0284c7;color:#fff}
+.eb-eat{background:#ea580c;color:#fff}
+.eb-noeat{background:#65a30d;color:#fff}
+.eb-none{background:#475569;color:#fde68a}
+@keyframes badgePop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+
+.ntag{padding:1px 7px;border-radius:99px;background:rgba(42,34,24,.82);color:#fff;
+  font-size:11.5px;font-weight:800;white-space:nowrap}
+.ntag.ok{background:rgba(22,163,74,.92)}
+.ntag.tool{position:absolute;transform:translate(-50%,-100%);padding:3px 11px;font-size:12.5px;font-weight:900;
+  background:rgba(29,78,216,.94);color:#fff;box-shadow:0 3px 10px rgba(37,99,235,.32);border:1.5px solid #bfdbfe}
+.ntag.tool.feed-tag{background:rgba(220,38,38,.94);border-color:#fecaca;box-shadow:0 3px 10px rgba(220,38,38,.32)}
+.ntag.tool.pulse{animation:tagBob 1.3s ease-in-out infinite}
+@keyframes tagBob{0%,100%{transform:translate(-50%,-100%)}50%{transform:translate(-50%,-122%)}}
+
+#trayLockTag{position:absolute;transform:translate(-50%,-50%);padding:5px 14px;border-radius:99px;
+  background:rgba(51,65,85,.90);border:2px solid #cbd5e1;color:#f8fafc;font-size:12.5px;font-weight:900;
+  white-space:nowrap;box-shadow:0 6px 18px rgba(15,23,42,.26);transition:opacity .35s,transform .35s}
+#trayLockTag.hide{opacity:0;transform:translate(-50%,-70%) scale(.88)}
+
+#labels{position:fixed;inset:0;pointer-events:none;z-index:5}
+.cue3d{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:5px 13px;border-radius:99px;
+  background:#eff6ff;border:2px solid #2563eb;color:#1e3a8a;font-size:13px;font-weight:900;white-space:nowrap;
+  box-shadow:0 4px 14px rgba(37,99,235,.30);animation:cueBob 1.3s ease-in-out infinite;display:none;pointer-events:none}
+.cue3d.show{display:block}
+@keyframes cueBob{0%,100%{transform:translate(-50%,-100%) translateY(0)}50%{transform:translate(-50%,-100%) translateY(-6px)}}
+.popword{position:absolute;transform:translate(-50%,-100%);padding:5px 13px;border-radius:99px;
+  background:rgba(30,58,138,.94);color:#fff;font-size:13.5px;font-weight:800;white-space:nowrap;
+  box-shadow:0 4px 12px rgba(0,0,0,.22);animation:popFloat 1.85s ease-out forwards;pointer-events:none}
+.popword.warn{background:rgba(194,65,12,.95)}
+.popword.good{background:rgba(21,128,61,.95)}
+.popword.gold{background:linear-gradient(135deg,#f59e0b,#d97706);border:2px solid #fef08a;font-size:14.5px;padding:7px 16px}
+@keyframes popFloat{0%{opacity:0;transform:translate(-50%,-70%) scale(.75)}16%{opacity:1;transform:translate(-50%,-110%) scale(1.05)}82%{opacity:1;transform:translate(-50%,-140%) scale(1)}100%{opacity:0;transform:translate(-50%,-178%) scale(.96)}}
+
+/* 温和锁定提醒浮条 */
+#lockToast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(16px);z-index:8;
+  max-width:min(520px,calc(100vw - 32px));padding:9px 16px;border-radius:16px;
+  background:rgba(255,251,235,.97);border:2px solid #f59e0b;color:#92400e;
+  font-size:13.5px;font-weight:900;box-shadow:0 8px 24px rgba(180,83,9,.22);
+  opacity:0;pointer-events:none;transition:all .24s;text-align:center}
+#lockToast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* 通关弹窗 */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+#winToast{position:fixed;inset:0;z-index:35;display:none;place-items:center;background:rgba(36,24,10,.34);padding:16px}
+#winToast.show{display:grid}
+.win-card{width:min(450px,100%);max-height:85vh;overflow-y:auto;background:#fffdf8;
+  border:2.5px solid var(--accent);border-radius:22px;padding:18px 20px;text-align:center;
+  box-shadow:0 20px 50px rgba(40,22,4,.28)}
+.win-concl{margin:10px 0;padding:10px 12px;border-radius:13px;background:#eff6ff;border:1.5px solid #93c5fd;
+  text-align:left;font-size:13.5px;line-height:1.58;color:#1e3a8a}
+.win-quiz{margin:10px 0;padding:10px 12px;border-radius:13px;background:#f8fafc;border:1.5px solid #d9e2ec;text-align:left}
+.win-quiz h4{margin:0 0 8px;font-size:13.5px;color:#1d4ed8}
+.qopts{display:flex;flex-direction:column;gap:7px}
+.qopt{padding:8px 11px;border-radius:11px;border:1.5px solid #d9d0be;background:#fff;
+  font-size:13.5px;font-weight:800;text-align:left;cursor:pointer;transition:all .14s}
+.qopt:hover{border-color:var(--accent);background:#eff6ff}
+.qopt.ok{border-color:#16a34a;background:#dcfce7;color:#14532d}
+.qopt.bad{border-color:#e03131;background:#fff5f5;color:#c92a2a}
+.qfb{margin-top:7px;font-size:12.5px;font-weight:800;min-height:18px;color:#166534}
+.win-acts{display:flex;justify-content:center;gap:10px;margin-top:12px}
+
+@media (max-width:960px){
+  #guideBar{top:58px;max-width:min(420px,calc(100vw - 260px));font-size:12.5px}
+}
+@media (max-width:740px){
+  #guideBar{top:54px;left:10px;right:10px;transform:none;max-width:none}
+  #scoreBadge{display:none}
+}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="nameTags">
+  <div id="trayLockTag">🔒 先用右侧水壶/苹果测出特征，解锁分类盘</div>
+</div>
+<div id="labels">
+  <div class="cue3d" id="targetCue">👆 拖/点红苹果喂大熊猫</div>
+</div>
+<div id="lockToast">🔒 先拖右边水壶浇水、苹果喂食，看看它会不会长高或主动吃东西吧！</div>
+<canvas id="confetti"></canvas>
+
+<div id="hudTL">
+  <a id="backBtn" href="../index.html" title="返回书包">‹</a>
+  <div>
+    <div class="hd-t" data-py="dì kè dòng zhí wù de yì tóng">第7课 动植物的异同</div>
+    <div class="hd-sub">活页 · 课本第 31 页「先实验贴标签 → 再归盘分类」</div>
+  </div>
+</div>
+
+<div id="guideBar" title="点我重听当前步骤">
+  <span id="guideIco">🔬</span>
+  <span id="guideTxt">阶段1：先用右边红苹果喂大熊猫，看看它会不会主动吃东西！</span>
+</div>
+
+<div id="hudTR">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<div id="scoreBadge"><span id="phaseLabel">🔬 实测解锁：</span><span class="num" id="sortNum">0 / 4</span></div>
+
+<aside id="notes">
+  <div class="nt-head">
+    <span class="nt-title" data-py="wǒ de fā xiàn">我的发现</span>
+    <span class="nt-cnt" id="ntCnt">0</span>
+    <button class="nt-tog" id="ntTog" type="button">收起</button>
+  </div>
+  <div class="stamps">
+    <span class="st" id="st1" data-py="tè zhēng shí cè">特征实测</span>
+    <span class="st" id="st2" data-py="dòng zhí guī wèi">动植归位</span>
+    <span class="st" id="st3" data-py="quán bù guī lèi">全部归类</span>
+  </div>
+  <div id="ntList"></div>
+</aside>
+
+<div id="winToast">
+  <div class="win-card">
+    <div style="font-size:38px">🏆</div>
+    <h3 style="margin:4px 0;color:#1e3a8a">太棒啦！实测鉴别与 8 种物品归盘全通关！</h3>
+    <div class="win-concl">
+      <b>✨ 科学小结论：</b>动物和植物都是生物，都会生长、需要水分；动物会主动移动吃食物，植物扎根原地吸水长高；铜奔马和紫水晶没有生命反应，是非生物。
+    </div>
+    <div class="win-quiz">
+      <h4>💡 考考你 · 答对领小红花 🌸</h4>
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:8px">下面哪一项虽然看起来像马，但浇水喂食都没有生命反应，是非生物？</div>
+      <div class="qopts" id="qOpts">
+        <button class="qopt" type="button" data-ok="1">🐎 铜奔马雕塑（不会吃也不会长大）</button>
+        <button class="qopt" type="button" data-hint="海马生活在海里，会自己游动、会吃小虾，是真正的动物哦！">🌊 海马（会游动和觅食）</button>
+        <button class="qopt" type="button" data-hint="猪笼草虽然会捕虫，但它扎根长绿叶、浇水会长高，是植物哦！">🌿 猪笼草（扎根长绿叶）</button>
+      </div>
+      <div class="qfb" id="qFb"></div>
+    </div>
+    <div class="win-acts">
+      <button class="tbtn" id="winKeepBtn" type="button">继续玩</button>
+      <button class="tbtn on" id="winAgainBtn" type="button">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js"></script>
+<script src="../vendor/voice.js"></script>
+<script>
+(function () {
+'use strict';
+
+try { sessionStorage.setItem('xk_last_vol', 'k1b'); } catch (e) {}
+
+var LESSON_ID = 'k1b-07';
+var BOOK_PROGRESS_KEY = 'xk_k1b_progress';
+var $ = function (s) { return document.querySelector(s); };
+var $$ = function (s) { return document.querySelectorAll(s); };
+
+/* ===== 拼音 ===== */
+var HAN = /[\u3400-\u9fff]/;
+var pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function ruby(text, py) {
+  if (!py) return esc(text);
+  var syl = py.trim().split(/\s+/), i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) {
+      var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; }
+      out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>';
+    } else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+$$('[data-py]').forEach(function (el) { el.innerHTML = ruby(el.textContent, el.dataset.py); });
+
+/* ===== 音效 + 语音 ===== */
+var actx = null;
+function beep(freqs, dur) {
+  try {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    var t = actx.currentTime;
+    freqs.forEach(function (f, idx) {
+      var o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'triangle'; o.frequency.setValueAtTime(f, t + idx * 0.08);
+      g.gain.setValueAtTime(0.001, t + idx * 0.08);
+      g.gain.exponentialRampToValueAtTime(0.11, t + idx * 0.08 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.08 + (dur || 0.2));
+      o.connect(g); g.connect(actx.destination);
+      o.start(t + idx * 0.08); o.stop(t + idx * 0.08 + (dur || 0.22));
+    });
+  } catch (e) {}
+}
+
+var voiceOn = true;
+function stopVoice() {
+  if (window.__xkVoice) window.__xkVoice.stop();
+  else if (window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
+}
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
+  if (!('speechSynthesis' in window)) return;
+  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+}
+
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem(BOOK_PROGRESS_KEY) || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem(BOOK_PROGRESS_KEY, JSON.stringify(d));
+  } catch (e) {}
+}
+
+/* ===== 彩带 ===== */
+var cfCanvas = $('#confetti'), cfCtx = cfCanvas.getContext('2d'), cfParts = [], cfOn = false;
+function fireConfetti() {
+  cfCanvas.width = window.innerWidth; cfCanvas.height = window.innerHeight;
+  cfParts = [];
+  var cols = ['#2563eb', '#22c55e', '#f59e0b', '#ec4899', '#a855f7', '#38bdf8'];
+  for (var i = 0; i < 92; i++) {
+    cfParts.push({
+      x: cfCanvas.width * (0.15 + Math.random() * 0.7), y: -15 - Math.random() * 110,
+      vx: (Math.random() - 0.5) * 200, vy: 120 + Math.random() * 190,
+      r: 5 + Math.random() * 5, a: Math.random() * 6.28, va: (Math.random() - 0.5) * 9,
+      c: cols[i % cols.length]
+    });
+  }
+  cfOn = true;
+}
+
+/* ===== Three.js 实验桌面（避让右上 #notes） ===== */
+var cv = $('#cv');
+var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color('#c8a274');
+var camera = new THREE.PerspectiveCamera(36, 16 / 9, 0.1, 80);
+camera.position.set(0.08, 7.15, 9.1);
+camera.lookAt(-0.08, 0.2, 0.18);
+
+scene.add(new THREE.HemisphereLight('#fff8ee', '#9a7a56', 0.78));
+var sunL = new THREE.DirectionalLight('#fff5e2', 0.78);
+sunL.position.set(-4, 11, 6);
+sunL.castShadow = true;
+sunL.shadow.mapSize.set(1024, 1024);
+sunL.shadow.camera.left = -8; sunL.shadow.camera.right = 8;
+sunL.shadow.camera.top = 8; sunL.shadow.camera.bottom = -8;
+sunL.shadow.bias = -0.0008;
+scene.add(sunL);
+
+var ramp = new THREE.DataTexture(new Uint8Array([125,125,125,255, 190,190,190,255, 236,236,236,255, 255,255,255,255]), 4, 1, THREE.RGBAFormat);
+ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+
+function toon(hex, extra) {
+  var o = { color: new THREE.Color(hex), gradientMap: ramp };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshToonMaterial(o);
+}
+function mesh(geo, mat) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+function ctex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c);
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+
+var deskTex = ctex(512, 512, function (g, w, h) {
+  g.fillStyle = '#c8a06b'; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 65; i++) {
+    g.fillStyle = 'rgba(110,70,28,' + (Math.random() * 0.05).toFixed(3) + ')';
+    g.fillRect(0, Math.random() * h, w, 1 + Math.random() * 3);
+  }
+});
+deskTex.wrapS = deskTex.wrapT = THREE.RepeatWrapping; deskTex.repeat.set(3, 3);
+var deskFloor = new THREE.Mesh(new THREE.PlaneGeometry(55, 55), new THREE.MeshLambertMaterial({ map: deskTex }));
+deskFloor.rotation.x = -Math.PI / 2; deskFloor.position.y = -0.18; deskFloor.receiveShadow = true;
+scene.add(deskFloor);
+
+var live = new THREE.Group();
+scene.add(live);
+
+// 浅暖实验台垫
+var matBoard = mesh(new THREE.BoxGeometry(9.6, 0.14, 6.45), toon('#e2c8a0'));
+matBoard.position.set(-0.32, -0.07, 0.12); matBoard.castShadow = false;
+live.add(matBoard);
+
+/* ===== 3 个后方 3D 实木分类盘（阶段 1 半透明待解锁 → 阶段 2 金光解锁展开） ===== */
+var TRAYS = {
+  animal:    { id: 'animal',    x: -3.28, z: -1.85, label: '🐾 动物盘',   rim: '#f59e0b', fill: '#fef3c7', slots: [[-0.58, 0.14], [0, 0.34], [0.58, 0.14]] },
+  plant:     { id: 'plant',     x: -0.96, z: -1.85, label: '🌿 植物盘',   rim: '#22c55e', fill: '#dcfce7', slots: [[-0.58, 0.14], [0, 0.34], [0.58, 0.14]] },
+  nonliving: { id: 'nonliving', x: 1.36,  z: -1.85, label: '💎 非生物盘', rim: '#64748b', fill: '#e2e8f0', slots: [[-0.42, 0.22], [0.42, 0.22], [0, -0.02]] }
+};
+
+var HIT_MAT = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false });
+var trayHitMeshes = [];
+
+Object.keys(TRAYS).forEach(function (key) {
+  var tr = TRAYS[key];
+  var g = new THREE.Group(); g.position.set(tr.x, 0, tr.z); live.add(g);
+  tr.g = g;
+
+  var trayTex = ctex(256, 180, function (c, w, h) {
+    c.fillStyle = tr.fill; c.fillRect(0, 0, w, h);
+    c.strokeStyle = tr.rim; c.lineWidth = 10; c.strokeRect(5, 5, w - 10, h - 10);
+    c.fillStyle = '#1e293b'; c.font = 'bold 30px "Microsoft YaHei",sans-serif'; c.textAlign = 'center';
+    c.fillText(tr.label, w / 2, 46);
+  });
+  var rimMat = toon(tr.rim, { transparent: true, opacity: 0.36 });
+  var topMat = new THREE.MeshToonMaterial({ map: trayTex, gradientMap: ramp, transparent: true, opacity: 0.36 });
+  tr.mats = [rimMat, topMat];
+
+  var base = mesh(new THREE.BoxGeometry(2.05, 0.12, 1.55), [rimMat, rimMat, topMat, rimMat, rimMat, rimMat]);
+  base.position.y = 0.06; g.add(base);
+  var bN = mesh(new THREE.BoxGeometry(2.05, 0.16, 0.08), rimMat); bN.position.set(0, 0.14, -0.74); g.add(bN);
+  var bW = mesh(new THREE.BoxGeometry(0.08, 0.16, 1.55), rimMat); bW.position.set(-0.99, 0.14, 0); g.add(bW);
+  var bE = mesh(new THREE.BoxGeometry(0.08, 0.16, 1.55), rimMat); bE.position.set(0.99, 0.14, 0); g.add(bE);
+
+  // 待解锁磨砂蒙板
+  var veilMat = new THREE.MeshBasicMaterial({ color: '#94a3b8', transparent: true, opacity: 0.28, side: THREE.DoubleSide, depthWrite: false });
+  var veil = new THREE.Mesh(new THREE.PlaneGeometry(1.96, 1.46), veilMat);
+  veil.rotation.x = -Math.PI / 2; veil.position.y = 0.135; g.add(veil);
+  tr.veilMat = veilMat;
+
+  var glow = new THREE.Mesh(new THREE.PlaneGeometry(2.26, 1.76),
+    new THREE.MeshBasicMaterial({ color: tr.rim, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
+  glow.rotation.x = -Math.PI / 2; glow.position.y = 0.148; g.add(glow);
+  tr.glow = glow;
+
+  var halo = new THREE.Mesh(
+    new THREE.RingGeometry(1.06, 1.24, 32),
+    new THREE.MeshBasicMaterial({ color: tr.rim, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false })
+  );
+  halo.rotation.x = -Math.PI / 2; halo.scale.set(1.08, 0.85, 1); halo.position.y = 0.155;
+  g.add(halo);
+  tr.halo = halo;
+
+  var hitBox = new THREE.Mesh(new THREE.BoxGeometry(2.24, 0.72, 1.76), HIT_MAT);
+  hitBox.position.y = 0.36;
+  hitBox.userData.trayId = key;
+  g.add(hitBox);
+  trayHitMeshes.push(hitBox);
+});
+
+/* ===== 桌面右侧 2 件大号醒目 3D 实测道具（放大 1.32x，托盘亮眼，支持拖拽 + 轻点双通道） ===== */
+var TOOLS = {};
+var toolVisMeshes = [];
+var toolHitMeshes = [];
+
+function registerDeskTool(id, grp, homePos, coasterCol, tagText, tagY, extraCls) {
+  var pad = mesh(new THREE.CylinderGeometry(0.72, 0.78, 0.08, 28), toon(coasterCol));
+  pad.position.set(homePos.x, 0.04, homePos.z); pad.castShadow = false;
+  live.add(pad);
+
+  var padRing = new THREE.Mesh(
+    new THREE.RingGeometry(0.76, 0.96, 32),
+    new THREE.MeshBasicMaterial({ color: id === 'water' ? '#0284c7' : '#dc2626', transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false })
+  );
+  padRing.rotation.x = -Math.PI / 2;
+  padRing.position.set(homePos.x, 0.09, homePos.z);
+  live.add(padRing);
+
+  grp.scale.setScalar(1.30);
+
+  // 宽松透明拾取球
+  var toolHit = new THREE.Mesh(new THREE.SphereGeometry(0.62, 12, 10), HIT_MAT);
+  toolHit.position.set(0, 0.38, 0);
+  toolHit.userData.isHitHelper = true;
+  grp.add(toolHit);
+
+  grp.position.copy(homePos);
+  live.add(grp);
+
+  var tag = document.createElement('div');
+  tag.className = 'ntag tool' + (extraCls ? ' ' + extraCls : '');
+  tag.textContent = tagText;
+  $('#nameTags').appendChild(tag);
+
+  var rec = {
+    id: id, g: grp, home: homePos.clone(), goal: homePos.clone(),
+    tagEl: tag, tagY: tagY || 1.25, tiltT: 0, biteT: 0, bounceT: 0,
+    bounceDir: new THREE.Vector3(1, 0, 0), padRing: padRing
+  };
+  pad.userData.toolRef = rec;
+  toolVisMeshes.push(pad);
+  grp.traverse(function (ch) {
+    if (ch.isMesh) {
+      ch.userData.toolRef = rec;
+      if (ch.userData.isHitHelper) toolHitMeshes.push(ch);
+      else toolVisMeshes.push(ch);
+    }
+  });
+  TOOLS[id] = rec;
+  return rec;
+}
+
+// 1. 💧 3D 大号蓝色浇水壶
+(function buildWateringCan() {
+  var g = new THREE.Group();
+  var blue = toon('#38bdf8'), darkBlue = toon('#0284c7');
+  var body = mesh(new THREE.CylinderGeometry(0.30, 0.36, 0.50, 22), blue);
+  body.position.y = 0.28; g.add(body);
+  var rim = mesh(new THREE.TorusGeometry(0.28, 0.045, 10, 22), darkBlue);
+  rim.rotation.x = Math.PI / 2; rim.position.y = 0.54; g.add(rim);
+  var handle = mesh(new THREE.TorusGeometry(0.24, 0.045, 10, 18, Math.PI * 1.25), darkBlue);
+  handle.position.set(0.30, 0.36, 0); handle.rotation.z = -Math.PI * 0.62; g.add(handle);
+  var spout = mesh(new THREE.CylinderGeometry(0.05, 0.088, 0.56, 10), blue);
+  spout.position.set(-0.38, 0.38, 0); spout.rotation.z = 0.92; g.add(spout);
+  var rose = mesh(new THREE.CylinderGeometry(0.125, 0.055, 0.13, 14), toon('#fbbf24'));
+  rose.position.set(-0.60, 0.55, 0); rose.rotation.z = 0.92; g.add(rose);
+  registerDeskTool('water', g, new THREE.Vector3(2.82, 0.08, 0.28), '#bae6fd', '💧 浇水壶（拖或点）', 1.28, '');
+})();
+
+// 2. 🍎 3D 大号红苹果（含被啃咬时的内芯咬痕效果）
+var appleBiteMark = null;
+(function buildApple() {
+  var g = new THREE.Group();
+  var red = toon('#ef4444');
+  var body = mesh(new THREE.SphereGeometry(0.35, 20, 18), red);
+  body.scale.set(1.06, 0.94, 1.02); body.position.y = 0.35; g.add(body);
+  var hl = mesh(new THREE.SphereGeometry(0.09, 10, 8), toon('#fca5a5'));
+  hl.scale.set(0.7, 1.3, 0.4); hl.position.set(-0.15, 0.46, 0.27); g.add(hl);
+  // 被咬一口露出的淡黄苹果肉贴片（动物啃食瞬间短暂显现）
+  appleBiteMark = mesh(new THREE.SphereGeometry(0.16, 12, 10), toon('#fef3c7'));
+  appleBiteMark.scale.set(0.75, 0.95, 0.55);
+  appleBiteMark.position.set(-0.24, 0.36, 0.18);
+  appleBiteMark.visible = false;
+  g.add(appleBiteMark);
+  var stem = mesh(new THREE.CylinderGeometry(0.028, 0.036, 0.22, 8), toon('#78350f'));
+  stem.position.set(0, 0.70, 0); stem.rotation.z = -0.18; g.add(stem);
+  var leaf = mesh(new THREE.SphereGeometry(0.15, 10, 8), toon('#22c55e'));
+  leaf.scale.set(1.6, 0.18, 0.72); leaf.position.set(0.18, 0.75, 0); leaf.rotation.z = 0.32; g.add(leaf);
+  registerDeskTool('feed', g, new THREE.Vector3(2.82, 0.08, 2.08), '#fecdd3', '🍎 红苹果（拖或点）', 1.15, 'feed-tag');
+})();
+
+/* ===== 8 种课本 P31 3D 实物模型工厂 ===== */
+var ITEMS = [];
+var itemVisMeshes = [];
+var itemHitMeshes = [];
+
+function makeSprout(yTop) {
+  var sg = new THREE.Group();
+  sg.position.set(0, yTop, 0);
+  var stem = mesh(new THREE.CylinderGeometry(0.022, 0.028, 0.24, 8), toon('#4ade80'));
+  stem.position.y = 0.10; sg.add(stem);
+  [-1, 1].forEach(function (s) {
+    var lf = mesh(new THREE.SphereGeometry(0.14, 10, 8), toon('#86efac', { emissive: '#15803d', emissiveIntensity: 0.25 }));
+    lf.scale.set(1.5, 0.24, 0.75);
+    lf.position.set(s * 0.16, 0.22, 0);
+    lf.rotation.z = s * 0.42;
+    sg.add(lf);
+  });
+  var star = new THREE.Mesh(new THREE.OctahedronGeometry(0.08, 0), new THREE.MeshBasicMaterial({ color: '#fde047' }));
+  star.position.y = 0.34; sg.add(star);
+  sg.scale.setScalar(0.001);
+  sg.visible = false;
+  return sg;
+}
+
+function createSpecimen(def, buildFn) {
+  var g = new THREE.Group();
+  g.position.set(def.homeX, 0, def.homeZ);
+  live.add(g);
+
+  var ring = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.56, 24),
+    new THREE.MeshBasicMaterial({ color: 0x2563eb, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
+  ring.rotation.x = -Math.PI / 2; ring.position.y = 0.03; g.add(ring);
+
+  var modelG = new THREE.Group(); g.add(modelG);
+  buildFn(modelG);
+
+  var sproutG = null;
+  if (def.cat === 'plant') {
+    sproutG = makeSprout(def.sproutY || 1.05);
+    modelG.add(sproutG);
+  }
+
+  var hitSph = new THREE.Mesh(new THREE.SphereGeometry(0.48, 12, 10), HIT_MAT);
+  hitSph.position.y = 0.44;
+  hitSph.userData.isHitHelper = true;
+  modelG.add(hitSph);
+
+  var wrap = document.createElement('div');
+  wrap.className = 'nwrap';
+  var badgeRow = document.createElement('div');
+  badgeRow.className = 'ebadge-row';
+  var tag = document.createElement('div');
+  tag.className = 'ntag';
+  tag.textContent = def.name;
+  wrap.appendChild(badgeRow);
+  wrap.appendChild(tag);
+  $('#nameTags').appendChild(wrap);
+
+  var item = {
+    id: def.id, name: def.name, cat: def.cat,
+    homeX: def.homeX, homeZ: def.homeZ,
+    goalX: def.homeX, goalZ: def.homeZ, goalY: 0,
+    tray: null,
+    g: g, model: modelG, ring: ring, sproutG: sproutG,
+    hasSprout: false, sproutScale: 0.001,
+    animT: 0, animKind: '', targetYaw: 0, growScale: 1, wobbleT: 0,
+    waterVoice: def.waterVoice, feedVoice: def.feedVoice,
+    wrongVoice: def.wrongVoice, okVoice: def.okVoice,
+    wrapEl: wrap, badgeRowEl: badgeRow, tagEl: tag,
+    badges: {}
+  };
+  modelG.traverse(function (ch) {
+    if (ch.isMesh) {
+      ch.userData.itemRef = item;
+      if (ch.userData.isHitHelper) itemHitMeshes.push(ch);
+      else itemVisMeshes.push(ch);
+    }
+  });
+
+  ITEMS.push(item);
+  return item;
+}
+
+function addItemBadge(item, key, text, cls) {
+  if (item.badges[key]) return;
+  item.badges[key] = true;
+  var b = document.createElement('span');
+  b.className = 'ebadge ' + cls;
+  b.textContent = text;
+  item.badgeRowEl.appendChild(b);
+}
+
+/* 1. 海马 [动物] */
+createSpecimen({
+  id: 'seahorse', name: '海马', cat: 'animal', homeX: -3.72, homeZ: 0.40,
+  waterVoice: '海马喝到水，开心地上下蹦跳摆动背鳍，动物需要喝水！',
+  feedVoice: '海马主动转过头来吸食苹果食物，会主动吃东西的是动物！',
+  wrongVoice: '海马会游动、会喝水也会吃食物，快放进动物盘吧！',
+  okVoice: '太棒了！海马需要喝水也会吃食物，放进动物盘完全正确！'
+}, function (m) {
+  var col = toon('#fb923c'), fin = toon('#fde047');
+  var puddle = mesh(new THREE.CylinderGeometry(0.36, 0.4, 0.06, 18), toon('#7dd3fc'));
+  puddle.position.y = 0.03; m.add(puddle);
+  var tail = mesh(new THREE.TorusGeometry(0.16, 0.055, 8, 16, Math.PI * 1.45), col);
+  tail.position.set(-0.04, 0.24, 0); tail.rotation.z = 2.6; m.add(tail);
+  var belly = mesh(new THREE.SphereGeometry(0.18, 12, 10), col);
+  belly.scale.set(0.85, 1.45, 0.72); belly.position.set(0.04, 0.55, 0); m.add(belly);
+  var neck = mesh(new THREE.CylinderGeometry(0.08, 0.11, 0.26, 10), col);
+  neck.position.set(-0.02, 0.82, 0); neck.rotation.z = 0.28; m.add(neck);
+  var head = mesh(new THREE.SphereGeometry(0.14, 12, 10), col);
+  head.position.set(0.05, 0.98, 0); m.add(head);
+  var snout = mesh(new THREE.CylinderGeometry(0.035, 0.055, 0.26, 8), col);
+  snout.rotation.z = -1.38; snout.position.set(0.22, 0.94, 0); m.add(snout);
+  var dorsal = mesh(new THREE.BoxGeometry(0.18, 0.24, 0.03), fin);
+  dorsal.position.set(-0.14, 0.58, 0); m.add(dorsal);
+  var eye = mesh(new THREE.SphereGeometry(0.032, 8, 8), toon('#111827'));
+  eye.position.set(0.1, 1.02, 0.11); m.add(eye);
+});
+
+/* 2. 大熊猫 [动物] */
+createSpecimen({
+  id: 'panda', name: '大熊猫', cat: 'animal', homeX: -2.20, homeZ: 0.40,
+  waterVoice: '大熊猫欢快地喝了清凉的水，开心地蹦跳摇摆，动物需要喝水！',
+  feedVoice: '哇！大熊猫主动转向红苹果大口啃起来啦！会主动吃食物的是动物！',
+  wrongVoice: '看看大熊猫头顶的实验徽章，它会喝水也会主动吃食物，是可爱的动物哦！',
+  okVoice: '正确！大熊猫会喝水会吃食物，住进动物盘啦！'
+}, function (m) {
+  var W = toon('#ffffff'), B = toon('#1f2937');
+  var body = mesh(new THREE.SphereGeometry(0.32, 16, 14), W);
+  body.scale.set(0.95, 1.05, 0.9); body.position.y = 0.34; m.add(body);
+  var band = mesh(new THREE.CylinderGeometry(0.28, 0.30, 0.18, 16), B);
+  band.position.y = 0.52; m.add(band);
+  var head = mesh(new THREE.SphereGeometry(0.25, 16, 14), W);
+  head.position.set(0, 0.78, 0.04); m.add(head);
+  [-1, 1].forEach(function (s) {
+    var ear = mesh(new THREE.SphereGeometry(0.09, 10, 10), B);
+    ear.position.set(s * 0.2, 0.98, 0.02); m.add(ear);
+    var patch = mesh(new THREE.SphereGeometry(0.075, 10, 8), B);
+    patch.scale.set(1.0, 0.8, 0.5); patch.position.set(s * 0.1, 0.81, 0.24); m.add(patch);
+    var arm = mesh(new THREE.SphereGeometry(0.11, 10, 8), B);
+    arm.scale.set(0.8, 1.4, 0.8); arm.position.set(s * 0.26, 0.48, 0.12); arm.rotation.z = s * 0.4; m.add(arm);
+    var leg = mesh(new THREE.SphereGeometry(0.11, 10, 8), B);
+    leg.position.set(s * 0.16, 0.11, 0.12); m.add(leg);
+  });
+  var bamboo = mesh(new THREE.CylinderGeometry(0.028, 0.032, 0.52, 8), toon('#22c55e'));
+  bamboo.position.set(0.28, 0.52, 0.22); bamboo.rotation.z = -0.35; m.add(bamboo);
+});
+
+/* 3. 飞鸟 [动物] */
+createSpecimen({
+  id: 'bird', name: '飞鸟', cat: 'animal', homeX: -0.68, homeZ: 0.40,
+  waterVoice: '小鸟喝了一口清水，开心地蹦跳展翅摇摆，动物需要喝水！',
+  feedVoice: '小鸟主动转过身大口啄食红苹果！会主动吃东西的是动物！',
+  wrongVoice: '小鸟会喝水、会挥动翅膀主动吃食物，属于动物哦！',
+  okVoice: '答对啦！飞翔的小鸟是动物，放进动物盘！'
+}, function (m) {
+  var W = toon('#fff7ed'), P = toon('#fb7185');
+  var perch = mesh(new THREE.CylinderGeometry(0.08, 0.14, 0.26, 10), toon('#92623c'));
+  perch.position.y = 0.13; m.add(perch);
+  var body = mesh(new THREE.SphereGeometry(0.24, 14, 12), W);
+  body.scale.set(1.4, 0.78, 0.82); body.position.set(0, 0.52, 0); m.add(body);
+  var head = mesh(new THREE.SphereGeometry(0.14, 12, 10), P);
+  head.position.set(0.32, 0.66, 0); m.add(head);
+  var beak = mesh(new THREE.ConeGeometry(0.04, 0.26, 8), toon('#e11d48'));
+  beak.rotation.z = -1.72; beak.position.set(0.5, 0.64, 0); m.add(beak);
+  [-1, 1].forEach(function (s) {
+    var wing = mesh(new THREE.BoxGeometry(0.34, 0.05, 0.56), P);
+    wing.position.set(-0.02, 0.62, s * 0.34); wing.rotation.x = s * 0.42; m.add(wing);
+  });
+  var tail = mesh(new THREE.BoxGeometry(0.28, 0.04, 0.22), W);
+  tail.position.set(-0.38, 0.52, 0); tail.rotation.z = 0.25; m.add(tail);
+});
+
+/* 4. 小麦 [植物] */
+createSpecimen({
+  id: 'wheat', name: '小麦', cat: 'plant', homeX: 0.84, homeZ: 0.40, sproutY: 1.14,
+  waterVoice: '哇！小麦吸饱了水分，一下子拔节长高还冒出了嫩芽，这是植物！',
+  feedVoice: '植物不用吃苹果，靠阳光和水自己制造养分！',
+  wrongVoice: '小麦浇水后会拔节长高、不吃苹果，是植物哦！',
+  okVoice: '放对啦！小麦吸水拔节长高，属于植物盘！'
+}, function (m) {
+  var soil = mesh(new THREE.CylinderGeometry(0.34, 0.38, 0.14, 16), toon('#785335'));
+  soil.position.y = 0.07; m.add(soil);
+  [[-0.12, 0.06, 0.12], [0.0, 0, 0], [0.14, -0.05, -0.14]].forEach(function (w) {
+    var st = mesh(new THREE.CylinderGeometry(0.024, 0.03, 0.85, 8), toon('#65a30d'));
+    st.position.set(w[0], 0.48, w[1]); st.rotation.z = w[2]; m.add(st);
+    for (var k = 0; k < 5; k++) {
+      var gr = mesh(new THREE.SphereGeometry(0.065, 8, 8), toon('#facc15'));
+      gr.scale.set(0.85, 1.35, 0.85);
+      gr.position.set(w[0] - w[2] * 0.4 + (k % 2 === 0 ? 0.04 : -0.04), 0.72 + k * 0.09, w[1]);
+      m.add(gr);
+    }
+  });
+});
+
+/* 5. 猪笼草 [植物] */
+createSpecimen({
+  id: 'pitcher', name: '猪笼草', cat: 'plant', homeX: -3.72, homeZ: 1.98, sproutY: 0.92,
+  waterVoice: '看！浇了水，猪笼草拔节长高还冒出了翠绿嫩芽，它确实是植物！',
+  feedVoice: '植物不用吃苹果，猪笼草扎根土里，靠阳光和水自己制造养分！',
+  wrongVoice: '小心别被骗啦！猪笼草浇水会长高冒嫩芽，扎根在土里，是植物哦！',
+  okVoice: '火眼金睛！猪笼草浇水长高冒嫩芽，放进植物盘完全正确！'
+}, function (m) {
+  var pot = mesh(new THREE.CylinderGeometry(0.32, 0.24, 0.3, 18), toon('#d97742'));
+  pot.position.y = 0.15; m.add(pot);
+  var leafMat = toon('#2f9e44');
+  for (var i = 0; i < 5; i++) {
+    var a = i * Math.PI * 2 / 5;
+    var lf = mesh(new THREE.SphereGeometry(0.2, 10, 8), leafMat);
+    lf.scale.set(1.6, 0.16, 0.6);
+    lf.position.set(Math.cos(a) * 0.24, 0.36 + (i % 2) * 0.12, Math.sin(a) * 0.24);
+    lf.rotation.y = -a; lf.rotation.z = 0.35; m.add(lf);
+  }
+  [[-0.36, 0.56, 0.18], [0.36, 0.62, -0.1]].forEach(function (p) {
+    var cup = mesh(new THREE.CylinderGeometry(0.11, 0.08, 0.32, 12), toon('#a3e635'));
+    cup.position.set(p[0], p[1], p[2]); m.add(cup);
+    var rim = mesh(new THREE.TorusGeometry(0.11, 0.028, 8, 16), toon('#e11d48'));
+    rim.rotation.x = Math.PI / 2; rim.position.set(p[0], p[1] + 0.16, p[2]); m.add(rim);
+    var lid = mesh(new THREE.SphereGeometry(0.09, 8, 6), toon('#fb7185'));
+    lid.scale.set(1.1, 0.24, 1.1); lid.position.set(p[0], p[1] + 0.25, p[2] - 0.04); lid.rotation.x = 0.4; m.add(lid);
+  });
+});
+
+/* 6. 松树 [植物] */
+createSpecimen({
+  id: 'pine', name: '松树', cat: 'plant', homeX: -2.20, homeZ: 1.98, sproutY: 1.24,
+  waterVoice: '哇！浇了水，小松树一下子拔节长高，树梢还冒出了亮绿嫩芽，是植物！',
+  feedVoice: '植物不用吃苹果，松树靠阳光和水自己制造养分！',
+  wrongVoice: '松树浇水会拔节长高冒嫩芽，扎根泥土生长，属于植物哦！',
+  okVoice: '正确！松树吸水长高，放进植物盘！'
+}, function (m) {
+  var base = mesh(new THREE.CylinderGeometry(0.4, 0.45, 0.12, 18), toon('#785335'));
+  base.position.y = 0.06; m.add(base);
+  [[0, 0, 1.0], [-0.22, -0.14, 0.68], [0.22, 0.12, 0.62]].forEach(function (t) {
+    var tg = new THREE.Group(); tg.position.set(t[0], 0.12, t[1]); tg.scale.setScalar(t[2]);
+    var tr = mesh(new THREE.CylinderGeometry(0.06, 0.09, 0.36, 8), toon('#7c4d2b'));
+    tr.position.y = 0.18; tg.add(tr);
+    var c1 = mesh(new THREE.ConeGeometry(0.32, 0.44, 9), toon('#1f7a42')); c1.position.y = 0.5; tg.add(c1);
+    var c2 = mesh(new THREE.ConeGeometry(0.24, 0.38, 9), toon('#2c9452')); c2.position.y = 0.78; tg.add(c2);
+    var c3 = mesh(new THREE.ConeGeometry(0.15, 0.30, 9), toon('#38b062')); c3.position.y = 1.02; tg.add(c3);
+    m.add(tg);
+  });
+});
+
+/* 7. 铜奔马雕塑 [非生物] */
+createSpecimen({
+  id: 'bronze', name: '铜奔马', cat: 'nonliving', homeX: -0.68, homeZ: 1.98,
+  waterVoice: '水珠顺着青铜雕塑滑落了，铜奔马纹丝不动，毫无生命反应，是非生物！',
+  feedVoice: '咚！苹果直接弹开了！铜奔马是青铜雕塑，不会吃也不会长，是非生物！',
+  wrongVoice: '铜奔马虽然像骏马，但实测浇水喂食都没有生命反应，是非生物哦！',
+  okVoice: '太聪明啦！铜奔马雕塑没有生命反应，放进非生物盘完全正确！'
+}, function (m) {
+  var bz = toon('#2f7a68'), bzDark = toon('#1f594c');
+  var plinth = mesh(new THREE.BoxGeometry(0.76, 0.14, 0.42), toon('#475569'));
+  plinth.position.y = 0.07; m.add(plinth);
+  var bird = mesh(new THREE.SphereGeometry(0.1, 8, 8), bzDark);
+  bird.scale.set(1.5, 0.4, 2.2); bird.position.set(0, 0.18, 0); m.add(bird);
+  var torso = mesh(new THREE.CylinderGeometry(0.13, 0.14, 0.52, 12), bz);
+  torso.rotation.z = Math.PI / 2; torso.position.set(0, 0.58, 0); m.add(torso);
+  var neck = mesh(new THREE.CylinderGeometry(0.08, 0.11, 0.34, 10), bz);
+  neck.position.set(0.28, 0.78, 0); neck.rotation.z = -0.35; m.add(neck);
+  var head = mesh(new THREE.BoxGeometry(0.22, 0.12, 0.12), bz);
+  head.position.set(0.42, 0.9, 0); head.rotation.z = -0.3; m.add(head);
+  var l1 = mesh(new THREE.CylinderGeometry(0.036, 0.032, 0.38, 8), bz); l1.position.set(-0.08, 0.38, 0); m.add(l1);
+  var l2 = mesh(new THREE.CylinderGeometry(0.036, 0.032, 0.38, 8), bz); l2.position.set(0.28, 0.44, 0.07); l2.rotation.z = 0.65; m.add(l2);
+  var l3 = mesh(new THREE.CylinderGeometry(0.036, 0.032, 0.38, 8), bz); l3.position.set(-0.3, 0.46, -0.06); l3.rotation.z = -0.75; m.add(l3);
+  var tail = mesh(new THREE.ConeGeometry(0.05, 0.28, 8), bzDark); tail.position.set(-0.38, 0.64, 0); tail.rotation.z = 1.15; m.add(tail);
+});
+
+/* 8. 紫水晶矿石 [非生物] */
+createSpecimen({
+  id: 'amethyst', name: '紫水晶', cat: 'nonliving', homeX: 0.84, homeZ: 1.98,
+  waterVoice: '水珠顺着紫水晶表面滑落消退了，矿石纹丝不动，是非生物！',
+  feedVoice: '咚！苹果弹开了！紫水晶是矿石，没有生命反应，是非生物！',
+  wrongVoice: '紫水晶浇水喂食都没有反应，是非生物哦！',
+  okVoice: '放对啦！紫水晶矿石没有生命，放进非生物盘！'
+}, function (m) {
+  var rock = mesh(new THREE.DodecahedronGeometry(0.32, 0), toon('#64748b'));
+  rock.scale.set(1.2, 0.55, 1.0); rock.position.y = 0.14; m.add(rock);
+  var c1 = toon('#9333ea'), c2 = toon('#a855f7'), c3 = toon('#c084fc');
+  [
+    [0, 0.52, 0, 0.14, 0.68, 0, 0, c1],
+    [-0.18, 0.42, 0.08, 0.11, 0.52, 0.1, 0.32, c2],
+    [0.19, 0.40, -0.06, 0.11, 0.48, -0.15, -0.35, c2],
+    [0.05, 0.36, 0.18, 0.09, 0.38, 0.35, -0.1, c3],
+    [-0.08, 0.38, -0.16, 0.09, 0.42, -0.3, 0.15, c3]
+  ].forEach(function (k) {
+    var cr = mesh(new THREE.CylinderGeometry(0.01, k[3], k[4], 6), k[7]);
+    cr.position.set(k[0], k[1], k[2]); cr.rotation.x = k[5]; cr.rotation.z = k[6]; m.add(cr);
+  });
+});
+
+/* ===== 粒子特效（水花、滚落水珠 2s 消退、嫩芽星星、苹果碎屑，严格 D4） ===== */
+var fxDrops = [];
+function spawnFX(x, y, z, colorHex, count, durSec, mode) {
+  var maxL = durSec || 1.8;
+  for (var i = 0; i < count; i++) {
+    var isStar = (mode === 'star');
+    var geo = isStar ? new THREE.OctahedronGeometry(0.072, 0) : new THREE.SphereGeometry(mode === 'crumb' ? 0.048 : 0.056, 8, 6);
+    var dm = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.94 }));
+    var ang = Math.random() * Math.PI * 2;
+    var r0 = mode === 'roll' ? 0.22 : 0.28;
+    dm.position.set(
+      x + Math.cos(ang) * r0,
+      y + (mode === 'roll' ? 0.68 + Math.random() * 0.28 : (isStar ? 0.7 + Math.random() * 0.45 : 0.95 + Math.random() * 0.38)),
+      z + Math.sin(ang) * r0
+    );
+    live.add(dm);
+    fxDrops.push({
+      m: dm,
+      vx: mode === 'roll' ? Math.cos(ang) * 0.42 : (Math.random() - 0.5) * (mode === 'crumb' ? 1.5 : 0.85),
+      vy: mode === 'water' ? -1.45 : (mode === 'roll' ? -0.68 : (mode === 'crumb' ? 0.8 + Math.random() * 0.7 : 0.95 + Math.random() * 0.5)),
+      vz: mode === 'roll' ? Math.sin(ang) * 0.42 : (Math.random() - 0.5) * (mode === 'crumb' ? 1.5 : 0.85),
+      grav: mode === 'crumb' ? -3.2 : (mode === 'water' ? -1.6 : 0),
+      spin: isStar ? 5.5 : 0,
+      life: maxL, maxLife: maxL
+    });
+  }
+}
+
+/* ===== 两步走科学鉴别法状态 ===== */
+// 阶段 1 必须实测：动物吃苹果 + 动物喝水 + 植物浇水长高 + 非生物无反应
+var tested = { animalFeed: false, animalWater: false, plantWater: false, nonliving: false };
+var traysUnlocked = false;
+var trayUnlockBlend = 0;
+var trayUnlockBurstT = 0;
+var found = {}, stamps = { s1: false, s2: false, s3: false }, celebrated = false, demo = false;
+var resetGen = 0;
+var lockToastTimer = null;
+var curGuideSpeech = '阶段1：先用右边红苹果喂大熊猫，看看它会不会主动吃东西！';
+
+function markInteracted() { document.body.classList.add('interacted'); }
+
+function showLockReminder() {
+  var el = $('#lockToast');
+  el.classList.add('show');
+  if (lockToastTimer) clearTimeout(lockToastTimer);
+  var g = resetGen;
+  lockToastTimer = setTimeout(function () { if (g === resetGen) el.classList.remove('show'); }, 2800);
+  beep([320, 260], 0.16);
+  speak('先拖右边水壶浇水、苹果喂食，看看它会不会长高或主动吃东西吧！', true);
+}
+
+function popLabelAt3D(worldPos, text, cls) {
+  var v = worldPos.clone().project(camera);
+  var x = (v.x * 0.5 + 0.5) * window.innerWidth;
+  var y = (-v.y * 0.5 + 0.5) * window.innerHeight;
+  var el = document.createElement('div');
+  el.className = 'popword' + (cls ? ' ' + cls : '');
+  el.textContent = text;
+  el.style.left = Math.max(110, Math.min(window.innerWidth - 110, x)) + 'px';
+  el.style.top = Math.max(76, Math.min(window.innerHeight - 110, y - 16)) + 'px';
+  $('#labels').appendChild(el);
+  setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1900);
+}
+
+function addDiscovery(key, html, spoken) {
+  if (!found[key]) {
+    found[key] = true;
+    var el = document.createElement('div');
+    el.className = 'stk';
+    el.innerHTML = html;
+    $('#ntList').prepend(el);
+    $('#ntCnt').textContent = Object.keys(found).length;
+  }
+  var justUnlocked = checkStamps();
+  if (spoken && !demo && !justUnlocked) speak(spoken);
+}
+
+function lightStamp(id, key) {
+  if (!stamps[key]) {
+    stamps[key] = true;
+    var el = $('#' + id);
+    if (el) el.classList.add('lit');
+    beep([523, 659, 784], 0.22);
+  }
+}
+
+function countTestsDone() {
+  return (tested.animalFeed ? 1 : 0) + (tested.animalWater ? 1 : 0) + (tested.plantWater ? 1 : 0) + (tested.nonliving ? 1 : 0);
+}
+
+function countSorted() {
+  var ok = 0, anOk = 0, plOk = 0;
+  ITEMS.forEach(function (it) {
+    if (it.tray === it.cat) {
+      ok++;
+      if (it.cat === 'animal') anOk++;
+      if (it.cat === 'plant') plOk++;
+    }
+  });
+  return { ok: ok, anOk: anOk, plOk: plOk };
+}
+
+function checkStamps() {
+  var cnt = countSorted();
+  var tDone = countTestsDone();
+  var justUnlocked = false;
+
+  if (tDone === 4 && !traysUnlocked) {
+    traysUnlocked = true;
+    trayUnlockBurstT = 1.6;
+    justUnlocked = true;
+    lightStamp('st1', 's1');
+    $('#trayLockTag').classList.add('hide');
+    Object.keys(TRAYS).forEach(function (k) {
+      spawnFX(TRAYS[k].x, 0.25, TRAYS[k].z, 0xfde047, 10, 1.5, 'star');
+    });
+    beep([523, 659, 784, 1046], 0.26);
+    popLabelAt3D(new THREE.Vector3(-0.96, 0.85, -1.68), '🔓 发现规律！3 个分类木盘金光解锁！', 'gold');
+    if (!demo) {
+      speak('太棒啦！你发现规律了：会吃会动是动物，浇水长高是植物，都没反应是非生物！后方三个木盘解锁啦，快把模型归类吧！', true);
+    }
+  }
+
+  if (!traysUnlocked) {
+    $('#phaseLabel').textContent = '🔬 实验鉴别：';
+    $('#sortNum').textContent = tDone + ' / 4';
+  } else {
+    $('#phaseLabel').textContent = '📦 归盘分类：';
+    $('#sortNum').textContent = cnt.ok + ' / 8';
+  }
+
+  if (cnt.anOk === 3 && cnt.plOk === 3) lightStamp('st2', 's2');
+  if (cnt.ok === 8) lightStamp('st3', 's3');
+
+  updateGuide(false);
+
+  if (!demo && !celebrated && traysUnlocked && stamps.s1 && stamps.s2 && stamps.s3) {
+    celebrated = true;
+    saveProgress(LESSON_ID, true);
+    fireConfetti();
+    beep([523, 659, 784, 1046], 0.28);
+    var g = resetGen;
+    setTimeout(function () {
+      if (g !== resetGen) return;
+      $('#winToast').classList.add('show');
+      speak('太棒啦！先实测生命特征、再把全部八种物品精准归盘都完成了，快来看看科学小结论并领小红花吧！', true);
+    }, 650);
+  }
+  return justUnlocked;
+}
+
+function updateGuide(speakIt) {
+  TOOLS.water.tagEl.classList.remove('pulse');
+  TOOLS.feed.tagEl.classList.remove('pulse');
+  var cnt = countSorted();
+  if (!traysUnlocked) {
+    $('#guideBar').classList.remove('unlocked');
+    $('#guideIco').textContent = '🔬';
+    if (!tested.animalFeed) {
+      curGuideSpeech = '阶段1（1/4）：拖或点右边的红苹果喂大熊猫，看看它会不会主动吃！';
+      TOOLS.feed.tagEl.classList.add('pulse');
+    } else if (!tested.animalWater) {
+      curGuideSpeech = '阶段1（2/4）：再拖蓝色浇水壶给大熊猫或海马浇水，看看动物要不要喝水！';
+      TOOLS.water.tagEl.classList.add('pulse');
+    } else if (!tested.plantWater) {
+      curGuideSpeech = '阶段1（3/4）：拖蓝色浇水壶给松树、猪笼草或小麦浇水，看植物怎么变化！';
+      TOOLS.water.tagEl.classList.add('pulse');
+    } else {
+      curGuideSpeech = '阶段1（4/4）：再用水壶或苹果测铜奔马、紫水晶，看非生物有没有反应！';
+      TOOLS.water.tagEl.classList.add('pulse');
+    }
+  } else if (cnt.ok < 8) {
+    $('#guideBar').classList.add('unlocked');
+    $('#guideIco').textContent = '🔓';
+    curGuideSpeech = '阶段2（已解锁）：按规律把全部 8 个模型拖进后方木盘（随时可继续用水壶/苹果测试）！';
+  } else {
+    $('#guideBar').classList.add('unlocked');
+    $('#guideIco').textContent = '🏆';
+    curGuideSpeech = '太棒啦！8 个模型全部精准归盘，还可以继续用水壶和苹果玩实测哦！';
+  }
+  $('#guideTxt').textContent = curGuideSpeech;
+  $('#guideBar').classList.remove('flash');
+  void $('#guideBar').offsetWidth;
+  $('#guideBar').classList.add('flash');
+  if (speakIt) speak(curGuideSpeech, true);
+}
+
+/* ===== 浇水壶 / 红苹果超形象生命实测（严格 D4 & D6 & D7） ===== */
+function testSpecimen(item, kind) {
+  markInteracted();
+  if (kind === 'water') {
+    TOOLS.water.tiltT = 0.95;
+    if (item.cat === 'plant') {
+      tested.plantWater = true;
+      spawnFX(item.g.position.x, 0.25, item.g.position.z, 0x38bdf8, 14, 1.5, 'water');
+      item.growScale = 1.25;
+      item.hasSprout = true;
+      if (item.sproutG) item.sproutG.visible = true;
+      spawnFX(item.g.position.x, 0.55, item.g.position.z, 0x4ade80, 8, 1.7, 'star');
+      spawnFX(item.g.position.x, 0.72, item.g.position.z, 0xfde047, 6, 1.7, 'star');
+      addItemBadge(item, 'water', '💧吸水长高', 'eb-grow');
+      beep([523, 659, 784], 0.2);
+      popLabelAt3D(item.g.position, '🌱 吸水拔节长高 + 冒嫩芽！', 'good');
+      addDiscovery('test_plant_w_' + item.id, '🌿 <b>' + item.name + '</b>：浇水拔节长高冒嫩芽', item.waterVoice);
+    } else if (item.cat === 'animal') {
+      tested.animalWater = true;
+      spawnFX(item.g.position.x, 0.25, item.g.position.z, 0x38bdf8, 12, 1.5, 'water');
+      spawnFX(item.g.position.x, 0.65, item.g.position.z, 0x7dd3fc, 6, 1.5, 'star');
+      item.animKind = 'drink'; item.animT = 1.55;
+      addItemBadge(item, 'water', '💧需要喝水', 'eb-drink');
+      beep([587, 740, 880], 0.18);
+      popLabelAt3D(item.g.position, '💧 欢快喝水蹦跳！', 'good');
+      addDiscovery('test_animal_w_' + item.id, '🐾 <b>' + item.name + '</b>：欢快喝水、需要水分', item.waterVoice);
+    } else {
+      tested.nonliving = true;
+      // 非生物：水珠直接顺边滑落 2 秒自然消退，模型纹丝不动（D4 & D6）
+      spawnFX(item.g.position.x, 0.2, item.g.position.z, 0x38bdf8, 12, 2.0, 'roll');
+      addItemBadge(item, 'non', '❌无生命反应', 'eb-none');
+      beep([290, 250], 0.15);
+      popLabelAt3D(item.g.position, '❌ 水珠滑落，纹丝不动！', 'warn');
+      addDiscovery('test_non_w_' + item.id, '💎 <b>' + item.name + '</b>：水珠滑落，无生命反应', item.waterVoice);
+    }
+  } else {
+    TOOLS.feed.tiltT = 0.72;
+    if (item.cat === 'animal') {
+      tested.animalFeed = true;
+      TOOLS.feed.biteT = 1.2;
+      // 动物转向苹果、俯身大口啃食 + 碎屑粒子 + 星星
+      item.targetYaw = Math.atan2(TOOLS.feed.g.position.x - item.g.position.x, TOOLS.feed.g.position.z - item.g.position.z);
+      item.animKind = 'eat'; item.animT = 1.65;
+      spawnFX(item.g.position.x, 0.45, item.g.position.z, 0xef4444, 7, 1.3, 'crumb');
+      spawnFX(item.g.position.x, 0.48, item.g.position.z, 0xfef08a, 7, 1.4, 'crumb');
+      spawnFX(item.g.position.x, 0.75, item.g.position.z, 0xfbbf24, 6, 1.6, 'star');
+      addItemBadge(item, 'feed', '🍎主动吃食物', 'eb-eat');
+      beep([523, 659, 784, 988], 0.18);
+      popLabelAt3D(item.g.position, '🍎 主动转身大口吃！', 'good');
+      addDiscovery('test_animal_f_' + item.id, '🐾 <b>' + item.name + '</b>：主动转身吃苹果', item.feedVoice);
+    } else if (item.cat === 'plant') {
+      // 植物静静不动、苹果轻轻弹开
+      TOOLS.feed.bounceT = 0.55;
+      TOOLS.feed.bounceDir.set(0.85, 0.45, 0.35);
+      addItemBadge(item, 'feed', '🌱不吃苹果', 'eb-noeat');
+      beep([420, 360], 0.15);
+      popLabelAt3D(item.g.position, '🌱 不吃苹果，靠阳光和水！');
+      addDiscovery('test_plant_f_' + item.id, '🌿 <b>' + item.name + '</b>：不吃苹果，自己制造养分', item.feedVoice);
+    } else {
+      tested.nonliving = true;
+      // 非生物：苹果“咚”地弹开，模型纹丝不动
+      TOOLS.feed.bounceT = 0.65;
+      TOOLS.feed.bounceDir.set(1.05, 0.55, 0.4);
+      addItemBadge(item, 'non', '❌无生命反应', 'eb-none');
+      beep([210, 175], 0.16);
+      popLabelAt3D(item.g.position, '❌ 咚！苹果弹开，毫无反应！', 'warn');
+      addDiscovery('test_non_f_' + item.id, '💎 <b>' + item.name + '</b>：苹果弹开，无生命反应', item.feedVoice);
+    }
+  }
+}
+
+/* ===== 精准 3D 分类放盘（阶段 2 解锁后启用，支持随时拖回桌面重放 D5） ===== */
+function relayoutTray(trayId) {
+  var tr = TRAYS[trayId];
+  var inside = ITEMS.filter(function (it) { return it.tray === trayId; });
+  inside.forEach(function (it, idx) {
+    var sl = tr.slots[idx % tr.slots.length];
+    it.goalX = tr.x + sl[0];
+    it.goalZ = tr.z + sl[1];
+    it.goalY = 0.13;
+  });
+}
+
+function returnItemToDesk(item, silent) {
+  var oldTray = item.tray;
+  item.tray = null;
+  item.goalX = item.homeX;
+  item.goalZ = item.homeZ;
+  item.goalY = 0;
+  item.tagEl.classList.remove('ok');
+  if (oldTray) relayoutTray(oldTray);
+  checkStamps();
+  if (!silent && !demo) speak('已放回桌面，可以继续浇水喂食或重新分类！');
+}
+
+function tryPlaceInTray(item, trayId) {
+  markInteracted();
+  if (!traysUnlocked) {
+    item.wobbleT = 0.65;
+    item.goalX = item.homeX; item.goalZ = item.homeZ; item.goalY = 0;
+    showLockReminder();
+    return;
+  }
+  var oldTray = item.tray;
+  if (item.cat === trayId) {
+    item.tray = trayId;
+    if (oldTray && oldTray !== trayId) relayoutTray(oldTray);
+    relayoutTray(trayId);
+    item.animKind = 'drink'; item.animT = 0.75;
+    item.tagEl.classList.add('ok');
+    beep([523, 659, 784], 0.2);
+    popLabelAt3D(new THREE.Vector3(TRAYS[trayId].x, 0.7, TRAYS[trayId].z), '✅ ' + item.name + ' 归类正确！', 'good');
+    addDiscovery('sort_' + item.id, '✅ <b>' + item.name + '</b> → ' + TRAYS[trayId].label, item.okVoice);
+  } else {
+    item.wobbleT = 0.85;
+    if (oldTray) { item.tray = null; relayoutTray(oldTray); }
+    item.goalX = item.homeX; item.goalZ = item.homeZ; item.goalY = 0;
+    item.tagEl.classList.remove('ok');
+    beep([280, 220], 0.2);
+    popLabelAt3D(new THREE.Vector3(TRAYS[trayId].x, 0.75, TRAYS[trayId].z), '💡 用右边水壶或苹果测测 ' + item.name + ' 吧！', 'warn');
+    if (!demo) speak(item.wrongVoice, true);
+    checkStamps();
+  }
+}
+
+/* ===== 拖拽 + 轻点双通道交互 ===== */
+var ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+var dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.45);
+var dragPt = new THREE.Vector3();
+var draggingTool = null, draggingItem = null;
+var armedTool = null, selectedItem = null;
+var toolReturnTimer = null;
+var downX = 0, downY = 0, didDrag = false;
+var lastHoverTestedId = '';
+var hoveredTrayId = null;
+
+function getNDC(e) {
+  var r = cv.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+}
+
+function findNearestSpecimen(x, z, maxDist) {
+  var best = null, bestD = maxDist;
+  ITEMS.forEach(function (it) {
+    var d = Math.hypot(it.g.position.x - x, it.g.position.z - z);
+    if (d < bestD) { bestD = d; best = it; }
+  });
+  return best;
+}
+
+function findDropTray(x, z) {
+  if (z > -0.18 || z < -2.95) return null;
+  var bestKey = null, bestD = 1.32;
+  Object.keys(TRAYS).forEach(function (k) {
+    var tr = TRAYS[k];
+    var dx = Math.abs(x - tr.x);
+    if (dx < bestD) { bestD = dx; bestKey = k; }
+  });
+  return bestKey;
+}
+
+function pickRecommendedForTool(toolId) {
+  if (toolId === 'feed') {
+    if (!tested.animalFeed) return ITEMS.find(function (x) { return x.id === 'panda'; });
+    if (!tested.nonliving) return ITEMS.find(function (x) { return x.id === 'bronze'; });
+    return ITEMS.find(function (x) { return !x.badges.feed && !x.badges.non; }) || ITEMS[1];
+  } else {
+    if (!tested.animalWater) return ITEMS.find(function (x) { return x.id === 'panda'; });
+    if (!tested.plantWater) return ITEMS.find(function (x) { return x.id === 'pine'; });
+    if (!tested.nonliving) return ITEMS.find(function (x) { return x.id === 'bronze'; });
+    return ITEMS.find(function (x) { return !x.badges.water && !x.badges.non; }) || ITEMS[5];
+  }
+}
+
+function flyToolToSpecimen(tl, item) {
+  var g = resetGen;
+  if (toolReturnTimer) clearTimeout(toolReturnTimer);
+  tl.goal.set(item.g.position.x + (tl.id === 'water' ? 0.44 : 0.34), tl.id === 'water' ? 1.05 : 0.72, item.g.position.z + 0.16);
+  testSpecimen(item, tl.id);
+  armedTool = null;
+  toolReturnTimer = setTimeout(function () {
+    if (g !== resetGen) return;
+    if (draggingTool !== tl) tl.goal.copy(tl.home);
+  }, 1050);
+}
+
+cv.addEventListener('pointerdown', function (e) {
+  markInteracted();
+  getNDC(e);
+  ray.setFromCamera(ptr, camera);
+  downX = e.clientX; downY = e.clientY; didDrag = false;
+
+  // 1. 优先抓取浇水壶或红苹果
+  var tHits = ray.intersectObjects(toolVisMeshes, false);
+  if (!tHits.length) tHits = ray.intersectObjects(toolHitMeshes, false);
+  if (tHits.length) {
+    selectedItem = null;
+    draggingTool = tHits[0].object.userData.toolRef;
+    lastHoverTestedId = '';
+    cv.classList.add('grabbing');
+    beep([494], 0.08);
+    return;
+  }
+
+  // 2. 抓取 8 个 3D 模型
+  var iHits = ray.intersectObjects(itemVisMeshes, false);
+  if (!iHits.length) iHits = ray.intersectObjects(itemHitMeshes, false);
+  if (iHits.length) {
+    draggingItem = iHits[0].object.userData.itemRef;
+    draggingItem.ring.material.opacity = 0.92;
+    cv.classList.add('grabbing');
+    beep([440], 0.08);
+    return;
+  }
+
+  // 3. 点击后方木盘
+  var trHits = ray.intersectObjects(trayHitMeshes, false);
+  if (trHits.length) {
+    if (!traysUnlocked) {
+      showLockReminder();
+      return;
+    }
+    if (selectedItem) {
+      var targetTray = trHits[0].object.userData.trayId;
+      var it = selectedItem;
+      selectedItem = null;
+      it.ring.material.opacity = 0;
+      tryPlaceInTray(it, targetTray);
+    }
+  }
+});
+
+window.addEventListener('pointermove', function (e) {
+  if (!draggingTool && !draggingItem) return;
+  if (!didDrag && Math.hypot(e.clientX - downX, e.clientY - downY) >= 10) didDrag = true;
+  if (!didDrag) return;
+  getNDC(e);
+  ray.setFromCamera(ptr, camera);
+  if (!ray.ray.intersectPlane(dragPlane, dragPt)) return;
+
+  if (draggingTool) {
+    armedTool = null;
+    var gx = Math.max(-4.35, Math.min(3.45, dragPt.x));
+    var gz = Math.max(-2.15, Math.min(2.65, dragPt.z));
+    var gy = draggingTool.id === 'water' ? 1.04 : 0.72;
+    draggingTool.goal.set(gx, gy, gz);
+
+    var probeX = draggingTool.id === 'water' ? gx - 0.28 : gx;
+    var target = findNearestSpecimen(probeX, gz, 1.22) || findNearestSpecimen(gx, gz, 1.22);
+    ITEMS.forEach(function (it) { it.ring.material.opacity = (it === target) ? 0.92 : 0; });
+    if (target && target.id !== lastHoverTestedId) {
+      lastHoverTestedId = target.id;
+      testSpecimen(target, draggingTool.id);
+    } else if (!target) {
+      lastHoverTestedId = '';
+    }
+  } else if (draggingItem) {
+    selectedItem = null;
+    draggingItem.goalX = Math.max(-4.35, Math.min(2.85, dragPt.x));
+    draggingItem.goalZ = Math.max(-2.35, Math.min(2.55, dragPt.z));
+    draggingItem.goalY = 0.64;
+    hoveredTrayId = traysUnlocked ? findDropTray(draggingItem.goalX, draggingItem.goalZ) : null;
+  }
+});
+
+window.addEventListener('pointerup', function () {
+  cv.classList.remove('grabbing');
+
+  if (draggingTool) {
+    var tl = draggingTool;
+    draggingTool = null;
+    ITEMS.forEach(function (it) { it.ring.material.opacity = 0; });
+    if (!didDrag) {
+      beep([523, 659], 0.12);
+      if (armedTool === tl) {
+        // 再轻点一次同一工具 → 自动演示测试一个推荐模型！
+        var recItem = pickRecommendedForTool(tl.id);
+        flyToolToSpecimen(tl, recItem);
+      } else {
+        if (armedTool) armedTool.goal.copy(armedTool.home);
+        armedTool = tl;
+        tl.goal.set(tl.home.x, tl.home.y + 0.36, tl.home.z);
+        var cue = tl.id === 'water'
+          ? '拿起浇水壶啦！点任意模型浇水，或者再点一次水壶自动示范！'
+          : '拿起红苹果啦！点任意模型喂食，或者再点一次苹果自动示范！';
+        popLabelAt3D(tl.g.position.clone().add(new THREE.Vector3(0, 1.05, 0)), tl.id === 'water' ? '💧 点模型浇水！' : '🍎 点模型喂食！');
+        speak(cue);
+      }
+    } else {
+      var probeX = tl.id === 'water' ? tl.goal.x - 0.28 : tl.goal.x;
+      var dropTarget = findNearestSpecimen(probeX, tl.goal.z, 1.32) || findNearestSpecimen(tl.goal.x, tl.goal.z, 1.32);
+      if (dropTarget && dropTarget.id !== lastHoverTestedId) {
+        testSpecimen(dropTarget, tl.id);
+      }
+      tl.goal.copy(tl.home);
+    }
+    return;
+  }
+
+  if (draggingItem) {
+    var it = draggingItem;
+    draggingItem = null;
+    hoveredTrayId = null;
+
+    if (!didDrag) {
+      if (armedTool) {
+        it.ring.material.opacity = 0;
+        flyToolToSpecimen(armedTool, it);
+        return;
+      }
+      if (!traysUnlocked) {
+        it.ring.material.opacity = 0;
+        it.wobbleT = 0.45;
+        showLockReminder();
+        return;
+      }
+      if (selectedItem && selectedItem !== it) selectedItem.ring.material.opacity = 0;
+      selectedItem = it;
+      it.ring.material.opacity = 0.92;
+      it.wobbleT = 0.45;
+      popLabelAt3D(it.g.position.clone().add(new THREE.Vector3(0, 1.05, 0)), '🖐️ 拖或点后方对应木盘！');
+      speak('这是' + it.name + '！看看它头顶的特征徽章，拖进后方对应木盘吧！');
+      return;
+    }
+
+    it.ring.material.opacity = 0;
+    var hitTray = findDropTray(it.goalX, it.goalZ);
+    if (hitTray) {
+      tryPlaceInTray(it, hitTray);
+    } else {
+      if (!traysUnlocked) {
+        it.goalX = it.homeX; it.goalZ = it.homeZ; it.goalY = 0;
+        showLockReminder();
+      } else {
+        returnItemToDesk(it, false);
+      }
+    }
+  }
+});
+
+/* ===== 顶部 HUD 与弹窗事件 ===== */
+$('#backBtn').addEventListener('click', function () {
+  try { sessionStorage.setItem('xk_last_vol', 'k1b'); } catch (e) {}
+});
+$('#voiceBtn').addEventListener('click', function () {
+  markInteracted();
+  voiceOn = !voiceOn;
+  this.classList.toggle('on', voiceOn);
+  if (voiceOn) updateGuide(true); else stopVoice();
+});
+$('#guideBar').addEventListener('click', function () { markInteracted(); updateGuide(true); });
+$('#resetBtn').addEventListener('click', resetAll);
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+$('#winKeepBtn').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgainBtn').addEventListener('click', resetAll);
+$('#qOpts').addEventListener('click', function (e) {
+  var b = e.target.closest('.qopt'); if (!b) return;
+  if (b.dataset.ok === '1') {
+    b.classList.add('ok');
+    $('#qFb').textContent = '🌸 答对啦！获得本课小红花！';
+    saveProgress(LESSON_ID, true);
+    beep([523, 659, 784, 1046], 0.24);
+    speak('答对啦！铜奔马雕塑浇水喂食都没有生命反应，是非生物，获得本课小红花！', true);
+  } else {
+    b.classList.add('bad');
+    beep([260, 220], 0.16);
+    var h = b.dataset.hint || '再想想哦！';
+    $('#qFb').textContent = '💡 ' + h;
+    speak(h, true);
+  }
+});
+
+/* ===== 演示模式（两步走示范，绝不触发通关） ===== */
+function startDemo() {
+  markInteracted();
+  resetAll();
+  demo = true;
+  $('#demoBtn').classList.add('on');
+  var g = resetGen;
+  var byId = function (id) { return ITEMS.find(function (x) { return x.id === id; }); };
+  var steps = [
+    function () {
+      var p = byId('panda');
+      TOOLS.feed.goal.set(p.homeX + 0.40, 0.72, p.homeZ + 0.18);
+      testSpecimen(p, 'feed');
+      speak('第1步！拖红苹果喂大熊猫，它主动转身大口啃，挂上主动吃食物徽章！', true);
+    },
+    function () {
+      TOOLS.feed.goal.copy(TOOLS.feed.home);
+      var p = byId('panda');
+      TOOLS.water.goal.set(p.homeX + 0.45, 1.05, p.homeZ + 0.12);
+      testSpecimen(p, 'water');
+      speak('再拖浇水壶给大熊猫浇水，它开心喝水蹦跳！', true);
+    },
+    function () {
+      var pn = byId('pine');
+      TOOLS.water.goal.set(pn.homeX + 0.45, 1.05, pn.homeZ + 0.12);
+      testSpecimen(pn, 'water');
+      speak('给松树浇水，它立刻拔节长高还冒出嫩芽，挂上吸水长高徽章！', true);
+    },
+    function () {
+      var bz = byId('bronze');
+      TOOLS.water.goal.set(bz.homeX + 0.45, 1.05, bz.homeZ + 0.12);
+      testSpecimen(bz, 'water');
+      speak('给铜奔马浇水，水珠滑落纹丝不动！四项实测完成，后方三个木盘立刻金光解锁！', true);
+    },
+    function () {
+      TOOLS.water.goal.copy(TOOLS.water.home);
+      tryPlaceInTray(byId('panda'), 'animal');
+      tryPlaceInTray(byId('pine'), 'plant');
+      tryPlaceInTray(byId('bronze'), 'nonliving');
+      speak('解锁后，按照实验徽章把 8 个模型拖进对应的木盘就能通关啦！轮到你来试试吧！', true);
+    },
+    function () { demo = false; $('#demoBtn').classList.remove('on'); resetAll(); }
+  ];
+  steps.forEach(function (fn, i) { setTimeout(function () { if (g === resetGen) fn(); }, i * 3100); });
+}
+$('#demoBtn').addEventListener('click', startDemo);
+
+function resetAll() {
+  resetGen++;
+  stopVoice();
+  demo = false;
+  $('#demoBtn').classList.remove('on');
+  tested = { animalFeed: false, animalWater: false, plantWater: false, nonliving: false };
+  traysUnlocked = false; trayUnlockBlend = 0; trayUnlockBurstT = 0;
+  $('#trayLockTag').classList.remove('hide');
+  $('#lockToast').classList.remove('show');
+  found = {}; stamps = { s1: false, s2: false, s3: false }; celebrated = false;
+  draggingItem = null; draggingTool = null; armedTool = null; selectedItem = null;
+  hoveredTrayId = null; lastHoverTestedId = '';
+  if (toolReturnTimer) { clearTimeout(toolReturnTimer); toolReturnTimer = null; }
+  if (lockToastTimer) { clearTimeout(lockToastTimer); lockToastTimer = null; }
+  cv.classList.remove('grabbing');
+  Object.keys(TOOLS).forEach(function (k) {
+    var tl = TOOLS[k];
+    tl.goal.copy(tl.home); tl.g.position.copy(tl.home);
+    tl.tiltT = 0; tl.biteT = 0; tl.bounceT = 0;
+  });
+  if (appleBiteMark) appleBiteMark.visible = false;
+  ITEMS.forEach(function (it) {
+    it.tray = null; it.goalX = it.homeX; it.goalZ = it.homeZ; it.goalY = 0;
+    it.g.position.set(it.homeX, 0, it.homeZ);
+    it.growScale = 1; it.animT = 0; it.animKind = ''; it.wobbleT = 0; it.targetYaw = 0;
+    it.model.rotation.set(0, 0, 0);
+    it.model.scale.setScalar(1);
+    it.hasSprout = false; it.sproutScale = 0.001;
+    if (it.sproutG) { it.sproutG.visible = false; it.sproutG.scale.setScalar(0.001); }
+    it.ring.material.opacity = 0;
+    it.tagEl.classList.remove('ok');
+    it.badges = {};
+    it.badgeRowEl.innerHTML = '';
+  });
+  fxDrops.forEach(function (d) { live.remove(d.m); });
+  fxDrops = [];
+  $('#ntList').innerHTML = ''; $('#ntCnt').textContent = '0';
+  $('#phaseLabel').textContent = '🔬 实验鉴别：';
+  $('#sortNum').textContent = '0 / 4';
+  $$('.st').forEach(function (s) { s.classList.remove('lit'); });
+  $('#winToast').classList.remove('show');
+  $('#qFb').textContent = '';
+  $$('.qopt').forEach(function (b) { b.classList.remove('ok', 'bad'); });
+  updateGuide(false);
+}
+
+/* ===== 帧循环 ===== */
+var introT0 = performance.now(), lastT = performance.now();
+var projV = new THREE.Vector3();
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', fit);
+fit();
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (now - lastT) / 1000));
+  lastT = now;
+  var t = now * 0.001;
+
+  var pop = Math.min(1, (performance.now() - introT0) / 680);
+  live.scale.setScalar(0.01 + 0.99 * (1 - Math.pow(1 - pop, 3)));
+
+  // 3 个木盘待解锁 / 金光解锁动画
+  var targetBlend = traysUnlocked ? 1 : 0;
+  trayUnlockBlend += (targetBlend - trayUnlockBlend) * Math.min(1, dt * 6);
+  if (trayUnlockBurstT > 0) trayUnlockBurstT = Math.max(0, trayUnlockBurstT - dt);
+  var trayInvite = traysUnlocked && !!(draggingItem || selectedItem);
+
+  Object.keys(TRAYS).forEach(function (k) {
+    var tr = TRAYS[k];
+    var op = 0.36 + 0.64 * trayUnlockBlend;
+    tr.mats.forEach(function (m) { m.opacity = op; });
+    tr.veilMat.opacity = 0.28 * (1 - trayUnlockBlend);
+    var burstSc = trayUnlockBurstT > 0 ? (1 + Math.sin(trayUnlockBurstT * Math.PI * 2.5) * 0.06) : (0.94 + 0.06 * trayUnlockBlend);
+    tr.g.scale.setScalar(burstSc);
+    var isHov = (hoveredTrayId === k);
+    var burstGlow = trayUnlockBurstT > 0 ? Math.min(0.55, trayUnlockBurstT * 0.45) : 0;
+    tr.glow.material.opacity = Math.max(burstGlow, isHov ? 0.56 : (trayInvite ? (0.18 + 0.12 * Math.sin(t * 5.2)) : 0));
+    tr.halo.material.opacity = Math.max(burstGlow * 1.4, isHov ? 0.95 : (trayInvite ? (0.45 + 0.35 * Math.sin(t * 5.2)) : 0));
+    tr.halo.scale.set(isHov ? 1.14 : (1.06 + 0.04 * Math.sin(t * 5.2)), isHov ? 0.9 : (0.84 + 0.03 * Math.sin(t * 5.2)), 1);
+  });
+
+  // 定位木盘待解锁横幅
+  if (!traysUnlocked) {
+    projV.set(-0.96, 0.35, -1.68).project(camera);
+    var lx = (projV.x * 0.5 + 0.5) * window.innerWidth;
+    var ly = (-projV.y * 0.5 + 0.5) * window.innerHeight;
+    var lockTag = $('#trayLockTag');
+    lockTag.style.left = lx + 'px';
+    lockTag.style.top = ly + 'px';
+  }
+
+  // 计算当前单焦点 #targetCue 指引目标
+  var cueEl = $('#targetCue');
+  var cueTargetTool = null;
+  var cueWorld = null, cueTxt = '';
+  if (!demo && !celebrated && !draggingTool && !draggingItem) {
+    var cntNow = countSorted();
+    if (!traysUnlocked) {
+      if (!tested.animalFeed) {
+        if (armedTool === TOOLS.feed) {
+          var pnd = ITEMS.find(function (x) { return x.id === 'panda'; });
+          cueWorld = new THREE.Vector3(pnd.g.position.x, 1.48, pnd.g.position.z);
+          cueTxt = '👆 点大熊猫喂红苹果';
+        } else {
+          cueTargetTool = TOOLS.feed;
+          cueWorld = new THREE.Vector3(TOOLS.feed.g.position.x, TOOLS.feed.g.position.y + 1.25, TOOLS.feed.g.position.z);
+          cueTxt = '👆 拖/点红苹果喂大熊猫';
+        }
+      } else if (!tested.animalWater) {
+        if (armedTool === TOOLS.water) {
+          var pnd2 = ITEMS.find(function (x) { return x.id === 'panda'; });
+          cueWorld = new THREE.Vector3(pnd2.g.position.x, 1.48, pnd2.g.position.z);
+          cueTxt = '👆 点大熊猫给它浇水喝';
+        } else {
+          cueTargetTool = TOOLS.water;
+          cueWorld = new THREE.Vector3(TOOLS.water.g.position.x, TOOLS.water.g.position.y + 1.32, TOOLS.water.g.position.z);
+          cueTxt = '👆 拖/点浇水壶给动物喝水';
+        }
+      } else if (!tested.plantWater) {
+        if (armedTool === TOOLS.water) {
+          var pn = ITEMS.find(function (x) { return x.id === 'pine'; });
+          cueWorld = new THREE.Vector3(pn.g.position.x, 1.48, pn.g.position.z);
+          cueTxt = '👆 点松树浇水看长高';
+        } else {
+          cueTargetTool = TOOLS.water;
+          cueWorld = new THREE.Vector3(TOOLS.water.g.position.x, TOOLS.water.g.position.y + 1.32, TOOLS.water.g.position.z);
+          cueTxt = '👆 拖/点浇水壶给植物浇水';
+        }
+      } else {
+        if (armedTool === TOOLS.water || armedTool === TOOLS.feed) {
+          var brz = ITEMS.find(function (x) { return x.id === 'bronze'; });
+          cueWorld = new THREE.Vector3(brz.g.position.x, 1.42, brz.g.position.z);
+          cueTxt = '👆 点铜奔马看有没有反应';
+        } else {
+          cueTargetTool = TOOLS.water;
+          cueWorld = new THREE.Vector3(TOOLS.water.g.position.x, TOOLS.water.g.position.y + 1.32, TOOLS.water.g.position.z);
+          cueTxt = '👆 拖/点水壶测铜奔马';
+        }
+      }
+    } else if (cntNow.ok < 8) {
+      if (selectedItem && selectedItem.tray !== selectedItem.cat) {
+        var trGoal = TRAYS[selectedItem.cat];
+        cueWorld = new THREE.Vector3(trGoal.x, 0.72, trGoal.z);
+        cueTxt = '👆 点或拖进「' + trGoal.label.replace(/^[^\u4e00-\u9fff]+/, '') + '」';
+      } else {
+        var nextItem = ITEMS.find(function (it) { return it.tray !== it.cat; });
+        if (nextItem) {
+          cueWorld = new THREE.Vector3(nextItem.g.position.x, nextItem.g.position.y + 1.48, nextItem.g.position.z);
+          cueTxt = '👆 把「' + nextItem.name + '」拖进木盘';
+        }
+      }
+    }
+  }
+
+  if (cueWorld && cueTxt) {
+    projV.copy(cueWorld).project(camera);
+    var cx = (projV.x * 0.5 + 0.5) * window.innerWidth;
+    var cy = (-projV.y * 0.5 + 0.5) * window.innerHeight;
+    if (cy < 280) cx = Math.min(window.innerWidth - 268, cx);
+    cueEl.textContent = cueTxt;
+    cueEl.style.left = Math.max(115, Math.min(window.innerWidth - 115, cx)) + 'px';
+    cueEl.style.top = Math.max(92, Math.min(window.innerHeight - 60, cy)) + 'px';
+    cueEl.classList.add('show');
+  } else {
+    cueEl.classList.remove('show');
+  }
+
+  // 更新 2 件大号 3D 实测道具
+  Object.keys(TOOLS).forEach(function (k) {
+    var tl = TOOLS[k];
+    var isArmed = (armedTool === tl);
+    var isCueTool = (cueTargetTool === tl);
+    var bob = (draggingTool !== tl && tl.tiltT <= 0 && tl.bounceT <= 0)
+      ? Math.sin(t * (isArmed ? 5.2 : 2.6) + tl.home.z) * (isArmed ? 0.08 : 0.045) : 0;
+
+    var bounceX = 0, bounceY = 0, bounceZ = 0;
+    if (tl.bounceT > 0) {
+      tl.bounceT = Math.max(0, tl.bounceT - dt);
+      var bArc = Math.sin(tl.bounceT * Math.PI / 0.6);
+      bounceX = tl.bounceDir.x * bArc * 0.72;
+      bounceY = Math.abs(bArc) * 0.55;
+      bounceZ = tl.bounceDir.z * bArc * 0.52;
+    }
+
+    tl.g.position.x += ((tl.goal.x + bounceX) - tl.g.position.x) * Math.min(1, dt * 13);
+    tl.g.position.y += ((tl.goal.y + bob + bounceY) - tl.g.position.y) * Math.min(1, dt * 13);
+    tl.g.position.z += ((tl.goal.z + bounceZ) - tl.g.position.z) * Math.min(1, dt * 13);
+
+    tl.padRing.material.opacity = (isArmed || isCueTool) ? (0.55 + 0.4 * Math.sin(t * 5.6)) : 0.16;
+    tl.padRing.scale.setScalar((isArmed || isCueTool) ? (1.0 + 0.13 * Math.sin(t * 5.6)) : 1);
+
+    if (tl.tiltT > 0) {
+      tl.tiltT = Math.max(0, tl.tiltT - dt);
+      tl.g.rotation.z = k === 'water' ? 0.65 : Math.sin(tl.tiltT * 20) * 0.25;
+    } else {
+      tl.g.rotation.z *= 0.84;
+    }
+
+    if (k === 'feed') {
+      if (tl.biteT > 0) {
+        tl.biteT = Math.max(0, tl.biteT - dt);
+        if (appleBiteMark) appleBiteMark.visible = true;
+        var bPulse = 1.30 * (0.86 + 0.12 * Math.abs(Math.sin(tl.biteT * 16)));
+        tl.g.scale.setScalar(bPulse);
+      } else {
+        if (appleBiteMark) appleBiteMark.visible = false;
+        tl.g.scale.setScalar(1.30);
+      }
+    }
+
+    if (draggingTool === tl || isCueTool) {
+      tl.tagEl.style.opacity = '0';
+    } else {
+      tl.tagEl.style.opacity = '1';
+      projV.set(tl.g.position.x, tl.g.position.y + tl.tagY, tl.g.position.z).project(camera);
+      tl.tagEl.style.left = ((projV.x * 0.5 + 0.5) * window.innerWidth) + 'px';
+      tl.tagEl.style.top = ((-projV.y * 0.5 + 0.5) * window.innerHeight) + 'px';
+    }
+  });
+
+  // 更新 8 个模型的生动生命反应动画、拔节长高、嫩芽弹出与头顶实测徽章投影
+  ITEMS.forEach(function (it, idx) {
+    it.g.position.x += (it.goalX - it.g.position.x) * Math.min(1, dt * 12);
+    it.g.position.z += (it.goalZ - it.g.position.z) * Math.min(1, dt * 12);
+    var extraY = 0;
+    if (it.animT > 0) {
+      it.animT = Math.max(0, it.animT - dt);
+      if (it.animKind === 'eat') {
+        // 动物主动转身俯身大口啃食
+        it.model.rotation.y += (it.targetYaw - it.model.rotation.y) * Math.min(1, dt * 12);
+        it.model.rotation.x = Math.abs(Math.sin(it.animT * 14)) * 0.36;
+        extraY = Math.abs(Math.sin(it.animT * 10)) * 0.16;
+      } else {
+        // 动物喝水开心蹦跳摇摆
+        extraY = Math.abs(Math.sin(it.animT * 11)) * 0.34;
+        it.model.rotation.y = Math.sin(it.animT * 13) * 0.38;
+        it.model.rotation.x *= 0.82;
+      }
+    } else {
+      var idleYaw = Math.sin(t * 0.9 + idx) * (it.cat === 'animal' ? 0.14 : (it.cat === 'plant' ? 0.03 : 0));
+      it.model.rotation.y += (idleYaw - it.model.rotation.y) * Math.min(1, dt * 6);
+      it.model.rotation.x *= 0.85;
+    }
+    if (it.wobbleT > 0) {
+      it.wobbleT = Math.max(0, it.wobbleT - dt);
+      it.model.rotation.z = Math.sin(it.wobbleT * 28) * 0.22;
+    } else {
+      it.model.rotation.z *= 0.85;
+    }
+    it.g.position.y += ((it.goalY + extraY) - it.g.position.y) * Math.min(1, dt * 12);
+
+    var curS = it.model.scale.y;
+    var nxtS = curS + (it.growScale - curS) * Math.min(1, dt * 5.2);
+    it.model.scale.set(nxtS, nxtS, nxtS);
+
+    if (it.sproutG && it.hasSprout) {
+      it.sproutScale += (1.15 - it.sproutScale) * Math.min(1, dt * 6.5);
+      it.sproutG.scale.setScalar(it.sproutScale);
+      it.sproutG.rotation.y = t * 1.4;
+    }
+
+    var tagH = 1.05 * nxtS + (it.hasSprout ? 0.22 : 0);
+    projV.set(it.g.position.x, it.g.position.y + tagH, it.g.position.z).project(camera);
+    it.wrapEl.style.left = ((projV.x * 0.5 + 0.5) * window.innerWidth) + 'px';
+    it.wrapEl.style.top = ((-projV.y * 0.5 + 0.5) * window.innerHeight) + 'px';
+  });
+
+  // 临时水珠/星星/碎屑粒子自动消退（D4）
+  for (var i = fxDrops.length - 1; i >= 0; i--) {
+    var d = fxDrops[i];
+    d.life -= dt;
+    d.vy += (d.grav || 0) * dt;
+    d.m.position.x += d.vx * dt;
+    d.m.position.y += d.vy * dt;
+    d.m.position.z += d.vz * dt;
+    if (d.spin) d.m.rotation.y += d.spin * dt;
+    if (d.m.position.y < 0.04) d.m.position.y = 0.04;
+    d.m.material.opacity = Math.max(0, d.life / d.maxLife);
+    if (d.life <= 0) { live.remove(d.m); fxDrops.splice(i, 1); }
+  }
+
+  // 彩带
+  if (cfOn) {
+    cfCtx.clearRect(0, 0, cfCanvas.width, cfCanvas.height);
+    var alive = 0;
+    cfParts.forEach(function (p) {
+      p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 240 * dt; p.a += p.va * dt;
+      if (p.y < cfCanvas.height + 24) {
+        alive++;
+        cfCtx.save(); cfCtx.translate(p.x, p.y); cfCtx.rotate(p.a);
+        cfCtx.fillStyle = p.c; cfCtx.fillRect(-p.r, -p.r * 0.5, p.r * 2, p.r);
+        cfCtx.restore();
+      }
+    });
+    if (!alive) { cfOn = false; cfCtx.clearRect(0, 0, cfCanvas.width, cfCanvas.height); }
+  }
+
+  renderer.render(scene, camera);
+}
+
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () {
+    return {
+      triangles: renderer.info.render.triangles,
+      celebrated: celebrated,
+      traysUnlocked: traysUnlocked,
+      sorted: countSorted().ok,
+      tested: tested
+    };
+  },
+  project3D: function (x, y, z) {
+    var v = new THREE.Vector3(x, y, z).project(camera);
+    return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight };
+  },
+  getTargets: function () {
+    var self = this;
+    var items = {};
+    ITEMS.forEach(function (it) {
+      items[it.id] = {
+        cat: it.cat, tray: it.tray, badges: Object.keys(it.badges),
+        pt: self.project3D(it.g.position.x, it.g.position.y + 0.48, it.g.position.z)
+      };
+    });
+    var trays = {};
+    Object.keys(TRAYS).forEach(function (k) { trays[k] = self.project3D(TRAYS[k].x, 0.25, TRAYS[k].z); });
+    return {
+      water: self.project3D(TOOLS.water.g.position.x, TOOLS.water.g.position.y + 0.45, TOOLS.water.g.position.z),
+      feed: self.project3D(TOOLS.feed.g.position.x, TOOLS.feed.g.position.y + 0.42, TOOLS.feed.g.position.z),
+      items: items,
+      trays: trays
+    };
+  },
+  startDemo: startDemo,
+  resetAll: resetAll
+};
+updateGuide(false);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

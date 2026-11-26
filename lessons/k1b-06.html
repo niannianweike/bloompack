@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第6课 常见的动物 · 常见动物 3D 观察台</title>
+<style>
+:root{--accent:#d97706;--accent-dark:#b45309;--ink:#2a2218;--line:#e4d5ba;--card:rgba(255,253,248,.94)}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#c5a474;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas#cv.grabbing{cursor:grabbing}
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.46em;color:#7a6a52;font-weight:600}
+body.no-py rt{display:none}
+
+/* 左上标题 */
+#hudTL{position:fixed;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:10px;
+  padding:7px 14px 7px 9px;border-radius:16px;background:var(--card);border:1.5px solid var(--line);
+  box-shadow:0 4px 16px rgba(60,36,12,.14)}
+#backBtn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:#5c4b34;font-size:19px;font-weight:900}
+#backBtn:hover{border-color:var(--accent);color:var(--accent)}
+.hd-t{font-size:16px;font-weight:900;line-height:1.5}
+.hd-sub{font-size:11.5px;color:#7b6c56;font-weight:700}
+
+/* 顶部中央动态引导 */
+#guideBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:6;
+  max-width:min(450px,calc(100vw - 630px));display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:15px;background:rgba(255,250,240,.96);
+  border:2px solid var(--accent);box-shadow:0 6px 18px rgba(146,64,14,.16);
+  font-size:13.5px;font-weight:800;color:#78350f;cursor:pointer;line-height:1.38;transition:transform .2s}
+#guideBar.flash{transform:translateX(-50%) scale(1.04)}
+
+/* 右上工具条 */
+#hudTR{position:fixed;top:12px;right:12px;z-index:7;display:flex;align-items:center;gap:6px}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:38px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);
+  background:var(--card);font-size:13.5px;font-weight:800;color:#4a3c28;cursor:pointer;
+  box-shadow:0 3px 0 #d9c8ab;transition:all .14s;white-space:nowrap}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:var(--accent-dark);color:#fff;box-shadow:0 3px 0 var(--accent-dark)}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#fef3c7;border:1.5px solid var(--accent);color:#92400e;font-size:10.5px;font-weight:900;
+  white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(217,119,6,.24);
+  animation:cuePop 1.6s ease-in-out infinite;transition:opacity .25s}
+body.interacted .entry-cue{opacity:0;animation:none}
+@keyframes cuePop{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+
+/* 右上可收起窄版发现栏（D3） */
+#notes{position:fixed;top:60px;right:12px;z-index:6;width:224px;padding:9px 11px;border-radius:15px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 6px 18px rgba(60,36,12,.12)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+.nt-title{font-size:13.5px;font-weight:900}
+.nt-cnt{font-size:12.5px;font-weight:900;color:var(--accent)}
+.nt-tog{padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:11px;font-weight:800;color:#6c5c45;cursor:pointer}
+.stamps{display:flex;gap:4px;margin-bottom:6px}
+.st{flex:1;text-align:center;padding:3px 2px;border-radius:8px;font-size:11px;font-weight:800;
+  border:1.5px dashed #d7c5a4;color:#9b8a70;background:#faf4e8;transition:all .2s;line-height:1.4}
+.st.lit{border-style:solid;border-color:var(--accent);background:#fef3c7;color:#92400e}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList,#notes.collapsed .stamps{display:none}
+#notes.collapsed .nt-head{margin-bottom:0}
+.stk{padding:5px 8px;border-radius:10px;background:#fff;border:1px solid #ece0c9;font-size:12px;font-weight:700;line-height:1.4}
+.stk b{color:#b45309}
+
+/* 左侧局部放大特征圈 */
+#rotHint{position:fixed;left:14px;top:74px;z-index:5;padding:5px 11px;border-radius:99px;
+  background:rgba(255,253,248,.88);border:1.5px solid var(--line);font-size:12px;font-weight:800;color:#6c583f;pointer-events:none}
+#zoomCard{position:fixed;left:16px;top:114px;z-index:6;width:214px;padding:10px 12px;border-radius:18px;
+  background:rgba(255,253,246,.96);border:2px solid var(--accent);box-shadow:0 10px 26px rgba(60,36,8,.2);
+  display:none;flex-direction:column;align-items:center;gap:6px;text-align:center}
+#zoomCard.show{display:flex;animation:popCard .25s ease-out}
+@keyframes popCard{0%{opacity:0;transform:scale(.82)}100%{opacity:1;transform:scale(1)}}
+.zm-circle{width:104px;height:104px;border-radius:50%;border:3px solid #f59e0b;background:#fffbeb;overflow:hidden;
+  display:grid;place-items:center;box-shadow:inset 0 2px 8px rgba(180,83,9,.14)}
+canvas#zoomCv{width:104px;height:104px;display:block}
+.zm-title{font-size:14px;font-weight:900;color:#92400e}
+.zm-desc{font-size:12px;font-weight:700;color:#4a3c28;line-height:1.45}
+
+/* 桌面可拖 3D 食物/树叶轻量提示签（非按钮） */
+#propTag{position:fixed;z-index:4;pointer-events:none;transform:translate(-50%,-100%);
+  padding:3px 10px;border-radius:99px;background:rgba(180,83,9,.92);color:#fff;
+  font-size:12px;font-weight:800;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.18);transition:opacity .15s}
+#propTag.done{background:rgba(22,163,74,.92)}
+#propTag.pulse{animation:tagBob 1.3s ease-in-out infinite}
+@keyframes tagBob{0%,100%{transform:translate(-50%,-100%)}50%{transform:translate(-50%,-120%)}}
+
+/* 底部 4 个极简动物头像纯图标切换钮（零长文字按钮） */
+#dock{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:6;
+  display:flex;align-items:center;gap:12px;padding:7px 14px;border-radius:99px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 8px 24px rgba(55,34,10,.16)}
+.acard{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  width:56px;height:56px;border-radius:50%;border:2px solid #e4d6bd;background:#fff;cursor:pointer;
+  padding:0;transition:all .16s}
+.acard .ico{font-size:25px;line-height:1}
+.acard:hover{border-color:var(--accent);transform:translateY(-2px) scale(1.06)}
+.acard.active{border-color:var(--accent);background:#fffbeb;box-shadow:0 3px 0 #f4cc83;transform:scale(1.08)}
+.acard.pulse{border-color:#ea580c;background:#fff7ed;animation:cardPulse 1.25s ease-in-out infinite}
+@keyframes cardPulse{0%,100%{box-shadow:0 0 0 0 rgba(234,88,12,.5);transform:scale(1.04)}50%{box-shadow:0 0 0 9px rgba(234,88,12,0);transform:scale(1.12)}}
+.acard .dots{display:flex;gap:4px}
+.acard .dot{width:7px;height:7px;border-radius:50%;background:#e4d5ba}
+.acard .dot.on{background:#16a34a}
+
+/* 3D 浮动标签与单焦点引导气泡（零遮挡、pointer-events:none） */
+#labels{position:fixed;inset:0;pointer-events:none;z-index:5}
+.cue3d{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:5px 13px;border-radius:99px;
+  background:#fff7ed;border:2px solid #ea580c;color:#9a3412;font-size:13px;font-weight:900;white-space:nowrap;
+  box-shadow:0 4px 14px rgba(234,88,12,.28);animation:cueBob 1.3s ease-in-out infinite;display:none;pointer-events:none}
+.cue3d.show{display:block}
+@keyframes cueBob{0%,100%{transform:translate(-50%,-100%) translateY(0)}50%{transform:translate(-50%,-100%) translateY(-6px)}}
+.popword{position:absolute;transform:translate(-50%,-100%);padding:4px 11px;border-radius:99px;
+  background:rgba(120,53,15,.92);color:#fff;font-size:13.5px;font-weight:800;white-space:nowrap;
+  box-shadow:0 4px 12px rgba(0,0,0,.18);animation:popFloat 1.55s ease-out forwards;pointer-events:none}
+@keyframes popFloat{0%{opacity:0;transform:translate(-50%,-70%) scale(.75)}18%{opacity:1;transform:translate(-50%,-110%) scale(1.04)}82%{opacity:1;transform:translate(-50%,-140%) scale(1)}100%{opacity:0;transform:translate(-50%,-175%) scale(.96)}}
+
+/* 通关弹窗 */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+#winToast{position:fixed;inset:0;z-index:35;display:none;place-items:center;background:rgba(36,24,10,.34);padding:16px}
+#winToast.show{display:grid}
+.win-card{width:min(450px,100%);max-height:85vh;overflow-y:auto;background:#fffdf8;
+  border:2.5px solid var(--accent);border-radius:22px;padding:18px 20px;text-align:center;
+  box-shadow:0 20px 50px rgba(40,22,4,.28)}
+.win-concl{margin:10px 0;padding:10px 12px;border-radius:13px;background:#fffbeb;border:1.5px solid #fcd34d;
+  text-align:left;font-size:13.5px;line-height:1.58;color:#78350f}
+.win-quiz{margin:10px 0;padding:10px 12px;border-radius:13px;background:#f8fafc;border:1.5px solid #d9e2ec;text-align:left}
+.win-quiz h4{margin:0 0 8px;font-size:13.5px;color:#b45309}
+.qopts{display:flex;flex-direction:column;gap:7px}
+.qopt{padding:8px 11px;border-radius:11px;border:1.5px solid #d9d0be;background:#fff;
+  font-size:13.5px;font-weight:800;text-align:left;cursor:pointer;transition:all .14s}
+.qopt:hover{border-color:var(--accent);background:#fffbeb}
+.qopt.ok{border-color:#16a34a;background:#dcfce7;color:#14532d}
+.qopt.bad{border-color:#e03131;background:#fff5f5;color:#c92a2a}
+.qfb{margin-top:7px;font-size:12.5px;font-weight:800;min-height:18px;color:#166534}
+.win-acts{display:flex;justify-content:center;gap:10px;margin-top:12px}
+
+@media (max-width:960px){
+  #guideBar{top:58px;max-width:min(420px,calc(100vw - 260px));font-size:12.5px}
+}
+@media (max-width:740px){
+  #guideBar{top:54px;left:10px;right:10px;transform:none;max-width:none}
+  #rotHint{display:none}
+  #zoomCard{top:102px;left:8px;width:176px}
+}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="propTag">🍞 拖给蚂蚁</div>
+<div id="labels">
+  <div class="cue3d" id="targetCue">👆 点蚂蚁看结构</div>
+</div>
+<canvas id="confetti"></canvas>
+
+<div id="hudTL">
+  <a id="backBtn" href="../index.html" title="返回书包">‹</a>
+  <div>
+    <div class="hd-t" data-py="dì kè cháng jiàn de dòng wù">第6课 常见的动物</div>
+    <div class="hd-sub">活页 · 课本第 27 页「常见动物 3D 观察台」</div>
+  </div>
+</div>
+
+<div id="guideBar" title="点我重听当前步骤">
+  <span id="guideIco">🐾</span>
+  <span id="guideTxt">第1步：点一点蚂蚁的头、胸、腹和六条腿，再把桌右的面包屑拖到蚂蚁嘴边！</span>
+</div>
+
+<div id="hudTR">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<div id="rotHint">↔ 拖动草盘可 360° 旋转 · 拖起右侧 3D 道具喂食互动</div>
+
+<aside id="notes">
+  <div class="nt-head">
+    <span class="nt-title" data-py="wǒ de fā xiàn">我的发现</span>
+    <span class="nt-cnt" id="ntCnt">0</span>
+    <button class="nt-tog" id="ntTog" type="button">收起</button>
+  </div>
+  <div class="stamps">
+    <span class="st" id="st1" data-py="kūn chóng mǎ yǐ">昆虫蚂蚁</span>
+    <span class="st" id="st2" data-py="bǔ rǔ tù zi">哺乳兔子</span>
+    <span class="st" id="st3" data-py="liǎng qī ruǎn tǐ">两栖软体</span>
+  </div>
+  <div id="ntList"></div>
+</aside>
+
+<!-- 左侧局部放大特征圈 -->
+<div id="zoomCard">
+  <div class="zm-circle"><canvas id="zoomCv" width="128" height="128"></canvas></div>
+  <div class="zm-title" id="zmTitle">🔍 局部放大特征</div>
+  <div class="zm-desc" id="zmDesc">点击动物的身体部位仔细观察！</div>
+</div>
+
+<!-- 底部 4 个简洁动物头像纯图标切换钮 -->
+<div id="dock">
+  <button class="acard active" data-animal="ant" type="button" title="蚂蚁" aria-label="蚂蚁"><span class="ico">🐜</span><span class="dots"><i class="dot" id="dot-ant-p"></i><i class="dot" id="dot-ant-a"></i></span></button>
+  <button class="acard" data-animal="rabbit" type="button" title="兔子" aria-label="兔子"><span class="ico">🐰</span><span class="dots"><i class="dot" id="dot-rabbit-p"></i><i class="dot" id="dot-rabbit-a"></i></span></button>
+  <button class="acard" data-animal="toad" type="button" title="蟾蜍" aria-label="蟾蜍"><span class="ico">🐸</span><span class="dots"><i class="dot" id="dot-toad-p"></i><i class="dot" id="dot-toad-a"></i></span></button>
+  <button class="acard" data-animal="snail" type="button" title="蜗牛" aria-label="蜗牛"><span class="ico">🐌</span><span class="dots"><i class="dot" id="dot-snail-p"></i><i class="dot" id="dot-snail-a"></i></span></button>
+</div>
+
+<div id="winToast">
+  <div class="win-card">
+    <div style="font-size:38px">🏆</div>
+    <h3 style="margin:4px 0;color:#78350f">太棒啦！四种常见动物的特征全发现啦！</h3>
+    <div class="win-concl">
+      <b>✨ 科学小结论：</b>不同动物有着各具特色的身体结构和运动方式，如蚂蚁有头胸腹和六条腿，兔子靠强健后肢跳跃，它们都需要食物并对刺激有反应。
+    </div>
+    <div class="win-quiz">
+      <h4>💡 考考你 · 答对领小红花 🌸</h4>
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:8px">用柔软的小树叶轻轻碰一下蜗牛的长触角，蜗牛会有什么反应？</div>
+      <div class="qopts" id="qOpts">
+        <button class="qopt" type="button" data-ok="1">🐌 触角会立刻缩回壳里保护自己，过会儿再伸出来</button>
+        <button class="qopt" type="button" data-hint="兔子才会靠强健后肢跳得高高的，蜗牛是用柔软腹足慢慢爬的哦！">🐰 像兔子一样跳得高高的</button>
+        <button class="qopt" type="button" data-hint="蜗牛是活生生的动物，对刺激会有反应，不会一动不动哦！">💎 像石头一样完全没有反应</button>
+      </div>
+      <div class="qfb" id="qFb"></div>
+    </div>
+    <div class="win-acts">
+      <button class="tbtn" id="winKeepBtn" type="button">继续玩</button>
+      <button class="tbtn on" id="winAgainBtn" type="button">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js"></script>
+<script src="../vendor/voice.js"></script>
+<script>
+(function () {
+'use strict';
+
+try { sessionStorage.setItem('xk_last_vol', 'k1b'); } catch (e) {}
+
+var LESSON_ID = 'k1b-06';
+var BOOK_PROGRESS_KEY = 'xk_k1b_progress';
+var $ = function (s) { return document.querySelector(s); };
+var $$ = function (s) { return document.querySelectorAll(s); };
+
+/* ===== 拼音 ===== */
+var HAN = /[\u3400-\u9fff]/;
+var pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function ruby(text, py) {
+  if (!py) return esc(text);
+  var syl = py.trim().split(/\s+/), i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) {
+      var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; }
+      out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>';
+    } else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+$$('[data-py]').forEach(function (el) { el.innerHTML = ruby(el.textContent, el.dataset.py); });
+
+/* ===== 音效 + 语音 ===== */
+var actx = null;
+function beep(freqs, dur) {
+  try {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    var t = actx.currentTime;
+    freqs.forEach(function (f, idx) {
+      var o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'triangle'; o.frequency.setValueAtTime(f, t + idx * 0.08);
+      g.gain.setValueAtTime(0.001, t + idx * 0.08);
+      g.gain.exponentialRampToValueAtTime(0.11, t + idx * 0.08 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.08 + (dur || 0.2));
+      o.connect(g); g.connect(actx.destination);
+      o.start(t + idx * 0.08); o.stop(t + idx * 0.08 + (dur || 0.22));
+    });
+  } catch (e) {}
+}
+
+var voiceOn = true;
+function stopVoice() {
+  if (window.__xkVoice) window.__xkVoice.stop();
+  else if (window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
+}
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
+  if (!('speechSynthesis' in window)) return;
+  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+}
+
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem(BOOK_PROGRESS_KEY) || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem(BOOK_PROGRESS_KEY, JSON.stringify(d));
+  } catch (e) {}
+}
+
+/* ===== 彩带 ===== */
+var cfCanvas = $('#confetti'), cfCtx = cfCanvas.getContext('2d'), cfParts = [], cfOn = false;
+function fireConfetti() {
+  cfCanvas.width = window.innerWidth; cfCanvas.height = window.innerHeight;
+  cfParts = [];
+  var cols = ['#d97706', '#22c55e', '#f472b6', '#38bdf8', '#facc15', '#a855f7'];
+  for (var i = 0; i < 88; i++) {
+    cfParts.push({
+      x: cfCanvas.width * (0.15 + Math.random() * 0.7), y: -15 - Math.random() * 110,
+      vx: (Math.random() - 0.5) * 200, vy: 120 + Math.random() * 190,
+      r: 5 + Math.random() * 5, a: Math.random() * 6.28, va: (Math.random() - 0.5) * 9,
+      c: cols[i % cols.length]
+    });
+  }
+  cfOn = true;
+}
+
+/* ===== Three.js 暖色户外草木观察台 + 右侧前缘可拖 3D 食物/小树叶 ===== */
+var cv = $('#cv');
+var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color('#c8aa79');
+var camera = new THREE.PerspectiveCamera(35, 16 / 9, 0.1, 80);
+camera.position.set(0.32, 3.5, 6.75);
+camera.lookAt(0.18, 0.78, 0.1);
+
+scene.add(new THREE.HemisphereLight('#fff9ee', '#8c7654', 0.74));
+var sunL = new THREE.DirectionalLight('#fff4de', 0.78);
+sunL.position.set(-4, 10, 6);
+sunL.castShadow = true;
+sunL.shadow.mapSize.set(1024, 1024);
+sunL.shadow.camera.left = -7; sunL.shadow.camera.right = 7;
+sunL.shadow.camera.top = 7; sunL.shadow.camera.bottom = -7;
+sunL.shadow.bias = -0.0008;
+scene.add(sunL);
+
+var ramp = new THREE.DataTexture(new Uint8Array([125,125,125,255, 190,190,190,255, 236,236,236,255, 255,255,255,255]), 4, 1, THREE.RGBAFormat);
+ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+
+function toon(hex, extra) {
+  var o = { color: new THREE.Color(hex), gradientMap: ramp };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshToonMaterial(o);
+}
+function mesh(geo, mat) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+function ctex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c);
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+
+var deskTex = ctex(512, 512, function (g, w, h) {
+  g.fillStyle = '#c8a16b'; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 60; i++) {
+    g.fillStyle = 'rgba(110,70,28,' + (Math.random() * 0.05).toFixed(3) + ')';
+    g.fillRect(0, Math.random() * h, w, 1 + Math.random() * 3);
+  }
+});
+deskTex.wrapS = deskTex.wrapT = THREE.RepeatWrapping; deskTex.repeat.set(3, 3);
+var deskFloor = new THREE.Mesh(new THREE.PlaneGeometry(50, 50), new THREE.MeshLambertMaterial({ map: deskTex }));
+deskFloor.rotation.x = -Math.PI / 2; deskFloor.position.y = -0.18; deskFloor.receiveShadow = true;
+scene.add(deskFloor);
+
+var live = new THREE.Group();
+scene.add(live);
+
+var STAGE_X = -0.55;
+var turntable = new THREE.Group();
+turntable.position.set(STAGE_X, 0, 0);
+live.add(turntable);
+
+// 自然草地圆台
+var grassTex = ctex(256, 256, function (g, w, h) {
+  var gr = g.createRadialGradient(w/2, h/2, 16, w/2, h/2, w/2);
+  gr.addColorStop(0, '#a3d977'); gr.addColorStop(0.75, '#7ec256'); gr.addColorStop(1, '#5ca33b');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(255,255,255,.18)'; g.lineWidth = 2;
+  for (var i = 0; i < 36; i++) {
+    var x = 26 + (i * 47) % (w - 52), y = 26 + (i * 67) % (h - 52);
+    g.beginPath(); g.moveTo(x, y); g.lineTo(x - 4, y - 9); g.moveTo(x, y); g.lineTo(x + 4, y - 8); g.stroke();
+  }
+});
+var stageDisc = mesh(new THREE.CylinderGeometry(1.9, 2.04, 0.24, 36), [
+  toon('#8c6239'),
+  new THREE.MeshToonMaterial({ map: grassTex, gradientMap: ramp }),
+  toon('#75502d')
+]);
+stageDisc.position.y = 0.12;
+turntable.add(stageDisc);
+
+// 草盘外圈呼吸高亮光环（提示点动物看结构）
+var stagePulseRing = new THREE.Mesh(
+  new THREE.RingGeometry(1.68, 1.88, 36),
+  new THREE.MeshBasicMaterial({ color: '#f59e0b', side: THREE.DoubleSide, transparent: true, opacity: 0.72, depthWrite: false })
+);
+stagePulseRing.rotation.x = -Math.PI / 2;
+stagePulseRing.position.y = 0.255;
+turntable.add(stagePulseRing);
+
+[[-1.4, 0.25, -0.7], [1.34, 0.25, -0.8], [-1.28, 0.24, 0.85]].forEach(function (p) {
+  var st = mesh(new THREE.DodecahedronGeometry(0.14, 0), toon('#a8a29e'));
+  st.scale.set(1.2, 0.6, 1); st.position.set(p[0], p[1], p[2]); turntable.add(st);
+});
+
+/* ===== 4 种 3D 精致动物建模（全部位宽松透明拾取球 + 兜底全身智能聚焦） ===== */
+var animals = {};
+var hitMeshes = [];
+var fallbackHitMeshes = [];
+var ANIMAL_PARTS = { ant: [], rabbit: [], toad: [], snail: [] };
+var HIT_MAT = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false });
+
+function tagPart(obj, animalId, partKey, label, desc, speech, recordHtml, drawType) {
+  var info = { animalId: animalId, partKey: partKey, label: label, desc: desc, speech: speech, recordHtml: recordHtml, drawType: drawType };
+  if (!ANIMAL_PARTS[animalId].some(function (x) { return x.partKey === partKey; })) {
+    ANIMAL_PARTS[animalId].push(info);
+  }
+  obj.traverse(function (ch) {
+    if (ch.isMesh) {
+      ch.userData.partInfo = info;
+      if (hitMeshes.indexOf(ch) === -1) hitMeshes.push(ch);
+    }
+  });
+  return info;
+}
+
+function addPartHitSphere(parent, r, x, y, z, info) {
+  var h = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 10), HIT_MAT);
+  h.position.set(x, y, z);
+  h.userData.partInfo = info;
+  parent.add(h);
+  hitMeshes.push(h);
+  return h;
+}
+
+function addAnimalFallbackHit(g, animalId, r, y) {
+  var h = new THREE.Mesh(new THREE.SphereGeometry(r || 1.48, 14, 12), HIT_MAT);
+  h.position.set(0, y || 0.68, 0);
+  h.userData.fallbackAnimal = animalId;
+  g.add(h);
+  fallbackHitMeshes.push(h);
+}
+
+/* 1. 蚂蚁 */
+var antParts = {};
+(function buildAnt() {
+  var g = new THREE.Group(); g.position.y = 0.24; turntable.add(g); animals.ant = g;
+  var bodyRoot = new THREE.Group(); g.add(bodyRoot); antParts.root = bodyRoot;
+  var darkMat = toon('#5b2c18'), midMat = toon('#733820'), eyeMat = toon('#111827');
+
+  var headG = new THREE.Group(); headG.position.set(0.68, 0.56, 0); bodyRoot.add(headG); antParts.head = headG;
+  var headM = mesh(new THREE.SphereGeometry(0.27, 16, 14), darkMat); headM.scale.set(1.1, 0.92, 0.95); headG.add(headM);
+  [-1, 1].forEach(function (s) {
+    var eye = mesh(new THREE.SphereGeometry(0.065, 10, 10), eyeMat);
+    eye.position.set(0.15, 0.08, s * 0.19); headG.add(eye);
+    var hl = mesh(new THREE.SphereGeometry(0.02, 6, 6), toon('#ffffff'));
+    hl.position.set(0.2, 0.1, s * 0.21); headG.add(hl);
+  });
+  antParts.antL = new THREE.Group(); antParts.antL.position.set(0.22, 0.12, 0.1); headG.add(antParts.antL);
+  antParts.antR = new THREE.Group(); antParts.antR.position.set(0.22, 0.12, -0.1); headG.add(antParts.antR);
+  [antParts.antL, antParts.antR].forEach(function (ag, idx) {
+    var s = idx === 0 ? 1 : -1;
+    var seg1 = mesh(new THREE.CylinderGeometry(0.02, 0.024, 0.34, 8), darkMat);
+    seg1.position.set(0.14, 0.12, s * 0.08); seg1.rotation.z = -0.82; seg1.rotation.x = s * 0.35; ag.add(seg1);
+    var seg2 = mesh(new THREE.CylinderGeometry(0.016, 0.02, 0.3, 8), darkMat);
+    seg2.position.set(0.34, 0.14, s * 0.18); seg2.rotation.z = -1.75; seg2.rotation.x = s * 0.2; ag.add(seg2);
+  });
+  antParts.jawL = new THREE.Group(); antParts.jawL.position.set(0.24, -0.06, 0.08); headG.add(antParts.jawL);
+  antParts.jawR = new THREE.Group(); antParts.jawR.position.set(0.24, -0.06, -0.08); headG.add(antParts.jawR);
+  [antParts.jawL, antParts.jawR].forEach(function (jg, idx) {
+    var s = idx === 0 ? 1 : -1;
+    var j1 = mesh(new THREE.ConeGeometry(0.055, 0.26, 8), toon('#3b1a0c'));
+    j1.rotation.z = -Math.PI / 2; j1.rotation.y = s * 0.35; j1.position.set(0.12, 0, -s * 0.02);
+    jg.add(j1);
+  });
+  var antHeadInfo = tagPart(headG, 'ant', 'ant_head', '蚂蚁头与钳子口器', '头上有两根弯曲的触角，还有像小钳子一样的口器用来搬运食物！',
+    '看蚂蚁的头部！它有两根灵敏摆动的触角，还有一对像小钳子一样的口器，专门用来咬住和搬运食物！', '🐜 <b>蚂蚁头部</b>：有摆动触角和钳子状口器', 'ant_head');
+  addPartHitSphere(headG, 0.54, 0.18, 0.04, 0, antHeadInfo);
+
+  var thoraxG = new THREE.Group(); thoraxG.position.set(0.08, 0.48, 0); bodyRoot.add(thoraxG);
+  var thoraxM = mesh(new THREE.SphereGeometry(0.23, 14, 12), midMat); thoraxM.scale.set(1.38, 0.88, 0.85); thoraxG.add(thoraxM);
+  antParts.legs = [];
+  var legXs = [0.22, 0.0, -0.22];
+  legXs.forEach(function (lx, li) {
+    [-1, 1].forEach(function (side) {
+      var lg = new THREE.Group(); lg.position.set(lx, -0.05, side * 0.16);
+      var femur = mesh(new THREE.CylinderGeometry(0.028, 0.032, 0.42, 8), darkMat);
+      femur.position.set(lx * 0.2, 0.06, side * 0.18); femur.rotation.x = side * 1.1; femur.rotation.z = -lx * 0.6; lg.add(femur);
+      var tibia = mesh(new THREE.CylinderGeometry(0.02, 0.026, 0.54, 8), darkMat);
+      tibia.position.set(lx * 0.38, -0.18, side * 0.42); tibia.rotation.x = side * 0.38; tibia.rotation.z = -lx * 0.5; lg.add(tibia);
+      thoraxG.add(lg);
+      antParts.legs.push({ g: lg, idx: li, side: side });
+    });
+  });
+  var antLegsInfo = tagPart(thoraxG, 'ant', 'ant_legs', '蚂蚁胸与六条腿', '蚂蚁的胸部左右两边一共长着 6 条弯曲的节肢腿，走起路来非常稳！',
+    '数一数蚂蚁胸部两边！左边三条、右边三条，一共有六条弯曲的节肢腿，这是昆虫的典型特征！', '🐜 <b>蚂蚁胸部</b>：长着 6 条弯曲节肢腿', 'ant_legs');
+  addPartHitSphere(thoraxG, 0.58, 0, -0.04, 0, antLegsInfo);
+
+  var abdG = new THREE.Group(); abdG.position.set(-0.62, 0.54, 0); bodyRoot.add(abdG);
+  var abdTex = ctex(256, 128, function (c, w, h) {
+    c.fillStyle = '#5b2c18'; c.fillRect(0, 0, w, h);
+    c.fillStyle = '#854528';
+    for (var i = 0; i < 4; i++) c.fillRect(i * 64 + 12, 0, 26, h);
+  });
+  var abdM = mesh(new THREE.SphereGeometry(0.38, 18, 14), new THREE.MeshToonMaterial({ map: abdTex, gradientMap: ramp }));
+  abdM.scale.set(1.28, 0.95, 0.95); abdG.add(abdM);
+  var antAbdInfo = tagPart(abdG, 'ant', 'ant_abdomen', '蚂蚁分节腹部', '蚂蚁的身体清楚分成头、胸、腹三部分，后面圆鼓鼓的是分节的腹部！',
+    '这是蚂蚁大大的腹部！把头、胸、腹连起来看，蚂蚁的身体分成清晰的三部分！', '🐜 <b>蚂蚁腹部</b>：身体清晰分头、胸、腹三段', 'ant_abdomen');
+  addPartHitSphere(abdG, 0.56, 0, 0, 0, antAbdInfo);
+  addAnimalFallbackHit(g, 'ant', 1.48, 0.56);
+
+  // 蚂蚁搬起展示用面包屑
+  var carryCrumb = mesh(new THREE.DodecahedronGeometry(0.18, 0), toon('#f59e0b'));
+  carryCrumb.scale.set(1.15, 0.78, 1.0);
+  carryCrumb.position.set(1.15, 0.25, 0); carryCrumb.visible = false; g.add(carryCrumb);
+  antParts.carryCrumb = carryCrumb;
+})();
+
+/* 2. 兔子 */
+var rabbitParts = {};
+(function buildRabbit() {
+  var g = new THREE.Group(); g.position.y = 0.24; g.visible = false; turntable.add(g); animals.rabbit = g;
+  var bodyRoot = new THREE.Group(); g.add(bodyRoot); rabbitParts.root = bodyRoot;
+  var furMat = toon('#fffaf2'), pinkMat = toon('#fda4af'), eyeMat = toon('#dc2626');
+
+  var torso = mesh(new THREE.SphereGeometry(0.55, 20, 16), furMat);
+  torso.scale.set(1.22, 0.92, 0.88); torso.position.set(-0.08, 0.62, 0); bodyRoot.add(torso);
+  var headG = new THREE.Group(); headG.position.set(0.52, 1.04, 0); bodyRoot.add(headG);
+  var headM = mesh(new THREE.SphereGeometry(0.36, 18, 16), furMat); headM.scale.set(1.08, 0.96, 0.95); headG.add(headM);
+  [-1, 1].forEach(function (s) {
+    var eye = mesh(new THREE.SphereGeometry(0.055, 10, 10), eyeMat);
+    eye.position.set(0.24, 0.08, s * 0.22); headG.add(eye);
+    var hl = mesh(new THREE.SphereGeometry(0.018, 6, 6), toon('#ffffff'));
+    hl.position.set(0.28, 0.1, s * 0.24); headG.add(hl);
+  });
+  var nose = mesh(new THREE.SphereGeometry(0.05, 10, 8), pinkMat); nose.position.set(0.38, 0.0, 0); headG.add(nose);
+
+  var teethG = new THREE.Group(); teethG.position.set(0.36, -0.1, 0); headG.add(teethG);
+  [-0.036, 0.036].forEach(function (tz) {
+    var tooth = mesh(new THREE.BoxGeometry(0.06, 0.13, 0.055), toon('#ffffff'));
+    tooth.position.set(0.02, -0.04, tz); teethG.add(tooth);
+  });
+  var rabTeethInfo = tagPart(teethG, 'rabbit', 'rabbit_teeth', '兔子突出长门牙', '兔子有两颗洁白突出的长门牙，最适合啃咬脆脆的胡萝卜和青草！',
+    '看兔子的小嘴巴！它有两颗白白的长门牙，专门用来啃咬胡萝卜和嫩草！', '🐰 <b>兔子门牙</b>：突出长门牙，适合啃草吃萝卜', 'rabbit_teeth');
+  tagPart(headM, 'rabbit', 'rabbit_teeth', '兔子头部与门牙', '兔子有着红眼睛、三瓣嘴和两颗突出的长门牙！',
+    '兔子有红红的眼睛和两颗突出的长门牙，最爱啃胡萝卜啦！', '🐰 <b>兔子门牙</b>：突出长门牙，适合啃草吃萝卜', 'rabbit_teeth');
+  addPartHitSphere(headG, 0.52, 0.14, -0.02, 0, rabTeethInfo);
+
+  var earsG = new THREE.Group(); earsG.position.set(0.0, 0.3, 0); headG.add(earsG);
+  rabbitParts.earL = new THREE.Group(); rabbitParts.earL.position.set(-0.04, 0, 0.14); earsG.add(rabbitParts.earL);
+  rabbitParts.earR = new THREE.Group(); rabbitParts.earR.position.set(-0.04, 0, -0.14); earsG.add(rabbitParts.earR);
+  [rabbitParts.earL, rabbitParts.earR].forEach(function (eg) {
+    var outer = mesh(new THREE.SphereGeometry(0.14, 12, 12), furMat);
+    outer.scale.set(0.55, 2.75, 0.92); outer.position.set(-0.04, 0.36, 0); outer.rotation.z = 0.25; eg.add(outer);
+    var inner = mesh(new THREE.SphereGeometry(0.09, 10, 10), pinkMat);
+    inner.scale.set(0.35, 2.25, 0.65); inner.position.set(0.02, 0.34, 0); inner.rotation.z = 0.25; eg.add(inner);
+  });
+  var rabEarsInfo = tagPart(earsG, 'rabbit', 'rabbit_ears', '兔子毛绒长耳朵', '兔子的耳朵又长又灵巧，能转动听清四周的动静，还能帮助散热！',
+    '看兔子这对长长的耳朵！它会轻轻摆动，能敏锐听到周围小小的声音！', '🐰 <b>兔子长耳</b>：毛绒长耳朵，听觉很灵敏', 'rabbit_ears');
+  addPartHitSphere(earsG, 0.54, 0, 0.34, 0, rabEarsInfo);
+
+  [-1, 1].forEach(function (s) {
+    var fleg = mesh(new THREE.CylinderGeometry(0.08, 0.07, 0.44, 10), furMat);
+    fleg.position.set(0.38, 0.24, s * 0.24); bodyRoot.add(fleg);
+  });
+  var hindG = new THREE.Group(); bodyRoot.add(hindG); rabbitParts.hind = hindG;
+  [-1, 1].forEach(function (s) {
+    var thigh = mesh(new THREE.SphereGeometry(0.28, 14, 12), furMat);
+    thigh.scale.set(1.25, 1.0, 0.72); thigh.position.set(-0.34, 0.38, s * 0.36); hindG.add(thigh);
+    var foot = mesh(new THREE.SphereGeometry(0.14, 12, 10), furMat);
+    foot.scale.set(2.1, 0.55, 0.85); foot.position.set(-0.14, 0.1, s * 0.36); hindG.add(foot);
+  });
+  var rabLegsInfo = tagPart(hindG, 'rabbit', 'rabbit_legs', '兔子强健后肢', '兔子的后腿比前腿粗壮有力得多，一蹬地就能弹跳得又高又远！',
+    '看兔子的后肢又粗壮又有力！它奔跑时就是靠强健的后肢一蹬一跳前进的！', '🐰 <b>兔子后肢</b>：后腿粗壮有力，擅长跳跃', 'rabbit_legs');
+  addPartHitSphere(hindG, 0.62, -0.22, 0.34, 0, rabLegsInfo);
+
+  var tailG = new THREE.Group(); tailG.position.set(-0.74, 0.56, 0); bodyRoot.add(tailG);
+  var tailM = mesh(new THREE.SphereGeometry(0.2, 12, 12), furMat); tailG.add(tailM);
+  var rabTailInfo = tagPart(tailG, 'rabbit', 'rabbit_tail', '兔子绒球短尾巴', '兔子身后长着一个毛茸茸圆滚滚的小短尾巴，像一团小棉花球！',
+    '点到兔子的小尾巴啦！短短的圆滚滚的，像一团毛茸茸的白色小绒球！', '🐰 <b>兔子短尾</b>：圆滚滚的绒球短尾巴', 'rabbit_tail');
+  addPartHitSphere(tailG, 0.44, 0, 0, 0, rabTailInfo);
+  addAnimalFallbackHit(g, 'rabbit', 1.52, 0.72);
+
+  var eatCarrot = new THREE.Group(); eatCarrot.position.set(1.16, 0.16, 0); eatCarrot.visible = false; g.add(eatCarrot);
+  var cBody = mesh(new THREE.ConeGeometry(0.14, 0.55, 12), toon('#f97316'));
+  cBody.rotation.z = Math.PI / 2; eatCarrot.add(cBody);
+  var cLeaf = mesh(new THREE.ConeGeometry(0.12, 0.24, 7), toon('#22c55e'));
+  cLeaf.rotation.z = -Math.PI / 2; cLeaf.position.x = 0.34; eatCarrot.add(cLeaf);
+  rabbitParts.eatCarrot = eatCarrot;
+})();
+
+/* 3. 蟾蜍 */
+var toadParts = {};
+(function buildToad() {
+  var g = new THREE.Group(); g.position.y = 0.24; g.visible = false; turntable.add(g); animals.toad = g;
+  var bodyRoot = new THREE.Group(); g.add(bodyRoot); toadParts.root = bodyRoot;
+
+  var skinTex = ctex(256, 256, function (c, w, h) {
+    c.fillStyle = '#738243'; c.fillRect(0, 0, w, h);
+    c.fillStyle = '#535e2e';
+    for (var i = 0; i < 34; i++) {
+      c.beginPath(); c.arc((i*53)%w, (i*79)%h, 8 + (i%4)*5, 0, Math.PI*2); c.fill();
+    }
+    c.fillStyle = '#8fa056';
+    for (var j = 0; j < 20; j++) {
+      c.beginPath(); c.arc((j*67+20)%w, (j*41+15)%h, 5 + (j%3)*3, 0, Math.PI*2); c.fill();
+    }
+  });
+  var toadBackMat = new THREE.MeshToonMaterial({ map: skinTex, gradientMap: ramp });
+  var bellyMat = toon('#e4deb3');
+
+  var backG = new THREE.Group(); bodyRoot.add(backG);
+  var bodyM = mesh(new THREE.SphereGeometry(0.62, 20, 16), toadBackMat);
+  bodyM.scale.set(1.18, 0.78, 1.05); bodyM.position.set(-0.08, 0.48, 0); backG.add(bodyM);
+  var belly = mesh(new THREE.SphereGeometry(0.54, 16, 12), bellyMat);
+  belly.scale.set(1.1, 0.56, 0.96); belly.position.set(-0.04, 0.34, 0); backG.add(belly);
+  [[-0.2, 0.92, 0.18], [-0.35, 0.88, -0.14], [0.05, 0.94, -0.22], [-0.45, 0.8, 0.2]].forEach(function (w) {
+    var bump = mesh(new THREE.SphereGeometry(0.075, 8, 8), toon('#5a6732'));
+    bump.scale.set(1.1, 0.55, 1.1); bump.position.set(w[0], w[1], w[2]); backG.add(bump);
+  });
+  var toadBackInfo = tagPart(backG, 'toad', 'toad_back', '蟾蜍斑点背部', '蟾蜍的背部凹凸不平，布满斑点状的小疙瘩，颜色像泥土方便隐藏自己！',
+    '观察蟾蜍的背部！上面有很多深浅不一的斑点和小凸起，这能保护它在草丛里藏起来！', '🐸 <b>蟾蜍背部</b>：布满斑点与凸起，善于伪装', 'toad_back');
+  addPartHitSphere(backG, 0.72, -0.08, 0.5, 0, toadBackInfo);
+
+  var faceG = new THREE.Group(); faceG.position.set(0.45, 0.62, 0); bodyRoot.add(faceG);
+  var snout = mesh(new THREE.SphereGeometry(0.38, 16, 12), toadBackMat);
+  snout.scale.set(1.0, 0.68, 1.18); faceG.add(snout);
+  var mouth = mesh(new THREE.TorusGeometry(0.28, 0.032, 8, 18, Math.PI), toon('#4d2c1e'));
+  mouth.rotation.x = Math.PI / 2; mouth.rotation.z = -Math.PI / 2; mouth.position.set(0.14, -0.06, 0); faceG.add(mouth);
+  [-1, 1].forEach(function (s) {
+    var lid = mesh(new THREE.SphereGeometry(0.16, 12, 12), toadBackMat);
+    lid.position.set(0.06, 0.24, s * 0.24); faceG.add(lid);
+    var iris = mesh(new THREE.SphereGeometry(0.12, 12, 12), toon('#facc15'));
+    iris.position.set(0.12, 0.24, s * 0.28); faceG.add(iris);
+    var pup = mesh(new THREE.SphereGeometry(0.07, 10, 10), toon('#111827'));
+    pup.position.set(0.18, 0.25, s * 0.31); faceG.add(pup);
+  });
+  var toadFaceInfo = tagPart(faceG, 'toad', 'toad_face', '蟾蜍大眼与宽扁嘴', '蟾蜍头顶有一对大而突出的眼睛，还有宽阔的大扁嘴，擅长吐舌捉飞虫！',
+    '看蟾蜍圆溜溜突出的大眼睛和宽宽的扁嘴巴！它一发现小飞虫就会迅速吐出长舌头！', '🐸 <b>蟾蜍头脸</b>：突出大双眼，宽阔扁嘴捉虫', 'toad_face');
+  addPartHitSphere(faceG, 0.56, 0.08, 0.1, 0, toadFaceInfo);
+
+  var legsG = new THREE.Group(); bodyRoot.add(legsG);
+  [-1, 1].forEach(function (s) {
+    var fl = mesh(new THREE.CylinderGeometry(0.08, 0.07, 0.42, 10), toon('#6e7d40'));
+    fl.position.set(0.42, 0.2, s * 0.36); fl.rotation.z = -0.3; legsG.add(fl);
+    var hl = mesh(new THREE.SphereGeometry(0.26, 12, 10), toadBackMat);
+    hl.scale.set(1.35, 0.85, 0.72); hl.position.set(-0.32, 0.26, s * 0.56); legsG.add(hl);
+    var web = mesh(new THREE.CylinderGeometry(0.16, 0.2, 0.06, 8), toon('#849450'));
+    web.scale.set(1.5, 1, 0.9); web.position.set(-0.18, 0.05, s * 0.62); legsG.add(web);
+  });
+  var toadLegsInfo = tagPart(legsG, 'toad', 'toad_legs', '蟾蜍弹跳后腿', '蟾蜍折叠着粗壮的弹跳后腿，脚趾间还有蹼，能跳跃也能游泳！',
+    '蟾蜍折叠着强壮的弹跳后腿，一发力就能跃起扑向小飞虫！', '🐸 <b>蟾蜍后腿</b>：强健后腿，能跳跃也会游泳', 'toad_legs');
+  addPartHitSphere(legsG, 0.62, -0.2, 0.22, 0, toadLegsInfo);
+  addAnimalFallbackHit(g, 'toad', 1.48, 0.56);
+
+  var tongue = mesh(new THREE.CylinderGeometry(0.048, 0.058, 1.15, 10), toon('#fb7185'));
+  tongue.rotation.z = Math.PI / 2; tongue.position.set(0.55, 0.56, 0); tongue.scale.y = 0.01; tongue.visible = false;
+  bodyRoot.add(tongue); toadParts.tongue = tongue;
+
+  var catchFly = new THREE.Group(); catchFly.position.set(1.45, 0.92, 0); catchFly.visible = false; g.add(catchFly);
+  catchFly.add(mesh(new THREE.SphereGeometry(0.085, 10, 8), toon('#1f2937')));
+  [-1, 1].forEach(function (s) {
+    var wg = mesh(new THREE.SphereGeometry(0.095, 8, 6), toon('#e0f2fe', { transparent: true, opacity: 0.85 }));
+    wg.scale.set(0.7, 0.15, 1.35); wg.position.set(0, 0.07, s * 0.11); catchFly.add(wg);
+  });
+  toadParts.catchFly = catchFly;
+})();
+
+/* 4. 蜗牛 */
+var snailParts = {};
+(function buildSnail() {
+  var g = new THREE.Group(); g.position.y = 0.24; g.visible = false; turntable.add(g); animals.snail = g;
+  var softG = new THREE.Group(); g.add(softG); snailParts.soft = softG;
+  var footMat = toon('#ebd6b5'), headMat = toon('#e4c89e');
+  var foot = mesh(new THREE.SphereGeometry(0.42, 18, 14), footMat);
+  foot.scale.set(2.35, 0.44, 0.88); foot.position.set(0.12, 0.18, 0); softG.add(foot);
+  var neck = mesh(new THREE.CylinderGeometry(0.18, 0.24, 0.54, 14), headMat);
+  neck.position.set(0.72, 0.42, 0); neck.rotation.z = -0.58; softG.add(neck);
+  var sHead = mesh(new THREE.SphereGeometry(0.22, 14, 12), headMat);
+  sHead.position.set(0.92, 0.62, 0); softG.add(sHead);
+  var snailBodyInfo = tagPart(foot, 'snail', 'snail_body', '蜗牛柔软身体', '蜗牛没有骨头和腿，靠下面湿润柔软的腹足贴着地面慢慢滑行！',
+    '蜗牛的身体软软的，靠宽宽的腹足一伸一缩慢慢向前爬行！', '🐌 <b>蜗牛身体</b>：柔软腹足，慢慢滑行', 'snail_body');
+  tagPart(neck, 'snail', 'snail_body', '蜗牛柔软身体', '蜗牛没有骨头和腿，靠下面湿润柔软的腹足贴着地面慢慢滑行！',
+    '蜗牛的身体软软的，靠宽宽的腹足一伸一缩慢慢向前爬行！', '🐌 <b>蜗牛身体</b>：柔软腹足，慢慢滑行', 'snail_body');
+  tagPart(sHead, 'snail', 'snail_body', '蜗牛柔软身体', '蜗牛没有骨头和腿，靠下面湿润柔软的腹足贴着地面慢慢滑行！',
+    '蜗牛的身体软软的，靠宽宽的腹足一伸一缩慢慢向前爬行！', '🐌 <b>蜗牛身体</b>：柔软腹足，慢慢滑行', 'snail_body');
+  addPartHitSphere(softG, 0.62, 0.35, 0.3, 0, snailBodyInfo);
+
+  var feelersG = new THREE.Group(); feelersG.position.set(0.98, 0.72, 0); softG.add(feelersG); snailParts.feelers = feelersG;
+  [-1, 1].forEach(function (s) {
+    var stalk = mesh(new THREE.CylinderGeometry(0.026, 0.036, 0.52, 8), headMat);
+    stalk.position.set(0.16, 0.22, s * 0.14); stalk.rotation.z = -0.55; stalk.rotation.x = s * 0.35; feelersG.add(stalk);
+    var tip = mesh(new THREE.SphereGeometry(0.055, 10, 10), toon('#1f2937'));
+    tip.position.set(0.3, 0.44, s * 0.22); feelersG.add(tip);
+    var low = mesh(new THREE.CylinderGeometry(0.018, 0.024, 0.22, 8), headMat);
+    low.position.set(0.18, -0.06, s * 0.09); low.rotation.z = -1.25; feelersG.add(low);
+  });
+  var snailFeelersInfo = tagPart(feelersG, 'snail', 'snail_feelers', '蜗牛长眼柄触角', '蜗牛头上有一对长长的眼柄触角，小眼睛就长在触角顶上，碰一下会立刻缩回去！',
+    '看蜗牛这对长长的触角，小眼睛就长在顶上！把右边桌上的小树叶拖过来轻轻碰一下试试吧！', '🐌 <b>蜗牛触角</b>：长眼柄触角，遇刺激会缩回', 'snail_feelers');
+  addPartHitSphere(feelersG, 0.58, 0.18, 0.22, 0, snailFeelersInfo);
+
+  var shellG = new THREE.Group(); shellG.position.set(-0.22, 0.72, 0); g.add(shellG); snailParts.shell = shellG;
+  var shellTex = ctex(256, 256, function (c, w, h) {
+    c.fillStyle = '#b97b42'; c.fillRect(0, 0, w, h);
+    c.strokeStyle = '#6f3e19'; c.lineWidth = 10;
+    for (var i = 0; i < 10; i++) {
+      c.beginPath(); c.moveTo(0, i * 28); c.lineTo(w, i * 28 + 16); c.stroke();
+    }
+  });
+  var shMat = new THREE.MeshToonMaterial({ map: shellTex, gradientMap: ramp });
+  shellG.add(mesh(new THREE.TorusGeometry(0.42, 0.28, 16, 28), shMat));
+  var innerWhorl = mesh(new THREE.TorusGeometry(0.2, 0.16, 12, 22), toon('#965c29'));
+  innerWhorl.position.set(-0.04, 0.02, 0.16); shellG.add(innerWhorl);
+  var innerWhorl2 = innerWhorl.clone(); innerWhorl2.position.z = -0.16; shellG.add(innerWhorl2);
+  var apex = mesh(new THREE.SphereGeometry(0.18, 12, 12), toon('#78441b'));
+  apex.position.set(-0.04, 0.02, 0.24); shellG.add(apex);
+  var snailShellInfo = tagPart(shellG, 'snail', 'snail_shell', '蜗牛螺旋硬壳', '蜗牛背着一个一圈圈螺旋纹理的硬壳，遇到危险就能缩进壳里保护自己！',
+    '蜗牛背着坚硬的螺旋纹小房子！遇到惊吓时，它可以把柔软身体缩进壳里保护自己！', '🐌 <b>蜗牛硬壳</b>：螺旋纹理硬壳，保护柔软身体', 'snail_shell');
+  addPartHitSphere(shellG, 0.74, 0, 0, 0, snailShellInfo);
+  addAnimalFallbackHit(g, 'snail', 1.52, 0.65);
+
+  // 蜗牛轻触动画用嫩绿小树叶
+  var touchLeaf = new THREE.Group(); touchLeaf.position.set(1.55, 1.35, 0.2); touchLeaf.visible = false; g.add(touchLeaf);
+  var lfBlade = mesh(new THREE.SphereGeometry(0.22, 12, 10), toon('#22c55e'));
+  lfBlade.scale.set(1.9, 0.14, 0.82); lfBlade.rotation.z = -0.45; touchLeaf.add(lfBlade);
+  var lfStem = mesh(new THREE.CylinderGeometry(0.018, 0.022, 0.42, 6), toon('#15803d'));
+  lfStem.rotation.z = 1.1; lfStem.position.set(0.32, 0.16, 0); touchLeaf.add(lfStem);
+  snailParts.touchLeaf = touchLeaf;
+})();
+
+/* ===== 桌面右侧前缘可拖拽 3D 互动道具（避让右上 #notes） ===== */
+var PROP_HOME = new THREE.Vector3(STAGE_X + 2.52, 0.28, 0.88);
+var FLY_HOME  = new THREE.Vector3(STAGE_X + 2.38, 1.05, 0.65);
+
+var propSaucer = mesh(new THREE.CylinderGeometry(0.56, 0.62, 0.07, 24), toon('#fef3c7'));
+propSaucer.position.set(PROP_HOME.x, 0.035, PROP_HOME.z); propSaucer.castShadow = false;
+live.add(propSaucer);
+
+var propPulseRing = new THREE.Mesh(
+  new THREE.RingGeometry(0.58, 0.76, 28),
+  new THREE.MeshBasicMaterial({ color: '#ea580c', side: THREE.DoubleSide, transparent: true, opacity: 0.75, depthWrite: false })
+);
+propPulseRing.rotation.x = -Math.PI / 2;
+propPulseRing.position.set(PROP_HOME.x, 0.08, PROP_HOME.z);
+live.add(propPulseRing);
+
+var deskProps = {};
+var deskPropMeshes = [];
+function registerDeskProp(animalId, grp) {
+  grp.position.copy(animalId === 'toad' ? FLY_HOME : PROP_HOME);
+  grp.visible = (animalId === 'ant');
+  // 宽松透明拾取球，确保 6 岁小朋友一抓就抓到、绝不点空
+  var hitS = new THREE.Mesh(new THREE.SphereGeometry(0.78, 12, 10), HIT_MAT);
+  hitS.position.set(0, 0.12, 0);
+  grp.add(hitS);
+  live.add(grp);
+  grp.traverse(function (ch) {
+    if (ch.isMesh) { ch.userData.propAnimal = animalId; deskPropMeshes.push(ch); }
+  });
+  deskProps[animalId] = grp;
+}
+
+// 1. 金黄 3D 面包屑
+(function () {
+  var g = new THREE.Group();
+  var main = mesh(new THREE.DodecahedronGeometry(0.26, 0), toon('#f59e0b'));
+  main.scale.set(1.18, 0.78, 1.0); g.add(main);
+  var bit1 = mesh(new THREE.DodecahedronGeometry(0.11, 0), toon('#fbbf24'));
+  bit1.position.set(0.22, -0.08, 0.14); g.add(bit1);
+  var bit2 = mesh(new THREE.DodecahedronGeometry(0.09, 0), toon('#d97706'));
+  bit2.position.set(-0.2, -0.09, 0.15); g.add(bit2);
+  registerDeskProp('ant', g);
+})();
+
+// 2. 鲜橙带绿叶 3D 胡萝卜
+(function () {
+  var g = new THREE.Group();
+  var body = mesh(new THREE.ConeGeometry(0.18, 0.72, 14), toon('#f97316'));
+  body.rotation.z = Math.PI / 2; g.add(body);
+  for (var i = 0; i < 3; i++) {
+    var lf = mesh(new THREE.ConeGeometry(0.08, 0.34, 7), toon('#22c55e'));
+    lf.rotation.z = -Math.PI / 2 + (i - 1) * 0.35;
+    lf.rotation.y = (i - 1) * 0.3;
+    lf.position.set(0.45, (i - 1) * 0.06, 0);
+    g.add(lf);
+  }
+  g.rotation.y = -0.35;
+  registerDeskProp('rabbit', g);
+})();
+
+// 3. 可拖/可点 3D 小飞虫
+(function () {
+  var g = new THREE.Group();
+  var body = mesh(new THREE.SphereGeometry(0.12, 12, 10), toon('#1f2937'));
+  body.scale.set(1.25, 0.9, 0.9); g.add(body);
+  var eye1 = mesh(new THREE.SphereGeometry(0.042, 8, 8), toon('#ef4444'));
+  eye1.position.set(-0.11, 0.03, 0.06); g.add(eye1);
+  var eye2 = eye1.clone(); eye2.position.z = -0.06; g.add(eye2);
+  var wings = [];
+  [-1, 1].forEach(function (s) {
+    var wg = mesh(new THREE.SphereGeometry(0.14, 10, 8), toon('#e0f2fe', { transparent: true, opacity: 0.85 }));
+    wg.scale.set(0.72, 0.14, 1.45); wg.position.set(0.02, 0.11, s * 0.16);
+    g.add(wg); wings.push(wg);
+  });
+  g.userData.wings = wings;
+  registerDeskProp('toad', g);
+})();
+
+// 4. 嫩绿 3D 小树叶（轻触蜗牛触角）
+(function () {
+  var g = new THREE.Group();
+  var blade = mesh(new THREE.SphereGeometry(0.28, 14, 12), toon('#22c55e'));
+  blade.scale.set(1.75, 0.15, 0.82); g.add(blade);
+  var vein = mesh(new THREE.BoxGeometry(0.75, 0.05, 0.04), toon('#bbf7d0'));
+  vein.position.y = 0.035; g.add(vein);
+  var stem = mesh(new THREE.CylinderGeometry(0.022, 0.028, 0.34, 8), toon('#15803d'));
+  stem.rotation.z = Math.PI / 2; stem.position.x = 0.56; g.add(stem);
+  g.rotation.y = -0.35; g.rotation.z = 0.16;
+  registerDeskProp('snail', g);
+})();
+
+var propGoal = PROP_HOME.clone();
+
+/* ===== 局部放大特征圈 2D 清晰插画 ===== */
+var zCv = $('#zoomCv'), zCtx = zCv.getContext('2d');
+function drawZoomFeature(type) {
+  var w = zCv.width, h = zCv.height, g = zCtx;
+  g.clearRect(0, 0, w, h);
+  g.fillStyle = '#fffbeb'; g.fillRect(0, 0, w, h);
+  g.lineCap = 'round'; g.lineJoin = 'round';
+
+  if (type === 'ant_head') {
+    g.fillStyle = '#5b2c18'; g.beginPath(); g.ellipse(54, 68, 28, 22, 0, 0, Math.PI*2); g.fill();
+    g.strokeStyle = '#3b1a0c'; g.lineWidth = 6;
+    g.beginPath(); g.moveTo(74, 58); g.quadraticCurveTo(106, 46, 100, 66); g.stroke();
+    g.beginPath(); g.moveTo(74, 78); g.quadraticCurveTo(106, 90, 100, 70); g.stroke();
+    g.lineWidth = 3.5;
+    g.beginPath(); g.moveTo(64, 50); g.lineTo(84, 24); g.lineTo(106, 30); g.stroke();
+    g.fillStyle = '#111827'; g.beginPath(); g.arc(62, 62, 6, 0, Math.PI*2); g.fill();
+  } else if (type === 'ant_legs') {
+    g.fillStyle = '#733820'; g.beginPath(); g.ellipse(64, 64, 22, 15, 0, 0, Math.PI*2); g.fill();
+    g.strokeStyle = '#472112'; g.lineWidth = 4;
+    [-1, 0, 1].forEach(function (i) {
+      g.beginPath(); g.moveTo(64 + i*12, 52); g.lineTo(64 + i*22, 26); g.lineTo(64 + i*32, 16); g.stroke();
+      g.beginPath(); g.moveTo(64 + i*12, 76); g.lineTo(64 + i*22, 102); g.lineTo(64 + i*32, 112); g.stroke();
+    });
+  } else if (type === 'ant_abdomen') {
+    g.fillStyle = '#5b2c18'; g.beginPath(); g.ellipse(32, 64, 14, 12, 0, 0, Math.PI*2); g.fill();
+    g.fillStyle = '#733820'; g.beginPath(); g.ellipse(58, 64, 15, 11, 0, 0, Math.PI*2); g.fill();
+    g.fillStyle = '#5b2c18'; g.beginPath(); g.ellipse(92, 64, 24, 18, 0, 0, Math.PI*2); g.fill();
+    g.strokeStyle = '#b45309'; g.lineWidth = 3;
+    g.beginPath(); g.moveTo(84, 48); g.lineTo(84, 80); g.moveTo(98, 48); g.lineTo(98, 80); g.stroke();
+  } else if (type === 'rabbit_ears') {
+    g.fillStyle = '#f8fafc'; g.strokeStyle = '#cbd5e1'; g.lineWidth = 3;
+    g.beginPath(); g.ellipse(46, 62, 14, 44, -0.18, 0, Math.PI*2); g.fill(); g.stroke();
+    g.beginPath(); g.ellipse(82, 62, 14, 44, 0.18, 0, Math.PI*2); g.fill(); g.stroke();
+    g.fillStyle = '#fda4af';
+    g.beginPath(); g.ellipse(46, 64, 7, 32, -0.18, 0, Math.PI*2); g.fill();
+    g.beginPath(); g.ellipse(82, 64, 7, 32, 0.18, 0, Math.PI*2); g.fill();
+  } else if (type === 'rabbit_teeth') {
+    g.fillStyle = '#fda4af'; g.beginPath(); g.arc(64, 44, 10, 0, Math.PI*2); g.fill();
+    g.fillStyle = '#ffffff'; g.strokeStyle = '#94a3b8'; g.lineWidth = 2.5;
+    g.fillRect(48, 58, 15, 34); g.strokeRect(48, 58, 15, 34);
+    g.fillRect(65, 58, 15, 34); g.strokeRect(65, 58, 15, 34);
+  } else if (type === 'rabbit_legs' || type === 'rabbit_tail') {
+    g.fillStyle = '#f8fafc'; g.strokeStyle = '#cbd5e1'; g.lineWidth = 3;
+    if (type === 'rabbit_legs') {
+      g.beginPath(); g.ellipse(54, 62, 26, 22, -0.3, 0, Math.PI*2); g.fill(); g.stroke();
+      g.beginPath(); g.ellipse(76, 92, 30, 12, 0, 0, Math.PI*2); g.fill(); g.stroke();
+    } else {
+      for (var i = 0; i < 8; i++) {
+        var a = i * Math.PI / 4;
+        g.beginPath(); g.arc(64 + Math.cos(a)*16, 64 + Math.sin(a)*16, 16, 0, Math.PI*2); g.fill();
+      }
+      g.beginPath(); g.arc(64, 64, 24, 0, Math.PI*2); g.fill();
+    }
+  } else if (type === 'toad_face') {
+    g.fillStyle = '#738243'; g.beginPath(); g.ellipse(64, 76, 44, 26, 0, 0, Math.PI*2); g.fill();
+    [-22, 22].forEach(function (dx) {
+      g.fillStyle = '#facc15'; g.beginPath(); g.arc(64 + dx, 46, 14, 0, Math.PI*2); g.fill();
+      g.fillStyle = '#111827'; g.beginPath(); g.arc(64 + dx, 46, 7, 0, Math.PI*2); g.fill();
+    });
+    g.strokeStyle = '#4d2c1e'; g.lineWidth = 4;
+    g.beginPath(); g.arc(64, 72, 28, 0.15, Math.PI - 0.15); g.stroke();
+  } else if (type === 'toad_back' || type === 'toad_legs') {
+    g.fillStyle = '#738243'; g.beginPath(); g.ellipse(64, 66, 42, 30, 0, 0, Math.PI*2); g.fill();
+    g.fillStyle = '#4a5427';
+    [[46,56,8],[70,52,10],[82,72,7],[52,78,9],[66,70,6]].forEach(function (p) {
+      g.beginPath(); g.arc(p[0], p[1], p[2], 0, Math.PI*2); g.fill();
+    });
+  } else if (type === 'snail_shell') {
+    g.fillStyle = '#b97b42'; g.beginPath(); g.arc(64, 64, 38, 0, Math.PI*2); g.fill();
+    g.strokeStyle = '#5c3111'; g.lineWidth = 4.5;
+    g.beginPath();
+    for (var t = 0; t < 18; t += 0.25) {
+      var r = t * 2.0, x = 64 + Math.cos(t) * r, y = 64 + Math.sin(t) * r;
+      if (t === 0) g.moveTo(x, y); else g.lineTo(x, y);
+    }
+    g.stroke();
+  } else if (type === 'snail_feelers' || type === 'snail_body') {
+    g.fillStyle = '#e4c89e'; g.beginPath(); g.ellipse(64, 92, 34, 16, 0, 0, Math.PI*2); g.fill();
+    g.strokeStyle = '#c8a675'; g.lineWidth = 6;
+    g.beginPath(); g.moveTo(52, 82); g.lineTo(38, 36); g.moveTo(76, 82); g.lineTo(90, 36); g.stroke();
+    g.fillStyle = '#1f2937';
+    g.beginPath(); g.arc(38, 34, 7, 0, Math.PI*2); g.arc(90, 34, 7, 0, Math.PI*2); g.fill();
+  }
+}
+
+/* ===== 状态、严格 1 对 1 记录与通关判定 ===== */
+var ANIMAL_META = {
+  ant:    { name: '蚂蚁', tag: '🍞 拖面包屑喂蚂蚁', cuePart: '👆 点蚂蚁看结构', cueAct: '👆 拖或点面包屑喂蚂蚁', actIco: '🍞', actLbl: '搬起面包屑', actRec: '🍞 <b>蚂蚁搬食</b>：用钳子口器搬起面包屑', actVoice: '哇，蚂蚁发现面包屑啦！它挥动钳子状口器把面包屑稳稳举起来搬走啦！' },
+  rabbit: { name: '兔子', tag: '🥕 拖胡萝卜喂兔子', cuePart: '👆 点兔子看结构', cueAct: '👆 拖或点胡萝卜喂兔子', actIco: '🥕', actLbl: '跳跃啃萝卜', actRec: '🥕 <b>兔子啃萝卜</b>：蹬强健后肢跳跃啃胡萝卜', actVoice: '小兔子看到胡萝卜好开心！它蹬起强健的后肢跳过来，用长门牙咔嚓咔嚓啃胡萝卜！' },
+  toad:   { name: '蟾蜍', tag: '🦟 拖/点飞虫捉虫', cuePart: '👆 点蟾蜍看结构', cueAct: '👆 拖或点小飞虫捉虫', actIco: '🦟', actLbl: '吐长舌捉飞虫', actRec: '🦟 <b>蟾蜍捉虫</b>：跃起吐出粉色长舌捉飞虫', actVoice: '看准小飞虫啦！蟾蜍张开宽嘴，唰地吐出粉红长舌头，精准把小飞虫捉住啦！' },
+  snail:  { name: '蜗牛', tag: '🍃 拖树叶碰触角', cuePart: '👆 点蜗牛看结构', cueAct: '👆 拖或点小树叶碰触角', actIco: '🍃', actLbl: '触角缩回壳里', actRec: '🍃 <b>蜗牛缩壳</b>：小树叶轻触触角立刻缩回壳里', actVoice: '小树叶轻轻碰了一下蜗牛的触角，触角立刻缩回螺旋壳里保护自己，过一会儿又缓缓伸出来啦！' }
+};
+var ANIMAL_ORDER = ['ant', 'rabbit', 'toad', 'snail'];
+var nextPartCursor = { ant: 0, rabbit: 0, toad: 0, snail: 0 };
+var propAutoFly = null; // { animalId, t, dur, from: Vector3, to: Vector3 }
+
+var curAnimal = 'ant';
+var partDone = { ant: false, rabbit: false, toad: false, snail: false };
+var actDone  = { ant: false, rabbit: false, toad: false, snail: false };
+var found = {}, stamps = { s1: false, s2: false, s3: false }, celebrated = false, demo = false;
+var resetGen = 0;
+var actAnim = { type: '', t: 0 };
+var curGuideSpeech = '第1步：点一点蚂蚁的头、胸、腹和六条腿，再把桌右的面包屑拖到蚂蚁嘴边！';
+
+function markInteracted() { document.body.classList.add('interacted'); }
+
+function popLabelAt3D(worldPos, text) {
+  var v = worldPos.clone().project(camera);
+  var x = (v.x * 0.5 + 0.5) * window.innerWidth;
+  var y = (-v.y * 0.5 + 0.5) * window.innerHeight;
+  var el = document.createElement('div');
+  el.className = 'popword';
+  el.textContent = text;
+  el.style.left = Math.max(90, Math.min(window.innerWidth - 90, x)) + 'px';
+  el.style.top = Math.max(70, Math.min(window.innerHeight - 110, y - 16)) + 'px';
+  $('#labels').appendChild(el);
+  setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1600);
+}
+
+function syncAnimalDots() {
+  ['ant', 'rabbit', 'toad', 'snail'].forEach(function (id) {
+    $('#dot-' + id + '-p').classList.toggle('on', !!partDone[id]);
+    $('#dot-' + id + '-a').classList.toggle('on', !!actDone[id]);
+  });
+  $('#propTag').classList.toggle('done', !!actDone[curAnimal]);
+}
+
+function addDiscovery(key, html, spoken) {
+  if (!found[key]) {
+    found[key] = true;
+    var el = document.createElement('div');
+    el.className = 'stk';
+    el.innerHTML = html;
+    $('#ntList').prepend(el);
+    $('#ntCnt').textContent = Object.keys(found).length;
+  }
+  checkStamps();
+  if (spoken && !demo) speak(spoken);
+}
+
+function lightStamp(id, key) {
+  if (!stamps[key]) {
+    stamps[key] = true;
+    var el = $('#' + id);
+    if (el) el.classList.add('lit');
+    beep([523, 659, 784], 0.22);
+  }
+}
+
+function checkStamps() {
+  syncAnimalDots();
+  if (partDone.ant && actDone.ant) lightStamp('st1', 's1');
+  if (partDone.rabbit && actDone.rabbit) lightStamp('st2', 's2');
+  if (partDone.toad && actDone.toad && partDone.snail && actDone.snail) lightStamp('st3', 's3');
+  updateGuide(false);
+
+  if (!demo && !celebrated && stamps.s1 && stamps.s2 && stamps.s3) {
+    celebrated = true;
+    saveProgress(LESSON_ID, true);
+    fireConfetti();
+    beep([523, 659, 784, 1046], 0.28);
+    var g = resetGen;
+    setTimeout(function () {
+      if (g !== resetGen) return;
+      $('#winToast').classList.add('show');
+      speak('太棒啦！蚂蚁、兔子、蟾蜍和蜗牛的身体特征和反应全都观察完了，快来看看科学小结论并领小红花吧！', true);
+    }, 700);
+  }
+}
+
+function updateGuide(speakIt) {
+  $('#propTag').classList.remove('pulse');
+  if (!stamps.s1) {
+    if (!partDone.ant) curGuideSpeech = '第1步：点击蚂蚁的头、胸、腹或六条腿，观察昆虫的身体结构！';
+    else { curGuideSpeech = '第1步：把桌面右侧的 3D 面包屑拖到蚂蚁嘴边，看它搬运食物！'; if (curAnimal === 'ant') $('#propTag').classList.add('pulse'); }
+  } else if (!stamps.s2) {
+    if (!partDone.rabbit) curGuideSpeech = '第2步：切到兔子头像，点击长耳朵、长门牙、后肢或短尾巴观察！';
+    else { curGuideSpeech = '第2步：把桌面右侧的 3D 胡萝卜拖到兔子嘴边，看它跳跃啃食！'; if (curAnimal === 'rabbit') $('#propTag').classList.add('pulse'); }
+  } else if (!stamps.s3) {
+    if (!partDone.toad || !actDone.toad) {
+      curGuideSpeech = !partDone.toad ? '第3步：切到蟾蜍头像，点击大眼睛、斑点背或后腿观察！' : '第3步：拖动或点击草盘旁的小飞虫，看蟾蜍吐长舌精准捉虫！';
+      if (curAnimal === 'toad' && partDone.toad) $('#propTag').classList.add('pulse');
+    } else {
+      curGuideSpeech = !partDone.snail ? '第4步：切到蜗牛头像，点击螺旋硬壳、长眼柄触角或柔软身体！' : '第4步：把桌右的 3D 小树叶拖去轻触蜗牛触角，看看缩壳反应！';
+      if (curAnimal === 'snail' && partDone.snail) $('#propTag').classList.add('pulse');
+    }
+  } else {
+    curGuideSpeech = '太棒啦！四种常见动物全部观察完毕，可以继续旋转和互动！';
+  }
+  $('#guideTxt').textContent = curGuideSpeech;
+  $('#guideBar').classList.remove('flash');
+  void $('#guideBar').offsetWidth;
+  $('#guideBar').classList.add('flash');
+  if (speakIt) speak(curGuideSpeech, true);
+}
+
+function getPropHome(id) {
+  return id === 'toad' ? FLY_HOME : PROP_HOME;
+}
+
+function selectAnimal(id, silent) {
+  curAnimal = id;
+  propAutoFly = null;
+  actAnim.type = ''; actAnim.t = 0;
+  // 清理所有临时交互道具（D4）
+  antParts.carryCrumb.visible = false;
+  rabbitParts.eatCarrot.visible = false;
+  toadParts.catchFly.visible = false; toadParts.tongue.visible = false;
+  snailParts.touchLeaf.visible = false;
+
+  Object.keys(animals).forEach(function (k) { animals[k].visible = (k === id); });
+  Object.keys(deskProps).forEach(function (k) {
+    deskProps[k].visible = (k === id);
+    deskProps[k].position.copy(getPropHome(k));
+  });
+  propGoal.copy(getPropHome(id));
+  propSaucer.visible = (id !== 'toad');
+
+  $$('.acard').forEach(function (b) { b.classList.toggle('active', b.dataset.animal === id); });
+  $('#propTag').textContent = ANIMAL_META[id].tag;
+  $('#zoomCard').classList.remove('show');
+  turntable.scale.setScalar(0.88);
+  syncAnimalDots();
+  updateGuide(false);
+
+  if (!silent && !demo) {
+    var intro = {
+      ant: '这是蚂蚁！点一点它的头、胸、腹和六条腿，再把右边桌上的面包屑拖到蚂蚁嘴边吧！',
+      rabbit: '这是小兔子！点一点长耳朵、长门牙和强健后肢，再把桌上的胡萝卜拖给兔子吃吧！',
+      toad: '这是蟾蜍！点一点它的大眼睛和斑点背，再拖动或点击旁边的小飞虫看看！',
+      snail: '这是蜗牛！点一点螺旋硬壳和长眼柄触角，再把桌上的小树叶拖去轻触触角看看！'
+    };
+    speak(intro[id]);
+  }
+}
+
+function triggerAnimalAction() {
+  markInteracted();
+  var meta = ANIMAL_META[curAnimal];
+  beep([523, 659], 0.18);
+  // 转盘微微朝向右侧道具方向，动画对位更精准
+  targetRotY = -0.22;
+  actAnim = { type: curAnimal, t: 3.0 };
+  deskProps[curAnimal].visible = false;
+  if (curAnimal === 'ant') antParts.carryCrumb.visible = true;
+  if (curAnimal === 'rabbit') rabbitParts.eatCarrot.visible = true;
+  if (curAnimal === 'toad') { toadParts.catchFly.visible = true; toadParts.tongue.visible = true; }
+  if (curAnimal === 'snail') snailParts.touchLeaf.visible = true;
+
+  actDone[curAnimal] = true;
+  popLabelAt3D(new THREE.Vector3(STAGE_X, 1.45, 0), meta.actIco + ' ' + meta.actLbl);
+  addDiscovery('act_' + curAnimal, meta.actRec, meta.actVoice);
+}
+
+/* ===== 拖拽桌面 3D 食物/小树叶 + 拖拽 360° 旋转 + 点击身体部位（<10px 绝不吃点击！） ===== */
+var ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+var propDragPlane = new THREE.Plane(new THREE.Vector3(0, 0.35, 0.94).normalize(), -0.52);
+var propDragPt = new THREE.Vector3();
+var dragMode = ''; // '' | 'prop' | 'spin'
+var downX = 0, downY = 0, lastSpinX = 0, moved = false, targetRotY = -0.28;
+
+function getNDC(e) {
+  var r = cv.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+}
+
+function pickNextAnimalPart(animalId) {
+  var list = ANIMAL_PARTS[animalId] || [];
+  if (!list.length) return null;
+  for (var i = 0; i < list.length; i++) {
+    if (!found[list[i].partKey]) return list[i];
+  }
+  var idx = nextPartCursor[animalId] % list.length;
+  nextPartCursor[animalId] = idx + 1;
+  return list[idx];
+}
+
+function launchPropAutoFly() {
+  if (actAnim.t > 0 || propAutoFly) return;
+  var curProp = deskProps[curAnimal];
+  if (!curProp || !curProp.visible) { triggerAnimalAction(); return; }
+  propAutoFly = {
+    animalId: curAnimal,
+    t: 0,
+    dur: 0.28,
+    from: curProp.position.clone(),
+    to: new THREE.Vector3(STAGE_X + 0.45, 0.96, 0.15)
+  };
+  beep([494, 587], 0.12);
+}
+
+cv.addEventListener('pointerdown', function (e) {
+  markInteracted();
+  getNDC(e);
+  ray.setFromCamera(ptr, camera);
+  downX = e.clientX; downY = e.clientY; lastSpinX = e.clientX; moved = false;
+
+  // 1. 优先抓取当前动物对应的桌面 3D 道具（含超大透明拾取球及托盘）
+  var activePropMeshes = deskPropMeshes.filter(function (m) {
+    return m.userData.propAnimal === curAnimal && deskProps[curAnimal].visible;
+  });
+  if (propSaucer.visible && deskProps[curAnimal].visible) activePropMeshes.push(propSaucer);
+  if (ray.intersectObjects(activePropMeshes, false).length) {
+    propAutoFly = null;
+    dragMode = 'prop';
+    cv.classList.add('grabbing');
+    beep([494], 0.08);
+    return;
+  }
+
+  dragMode = 'spin';
+});
+
+window.addEventListener('pointermove', function (e) {
+  if (!dragMode) return;
+  // 严格区分微抖动点击（<10px）与真正拖拽，绝不吃掉小朋友的点击！
+  if (!moved && Math.hypot(e.clientX - downX, e.clientY - downY) >= 10) {
+    moved = true;
+    lastSpinX = e.clientX;
+  }
+
+  if (dragMode === 'prop') {
+    if (!moved) return;
+    getNDC(e);
+    ray.setFromCamera(ptr, camera);
+    if (ray.ray.intersectPlane(propDragPlane, propDragPt)) {
+      propGoal.set(
+        Math.max(-2.7, Math.min(2.8, propDragPt.x)),
+        Math.max(0.24, Math.min(2.35, propDragPt.y)),
+        Math.max(-0.2, Math.min(1.1, propDragPt.z))
+      );
+      // 拖到动物附近（宽容判定！）即刻触发互动
+      var distToAnimal = Math.hypot(propGoal.x - (STAGE_X + 0.2), propGoal.y - 0.85);
+      if (distToAnimal < 1.68 && actAnim.t <= 0) {
+        dragMode = '';
+        cv.classList.remove('grabbing');
+        propGoal.copy(getPropHome(curAnimal));
+        triggerAnimalAction();
+      }
+    }
+  } else if (dragMode === 'spin' && moved) {
+    targetRotY += (e.clientX - lastSpinX) * 0.011;
+    lastSpinX = e.clientX;
+  }
+});
+
+window.addEventListener('pointerup', function (e) {
+  if (!dragMode) return;
+  var mode = dragMode;
+  dragMode = '';
+  cv.classList.remove('grabbing');
+
+  if (mode === 'prop') {
+    if (!moved) {
+      // 轻点食物/小树叶/飞虫自动飞向动物嘴边并触发互动！
+      launchPropAutoFly();
+    } else {
+      if (Math.hypot(propGoal.x - (STAGE_X + 0.2), propGoal.y - 0.85) < 2.15 && actAnim.t <= 0) {
+        triggerAnimalAction();
+      }
+      propGoal.copy(getPropHome(curAnimal));
+    }
+    return;
+  }
+
+  if (moved) return;
+  getNDC(e);
+  ray.setFromCamera(ptr, camera);
+  // 1) 优先精准命中该动物的部位及其宽松透明拾取球
+  var visibleHits = hitMeshes.filter(function (m) {
+    return animals[m.userData.partInfo.animalId] && animals[m.userData.partInfo.animalId].visible;
+  });
+  var hits = ray.intersectObjects(visibleHits, false);
+  if (hits.length) {
+    var info = hits[0].object.userData.partInfo;
+    inspectAnimalPart(info, hits[0].point);
+    return;
+  }
+  // 2) 点到动物整体兜底球或草盘：自动智能聚焦当前动物下一个未观察部位并弹出局部特写，绝不让孩子点空！
+  var fbHits = fallbackHitMeshes.filter(function (m) {
+    return m.userData.fallbackAnimal === curAnimal && animals[curAnimal].visible;
+  });
+  if (ray.intersectObjects(fbHits, false).length || ray.intersectObject(stageDisc).length) {
+    var smartPart = pickNextAnimalPart(curAnimal);
+    if (smartPart) inspectAnimalPart(smartPart, new THREE.Vector3(STAGE_X, 1.35, 0));
+  }
+});
+
+function inspectAnimalPart(info, pt) {
+  beep([587, 740], 0.16);
+  partDone[info.animalId] = true;
+  animals[info.animalId].scale.set(1.06, 0.94, 1.06);
+  drawZoomFeature(info.drawType);
+  $('#zmTitle').textContent = '🔍 ' + info.label;
+  $('#zmDesc').textContent = info.desc;
+  $('#zoomCard').classList.add('show');
+  popLabelAt3D(pt || new THREE.Vector3(STAGE_X, 1.4, 0), '✨ ' + info.label);
+  addDiscovery(info.partKey, info.recordHtml, info.speech);
+}
+
+/* ===== 控件事件 ===== */
+$$('.acard').forEach(function (b) {
+  b.addEventListener('click', function () {
+    markInteracted();
+    beep([494], 0.12);
+    selectAnimal(b.dataset.animal, false);
+  });
+});
+$('#backBtn').addEventListener('click', function () {
+  try { sessionStorage.setItem('xk_last_vol', 'k1b'); } catch (e) {}
+});
+$('#voiceBtn').addEventListener('click', function () {
+  markInteracted();
+  voiceOn = !voiceOn;
+  this.classList.toggle('on', voiceOn);
+  if (voiceOn) updateGuide(true); else stopVoice();
+});
+$('#guideBar').addEventListener('click', function () { markInteracted(); updateGuide(true); });
+$('#resetBtn').addEventListener('click', resetAll);
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+$('#winKeepBtn').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgainBtn').addEventListener('click', resetAll);
+$('#qOpts').addEventListener('click', function (e) {
+  var b = e.target.closest('.qopt'); if (!b) return;
+  if (b.dataset.ok === '1') {
+    b.classList.add('ok');
+    $('#qFb').textContent = '🌸 答对啦！获得本课小红花！';
+    saveProgress(LESSON_ID, true);
+    beep([523, 659, 784, 1046], 0.24);
+    speak('答对啦！蜗牛对刺激有反应，触角会立刻缩回壳里保护自己，获得本课小红花！', true);
+  } else {
+    b.classList.add('bad');
+    beep([260, 220], 0.16);
+    var h = b.dataset.hint || '再想想哦！';
+    $('#qFb').textContent = '💡 ' + h;
+    speak(h, true);
+  }
+});
+
+/* ===== 演示模式（不触发通关） ===== */
+function startDemo() {
+  markInteracted();
+  resetAll();
+  demo = true;
+  $('#demoBtn').classList.add('on');
+  var g = resetGen;
+  var steps = [
+    function () { selectAnimal('ant', true); triggerAnimalAction(); speak('演示开始！点蚂蚁身体部位观察头胸腹和六条腿，把桌右面包屑拖到蚂蚁嘴边看它搬起食物！', true); },
+    function () { selectAnimal('rabbit', true); triggerAnimalAction(); speak('切到兔子，观察长耳朵、长门牙和强健后肢，把胡萝卜拖给兔子看它欢快跳跃啃食！', true); },
+    function () { selectAnimal('toad', true); triggerAnimalAction(); speak('切到蟾蜍，拖动或点小飞虫看它吐出长长的粉红舌头精准捉虫！', true); },
+    function () { selectAnimal('snail', true); triggerAnimalAction(); speak('最后切到蜗牛，把小树叶拖去轻触长触角看它立刻缩回螺旋壳里！现在轮到你试试！', true); },
+    function () { demo = false; $('#demoBtn').classList.remove('on'); resetAll(); }
+  ];
+  steps.forEach(function (fn, i) { setTimeout(function () { if (g === resetGen) fn(); }, i * 3100); });
+}
+$('#demoBtn').addEventListener('click', startDemo);
+
+function resetAll() {
+  resetGen++;
+  stopVoice();
+  demo = false;
+  $('#demoBtn').classList.remove('on');
+  found = {};
+  partDone = { ant: false, rabbit: false, toad: false, snail: false };
+  actDone = { ant: false, rabbit: false, toad: false, snail: false };
+  nextPartCursor = { ant: 0, rabbit: 0, toad: 0, snail: 0 };
+  propAutoFly = null;
+  stamps = { s1: false, s2: false, s3: false }; celebrated = false;
+  actAnim = { type: '', t: 0 }; dragMode = ''; cv.classList.remove('grabbing');
+  $('#ntList').innerHTML = ''; $('#ntCnt').textContent = '0';
+  $$('.st').forEach(function (s) { s.classList.remove('lit'); });
+  $('#zoomCard').classList.remove('show');
+  $('#winToast').classList.remove('show');
+  $('#qFb').textContent = '';
+  $$('.qopt').forEach(function (b) { b.classList.remove('ok', 'bad'); });
+  targetRotY = -0.28;
+  selectAnimal('ant', true);
+  updateGuide(false);
+}
+
+/* ===== 帧循环 ===== */
+var introT0 = performance.now(), lastT = performance.now();
+var projV = new THREE.Vector3();
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', fit);
+fit();
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (now - lastT) / 1000));
+  lastT = now;
+  var t = now * 0.001;
+
+  var pop = Math.min(1, (performance.now() - introT0) / 680);
+  live.scale.setScalar(0.01 + 0.99 * (1 - Math.pow(1 - pop, 3)));
+
+  turntable.rotation.y += (targetRotY - turntable.rotation.y) * Math.min(1, dt * 8);
+  turntable.scale.lerp(new THREE.Vector3(1, 1, 1), Math.min(1, dt * 10));
+  Object.keys(animals).forEach(function (k) {
+    animals[k].scale.lerp(new THREE.Vector3(1, 1, 1), Math.min(1, dt * 9));
+  });
+
+  // 当前桌面 3D 道具待机漂浮/自动飞向动物/拖拽平滑 + 提示签同步
+  var curProp = deskProps[curAnimal];
+  var pTag = $('#propTag');
+  if (propAutoFly && propAutoFly.animalId === curAnimal && curProp && curProp.visible) {
+    propAutoFly.t += dt;
+    var fu = Math.min(1, propAutoFly.t / propAutoFly.dur);
+    var easeF = 1 - Math.pow(1 - fu, 2);
+    curProp.position.lerpVectors(propAutoFly.from, propAutoFly.to, easeF);
+    curProp.position.y += Math.sin(fu * Math.PI) * 0.55;
+    pTag.style.opacity = '0';
+    if (fu >= 1) {
+      propAutoFly = null;
+      propGoal.copy(getPropHome(curAnimal));
+      triggerAnimalAction();
+    }
+  } else if (curProp && curProp.visible) {
+    var gx = propGoal.x, gy = propGoal.y, gz = propGoal.z;
+    if (dragMode !== 'prop') {
+      if (curAnimal === 'toad') {
+        gx += Math.sin(t * 4.2) * 0.16;
+        gy += Math.cos(t * 5.6) * 0.12;
+        gz += Math.sin(t * 3.4) * 0.12;
+        curProp.userData.wings.forEach(function (w, idx) {
+          w.rotation.x = (idx === 0 ? -1 : 1) * (0.2 + Math.sin(t * 36) * 0.45);
+        });
+      } else {
+        gy += Math.sin(t * 2.8) * 0.045;
+      }
+    }
+    curProp.position.x += (gx - curProp.position.x) * Math.min(1, dt * 13);
+    curProp.position.y += (gy - curProp.position.y) * Math.min(1, dt * 13);
+    curProp.position.z += (gz - curProp.position.z) * Math.min(1, dt * 13);
+
+    // 当 #targetCue 正指向道具时隐藏静态 #propTag，保证单焦点零重叠
+    var cueOnProp = (partDone[curAnimal] && !actDone[curAnimal]);
+    if (dragMode === 'prop' || cueOnProp) {
+      pTag.style.opacity = '0';
+    } else {
+      pTag.style.opacity = '1';
+      projV.set(curProp.position.x, curProp.position.y + 0.48, curProp.position.z).project(camera);
+      pTag.style.left = Math.max(90, Math.min(window.innerWidth - 260, (projV.x * 0.5 + 0.5) * window.innerWidth)) + 'px';
+      pTag.style.top = Math.max(88, ((-projV.y * 0.5 + 0.5) * window.innerHeight)) + 'px';
+    }
+  } else {
+    pTag.style.opacity = '0';
+  }
+
+  // 呼吸光环 & 单焦点跳动 #targetCue 气泡（绝不遮挡 #notes 与 #guideBar）
+  var needPart = !partDone[curAnimal];
+  var needAct = partDone[curAnimal] && !actDone[curAnimal];
+  var nextUndone = ANIMAL_ORDER.find(function (id) { return !partDone[id] || !actDone[id]; });
+
+  stagePulseRing.visible = needPart;
+  if (needPart) {
+    stagePulseRing.material.opacity = 0.45 + 0.35 * Math.sin(t * 5.2);
+    stagePulseRing.scale.setScalar(0.98 + 0.04 * Math.sin(t * 5.2));
+  }
+  propPulseRing.visible = needAct && curProp && curProp.visible && dragMode !== 'prop' && !propAutoFly;
+  if (propPulseRing.visible) {
+    propPulseRing.position.set(curProp.position.x, curAnimal === 'toad' ? 0.08 : 0.08, curProp.position.z);
+    propPulseRing.material.opacity = 0.5 + 0.4 * Math.sin(t * 6.0);
+    propPulseRing.scale.setScalar(0.96 + 0.14 * Math.sin(t * 6.0));
+  }
+
+  $$('.acard').forEach(function (b) {
+    b.classList.toggle('pulse', !needPart && !needAct && nextUndone === b.dataset.animal);
+  });
+
+  var cueEl = $('#targetCue');
+  if (demo || celebrated || dragMode === 'prop' || propAutoFly) {
+    cueEl.classList.remove('show');
+  } else if (needPart) {
+    projV.set(STAGE_X, 1.88, 0).project(camera);
+    var cx1 = Math.max(120, Math.min(window.innerWidth - 260, (projV.x * 0.5 + 0.5) * window.innerWidth));
+    var cy1 = Math.max(92, Math.min(window.innerHeight - 120, (-projV.y * 0.5 + 0.5) * window.innerHeight));
+    cueEl.textContent = ANIMAL_META[curAnimal].cuePart;
+    cueEl.style.left = cx1 + 'px';
+    cueEl.style.top = cy1 + 'px';
+    cueEl.classList.add('show');
+  } else if (needAct && curProp && curProp.visible) {
+    projV.set(curProp.position.x, curProp.position.y + 0.62, curProp.position.z).project(camera);
+    var cx2 = (projV.x * 0.5 + 0.5) * window.innerWidth;
+    var cy2 = (-projV.y * 0.5 + 0.5) * window.innerHeight;
+    if (cy2 < 280) cx2 = Math.min(window.innerWidth - 270, cx2);
+    cueEl.textContent = ANIMAL_META[curAnimal].cueAct;
+    cueEl.style.left = Math.max(120, Math.min(window.innerWidth - 110, cx2)) + 'px';
+    cueEl.style.top = Math.max(92, Math.min(window.innerHeight - 110, cy2)) + 'px';
+    cueEl.classList.add('show');
+  } else if (nextUndone) {
+    var nextBtn = document.querySelector('.acard[data-animal="' + nextUndone + '"]');
+    if (nextBtn) {
+      var br = nextBtn.getBoundingClientRect();
+      cueEl.textContent = '👆 点下方图标换' + ANIMAL_META[nextUndone].name;
+      cueEl.style.left = (br.left + br.width * 0.5) + 'px';
+      cueEl.style.top = (br.top - 10) + 'px';
+      cueEl.classList.add('show');
+    }
+  } else {
+    cueEl.classList.remove('show');
+  }
+
+  // 1. 蚂蚁动画
+  if (animals.ant.visible) {
+    antParts.antL.rotation.y = Math.sin(t * 4.5) * 0.25;
+    antParts.antR.rotation.y = -Math.sin(t * 4.5 + 0.6) * 0.25;
+    antParts.jawL.rotation.y = 0.12 + Math.sin(t * 6) * 0.16;
+    antParts.jawR.rotation.y = -0.12 - Math.sin(t * 6) * 0.16;
+    if (actAnim.type === 'ant' && actAnim.t > 0) {
+      actAnim.t -= dt;
+      var p = 1 - actAnim.t / 3.0;
+      var walk = Math.sin(t * 18) * 0.22;
+      antParts.legs.forEach(function (lg) { lg.g.rotation.z = walk * (lg.idx % 2 === 0 ? 1 : -1) * lg.side; });
+      if (p < 0.35) {
+        antParts.root.position.x = (p / 0.35) * 0.35;
+        antParts.carryCrumb.position.set(1.22, 0.18, 0);
+      } else if (p < 0.85) {
+        var u = (p - 0.35) / 0.5;
+        antParts.root.position.x = 0.35 - u * 0.45;
+        antParts.carryCrumb.position.set(antParts.root.position.x + 1.02, 0.54 + Math.sin(u * Math.PI) * 0.18, 0);
+      } else {
+        antParts.root.position.x *= 0.85;
+      }
+      if (actAnim.t <= 0) {
+        antParts.carryCrumb.visible = false; antParts.root.position.x = 0;
+        deskProps.ant.visible = true; deskProps.ant.position.copy(PROP_HOME);
+      }
+    } else {
+      antParts.root.position.x *= 0.9;
+      antParts.legs.forEach(function (lg) { lg.g.rotation.z *= 0.85; });
+    }
+  }
+
+  // 2. 兔子动画
+  if (animals.rabbit.visible) {
+    rabbitParts.earL.rotation.z = 0.1 + Math.sin(t * 3.2) * 0.12;
+    rabbitParts.earR.rotation.z = -0.05 + Math.cos(t * 2.8) * 0.12;
+    if (actAnim.type === 'rabbit' && actAnim.t > 0) {
+      actAnim.t -= dt;
+      var rp = 1 - actAnim.t / 3.0;
+      if (rp < 0.38) {
+        var hopU = (rp / 0.38) * Math.PI;
+        rabbitParts.root.position.y = Math.sin(hopU) * 0.65;
+        rabbitParts.root.position.x = (rp / 0.38) * 0.36;
+        rabbitParts.root.rotation.z = Math.cos(hopU) * 0.18;
+      } else if (rp < 0.85) {
+        rabbitParts.root.position.y = 0;
+        rabbitParts.root.position.x = 0.36;
+        rabbitParts.root.rotation.z = -0.14 + Math.sin(t * 24) * 0.06;
+        rabbitParts.eatCarrot.rotation.z = Math.sin(t * 24) * 0.15;
+      } else {
+        rabbitParts.root.position.x *= 0.85;
+        rabbitParts.root.rotation.z *= 0.85;
+      }
+      if (actAnim.t <= 0) {
+        rabbitParts.eatCarrot.visible = false; rabbitParts.root.position.set(0, 0, 0); rabbitParts.root.rotation.z = 0;
+        deskProps.rabbit.visible = true; deskProps.rabbit.position.copy(PROP_HOME);
+      }
+    } else {
+      rabbitParts.root.position.y = Math.abs(Math.sin(t * 2.1)) * 0.05;
+    }
+  }
+
+  // 3. 蟾蜍动画
+  if (animals.toad.visible) {
+    if (actAnim.type === 'toad' && actAnim.t > 0) {
+      actAnim.t -= dt;
+      var tp = 1 - actAnim.t / 3.0;
+      toadParts.catchFly.position.set(1.42 + Math.sin(t * 9) * 0.12, 0.92 + Math.cos(t * 11) * 0.1, Math.sin(t * 7) * 0.12);
+      if (tp > 0.22 && tp < 0.65) {
+        var ext = Math.sin(((tp - 0.22) / 0.43) * Math.PI);
+        toadParts.root.position.y = ext * 0.28;
+        toadParts.tongue.scale.set(1, Math.max(0.02, ext * 1.18), 1);
+        toadParts.tongue.position.set(0.58 + ext * 0.48, 0.56 + ext * 0.14, 0);
+        if (tp > 0.44) toadParts.catchFly.visible = false;
+      } else {
+        toadParts.root.position.y *= 0.85;
+        toadParts.tongue.scale.set(1, 0.01, 1);
+      }
+      if (actAnim.t <= 0) {
+        toadParts.catchFly.visible = false; toadParts.tongue.visible = false; toadParts.root.position.y = 0;
+        deskProps.toad.visible = true; deskProps.toad.position.copy(FLY_HOME);
+      }
+    } else {
+      toadParts.root.scale.set(1, 1 + Math.sin(t * 3.5) * 0.03, 1);
+    }
+  }
+
+  // 4. 蜗牛动画（小树叶轻触触角立刻缩回壳内再缓缓伸出）
+  if (animals.snail.visible) {
+    var retract = 0;
+    if (actAnim.type === 'snail' && actAnim.t > 0) {
+      actAnim.t -= dt;
+      var sp = 1 - actAnim.t / 3.0;
+      if (sp < 0.22) {
+        snailParts.touchLeaf.position.set(1.55 - (sp / 0.22) * 0.48, 1.32 - (sp / 0.22) * 0.22, 0.12);
+        retract = 0;
+      } else if (sp < 0.68) {
+        snailParts.touchLeaf.position.set(1.55, 1.45, 0.2);
+        retract = Math.min(1, (sp - 0.22) / 0.12);
+      } else {
+        snailParts.touchLeaf.visible = false;
+        retract = Math.max(0, 1 - (sp - 0.68) / 0.3);
+      }
+      if (actAnim.t <= 0) {
+        snailParts.touchLeaf.visible = false; retract = 0;
+        deskProps.snail.visible = true; deskProps.snail.position.copy(PROP_HOME);
+      }
+    }
+    snailParts.feelers.scale.setScalar(Math.max(0.04, 1 - retract * 0.96));
+    snailParts.feelers.rotation.z = Math.sin(t * 2.4) * 0.08;
+    snailParts.soft.scale.x = 1 - retract * 0.42;
+    snailParts.soft.position.x = -retract * 0.34;
+  }
+
+  // 彩带
+  if (cfOn) {
+    cfCtx.clearRect(0, 0, cfCanvas.width, cfCanvas.height);
+    var alive = 0;
+    cfParts.forEach(function (p) {
+      p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 240 * dt; p.a += p.va * dt;
+      if (p.y < cfCanvas.height + 24) {
+        alive++;
+        cfCtx.save(); cfCtx.translate(p.x, p.y); cfCtx.rotate(p.a);
+        cfCtx.fillStyle = p.c; cfCtx.fillRect(-p.r, -p.r * 0.5, p.r * 2, p.r);
+        cfCtx.restore();
+      }
+    });
+    if (!alive) { cfOn = false; cfCtx.clearRect(0, 0, cfCanvas.width, cfCanvas.height); }
+  }
+
+  renderer.render(scene, camera);
+}
+
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () { return { triangles: renderer.info.render.triangles, celebrated: celebrated, curAnimal: curAnimal, partDone: partDone, actDone: actDone }; },
+  project3D: function (x, y, z) {
+    var v = new THREE.Vector3(x, y, z).project(camera);
+    return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight };
+  },
+  getTargets: function () {
+    var p = deskProps[curAnimal] ? deskProps[curAnimal].position : PROP_HOME;
+    return {
+      animal: this.project3D(STAGE_X, 0.85, 0),
+      prop: this.project3D(p.x, p.y + 0.1, p.z)
+    };
+  },
+  startDemo: startDemo,
+  resetAll: resetAll
+};
+selectAnimal('ant', true);
+updateGuide(false);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

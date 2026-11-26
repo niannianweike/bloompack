@@ -1,0 +1,2507 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>小学科学·3D互动书包与课本</title>
+<style>
+:root{
+  --bg:#f6efe0; --bg-hi:#fdfaf2; --card:#fffdf8; --ink:#241e16; --muted:#7b705e; --line:#e4d7be;
+  --accent:#e56d17; --accent-hi:#f2822e; --accent-lo:#bf5409; --accent-soft:#fde7cf;
+  --u1:#d97706; --u2:#16a34a; --u3:#2563eb; --u4:#e56d17;
+  --shadow:0 2px 10px rgba(68,48,18,.06), 0 16px 38px rgba(68,48,18,.11);
+  --shadow-sm:0 1px 4px rgba(68,48,18,.06), 0 4px 14px rgba(68,48,18,.07);
+  --f-kai:"KaiTi","楷体","STKaiti","Kaiti SC","Noto Serif SC",serif;
+  --f-ui:"Noto Sans SC","Source Han Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);overflow-x:hidden}
+body{
+  font-family:var(--f-ui);line-height:1.5;
+  background-image:
+    radial-gradient(960px 540px at 15% -5%, rgba(255,244,218,.92) 0%, transparent 72%),
+    radial-gradient(960px 540px at 88% -5%, rgba(214,236,252,.72) 0%, transparent 72%),
+    linear-gradient(180deg, #faf4e6 0%, #efe2c8 100%);
+}
+ruby{ruby-position:over;margin:0 .03em;ruby-align:center}
+rt{font-size:.42em;color:#8e7e64;font-family:var(--f-ui);font-weight:400;line-height:1.15;padding:0 .05em}
+body.no-py rt{display:none}
+button,a{font-family:inherit;color:inherit}
+svg.ico{width:1.08em;height:1.08em;flex:none;vertical-align:-.14em}
+
+.shell{display:flex;flex-direction:column;min-height:100vh;padding:12px 18px 16px;gap:12px}
+body.stage-locked .shell{height:100vh}
+
+/* ===== 顶部统一工作台栏 ===== */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:8px 14px;border-radius:20px;
+  background:rgba(255,253,248,.88);backdrop-filter:blur(10px);
+  border:1.5px solid rgba(228,215,190,.92);box-shadow:var(--shadow-sm);
+  position:relative;z-index:20;
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-mark{
+  width:42px;height:42px;border-radius:13px;flex:none;
+  background:linear-gradient(135deg,#fff2dc,#fddcb0);border:1.5px solid #efc68c;
+  display:grid;place-items:center;box-shadow:0 2px 6px rgba(217,114,30,.16);
+}
+.brand-mark svg{width:28px;height:28px}
+.brand-t h1{margin:0;font-size:23px;line-height:1.75;color:#2a2218;white-space:nowrap}
+.brand-sub{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-top:-4px}
+.b-pill{padding:0 8px;border-radius:99px;background:#fef3e2;border:1px solid #f0cba0;color:#b8550b;font-weight:700;font-size:12px}
+
+.top-nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mode-tabs{display:inline-flex;padding:3px;border-radius:14px;background:#f2e9d6;border:1px solid #e5d8bd;gap:4px}
+.mtab{
+  display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;border-radius:11px;
+  border:1.5px solid transparent;background:transparent;font-size:16px;font-weight:700;color:#5c503e;
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.mtab:hover{background:rgba(255,255,255,.72);color:var(--ink)}
+.mtab[aria-pressed="true"]{background:#fff;border-color:#ebb27d;color:#c2560c;box-shadow:0 2px 8px rgba(217,114,30,.15)}
+
+.tool-btn{
+  display:inline-flex;align-items:center;gap:6px;min-height:42px;padding:0 13px;border-radius:13px;
+  border:1.5px solid var(--line);background:#fff;font-size:15px;font-weight:700;color:#4a3f2f;
+  cursor:pointer;box-shadow:0 2px 0 #e2d5bc;transition:all .14s;white-space:nowrap;
+}
+.tool-btn:hover{border-color:var(--accent);color:var(--accent);background:#fffaf2;transform:translateY(-1px)}
+.tool-btn.primary{background:linear-gradient(180deg,var(--accent-hi),var(--accent));border-color:var(--accent-lo);color:#fff;box-shadow:0 2px 0 var(--accent-lo)}
+.tool-btn.primary:hover{color:#fff;filter:brightness(1.04)}
+
+/* ===== 学习进度与小红花统计栏 ===== */
+.prog-hud{
+  display:flex;align-items:center;gap:10px;padding:6px 14px;border-radius:14px;
+  background:linear-gradient(180deg,#fff9f0,#fef0dc);border:1.5px solid #f0cfa0;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9);min-width:210px;
+}
+.prog-flower{
+  display:inline-flex;align-items:center;gap:4px;font-size:15px;font-weight:900;color:#d6336c;white-space:nowrap;
+}
+.prog-bar-wrap{flex:1 1 86px;min-width:72px;display:flex;flex-direction:column;gap:3px}
+.prog-bar-bg{height:9px;border-radius:99px;background:#f0e0c4;overflow:hidden;box-shadow:inset 0 1px 2px rgba(90,60,20,.14)}
+.prog-bar-fill{height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#f59f00,#f06595);transition:width .4s cubic-bezier(.22,1,.36,1)}
+.prog-txt{font-size:11px;font-weight:800;color:#8a6232;white-space:nowrap;line-height:1}
+.done-badge{
+  display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:99px;
+  background:linear-gradient(180deg,#fff0f6,#ffd6e7);border:1.5px solid #f783ac;
+  color:#c2255c;font-size:11px;font-weight:800;white-space:nowrap;
+}
+.portal-slot.is-done{border-color:#2b8a3e;background:linear-gradient(145deg,#f6fff8 0%,#e6f9eb 100%);box-shadow:0 8px 20px rgba(43,138,62,.16)}
+.portal-slot.is-done::after{border-color:rgba(43,138,62,.28)}
+.ccard.is-done{border-color:#74c69d;background:linear-gradient(180deg,#ffffff 0%,#f7fff9 100%)}
+.cflower{
+  position:absolute;right:10px;bottom:8px;padding:2px 8px;border-radius:99px;
+  background:rgba(255,240,246,.96);border:1.5px solid #f783ac;color:#c2255c;
+  font-size:12px;font-weight:800;box-shadow:0 2px 6px rgba(194,37,92,.14);
+}
+.cat-prog-banner{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  padding:12px 18px;border-radius:18px;
+  background:linear-gradient(135deg,#fffaf0 0%,#fff0f6 100%);
+  border:1.5px solid #f2c6d4;box-shadow:var(--shadow-sm);
+}
+.cat-prog-l{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.cat-prog-title{font-size:17px;font-weight:900;color:#4a2b34}
+.cat-prog-flowers{display:flex;flex-wrap:wrap;gap:4px;font-size:17px;line-height:1}
+.cat-prog-bar{width:220px;max-width:100%;height:12px;border-radius:99px;background:#f2dce4;overflow:hidden}
+.cat-prog-bar>i{display:block;height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#f59f00,#e64980);transition:width .4s ease}
+
+/* ===== 接着学 + 快速搜索 + 原书 PDF 导入 ===== */
+.resume-btn{
+  display:inline-flex;align-items:center;gap:5px;min-height:38px;padding:0 12px;border-radius:12px;
+  border:1.5px solid #e58325;background:linear-gradient(180deg,#ff9a3c,#e56d17);color:#fff;
+  font-size:13.5px;font-weight:800;text-decoration:none;cursor:pointer;white-space:nowrap;
+  box-shadow:0 2px 0 #b8500a;transition:all .14s;
+}
+.resume-btn:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.search-wrap{position:relative;display:inline-flex;align-items:center}
+.search-in{
+  width:168px;min-height:40px;padding:0 12px 0 32px;border-radius:12px;
+  border:1.5px solid var(--line);background:#fffdf8;font-size:14px;font-weight:700;color:var(--ink);
+  outline:none;transition:border-color .15s,width .18s;
+}
+.search-in:focus{border-color:var(--accent);width:214px;background:#fff}
+.search-ico{position:absolute;left:10px;width:15px;height:15px;color:#8e7e64;pointer-events:none}
+.search-drop{
+  position:absolute;top:calc(100% + 6px);right:0;width:300px;max-height:320px;overflow-y:auto;
+  background:#fffdf8;border:1.5px solid #e4d2b4;border-radius:14px;padding:6px;
+  box-shadow:0 14px 32px rgba(68,48,18,.18);z-index:60;display:none;flex-direction:column;gap:4px;
+}
+.search-drop.show{display:flex}
+.sdrop-item{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;
+  border-radius:10px;text-decoration:none;color:var(--ink);font-size:13px;font-weight:700;
+  background:transparent;border:none;cursor:pointer;text-align:left;transition:background .12s;
+}
+.sdrop-item:hover{background:#fff3df;color:#bf5409}
+.sdrop-item small{font-size:11px;color:#8a7b62;font-weight:700;flex:none}
+
+.pdf-wrap{position:relative;display:inline-flex;align-items:center}
+.tool-btn.pdf-need{border-color:#e58325;background:#fff5e6;color:#c2560c;box-shadow:0 2px 0 #f0c28b;animation:pdfPulse 2s ease-in-out infinite}
+@keyframes pdfPulse{0%,100%{box-shadow:0 2px 0 #f0c28b,0 0 0 0 rgba(229,109,23,.35)}50%{box-shadow:0 2px 0 #f0c28b,0 0 0 7px rgba(229,109,23,0)}}
+.tool-btn.pdf-on{border-color:#2b8a3e;background:#ebfbee;color:#2b8a3e;box-shadow:0 2px 0 #b2f2bb;animation:none}
+.pdf-pop{
+  position:absolute;top:calc(100% + 8px);right:0;width:300px;z-index:50;
+  background:#fffdf8;border:1.5px solid #e4d2b4;border-radius:16px;padding:12px 14px;
+  box-shadow:0 16px 36px rgba(68,48,18,.22);display:none;flex-direction:column;gap:9px;
+}
+.pdf-pop.show{display:flex}
+.pdf-pop h5{margin:0;font-size:14.5px;color:#2c2216;display:flex;align-items:center;gap:6px}
+.pdf-pop p{margin:0;font-size:12.5px;color:#6d5f49;line-height:1.45}
+.pdf-stat{font-size:12px;font-weight:700;padding:6px 9px;border-radius:10px;background:#f8f1e2;color:#5c4b32}
+.pdf-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pdf-mini{
+  padding:5px 10px;border-radius:10px;border:1.5px solid var(--line);background:#fff;
+  font-size:12.5px;font-weight:800;color:#4a3f2f;cursor:pointer;transition:all .12s;
+}
+.pdf-mini:hover{border-color:var(--accent);color:var(--accent)}
+.pdf-mini.pri{background:linear-gradient(180deg,var(--accent-hi),var(--accent));border-color:var(--accent-lo);color:#fff}
+.pdf-mini.danger{border-color:#ffc9c9;color:#c92a2a;background:#fff5f5}
+
+/* 原书 PDF 贴图页面与半透明发光活页入口 */
+.page.has-pdf{padding:0;background:#fff}
+.page.has-pdf .pdf-bg{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff;display:block;
+}
+.page.has-pdf .pdf-loading{
+  position:absolute;inset:0;display:grid;place-items:center;font-size:14px;font-weight:700;color:#8e7e64;background:#fbf7ee;
+}
+.page.has-pdf .pdf-pg-chip{
+  position:absolute;bottom:8px;z-index:4;padding:2px 9px;border-radius:99px;
+  background:rgba(255,253,248,.88);border:1px solid rgba(210,192,160,.8);
+  font-size:11.5px;font-weight:800;color:#6c5e49;pointer-events:none;
+}
+.page.left.has-pdf .pdf-pg-chip{left:12px}
+.page.right.has-pdf .pdf-pg-chip{right:12px}
+.portal-slot.on-pdf{
+  position:absolute;z-index:5;left:12px;right:12px;bottom:10px;width:auto;
+  padding:7px 12px;gap:10px;flex-direction:row;align-items:center;justify-content:space-between;
+  background:rgba(255,250,240,.94);backdrop-filter:blur(8px);
+  border:2px solid var(--accent);border-radius:14px;
+  box-shadow:0 8px 22px rgba(229,109,23,.26), 0 0 0 2px rgba(255,255,255,.8);
+}
+.portal-slot.on-pdf:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(229,109,23,.34)}
+.portal-slot.on-pdf .portal-top{display:none}
+.portal-slot.on-pdf .portal-mid{flex:1 1 auto;min-width:0;gap:8px}
+.portal-slot.on-pdf .portal-ico{width:38px;height:38px;border-radius:10px}
+.portal-slot.on-pdf .portal-ico svg{width:28px;height:28px}
+.portal-slot.on-pdf .portal-txt{min-width:0}
+.portal-slot.on-pdf .portal-txt h4{font-size:14.5px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.portal-slot.on-pdf .portal-txt p{font-size:11.5px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.portal-slot.on-pdf .portal-go{align-self:center;flex:none;padding:5px 11px;font-size:12.5px;background:linear-gradient(180deg,var(--accent-hi),var(--accent));border-color:var(--accent-lo);color:#fff}
+.page.has-pdf .pdf-pg-chip{top:8px;bottom:auto}
+#bookOverlay.drag-pdf::after{
+  content:"松手导入《科学》教材 PDF（仅存本机浏览器，不上传）";
+  position:absolute;inset:14px;z-index:80;border-radius:20px;
+  border:3px dashed var(--accent);background:rgba(255,250,240,.92);
+  display:grid;place-items:center;font-size:20px;font-weight:900;color:#bf5409;pointer-events:none;
+}
+
+/* ===== 主舞台：3D 书包 / 立体翻书 ===== */
+#stageWrap{
+  position:relative;flex:1 1 auto;min-height:0;border-radius:26px;overflow:hidden;
+  border:2px solid rgba(220,204,174,.95);
+  background:linear-gradient(180deg,#cbe6fa 0%,#eaf4fc 42%,#f4ecdc 66%,#e8d6b8 100%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.72), var(--shadow);
+  display:flex;flex-direction:column;
+}
+#bagCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:pointer}
+
+/* 3D 书包阶段浮层 */
+.bag-hud{
+  position:absolute;inset:0;pointer-events:none;z-index:5;
+  display:flex;flex-direction:column;justify-content:space-between;padding:18px 22px;
+}
+.bag-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.stage-badge{
+  pointer-events:auto;display:inline-flex;align-items:center;gap:8px;
+  padding:8px 18px;border-radius:99px;background:rgba(255,253,248,.92);backdrop-filter:blur(8px);
+  border:1.5px solid rgba(226,210,180,.95);box-shadow:var(--shadow-sm);
+  font-size:19px;font-weight:700;color:#382f22;line-height:1.6;
+}
+.stage-badge .pulse-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 5px rgba(229,109,23,.22);animation:pDot 1.6s infinite}
+@keyframes pDot{0%,100%{transform:scale(1)}50%{transform:scale(1.22)}}
+
+.bag-bottom{display:flex;flex-direction:column;align-items:center;gap:10px}
+.bag-cta-row{pointer-events:auto;display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.big-cta{
+  display:inline-flex;align-items:center;gap:8px;min-height:54px;padding:4px 26px;border-radius:18px;
+  border:2px solid var(--accent-lo);background:linear-gradient(180deg,var(--accent-hi),var(--accent));
+  color:#fff;font-size:22px;font-weight:800;cursor:pointer;line-height:1.65;
+  box-shadow:0 4px 0 var(--accent-lo), 0 10px 24px rgba(191,84,9,.32);transition:all .15s;
+}
+.big-cta:hover{transform:translateY(-2px);filter:brightness(1.05)}
+.big-cta:active{transform:translateY(2px)}
+.big-cta rt{color:#fff3e4}
+.soft-cta{
+  display:inline-flex;align-items:center;gap:6px;min-height:52px;padding:4px 18px;border-radius:16px;
+  border:1.5px solid var(--line);background:rgba(255,253,248,.94);color:#4a3f2f;
+  font-size:18px;font-weight:700;cursor:pointer;box-shadow:0 3px 0 #dfd2b9;transition:all .15s;
+}
+.soft-cta:hover{border-color:var(--accent);color:var(--accent);background:#fff}
+
+/* 12 册课本选书条（书包侧视时显示） */
+.shelf-dock{
+  pointer-events:auto;width:min(1560px, 100%);
+  background:rgba(255,253,248,.90);backdrop-filter:blur(10px);
+  border:1.5px solid rgba(226,210,180,.95);border-radius:18px;padding:8px 12px;
+  box-shadow:0 12px 30px rgba(68,48,18,.14);
+  display:flex;flex-direction:column;gap:6px;
+}
+.shelf-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.shelf-info{font-size:15px;font-weight:700;color:#4a3f2f}
+.shelf-info em{font-style:normal;color:var(--accent)}
+.book-pills{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:5px}
+.bpill{
+  display:flex;align-items:center;justify-content:space-between;gap:3px;white-space:nowrap;
+  padding:5px 7px;border-radius:11px;border:1.5px solid #e5d8bf;background:#faf5ea;
+  font-size:13px;font-weight:700;color:#786c58;cursor:pointer;transition:all .14s;
+}
+.bpill:hover{border-color:#d8b38f;background:#fff}
+.bpill.ready{background:linear-gradient(180deg,#fffaf0,#fdebd3);border-color:#ebb27d;color:#b8500a}
+.bpill.sel{background:linear-gradient(180deg,var(--accent-hi),var(--accent));border-color:var(--accent-lo);color:#fff;box-shadow:0 3px 10px rgba(217,114,30,.28)}
+.bpill .btag{font-size:11px;padding:1px 6px;border-radius:99px;background:rgba(0,0,0,.06)}
+.bpill.ready .btag{background:#fff;color:#c85a0e}
+.bpill.sel .btag{background:rgba(255,255,255,.24);color:#fff}
+
+/* 3D 书名悬浮名牌 */
+#bookHoverTag{
+  position:absolute;left:0;top:0;z-index:8;display:none;pointer-events:none;
+  padding:4px 14px;border-radius:99px;background:rgba(36,30,22,.88);color:#fff;
+  font-size:15px;font-weight:700;white-space:nowrap;border:1.5px solid rgba(255,255,255,.5);
+  box-shadow:0 6px 16px rgba(0,0,0,.22);transform:translate(-50%,-115%);
+}
+#bookHoverTag.show{display:block}
+
+/* ===== 状态 3：立体摊开翻书层 ===== */
+#bookOverlay{
+  position:absolute;inset:0;z-index:12;
+  background:radial-gradient(ellipse at 50% 45%, rgba(250,242,226,.96) 0%, rgba(235,219,192,.98) 100%);
+  display:none;flex-direction:column;align-items:center;justify-content:space-between;
+  padding:12px 22px 14px;gap:8px;
+}
+#bookOverlay.show{display:flex;animation:bookFade .45s cubic-bezier(.2,.8,.3,1)}
+@keyframes bookFade{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+
+.book-bar{
+  width:min(1320px,100%);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+}
+.book-bar-l,.book-bar-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.book-crumb{
+  padding:5px 14px;border-radius:99px;background:#fff;border:1.5px solid var(--line);
+  font-size:16px;font-weight:700;color:#4a3f2f;box-shadow:var(--shadow-sm);
+}
+.book-crumb b{color:var(--accent)}
+
+/* 单元书签 */
+.unit-tabs{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.utab{
+  padding:5px 12px;border-radius:11px;border:1.5px solid var(--line);background:#fff;
+  font-size:14px;font-weight:700;color:#5a4e3d;cursor:pointer;transition:all .14s;
+  display:inline-flex;align-items:center;gap:5px;
+}
+.utab .udot{width:8px;height:8px;border-radius:50%}
+.utab:hover{border-color:var(--accent);transform:translateY(-1px)}
+.utab.act{background:#fff8eb;border-color:var(--accent);color:#b8500a;box-shadow:0 2px 8px rgba(217,114,30,.15)}
+
+/* 书本本体（3D 透视对开双页） */
+.book-stage{
+  flex:1 1 auto;min-height:0;width:min(1260px,100%);
+  display:flex;align-items:center;justify-content:center;gap:14px;
+  perspective:2200px;position:relative;
+}
+.flip-arrow{
+  width:52px;height:52px;border-radius:50%;flex:none;
+  border:2px solid #dfd0b4;background:rgba(255,253,248,.95);color:#4a3f2f;
+  display:grid;place-items:center;cursor:pointer;font-size:22px;font-weight:800;
+  box-shadow:0 4px 14px rgba(68,48,18,.12);transition:all .15s;z-index:6;
+}
+.flip-arrow:hover:not(:disabled){border-color:var(--accent);color:var(--accent);transform:scale(1.06)}
+.flip-arrow:disabled{opacity:.32;cursor:not-allowed}
+
+.book-shell{
+  position:relative;flex:1 1 auto;max-width:1100px;height:min(74vh, 720px);min-height:460px;
+  display:grid;grid-template-columns:1fr 1fr;
+  border-radius:16px;padding:10px;
+  background:linear-gradient(90deg, #b8601c 0%, #d97724 3%, #a65416 49.5%, #7c3c0d 50%, #a65416 50.5%, #d97724 97%, #b8601c 100%);
+  box-shadow:0 22px 48px rgba(62,40,12,.24), 0 4px 0 #8c4410;
+  transform-style:preserve-3d;
+}
+/* 纸张厚度叠边 */
+.book-shell::before,.book-shell::after{
+  content:"";position:absolute;top:14px;bottom:14px;width:9px;pointer-events:none;
+  background:repeating-linear-gradient(90deg,#f5ecda 0 1.5px,#d8cab0 1.5px 3px);
+}
+.book-shell::before{left:3px;border-radius:4px 0 0 4px}
+.book-shell::after{right:3px;border-radius:0 4px 4px 0}
+
+.page{
+  position:relative;overflow:hidden;
+  background:#fffdf7;
+  padding:22px 26px 38px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.page.left{
+  border-radius:8px 0 0 8px;
+  background:linear-gradient(90deg, #faf4e6 0%, #fffdf8 12%, #fffdf8 92%, #ede3cf 100%);
+  border-right:1px solid rgba(120,90,45,.16);
+}
+.page.right{
+  border-radius:0 8px 8px 0;
+  background:linear-gradient(90deg, #ede3cf 0%, #fffdf8 8%, #fffdf8 88%, #faf4e6 100%);
+}
+.pg-head{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding-bottom:8px;border-bottom:2px solid rgba(210,192,160,.45);
+}
+.pg-unit-tag{
+  font-size:12px;font-weight:800;padding:2px 10px;border-radius:99px;color:#fff;letter-spacing:.03em;
+}
+.pg-lesson-tag{font-size:14px;font-weight:700;color:#6c5e49}
+.pg-body{
+  flex:1 1 auto;min-height:0;
+  display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:12px;
+  position:relative;
+}
+.pg-foot{
+  position:absolute;bottom:10px;left:24px;right:24px;
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:13px;font-weight:800;color:#9b8b72;
+}
+.page.left .pg-foot{flex-direction:row}
+.page.right .pg-foot{flex-direction:row-reverse}
+
+/* 抽象书页横线块（代替电子书文字） */
+.abs-block{
+  border-radius:12px;padding:12px 14px;
+  background:rgba(246,239,224,.46);border:1.5px dashed rgba(205,188,158,.55);
+  display:flex;flex-direction:column;justify-content:center;gap:9px;
+}
+.abs-block.span2{grid-column:1 / span 2}
+.abs-block.row2{grid-row:1 / span 2}
+.abs-title{height:13px;width:54%;border-radius:99px;background:#dccbb0}
+.abs-line{height:8px;border-radius:99px;background:#e8decb}
+.abs-line.w90{width:92%}.abs-line.w80{width:80%}.abs-line.w68{width:68%}.abs-line.w50{width:50%}
+.abs-sketch{
+  margin-top:4px;height:44px;border-radius:10px;
+  border:1.5px dashed #d7c7aa;background:repeating-linear-gradient(-45deg,rgba(218,200,168,.15) 0 6px,transparent 6px 12px);
+  display:flex;align-items:center;justify-content:center;font-size:12px;color:#a5957a;font-weight:700;
+}
+
+/* 发光互动教具格子（对应教材互动位置） */
+.portal-slot{
+  position:relative;text-decoration:none;color:inherit;
+  border-radius:16px;padding:12px 14px;
+  background:linear-gradient(145deg,#fffaf0 0%,#fdecd2 100%);
+  border:2.5px solid var(--accent);
+  box-shadow:0 8px 22px rgba(229,109,23,.20), inset 0 1px 0 rgba(255,255,255,.95);
+  display:flex;flex-direction:column;justify-content:space-between;gap:6px;
+  cursor:pointer;transition:transform .16s, box-shadow .16s;overflow:hidden;
+}
+.portal-slot::after{
+  content:"";position:absolute;inset:-2px;border-radius:16px;pointer-events:none;
+  border:2px solid rgba(229,109,23,.35);animation:portalGlow 2.1s ease-in-out infinite;
+}
+@keyframes portalGlow{0%,100%{opacity:.25;transform:scale(1)}50%{opacity:.85;transform:scale(1.012)}}
+.portal-slot:hover{transform:translateY(-3px) scale(1.015);box-shadow:0 14px 30px rgba(229,109,23,.30)}
+.portal-slot.span2{grid-column:1 / span 2}
+.portal-slot.row2{grid-row:1 / span 2}
+.portal-top{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.portal-pill{
+  display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:99px;
+  background:var(--accent);color:#fff;font-size:12px;font-weight:800;white-space:nowrap;
+}
+.portal-loc{font-size:11px;font-weight:700;color:#a46326;background:rgba(255,255,255,.78);padding:1px 7px;border-radius:99px}
+.portal-mid{display:flex;align-items:center;gap:10px;min-height:0}
+.portal-ico{
+  width:56px;height:56px;border-radius:14px;flex:none;
+  background:#fff;border:1.5px solid #f0c99a;display:grid;place-items:center;
+  box-shadow:0 3px 10px rgba(191,84,9,.12);
+}
+.portal-ico svg{width:44px;height:44px}
+.portal-txt h4{margin:0;font-size:18px;line-height:1.55;color:#2b2116}
+.portal-txt p{margin:2px 0 0;font-size:13px;color:#7a5c38;line-height:1.4}
+.portal-go{
+  align-self:flex-end;display:inline-flex;align-items:center;gap:5px;
+  padding:4px 12px;border-radius:10px;background:#fff;border:1.5px solid #e9b980;
+  color:#c2560c;font-size:13px;font-weight:800;
+}
+
+/* 书内目录页（Spread 0 左页） */
+.toc-list{
+  grid-column:1 / span 2;grid-row:1 / span 2;
+  display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;align-content:start;
+  overflow-y:auto;padding-right:2px;
+}
+.toc-item{
+  display:flex;align-items:center;justify-content:space-between;gap:6px;
+  padding:6px 10px;border-radius:10px;border:1px solid #e7dbc3;background:#faf5ea;
+  font-size:13px;font-weight:700;color:#3d3222;cursor:pointer;text-align:left;transition:all .13s;
+}
+.toc-item:hover{border-color:var(--accent);background:#fff8ec;color:#c2560c;transform:translateX(2px)}
+.toc-item .tp{font-size:11px;color:#8e7e64;font-weight:800;flex:none}
+.toc-u{grid-column:1 / span 2;font-size:12px;font-weight:800;color:#8e7e64;margin-top:4px;padding-left:2px}
+
+/* 翻页 3D 动效叶片 */
+#flipLeaf{
+  position:absolute;top:10px;bottom:10px;width:calc(50% - 10px);
+  pointer-events:none;display:none;transform-style:preserve-3d;z-index:10;
+}
+#flipLeaf.fwd{left:50%;transform-origin:left center;display:block;animation:leafFwd .42s cubic-bezier(.45,.05,.55,.95) forwards}
+#flipLeaf.bwd{left:10px;transform-origin:right center;display:block;animation:leafBwd .42s cubic-bezier(.45,.05,.55,.95) forwards}
+.leaf-face{
+  position:absolute;inset:0;border-radius:0 8px 8px 0;
+  background:linear-gradient(90deg,#e9dec7 0%,#fffdf7 16%,#fbf5e7 100%);
+  box-shadow:-6px 0 22px rgba(68,48,18,.18);backface-visibility:hidden;
+}
+#flipLeaf.bwd .leaf-face{border-radius:8px 0 0 8px;background:linear-gradient(270deg,#e9dec7 0%,#fffdf7 16%,#fbf5e7 100%)}
+@keyframes leafFwd{0%{transform:rotateY(0deg)}100%{transform:rotateY(-180deg)}}
+@keyframes leafBwd{0%{transform:rotateY(0deg)}100%{transform:rotateY(180deg)}}
+
+/* 书本底部页码滑动条 */
+.book-foot{
+  width:min(1100px,100%);display:flex;align-items:center;gap:12px;
+  padding:8px 16px;border-radius:16px;background:rgba(255,253,248,.92);
+  border:1.5px solid var(--line);box-shadow:var(--shadow-sm);
+}
+.book-foot input[type="range"]{flex:1 1 auto;accent-color:var(--accent);height:8px;cursor:pointer}
+.pg-counter{font-size:15px;font-weight:800;color:#4a3f2f;min-width:128px;text-align:right;white-space:nowrap}
+
+/* ===== 备用目录总览模式 ===== */
+#catalogView{
+  width:min(1440px,100%);margin:0 auto;display:flex;flex-direction:column;gap:18px;padding-bottom:24px;
+}
+.cat-filters{
+  display:flex;align-items:center;flex-wrap:wrap;gap:8px;
+  padding:10px 14px;border-radius:18px;background:rgba(255,253,248,.88);
+  border:1.5px solid var(--line);box-shadow:var(--shadow-sm);
+}
+.f-pill{
+  display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:2px 14px;border-radius:99px;
+  border:1.5px solid var(--line);background:#faf5ea;font-size:15px;font-weight:700;color:#5a4f3e;cursor:pointer;
+}
+.f-pill[aria-pressed="true"]{background:linear-gradient(180deg,var(--accent-hi),var(--accent));border-color:var(--accent-lo);color:#fff}
+.f-pill .dot{width:8px;height:8px;border-radius:50%}
+.f-pill[aria-pressed="true"] .dot{background:#fff!important}
+.unit-sec{
+  background:rgba(255,253,248,.9);border:1.5px solid rgba(226,212,185,.95);
+  border-radius:22px;padding:16px 20px 20px;box-shadow:var(--shadow-sm);
+}
+.unit-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:10px;margin-bottom:14px;border-bottom:2px dashed rgba(190,170,136,.38);flex-wrap:wrap}
+.unit-title-wrap{display:flex;align-items:center;gap:10px}
+.unit-num{padding:3px 11px;border-radius:10px;color:#fff;font-size:14px;font-weight:800}
+.unit-head h2{margin:0;font-size:26px;font-family:var(--f-kai)}
+.cat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.unit-sec.cols3 .cat-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.ccard{
+  display:flex;flex-direction:column;text-decoration:none;border-radius:18px;overflow:hidden;
+  background:#fff;border:1.5px solid #e8dcc4;box-shadow:0 3px 10px rgba(70,50,20,.05);
+  transition:transform .16s, border-color .16s, box-shadow .16s;
+}
+.ccard:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 12px 24px rgba(191,84,9,.14)}
+.cthumb{
+  position:relative;height:106px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(145deg,#fef6e4,#fdebd0);border-bottom:1px solid #f0e3ca;
+}
+.cthumb svg{width:72px;height:72px}
+.cno{position:absolute;left:10px;top:8px;padding:1px 8px;border-radius:99px;background:rgba(255,255,255,.92);border:1px solid #e8d9be;font-size:12px;font-weight:800;color:#5a4d3a}
+.cpg{position:absolute;right:10px;top:8px;padding:1px 7px;border-radius:8px;background:rgba(255,255,255,.88);font-size:11px;font-weight:700;color:#8a7b62}
+.cbody{padding:11px 13px 12px;display:flex;flex-direction:column;gap:7px;flex:1}
+.cbody h3{margin:0;font-size:20px;line-height:1.6;color:#241e16}
+.ctags{display:flex;flex-wrap:wrap;gap:5px}
+.ctag{font-size:12px;font-weight:700;padding:1px 8px;border-radius:99px;background:#faf3e4;border:1px solid #ead8b8;color:#7a551e}
+.cfoot{margin-top:auto;padding-top:7px;border-top:1px dashed rgba(210,192,160,.55);display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:#7b705e}
+.cfoot .go{color:var(--accent)}
+
+/* 响应式（平板与 390px 手机） */
+@media (max-width:1180px){
+  .book-pills{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .cat-grid,.unit-sec.cols3 .cat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:860px){
+  body.stage-locked .shell{height:auto;min-height:100vh}
+  .shell{padding:8px 10px 16px;gap:8px}
+  .topbar{padding:7px 10px;border-radius:16px;gap:8px}
+  .brand-mark{width:34px;height:34px;border-radius:10px}
+  .brand-mark svg{width:22px;height:22px}
+  .brand-t h1{font-size:17px}
+  .brand-sub{display:none}
+  .prog-hud{min-width:0;padding:4px 10px;gap:6px;flex:1 1 auto}
+  .prog-flower{font-size:13px}
+  .prog-txt{font-size:10px}
+  .resume-btn{min-height:32px;padding:0 9px;font-size:12px}
+  .search-wrap{display:none}
+  .mtab{min-height:36px;padding:0 10px;font-size:14px}
+  .tool-btn{min-height:36px;padding:0 10px;font-size:13px}
+  #stageWrap{min-height:78vh;border-radius:18px}
+  .bag-hud{padding:10px 10px}
+  .stage-badge{font-size:14px;padding:5px 12px}
+  .big-cta{font-size:17px;min-height:44px;padding:2px 16px}
+  .soft-cta{font-size:14px;min-height:42px;padding:2px 12px}
+  .shelf-dock{padding:8px 10px;border-radius:15px;gap:6px}
+  .shelf-info{font-size:13px;line-height:1.4}
+  .book-pills{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;max-height:112px;overflow-y:auto;padding-right:2px}
+  .bpill{font-size:12px;padding:5px 8px;white-space:nowrap}
+  #bookOverlay{position:relative;inset:auto;min-height:78vh;padding:10px 10px 12px}
+  .book-stage{flex-direction:column;gap:8px}
+  .flip-arrow{display:none}
+  .book-shell{grid-template-columns:1fr;height:auto;min-height:0;gap:10px;padding:8px;width:100%}
+  .book-shell::before,.book-shell::after{display:none}
+  .page.left,.page.right{border-radius:10px;border-right:none;padding:14px 14px 32px;min-height:290px}
+  .pg-body{grid-template-columns:1fr;grid-template-rows:auto;gap:8px}
+  .abs-block.span2,.portal-slot.span2{grid-column:auto}
+  .abs-block.row2,.portal-slot.row2{grid-row:auto}
+  .toc-list{grid-template-columns:1fr}
+  .toc-u{grid-column:auto}
+  .book-foot{padding:6px 10px;gap:8px;flex-wrap:wrap;justify-content:center}
+  .pg-counter{min-width:0;text-align:center;font-size:13px}
+  .mob-flip-row{display:flex!important;gap:8px;width:100%}
+  .mob-flip-row button{flex:1}
+  .cat-grid,.unit-sec.cols3 .cat-grid{grid-template-columns:1fr}
+}
+.mob-flip-row{display:none}
+</style>
+</head>
+<body class="stage-locked">
+<div class="shell">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 40 40" fill="none">
+          <rect x="7" y="11" width="26" height="23" rx="6" fill="#4f95dc" stroke="#255d99" stroke-width="2"/>
+          <path d="M14 11 V8 C14 5.5 26 5.5 26 8 V11" stroke="#255d99" stroke-width="2.2" stroke-linecap="round"/>
+          <rect x="11" y="21" width="18" height="9" rx="3" fill="#ff9f43" stroke="#bf5409" stroke-width="1.8"/>
+          <circle cx="20" cy="25.5" r="2" fill="#fff"/>
+        </svg>
+      </span>
+      <div class="brand-t">
+        <h1 data-py="xiǎo xué kē xué hù dòng shū bāo">小学科学·互动书包</h1>
+        <div class="brand-sub"><span class="b-pill">粤教科技版</span><span>点击书包 → 侧看抽书 → 翻页进 3D 实验</span></div>
+      </div>
+    </div>
+
+    <div class="prog-hud" id="progHud" title="完成每课全部发现即可获得小红花">
+      <span class="prog-flower" id="progFlower">🌸 0 / 16</span>
+      <div class="prog-bar-wrap">
+        <div class="prog-bar-bg"><div class="prog-bar-fill" id="progBarFill"></div></div>
+        <span class="prog-txt" id="progTxt">已完成 0 / 16 课</span>
+      </div>
+      <a class="resume-btn" id="resumeBtn" href="lessons/k1a-01.html" title="一键进入下一张未完成的活页">▶ 接着学</a>
+    </div>
+
+    <div class="top-nav">
+      <div class="search-wrap" id="searchWrap">
+        <svg class="search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-in" id="hubSearch" type="search" placeholder="搜课题 / 页码 / 磁铁…" autocomplete="off" aria-label="搜索课程与活页">
+        <div class="search-drop" id="searchDrop" role="listbox"></div>
+      </div>
+      <div class="mode-tabs" role="tablist">
+        <button class="mtab" id="tabBag" type="button" aria-pressed="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span>3D 书包翻书</span></button>
+        <button class="mtab" id="tabCatalog" type="button" aria-pressed="false"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>目录总览</span></button>
+      </div>
+      <button class="tool-btn" id="pyBtn" type="button" aria-pressed="true">拼音：开</button>
+    </div>
+  </header>
+
+  <!-- ===== 3D 书包与立体翻书主舞台 ===== -->
+  <section id="stageWrap">
+    <canvas id="bagCanvas"></canvas>
+    <div id="bookHoverTag"></div>
+
+    <!-- 书包正面 / 侧面 HUD -->
+    <div class="bag-hud" id="bagHud">
+      <div class="bag-top">
+        <div class="stage-badge" id="bagTip"><span class="pulse-dot"></span><span id="bagTipTxt" data-py="diǎn yì diǎn shū bāo dǎ kāi kàn kàn lǐ miàn de kē xué shū">点一点书包，打开看看里面的科学书！</span></div>
+        <button class="tool-btn" id="bagBackFront" type="button" hidden><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg><span>合上书包</span></button>
+      </div>
+
+      <div class="bag-bottom">
+        <div class="bag-cta-row" id="frontCta">
+          <button class="big-cta" id="openBagBtn" type="button"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><polyline points="12 5 19 12 12 19"/></svg><span data-py="dǎ kāi shū bāo kàn kè běn">打开书包看课本</span></button>
+        </div>
+
+        <div class="shelf-dock" id="shelfDock" hidden>
+          <div class="shelf-head">
+            <div class="shelf-info" id="shelfInfo">书包里装着 <em>1–6 年级 12 册</em>《科学》课本 · 点亮课本可直接抽出翻开</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="tool-btn primary" id="pullBookBtn" type="button"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span id="pullBookTxt">抽出并翻开《一年级上册》</span></button>
+            </div>
+          </div>
+          <div class="book-pills" id="bookPills"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 摊开课本逐页翻阅层 -->
+    <div id="bookOverlay">
+    <div class="book-bar">
+        <div class="book-bar-l">
+          <button class="tool-btn" id="closeBookBtn" type="button"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg><span>放回书包</span></button>
+          <span class="book-crumb">《科学》<b id="crumbBook">一年级上册</b> · <span id="crumbLesson">目录 / P1</span></span>
+        </div>
+        <div class="book-bar-r unit-tabs" id="unitTabs">
+          <div id="unitTabBtns" style="display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap"></div>
+          <div class="pdf-wrap" id="pdfWrap">
+            <button class="tool-btn" id="pdfImportBtn" type="button" title="导入本册教材 PDF，在本机显示真实原书页">📄 导入原书 PDF</button>
+            <input type="file" id="pdfFileInput" accept="application/pdf,.pdf" hidden>
+            <div class="pdf-pop" id="pdfPop">
+              <h5>📄 教材原书页（仅存本机）</h5>
+              <p id="pdfPopDesc">为尊重教材版权，站点默认展示抽象占位页。导入粤教科技版《科学》PDF 后，将直接在本机浏览器（IndexedDB）渲染高清原书页，<b>绝不上传服务器</b>。</p>
+              <div class="pdf-stat" id="pdfStat">当前状态：未导入（显示占位页）</div>
+              <div class="pdf-row">
+                <button class="pdf-mini pri" id="pdfPickBtn" type="button">选择 PDF 文件</button>
+                <button class="pdf-mini" id="pdfAutoLocalBtn" type="button" hidden>⚡ 一键载入本地原书</button>
+                <button class="pdf-mini" id="pdfQuietBtn" type="button">先看占位页</button>
+                <button class="pdf-mini" id="pdfToggleBtn" type="button" hidden>切回占位页</button>
+                <button class="pdf-mini danger" id="pdfRemoveBtn" type="button" hidden>移除</button>
+              </div>
+              <div class="pdf-row" id="pdfOffsetRow" hidden>
+                <span style="font-size:12px;font-weight:700;color:#6d5f49">页码对齐微调：</span>
+                <button class="pdf-mini" id="pdfOffMinus" type="button">−1</button>
+                <b id="pdfOffVal" style="font-size:12.5px;min-width:28px;text-align:center">+7</b>
+                <button class="pdf-mini" id="pdfOffPlus" type="button">+1</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="book-stage">
+        <button class="flip-arrow" id="prevPageBtn" type="button" aria-label="上一页">‹</button>
+        <div class="book-shell" id="bookShell">
+          <article class="page left" id="pageLeft"></article>
+          <article class="page right" id="pageRight"></article>
+          <div id="flipLeaf"><div class="leaf-face"></div></div>
+        </div>
+        <button class="flip-arrow" id="nextPageBtn" type="button" aria-label="下一页">›</button>
+      </div>
+
+      <div class="book-foot">
+        <div class="mob-flip-row">
+          <button class="tool-btn" id="mobPrevBtn" type="button">‹ 上一页</button>
+          <button class="tool-btn primary" id="mobNextBtn" type="button">下一页 ›</button>
+        </div>
+        <span style="font-size:13px;font-weight:700;color:#7b705e;white-space:nowrap">快速翻页</span>
+        <input type="range" id="pageRange" min="0" max="30" value="0" aria-label="翻页滑块">
+        <span class="pg-counter" id="pgCounter">目录 / P1</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 备用目录总览模式 ===== -->
+  <section id="catalogView" hidden>
+    <div class="cat-prog-banner" id="catProgBanner">
+      <div class="cat-prog-l">
+        <div class="mode-tabs" id="catVolTabs" role="tablist" aria-label="切换年级分册">
+          <button class="mtab" type="button" data-vol="k1a" aria-pressed="true">📘 一年级上册</button>
+          <button class="mtab" type="button" data-vol="k1b" aria-pressed="false">📗 一年级下册</button>
+        </div>
+        <span class="cat-prog-title" id="catProgTitle">🌸 小红花收集进度：0 / 16 课</span>
+        <div class="cat-prog-bar"><i id="catProgFill"></i></div>
+      </div>
+      <div class="cat-prog-flowers" id="catProgFlowers" aria-label="已获得的小红花"></div>
+    </div>
+    <div class="cat-filters" id="catFilters"></div>
+    <div id="catSections"></div>
+  </section>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="vendor/pdf-book.js"></script>
+<script>
+(function () {
+'use strict';
+
+/* ========= 拼音注音引擎 ========= */
+var HAN = /[㐀-鿿]/;
+var pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function ruby(text, py) {
+  if (!py) return esc(text);
+  var syl = py.trim().split(/\s+/), i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) {
+      var p = syl[i++];
+      if (!p) { pyErrors.push(text); p = ''; }
+      out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>';
+    } else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+function hydrate(root) {
+  root.querySelectorAll('[data-py]').forEach(function (el) {
+    var t = el.textContent;
+    el.dataset.t = t;
+    el.innerHTML = ruby(t, el.dataset.py);
+  });
+}
+hydrate(document);
+
+/* ========= WebAudio 轻量拟物音效 ========= */
+var actx = null;
+function playTone(f0, f1, dur, gain) {
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    actx = actx || new AC();
+    var t0 = actx.currentTime;
+    var o = actx.createOscillator(), g = actx.createGain();
+    o.type = 'triangle';
+    o.frequency.setValueAtTime(f0, t0);
+    o.frequency.exponentialRampToValueAtTime(Math.max(f1, 20), t0 + dur);
+    g.gain.setValueAtTime(gain || 0.06, t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+    o.connect(g); g.connect(actx.destination);
+    o.start(t0); o.stop(t0 + dur + 0.02);
+  } catch (e) {}
+}
+function sfxZip() { playTone(420, 880, 0.14, 0.06); }
+function sfxSlide() { playTone(320, 560, 0.16, 0.05); }
+function sfxFlip() { playTone(520, 260, 0.11, 0.045); }
+
+/* ========= 12 册书包数据（1-6年级上下册） ========= */
+var BOOKS = [
+  { id: 'k1a', label: '一年级上册', short: '一上', ready: true,  tag: '16活页', color: '#e56d17', spine: '#cf580c', accent: '#fff4df' },
+  { id: 'k1b', label: '一年级下册', short: '一下', ready: true,  tag: '14活页', color: '#e86850', spine: '#cc4d36', accent: '#fff2ee' },
+  { id: 'k2a', label: '二年级上册', short: '二上', ready: false, tag: '待做',   color: '#58b37c', spine: '#429563', accent: '#eefaf2' },
+  { id: 'k2b', label: '二年级下册', short: '二下', ready: false, tag: '待做',   color: '#7cc498', spine: '#5ea87b', accent: '#eefaf2' },
+  { id: 'k3a', label: '三年级上册', short: '三上', ready: false, tag: '待做',   color: '#4f93d8', spine: '#3979ba', accent: '#edf5fd' },
+  { id: 'k3b', label: '三年级下册', short: '三下', ready: false, tag: '待做',   color: '#79b0e4', spine: '#5a94cc', accent: '#edf5fd' },
+  { id: 'k4a', label: '四年级上册', short: '四上', ready: false, tag: '待做',   color: '#7a75cc', spine: '#5e59ad', accent: '#f1f0fc' },
+  { id: 'k4b', label: '四年级下册', short: '四下', ready: false, tag: '待做',   color: '#9c98dc', spine: '#7e7ac2', accent: '#f1f0fc' },
+  { id: 'k5a', label: '五年级上册', short: '五上', ready: false, tag: '待做',   color: '#d46a88', spine: '#b6506e', accent: '#fdf0f4' },
+  { id: 'k5b', label: '五年级下册', short: '五下', ready: false, tag: '待做',   color: '#e28da5', spine: '#c47088', accent: '#fdf0f4' },
+  { id: 'k6a', label: '六年级上册', short: '六上', ready: false, tag: '待做',   color: '#49a5a8', spine: '#34878a', accent: '#ecf9f9' },
+  { id: 'k6b', label: '六年级下册', short: '六下', ready: false, tag: '待做',   color: '#73bfc2', spine: '#54a0a3', accent: '#ecf9f9' }
+];
+
+/* ========= 微型 SVG 图标 ========= */
+var ICONS = {
+  scale: '<svg viewBox="0 0 64 64" fill="none"><line x1="32" y1="12" x2="32" y2="52" stroke="#9a6b3b" stroke-width="4" stroke-linecap="round"/><rect x="18" y="50" width="28" height="6" rx="3" fill="#c79563"/><line x1="12" y1="22" x2="52" y2="16" stroke="#b8844c" stroke-width="3.5" stroke-linecap="round"/><path d="M8 34 Q16 40 24 34 Z" fill="#f59e0b"/><path d="M40 28 Q48 34 56 28 Z" fill="#3b82f6"/></svg>',
+  sort:  '<svg viewBox="0 0 64 64" fill="none"><rect x="8" y="34" width="20" height="18" rx="4" fill="#fde68a" stroke="#d97706" stroke-width="2.5"/><rect x="36" y="34" width="20" height="18" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="2.5"/><circle cx="18" cy="24" r="7" fill="#ef4444"/><rect x="40" y="16" width="12" height="12" rx="3" fill="#22c55e"/></svg>',
+  mat:   '<svg viewBox="0 0 64 64" fill="none"><rect x="10" y="16" width="18" height="32" rx="4" fill="#d97706" opacity=".85"/><rect x="26" y="12" width="18" height="36" rx="4" fill="#60a5fa" opacity=".88"/><circle cx="48" cy="38" r="10" fill="#cbd5e1" stroke="#64748b" stroke-width="2.5"/></svg>',
+  metal: '<svg viewBox="0 0 64 64" fill="none"><path d="M18 14 V38 C18 46 46 46 46 38 V14" stroke="#ef4444" stroke-width="7" stroke-linecap="round"/><rect x="14" y="12" width="8" height="8" rx="1" fill="#cbd5e1"/><rect x="42" y="12" width="8" height="8" rx="1" fill="#cbd5e1"/><circle cx="32" cy="52" r="4" fill="#64748b"/></svg>',
+  grow:  '<svg viewBox="0 0 64 64" fill="none"><circle cx="22" cy="24" r="9" fill="#fed7aa" stroke="#c2410c" stroke-width="2"/><rect x="15" y="34" width="14" height="18" rx="5" fill="#38bdf8"/><rect x="39" y="24" width="16" height="28" rx="4" fill="#94a3b8" stroke="#475569" stroke-width="2"/><circle cx="47" cy="18" r="3" fill="#facc15"/></svg>',
+  bfly:  '<svg viewBox="0 0 64 64" fill="none"><ellipse cx="22" cy="28" rx="13" ry="10" fill="#f59e0b" stroke="#92400e" stroke-width="2"/><ellipse cx="42" cy="28" rx="13" ry="10" fill="#fbbf24" stroke="#92400e" stroke-width="2"/><ellipse cx="24" cy="41" rx="9" ry="7" fill="#fb923c" stroke="#92400e" stroke-width="2"/><ellipse cx="40" cy="41" rx="9" ry="7" fill="#fb923c" stroke="#92400e" stroke-width="2"/><rect x="30" y="18" width="4" height="28" rx="2" fill="#451a03"/></svg>',
+  plant: '<svg viewBox="0 0 64 64" fill="none"><polygon points="20,52 44,52 48,36 16,36" fill="#d97706" stroke="#92400e" stroke-width="2"/><line x1="32" y1="36" x2="32" y2="18" stroke="#15803d" stroke-width="3.5" stroke-linecap="round"/><path d="M32 28 C18 22 18 12 28 15 Z" fill="#4ade80" stroke="#15803d" stroke-width="1.8"/><path d="M32 24 C46 18 46 8 36 11 Z" fill="#22c55e" stroke="#15803d" stroke-width="1.8"/></svg>',
+  weath: '<svg viewBox="0 0 64 64" fill="none"><circle cx="24" cy="24" r="11" fill="#fde047" stroke="#eab308" stroke-width="2"/><path d="M24 44 H50 C55 44 58 38 55 34 C53 30 48 29 45 31 C42 23 30 23 28 31 C22 30 18 35 20 40 C20 42 22 44 24 44 Z" fill="#fff" stroke="#60a5fa" stroke-width="2.2"/></svg>',
+  flag:  '<svg viewBox="0 0 64 64" fill="none"><line x1="20" y1="10" x2="20" y2="54" stroke="#64748b" stroke-width="3.5" stroke-linecap="round"/><path d="M22 14 L50 20 L22 30 Z" fill="#ef4444"/><rect x="38" y="34" width="12" height="20" rx="3" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/></svg>',
+  coat:  '<svg viewBox="0 0 64 64" fill="none"><path d="M14 28 Q32 10 50 28 Z" fill="#3b82f6" stroke="#1d4ed8" stroke-width="2"/><line x1="32" y1="28" x2="32" y2="50" stroke="#1d4ed8" stroke-width="3" stroke-linecap="round"/><path d="M32 50 Q32 56 26 55" stroke="#1d4ed8" stroke-width="3" stroke-linecap="round"/></svg>',
+  eco:   '<svg viewBox="0 0 64 64" fill="none"><rect x="8" y="42" width="48" height="12" rx="4" fill="#86efac"/><path d="M16 40 Q24 32 32 38 Q40 42 46 36" stroke="#d97706" stroke-width="4" stroke-linecap="round"/><path d="M32 24 C20 18 18 12 32 14 C46 12 44 18 32 24 Z" fill="#22c55e" stroke="#15803d" stroke-width="2"/></svg>',
+  dfly:  '<svg viewBox="0 0 64 64" fill="none"><path d="M32 24 L8 14 L10 23 L32 29 Z" fill="#f6b24c" stroke="#c96511" stroke-width="2"/><path d="M32 24 L56 14 L54 23 L32 29 Z" fill="#ffe1a6" stroke="#c96511" stroke-width="2"/><rect x="28" y="27" width="8" height="26" rx="3" fill="#fff5de" stroke="#c96511" stroke-width="2"/></svg>',
+  tune:  '<svg viewBox="0 0 64 64" fill="none"><path d="M32 20 L10 12 L12 20 L32 25 Z" fill="#60a5fa" stroke="#1d4ed8" stroke-width="2"/><path d="M32 20 L54 12 L52 20 L32 25 Z" fill="#f59e0b" stroke="#b45309" stroke-width="2"/><line x1="12" y1="42" x2="52" y2="42" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/><circle cx="38" cy="42" r="6" fill="#e56d17"/></svg>',
+  tool:  '<svg viewBox="0 0 64 64" fill="none"><circle cx="18" cy="18" r="7" stroke="#e56d17" stroke-width="3.2"/><circle cx="18" cy="46" r="7" stroke="#e56d17" stroke-width="3.2"/><line x1="24" y1="22" x2="52" y2="44" stroke="#64748b" stroke-width="4" stroke-linecap="round"/><line x1="24" y1="42" x2="52" y2="20" stroke="#64748b" stroke-width="4" stroke-linecap="round"/></svg>',
+  /* ---- k1b 专属图标 ---- */
+  pos:     '<svg viewBox="0 0 64 64" fill="none"><rect x="10" y="34" width="44" height="16" rx="4" fill="#fde68a" stroke="#d97706" stroke-width="2.4"/><line x1="34" y1="12" x2="34" y2="38" stroke="#64748b" stroke-width="3.2" stroke-linecap="round"/><path d="M35 13 L52 19 L35 26 Z" fill="#ef4444"/><path d="M16 24 L26 24 M21 19 L21 29" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/></svg>',
+  compass: '<svg viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="22" fill="#fffaf0" stroke="#d97706" stroke-width="3"/><polygon points="32,14 38,32 32,29 26,32" fill="#ef4444"/><polygon points="32,50 26,32 32,35 38,32" fill="#3b82f6"/><circle cx="32" cy="32" r="3" fill="#fff" stroke="#475569" stroke-width="2"/></svg>',
+  campus:  '<svg viewBox="0 0 64 64" fill="none"><rect x="8" y="14" width="48" height="38" rx="6" fill="#fef08a" stroke="#ca8a04" stroke-width="2.4"/><rect x="14" y="20" width="24" height="10" rx="2" fill="#f97316"/><ellipse cx="28" cy="40" rx="11" ry="6" fill="#4ade80" stroke="#ef4444" stroke-width="2"/><rect x="44" y="20" width="7" height="24" rx="2" fill="#60a5fa"/></svg>',
+  leaf:    '<svg viewBox="0 0 64 64" fill="none"><path d="M16 48 C16 22 36 12 50 14 C50 32 40 48 16 48 Z" fill="#4ade80" stroke="#15803d" stroke-width="2.4"/><path d="M16 48 L42 22" stroke="#15803d" stroke-width="2.4" stroke-linecap="round"/><circle cx="26" cy="22" r="5" fill="#f472b6"/></svg>',
+  lens:    '<svg viewBox="0 0 64 64" fill="none"><circle cx="28" cy="28" r="15" fill="#e0f2fe" stroke="#0284c7" stroke-width="3.5"/><line x1="39" y1="39" x2="53" y2="53" stroke="#92400e" stroke-width="5.5" stroke-linecap="round"/><circle cx="28" cy="28" r="6" fill="#fb7185"/></svg>',
+  ant:     '<svg viewBox="0 0 64 64" fill="none"><circle cx="20" cy="34" r="6" fill="#7c2d12"/><circle cx="32" cy="34" r="5.5" fill="#9a3412"/><ellipse cx="45" cy="34" rx="8" ry="6.5" fill="#7c2d12"/><path d="M16 28 L10 20 M18 28 L15 18 M28 38 L24 48 M32 38 L32 49 M36 38 L40 48" stroke="#451a03" stroke-width="2.4" stroke-linecap="round"/></svg>',
+  sortbio: '<svg viewBox="0 0 64 64" fill="none"><circle cx="20" cy="24" r="10" fill="#fde68a" stroke="#d97706" stroke-width="2.2"/><circle cx="44" cy="24" r="10" fill="#bbf7d0" stroke="#16a34a" stroke-width="2.2"/><circle cx="32" cy="44" r="10" fill="#e2e8f0" stroke="#64748b" stroke-width="2.2"/></svg>',
+  daynight:'<svg viewBox="0 0 64 64" fill="none"><path d="M32 10 A22 22 0 0 0 32 54 Z" fill="#fde047" stroke="#eab308" stroke-width="2"/><path d="M32 10 A22 22 0 0 1 32 54 Z" fill="#1e3a8a" stroke="#1d4ed8" stroke-width="2"/><circle cx="43" cy="26" r="5" fill="#fef08a"/></svg>',
+  sunpath: '<svg viewBox="0 0 64 64" fill="none"><path d="M10 46 Q32 10 54 46" stroke="#f59e0b" stroke-width="3" stroke-dasharray="4 4"/><circle cx="32" cy="22" r="8" fill="#facc15" stroke="#ea580c" stroke-width="2"/><rect x="14" y="46" width="36" height="6" rx="2" fill="#94a3b8"/></svg>',
+  moon:    '<svg viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="22" fill="#1e293b"/><path d="M38 16 A16 16 0 1 0 38 48 A12 12 0 1 1 38 16 Z" fill="#fde047"/></svg>',
+  design:  '<svg viewBox="0 0 64 64" fill="none"><rect x="10" y="14" width="44" height="36" rx="4" fill="#eff6ff" stroke="#2563eb" stroke-width="2.4"/><line x1="16" y1="30" x2="48" y2="30" stroke="#2563eb" stroke-width="3.5"/><line x1="22" y1="30" x2="22" y2="44" stroke="#2563eb" stroke-width="3.5"/><line x1="42" y1="30" x2="42" y2="44" stroke="#2563eb" stroke-width="3.5"/></svg>',
+  pbridge: '<svg viewBox="0 0 64 64" fill="none"><rect x="10" y="26" width="44" height="8" rx="2" fill="#fffaf0" stroke="#d97706" stroke-width="2.5"/><rect x="18" y="34" width="6" height="16" rx="1" fill="#fde68a" stroke="#d97706" stroke-width="2"/><rect x="40" y="34" width="6" height="16" rx="1" fill="#fde68a" stroke="#d97706" stroke-width="2"/><circle cx="26" cy="21" r="4.5" fill="#cbd5e1" stroke="#64748b" stroke-width="2"/><circle cx="38" cy="21" r="4.5" fill="#cbd5e1" stroke="#64748b" stroke-width="2"/></svg>',
+  bridge:  '<svg viewBox="0 0 64 64" fill="none"><rect x="6" y="42" width="52" height="10" rx="3" fill="#60a5fa"/><path d="M8 42 Q32 16 56 42" fill="none" stroke="#ea580c" stroke-width="4.5" stroke-linecap="round"/><line x1="8" y1="32" x2="56" y2="32" stroke="#475569" stroke-width="3.5"/><line x1="22" y1="16" x2="22" y2="42" stroke="#dc2626" stroke-width="3"/><line x1="42" y1="16" x2="42" y2="42" stroke="#dc2626" stroke-width="3"/></svg>'
+};
+
+/* ========= 双册完整元数据注册表（k1a 一年级上册 + k1b 一年级下册） ========= */
+var VOLUMES = {
+  k1a: {
+    id: 'k1a', bookIdx: 0, label: '一年级上册', short: '一上',
+    maxPage: 61, maxSpread: 30, pdfOffset: 7, pdfFile: '科学一年级上册.pdf',
+    progressKey: 'xk_k1a_progress',
+    units: {
+      u1: { num: '第 1 单元', name: '认识常见的物体', py: 'rèn shi cháng jiàn de wù tǐ', color: '#d97706', cols: 4 },
+      u2: { num: '第 2 单元', name: '认识生物',       py: 'rèn shi shēng wù',           color: '#16a34a', cols: 3 },
+      u3: { num: '第 3 单元', name: '了解天气',       py: 'liǎo jiě tiān qì',           color: '#2563eb', cols: 4 },
+      u4: { num: '第 4 单元', name: '会旋转的纸蜻蜓', py: 'huì xuán zhuǎn de zhǐ qīng tíng', color: '#e56d17', cols: 3 }
+    },
+    unitTabs: [
+      { sp: 0,  label: '目录',        color: '#786c58' },
+      { sp: 2,  label: '1单元 P1–18', color: '#d97706', min: 1,  max: 9 },
+      { sp: 10, label: '2单元 P19–28',color: '#16a34a', min: 10, max: 14 },
+      { sp: 15, label: '3单元 P29–44',color: '#2563eb', min: 15, max: 22 },
+      { sp: 23, label: '4单元 P45–61',color: '#e56d17', min: 23, max: 30 }
+    ],
+    catFilters: [
+      { key: 'all', label: '全部 16 张活页',       color: '#e56d17' },
+      { key: 'u1',  label: '第1单元 · 物体与材料', color: '#d97706' },
+      { key: 'u2',  label: '第2单元 · 认识生物',   color: '#16a34a' },
+      { key: 'u3',  label: '第3单元 · 了解天气',   color: '#2563eb' },
+      { key: 'u4',  label: '第4单元 · 纸蜻蜓与工具', color: '#e56d17' }
+    ],
+    lessons: [
+      { id:'k1a-01', no:1,  u:'u1', p:'P2–5',   sp:2,  name:'观察物体',             py:'guān chá wù tǐ',                     ico:'scale', tags:['天平比轻重','手指按软硬','绿垫比长短'], foot:'拖一拖 · 按一按 · 敲一敲' },
+      { id:'k1a-02', no:2,  u:'u1', p:'P6–9',   sp:3,  name:'物体的分类',           py:'wù tǐ de fēn lèi',                   ico:'sort',  tags:['3D多标准分类','一拃小手量长短'],       foot:'换标准 · 拖进盘 · 量一量' },
+      { id:'k1a-03', no:3,  u:'u1', p:'P10–13', sp:5,  name:'认识常见的材料',       py:'rèn shi cháng jiàn de cái liào',     ico:'mat',   tags:['4工具测材料','给课本换材料'],           foot:'敲 · 滴水 · 掰弯 · 翻书' },
+      { id:'k1a-04', no:4,  u:'u1', p:'P14–17', sp:8,  name:'认识金属',             py:'rèn shi jīn shǔ',                    ico:'metal', tags:['砂纸打磨','磁铁吸铁','热水传热'],       foot:'光泽 · 响声 · 磁性 · 传热' },
+      { id:'k1a-05', no:5,  u:'u2', p:'P20–22', sp:10, name:'认识我自己',           py:'rèn shi wǒ zì jǐ',                   ico:'grow',  tags:['1–7岁长高尺','喂养人与机器人'],         foot:'人会生长，需要食物和水' },
+      { id:'k1a-06', no:6,  u:'u2', p:'P23–24', sp:11, name:'动物是生物',           py:'dòng wù shì shēng wù',               ico:'bfly',  tags:['抖窗帘引蝴蝶','真小狗vs玩具狗'],         foot:'会动会吃对外界有反应' },
+      { id:'k1a-07', no:7,  u:'u2', p:'P25–27', sp:13, name:'植物是生物',           py:'zhí wù shì shēng wù',                ico:'plant', tags:['浇水晒太阳','睡莲开花','真假花'],       foot:'会发芽开花，需要水光' },
+      { id:'k1a-08', no:8,  u:'u3', p:'P30–32', sp:15, name:'常见的天气',           py:'cháng jiàn de tiān qì',              ico:'weath', tags:['3D天气小庭院','晴阴雨雪风实景'],         foot:'一键造景体验五种天气' },
+      { id:'k1a-09', no:9,  u:'u3', p:'P33–35', sp:17, name:'观察天气',             py:'guān chá tiān qì',                   ico:'flag',  tags:['校园气象站','红旗云量雨量温度'],         foot:'拨动仪器实测风云雨温' },
+      { id:'k1a-10', no:10, u:'u3', p:'P36–39', sp:18, name:'天气对我们生活的影响', py:'tiān qì duì wǒ men shēng huó de yǐng xiǎng', ico:'coat', tags:['看天气3D换装','真实冷热淋湿反应'], foot:'拖衣配对，感受冷暖干湿' },
+      { id:'k1a-11', no:11, u:'u3', p:'P40–44', sp:20, name:'天气对动植物的影响',   py:'tiān qì duì dòng zhí wù de yǐng xiǎng',     ico:'eco',  tags:['蚯蚓燕子','含羞草蓝花草'],           foot:'雨天钻土、触碰合叶、浇水救花' },
+      { id:'k1a-12', no:12, u:'u4', p:'P46–49', sp:23, name:'制作会旋转的纸蜻蜓',   py:'zhì zuò huì xuán zhuǎn de zhǐ qīng tíng',   ico:'dfly', tags:['桌面真剪真折','拖高松手对比飞'],         foot:'亲手剪折 → 旋转下落' },
+      { id:'k1a-13', no:13, u:'u4', p:'P50–54', sp:25, name:'改进我的纸蜻蜓',       py:'gǎi jìn wǒ de zhǐ qīng tíng',        ico:'tune',  tags:['三参数实时变形','双机同台竞飞'],         foot:'调翼长、翼宽与折尾比留空' },
+      { id:'k1a-14', no:14, u:'u4', p:'P55–60', sp:28, name:'发现常见工具的作用',   py:'fā xiàn cháng jiàn gōng jù de zuò yòng',    ico:'tool', tags:['手撕小刀剪刀','5×放大镜看毛刺'],       foot:'亲手裁纸与五角星对比边缘' }
+    ],
+    pages: {
+      1:  { u:'u1', label:'第 1 单元导语', pos:'none', sketch:'单元主题导图' },
+      2:  { u:'u1', lid:'k1a-01', pos:'none', sketch:'认识身边的文具' },
+      3:  { u:'u1', lid:'k1a-01', pos:'none', sketch:'特征观察记录区' },
+      4:  { u:'u1', lid:'k1a-01', file:'k1a-01',      pos:'bot', loc:'下半页', act:'天平比轻重·按软硬', actPy:'tiān píng bǐ qīng zhòng àn ruǎn yìng', desc:'拖文具上天平、手指按软硬、绿垫比长短' },
+      5:  { u:'u1', lid:'k1a-01', pos:'none', sketch:'观察方法分享与布袋思考区' },
+      6:  { u:'u1', lid:'k1a-02', pos:'none', sketch:'书包物品导入图' },
+      7:  { u:'u1', lid:'k1a-02', file:'k1a-02',      pos:'top', loc:'上半页', act:'3D 多标准分类盘', actPy:'duō biāo zhǔn fēn lèi pán', desc:'切换颜色、大小、形状标牌亲手分进木盘' },
+      8:  { u:'u1', lid:'k1a-02', file:'k1a-02-span', pos:'bot', loc:'下半页', act:'用“一拃”量长短', actPy:'yòng yì zhǎ liáng cháng duǎn', desc:'把文具靠在 3D 小手旁比长短再分格' },
+      9:  { u:'u1', lid:'k1a-02', pos:'none', sketch:'分类记录与整理衣柜' },
+      10: { u:'u1', lid:'k1a-03', pos:'none', sketch:'常见材料生活图' },
+      11: { u:'u1', lid:'k1a-03', file:'k1a-03',      pos:'top', loc:'上半页', act:'4 工具材料实验台', actPy:'gōng jù cái liào shí yàn tái', desc:'拿起小锤、滴管、小手、磁铁亲手测 5 种材料' },
+      12: { u:'u1', lid:'k1a-03', pos:'none', sketch:'书包材料交流记录区' },
+      13: { u:'u1', lid:'k1a-03', file:'k1a-03-book', pos:'tl',  loc:'左上方', act:'给课本换材料', actPy:'gěi kè běn huàn cái liào', desc:'换成纸、木板、铁板、布、玻璃试翻书页' },
+      14: { u:'u1', lid:'k1a-04', pos:'none', sketch:'身边常见金属制品图' },
+      15: { u:'u1', lid:'k1a-04', pos:'none', sketch:'教室里的金属观察图' },
+      16: { u:'u1', lid:'k1a-04', file:'k1a-04',      pos:'top', loc:'上半页', act:'金属探秘工坊', actPy:'jīn shǔ tàn mì gōng fáng', desc:'砂纸打磨光泽、磁铁吸、敲击听声、热水传热' },
+      17: { u:'u1', lid:'k1a-04', pos:'none', sketch:'金属科技产品展示图' },
+      18: { u:'u1', label:'第 1 单元小结', pos:'none', sketch:'单元知识回顾' },
+      19: { u:'u2', label:'第 2 单元导语', pos:'none', sketch:'认识生物单元页' },
+      20: { u:'u2', lid:'k1a-05', file:'k1a-05',      pos:'bot', loc:'下半页', act:'成长时光轴与机器人', actPy:'chéng zhǎng shí guāng zhóu yǔ jī qì rén', desc:'拖动 1–7 岁看长高，喂苹果、水与电池比差异' },
+      21: { u:'u2', lid:'k1a-05', pos:'none', sketch:'成长证据交流区' },
+      22: { u:'u2', lid:'k1a-05', pos:'none', sketch:'健康成长思考区' },
+      23: { u:'u2', lid:'k1a-06', file:'k1a-06',      pos:'bot', loc:'下半页', act:'窗帘蝴蝶与真假小狗', actPy:'chuāng lián hú dié yǔ zhēn jiǎ xiǎo gǒu', desc:'抖窗帘、送花蜜引蝴蝶，喂食对比真假小狗' },
+      24: { u:'u2', lid:'k1a-06', pos:'none', sketch:'动物观察记录区' },
+      25: { u:'u2', lid:'k1a-07', pos:'none', sketch:'校园花圃导入图' },
+      26: { u:'u2', lid:'k1a-07', file:'k1a-07',      pos:'top', loc:'上半页', act:'校园花圃浇水看生长', actPy:'xiào yuán huā pǔ jiāo shuǐ kàn shēng zhǎng', desc:'拎浇水壶浇真假花、照小太阳看发芽开花' },
+      27: { u:'u2', lid:'k1a-07', pos:'none', sketch:'植物调查表与思考区' },
+      28: { u:'u2', label:'第 2 单元小结', pos:'none', sketch:'校园生物总结' },
+      29: { u:'u3', label:'第 3 单元导语', pos:'none', sketch:'了解天气单元页' },
+      30: { u:'u3', lid:'k1a-08', file:'k1a-08',      pos:'bot', loc:'下半页', act:'3D 天气小庭院', actPy:'tiān qì xiǎo tíng yuàn', desc:'亲手切换晴、阴、雨、雪、风看实时光影变化' },
+      31: { u:'u3', lid:'k1a-08', pos:'none', sketch:'天气词语交流区' },
+      32: { u:'u3', lid:'k1a-08', pos:'none', sketch:'天气特征分享区' },
+      33: { u:'u3', lid:'k1a-09', pos:'none', sketch:'户外天气导入图' },
+      34: { u:'u3', lid:'k1a-09', file:'k1a-09',      pos:'top', loc:'上半页', act:'3D 校园气象观测站', actPy:'xiào yuán qì xiàng guān cè zhàn', desc:'拨动红旗、云层、雨量筒与温度计实测天气' },
+      35: { u:'u3', lid:'k1a-09', pos:'none', sketch:'一周天气观察记录表' },
+      36: { u:'u3', lid:'k1a-10', pos:'none', sketch:'天气与出行导入图' },
+      37: { u:'u3', lid:'k1a-10', file:'k1a-10',      pos:'top', loc:'上半页', act:'看天气给娃娃换装', actPy:'kàn tiān qì gěi wá wa huàn zhuāng', desc:'切晴雨风雪，拖衣服给 3D 娃娃看冷暖反应' },
+      38: { u:'u3', lid:'k1a-10', pos:'none', sketch:'下雨利与弊讨论区' },
+      39: { u:'u3', lid:'k1a-10', pos:'none', sketch:'不同天气户外活动图' },
+      40: { u:'u3', lid:'k1a-11', pos:'none', sketch:'下雨天动物观察图' },
+      41: { u:'u3', lid:'k1a-11', file:'k1a-11',      pos:'top', loc:'上半页', act:'动植物天气剧场', actPy:'dòng zhí wù tiān qì jù chǎng', desc:'下雨看蚯蚓钻土燕子低飞，触碰含羞草、浇水救花' },
+      42: { u:'u3', lid:'k1a-11', pos:'none', sketch:'蓝花草与含羞草对比图' },
+      43: { u:'u3', lid:'k1a-11', pos:'none', sketch:'天气谚语交流区' },
+      44: { u:'u3', label:'第 3 单元小结', pos:'none', sketch:'天气单元回顾' },
+      45: { u:'u4', label:'第 4 单元导语', pos:'none', sketch:'会旋转的纸蜻蜓导图' },
+      46: { u:'u4', lid:'k1a-12', pos:'none', sketch:'纸条与纸蜻蜓导入图' },
+      47: { u:'u4', lid:'k1a-12', file:'k1a-12',      pos:'top', loc:'上半页', act:'3D 剪折并放飞纸蜻蜓', actPy:'jiǎn zhé bìng fàng fēi zhǐ qīng tíng', desc:'桌面亲手剪折四步成型，拎高松手和平纸条比飞' },
+      48: { u:'u4', lid:'k1a-12', pos:'none', sketch:'飞行状态观察记录区' },
+      49: { u:'u4', lid:'k1a-12', pos:'none', sketch:'讨论与改进想法区' },
+      50: { u:'u4', lid:'k1a-13', pos:'none', sketch:'改进纸蜻蜓想法图' },
+      51: { u:'u4', lid:'k1a-13', file:'k1a-13',      pos:'top', loc:'上半页', act:'双机调校竞飞场', actPy:'shuāng jī tiáo jiào jìng fēi chǎng', desc:'实时拉动翼长翼宽折尾，双机同时松手比留空' },
+      52: { u:'u4', lid:'k1a-13', pos:'none', sketch:'折翼结构示意图' },
+      53: { u:'u4', lid:'k1a-13', pos:'none', sketch:'双机试飞记录区' },
+      54: { u:'u4', lid:'k1a-13', pos:'none', sketch:'留空大比拼分享区' },
+      55: { u:'u4', lid:'k1a-14', pos:'none', sketch:'常见工具导入图' },
+      56: { u:'u4', lid:'k1a-14', file:'k1a-14',      pos:'top', loc:'上半页', act:'手撕·小刀·剪刀工坊', actPy:'shǒu sī xiǎo dāo jiǎn dāo gōng fáng', desc:'亲手撕裁纸条与五角星，拿 5× 放大镜看毛刺' },
+      57: { u:'u4', lid:'k1a-14', pos:'none', sketch:'剪纸操作步骤图' },
+      58: { u:'u4', lid:'k1a-14', pos:'none', sketch:'切口对比记录区' },
+      59: { u:'u4', lid:'k1a-14', pos:'none', sketch:'工具发现剪贴报区' },
+      60: { u:'u4', lid:'k1a-14', pos:'none', sketch:'生活中的简单工具图' },
+      61: { u:'u4', label:'第 4 单元小结', pos:'none', sketch:'纸蜻蜓与工具总结' }
+    }
+  },
+  k1b: {
+    id: 'k1b', bookIdx: 1, label: '一年级下册', short: '一下',
+    maxPage: 64, maxSpread: 32, pdfOffset: 5, pdfFile: '科学一年级下册.pdf',
+    progressKey: 'xk_k1b_progress',
+    units: {
+      u1: { num: '第 1 单元', name: '位置和方向',       py: 'wèi zhì hé fāng xiàng',             color: '#d97706', cols: 3 },
+      u2: { num: '第 2 单元', name: '植物和动物',       py: 'zhí wù hé dòng wù',                 color: '#16a34a', cols: 4 },
+      u3: { num: '第 3 单元', name: '太阳和月亮',       py: 'tài yáng hé yuè liang',             color: '#2563eb', cols: 4 },
+      u4: { num: '第 4 单元', name: '桥梁与人们的生活', py: 'qiáo liáng yǔ rén men de shēng huó', color: '#e56d17', cols: 3 }
+    },
+    unitTabs: [
+      { sp: 0,  label: '目录',        color: '#786c58' },
+      { sp: 1,  label: '1单元 P1–14', color: '#d97706', min: 1,  max: 7 },
+      { sp: 8,  label: '2单元 P15–32',color: '#16a34a', min: 8,  max: 16 },
+      { sp: 17, label: '3单元 P33–46',color: '#2563eb', min: 17, max: 23 },
+      { sp: 24, label: '4单元 P47–64',color: '#e56d17', min: 24, max: 32 }
+    ],
+    catFilters: [
+      { key: 'all', label: '全部 14 张活页',       color: '#e56d17' },
+      { key: 'u1',  label: '第1单元 · 位置和方向', color: '#d97706' },
+      { key: 'u2',  label: '第2单元 · 植物和动物', color: '#16a34a' },
+      { key: 'u3',  label: '第3单元 · 太阳和月亮', color: '#2563eb' },
+      { key: 'u4',  label: '第4单元 · 桥梁与生活', color: '#e56d17' }
+    ],
+    lessons: [
+      { id:'k1b-01', no:1,  u:'u1', p:'P2–5',   sp:2,  name:'描述位置',       py:'miáo shù wèi zhì',                     ico:'pos',     tags:['教室前后左右','蒙眼摸旗指挥'],         foot:'选方位 · 指挥走步 · 摸红旗' },
+      { id:'k1b-02', no:2,  u:'u1', p:'P6–10',  sp:4,  name:'辨别方向',       py:'biàn bié fāng xiàng',                  ico:'compass', tags:['伸臂辨东南西北','校园线索寻旗'],       foot:'面向太阳 · 跟线索找红旗' },
+      { id:'k1b-03', no:3,  u:'u1', p:'P11–14', sp:6,  name:'制作校园模型',   py:'zhì zuò xiào yuán mó xíng',            ico:'campus',  tags:['拼装6大建筑','平面与3D切换'],          foot:'摆建筑 · 对方向 · 当小导游' },
+      { id:'k1b-04', no:4,  u:'u2', p:'P16–19', sp:8,  name:'身边的植物',     py:'shēn biān de zhí wù',                  ico:'leaf',    tags:['5种3D植物','扇闻法与特征卡'],          foot:'看叶花果 · 扇闻香气 · 认植物' },
+      { id:'k1b-05', no:5,  u:'u2', p:'P20–24', sp:11, name:'观察植物',       py:'guān chá zhí wù',                      ico:'lens',    tags:['看摸闻月季','三步调焦5×放大镜'],       foot:'多感官观察 · 放大看细节' },
+      { id:'k1b-06', no:6,  u:'u2', p:'P25–28', sp:13, name:'常见的动物',     py:'cháng jiàn de dòng wù',                ico:'ant',     tags:['蚂蚁兔子蟾蜍蜗牛','局部观察与喂食'],   foot:'观察身体部位与真实动作' },
+      { id:'k1b-07', no:7,  u:'u2', p:'P29–32', sp:15, name:'动植物的异同',   py:'dòng zhí wù de yì tóng',               ico:'sortbio', tags:['8种3D图鉴实测','动物植物非生物三盘'],  foot:'浇水喂食验生物 · 分类装盘' },
+      { id:'k1b-08', no:8,  u:'u3', p:'P34–38', sp:17, name:'白天与黑夜',     py:'bái tiān yǔ hēi yè',                   ico:'daynight',tags:['3D日出日落全景','昼夜生物作息剧场'],   foot:'太阳东升西落 · 含羞草与蝙蝠' },
+      { id:'k1b-09', no:9,  u:'u3', p:'P39–42', sp:20, name:'天空中的太阳',   py:'tiān kōng zhōng de tài yáng',          ico:'sunpath', tags:['5时段太阳与影子','戴护目镜辨方向'],    foot:'太阳东→南→西 · 影子方向相反' },
+      { id:'k1b-10', no:10, u:'u3', p:'P43–46', sp:22, name:'月亮的形状',     py:'yuè liang de xíng zhuàng',             ico:'moon',    tags:['初一至三十3D月相','拍月相贴黑卡纸'],   foot:'拨动农历日期 · 记录圆缺规律' },
+      { id:'k1b-11', no:11, u:'u4', p:'P48–51', sp:25, name:'设计一座纸桥',   py:'shè jì yí zuò zhǐ qiáo',               ico:'design',  tags:['桥梁4大部件','5张A4纸蓝图配置'],       foot:'认部件 · 配桥墩桥面 · 做自检' },
+      { id:'k1b-12', no:12, u:'u4', p:'P52–55', sp:27, name:'纸桥制作与改进', py:'zhǐ qiáo zhì zuò yǔ gǎi jìn',          ico:'pbridge', tags:['分步剪折凹槽桥','放一角硬币承重改进'], foot:'折桥墩凹槽 · 放硬币 · 加纸加固' },
+      { id:'k1b-13', no:13, u:'u4', p:'P56–59', sp:28, name:'创作科普剧',     py:'chuàng zuò kē pǔ jù',                  ico:'bridge',  tags:['4类3D桥梁通车','四角色科普播报'],      foot:'平桥拱桥斜拉悬索 · 体验交通便利' },
+      { id:'k1b-14', no:14, u:'u4', p:'P60–64', sp:30, name:'科普剧展演',     py:'kē pǔ jù zhǎn yǎn',                    ico:'bridge',  tags:['线下全班展演页'],                      foot:'线下小组合作演出与互评' }
+    ],
+    pages: {
+      1:  { u:'u1', label:'第 1 单元导语', pos:'none', sketch:'位置和方向单元导图' },
+      2:  { u:'u1', lid:'k1b-01', pos:'none', sketch:'教室座位位置导入' },
+      3:  { u:'u1', lid:'k1b-01', pos:'none', sketch:'描述教室座位讨论区' },
+      4:  { u:'u1', lid:'k1b-01', file:'k1b-01', pos:'top', loc:'上半页', act:'教室方位与蒙眼摸旗', actPy:'jiào shì fāng wèi yǔ méng yǎn mō qí', desc:'在 3D 教室体验前后左右远近，指挥蒙眼小同学摸到小红旗' },
+      5:  { u:'u1', lid:'k1b-01', pos:'none', sketch:'校园建筑位置口头分享' },
+      6:  { u:'u1', lid:'k1b-02', pos:'none', sketch:'校园辨别方向导入' },
+      7:  { u:'u1', lid:'k1b-02', pos:'none', sketch:'太阳东升伸平双臂辨方向' },
+      8:  { u:'u1', lid:'k1b-02', file:'k1b-02', pos:'bot', loc:'下半页', act:'校园罗盘与线索寻旗', actPy:'xiào yuán luó pán yǔ xiàn suǒ xún qí', desc:'面向东方伸臂认东南西北，按 5 条线索走立体校园找红旗' },
+      9:  { u:'u1', lid:'k1b-02', pos:'none', sketch:'方向词语勾选记录区' },
+      10: { u:'u1', lid:'k1b-02', pos:'none', sketch:'校园小导游指路练习' },
+      11: { u:'u1', lid:'k1b-03', pos:'none', sketch:'准备制作校园模型' },
+      12: { u:'u1', lid:'k1b-03', pos:'none', sketch:'校园平面图与手绘简图' },
+      13: { u:'u1', lid:'k1b-03', file:'k1b-03', pos:'top', loc:'上半页', act:'3D 校园模型拼装工坊', actPy:'xiào yuán mó xíng pīn zhuāng gōng fáng', desc:'把 6 大立体校园建筑摆进黄色简图底板，切换俯视与导游巡检' },
+      14: { u:'u1', label:'第 1 单元小结', pos:'none', sketch:'位置与方向单元回顾' },
+      15: { u:'u2', label:'第 2 单元导语', pos:'none', sketch:'植物和动物单元页' },
+      16: { u:'u2', lid:'k1b-04', pos:'none', sketch:'画一画身边的植物' },
+      17: { u:'u2', lid:'k1b-04', file:'k1b-04', pos:'bot', loc:'下半页', act:'身边植物 3D 认辨台', actPy:'shēn biān zhí wù rèn biàn tái', desc:'观察松树、荷花、酢浆草、茉莉花与桃树，扇闻花香配特征卡' },
+      18: { u:'u2', lid:'k1b-04', pos:'none', sketch:'扇闻法与更多常见植物' },
+      19: { u:'u2', lid:'k1b-04', pos:'none', sketch:'银杏与蒲公英特征卡猜谜' },
+      20: { u:'u2', lid:'k1b-05', pos:'none', sketch:'校园观察植物导入' },
+      21: { u:'u2', lid:'k1b-05', pos:'none', sketch:'放大镜三步使用方法' },
+      22: { u:'u2', lid:'k1b-05', file:'k1b-05', pos:'top', loc:'上半页', act:'月季观察与调焦放大镜', actPy:'yuè jì guān chá yǔ tiáo jiāo fàng dà jìng', desc:'看颜色、按柔嫩花瓣、扇闻花香、调焦 5× 放大镜看叶脉花蕊' },
+      23: { u:'u2', lid:'k1b-05', pos:'none', sketch:'植物观察记录表与你画我猜' },
+      24: { u:'u2', lid:'k1b-05', pos:'none', sketch:'制作我的植物卡片' },
+      25: { u:'u2', lid:'k1b-06', pos:'none', sketch:'画一画常见动物导入' },
+      26: { u:'u2', lid:'k1b-06', pos:'none', sketch:'麻雀与蜗牛观察导入' },
+      27: { u:'u2', lid:'k1b-06', file:'k1b-06', pos:'top', loc:'上半页', act:'常见动物 3D 观察台', actPy:'cháng jiàn dòng wù guān chá tái', desc:'观察蚂蚁三段六腿搬食、兔子长耳跳跃、蟾蜍捉虫与蜗牛缩壳' },
+      28: { u:'u2', lid:'k1b-06', pos:'none', sketch:'寻找校园小动物记录区' },
+      29: { u:'u2', lid:'k1b-07', pos:'none', sketch:'校园动植物调查导入' },
+      30: { u:'u2', lid:'k1b-07', pos:'none', sketch:'校园动植物大调查范例' },
+      31: { u:'u2', lid:'k1b-07', file:'k1b-07', pos:'bot', loc:'下半页', act:'动植物与非生物分类台', actPy:'dòng zhí wù yǔ fēi shēng wù fēn lèi tái', desc:'给海马、熊猫、猪笼草、铜奔马等 8 种 3D 模型测生物特征并分类' },
+      32: { u:'u2', label:'第 2 单元小结', pos:'none', sketch:'植物和动物单元回顾' },
+      33: { u:'u3', label:'第 3 单元导语', pos:'none', sketch:'太阳和月亮单元页' },
+      34: { u:'u3', lid:'k1b-08', pos:'none', sketch:'日出而作日落而息导入' },
+      35: { u:'u3', lid:'k1b-08', file:'k1b-08',     pos:'top', loc:'上半页', act:'3D 日出日落昼夜全景', actPy:'rì chū rì luò zhòu yè quán jǐng', desc:'拨动时间盘或点天空，看太阳东升西落、晚霞染红与星夜降临' },
+      36: { u:'u3', lid:'k1b-08', file:'k1b-08-bio', pos:'bot', loc:'下半页', act:'昼夜生物作息 3D 剧场', actPy:'zhòu yè shēng wù zuò xī jù chǎng', desc:'切换白天黑夜，观察含羞草开合、麻雀昼动夜栖与蝙蝠夜飞捕虫' },
+      37: { u:'u3', lid:'k1b-08', pos:'none', sketch:'白天与黑夜对人类的影响' },
+      38: { u:'u3', lid:'k1b-08', pos:'none', sketch:'古诗与昼夜交替讨论' },
+      39: { u:'u3', lid:'k1b-09', pos:'none', sketch:'一天中不同时间的太阳' },
+      40: { u:'u3', lid:'k1b-09', file:'k1b-09', pos:'top', loc:'上半页', act:'太阳轨迹日影与辨方向', actPy:'tài yáng guǐ jì rì yǐng yǔ biàn fāng xiàng', desc:'戴护目镜看早8时至下午4时太阳弧线与反向影子，面向太阳辨方向' },
+      41: { u:'u3', lid:'k1b-09', pos:'none', sketch:'扮演太阳辨认方向小游戏' },
+      42: { u:'u3', lid:'k1b-09', pos:'none', sketch:'公园中午影子标方向练习' },
+      43: { u:'u3', lid:'k1b-10', pos:'none', sketch:'玉盘还是弯钩古诗导入' },
+      44: { u:'u3', lid:'k1b-10', file:'k1b-10', pos:'top', loc:'上半页', act:'3D 月相变化观测站', actPy:'yuè xiàng biàn huà guān cè zhàn', desc:'滑动农历初一至三十看立体月亮圆缺变化，拍照贴进黑卡纸展板' },
+      45: { u:'u3', lid:'k1b-10', pos:'none', sketch:'月相交流与超轻黏土手工' },
+      46: { u:'u3', label:'第 3 单元小结', pos:'none', sketch:'太阳和月亮单元回顾' },
+      47: { u:'u4', label:'第 4 单元导语', pos:'none', sketch:'桥梁与人们的生活导图' },
+      48: { u:'u4', lid:'k1b-11', pos:'none', sketch:'设计纸桥任务导入' },
+      49: { u:'u4', lid:'k1b-11', pos:'none', sketch:'桥梁调查与两枚硬币任务' },
+      50: { u:'u4', lid:'k1b-11', file:'k1b-11', pos:'bot', loc:'下半页', act:'桥梁部件与纸桥设计台', actPy:'qiáo liáng bù jiàn yǔ zhǐ qiáo shè jì tái', desc:'拆解认识桥面桥墩桥台桥身，用 5 张 A4 纸规则设计 3D 纸桥蓝图' },
+      51: { u:'u4', lid:'k1b-11', pos:'none', sketch:'分享纸桥草图与自检' },
+      52: { u:'u4', lid:'k1b-12', pos:'none', sketch:'制作纸桥前安全检查' },
+      53: { u:'u4', lid:'k1b-12', pos:'none', sketch:'纸桥剪裁与折条步骤图' },
+      54: { u:'u4', lid:'k1b-12', file:'k1b-12', pos:'top', loc:'上半页', act:'纸桥制作与硬币承重赛', actPy:'zhǐ qiáo zhì zuò yǔ yìng bì chéng zhòng sài', desc:'分步折桥墩与凹槽桥面，放一角硬币实测形变并加纸改进承重' },
+      55: { u:'u4', lid:'k1b-12', pos:'none', sketch:'纸桥发现与改进思考区' },
+      56: { u:'u4', lid:'k1b-13', file:'k1b-13', pos:'bot', loc:'下半页', act:'3D 桥梁博物馆与通车台', actPy:'qiáo liáng bó wù guǎn yǔ tōng chē tái', desc:'建造木平桥、石拱桥、斜拉桥与悬索桥并通车，听四角色科普播报' },
+      57: { u:'u4', lid:'k1b-13', pos:'none', sketch:'科普短剧剧本创作步骤' },
+      58: { u:'u4', lid:'k1b-13', pos:'none', sketch:'小组台词创作与交流' },
+      59: { u:'u4', lid:'k1b-13', pos:'none', sketch:'身边桥梁材料与排练准备' },
+      60: { u:'u4', lid:'k1b-14', pos:'none', sketch:'科普剧展演关注要点' },
+      61: { u:'u4', lid:'k1b-14', pos:'none', sketch:'小组线下演出任务与要求' },
+      62: { u:'u4', lid:'k1b-14', pos:'none', sketch:'演出优点记录与同伴互评' },
+      63: { u:'u4', lid:'k1b-14', pos:'none', sketch:'展演收获与改进反思' },
+      64: { u:'u4', label:'第 4 单元小结', pos:'none', sketch:'桥梁与生活单元总结' }
+    }
+  }
+};
+Object.keys(VOLUMES).forEach(function (vk) {
+  var v = VOLUMES[vk];
+  v.lmap = {};
+  v.lessons.forEach(function (l) { v.lmap[l.id] = l; });
+  v.liveIds = [];
+  Object.keys(v.pages).sort(function (a, b) { return (+a) - (+b); }).forEach(function (ps) {
+    var pd = v.pages[ps];
+    if (pd && pd.pos !== 'none' && pd.lid) v.liveIds.push(pd.file || pd.lid);
+  });
+});
+
+/* ========= 全局状态 ========= */
+var S = {
+  vol: 'k1a',           // 当前选中分册：'k1a' | 'k1b'
+  view: 'bag',          // 'bag' | 'catalog'
+  bagMode: 'front',     // 'front' | 'side' | 'pulling' | 'book'
+  selBook: 0,           // 选中的书索引 0..11
+  hoverBook: -1,
+  spread: 0,            // 0..curVol().maxSpread
+  pyOn: true,
+  filter: 'all'
+};
+function curVol() { return VOLUMES[S.vol] || VOLUMES.k1a; }
+var $ = function (s) { return document.querySelector(s); };
+var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
+
+/* ========= 3D 书包与 12 册书架（Three.js 圆润布艺建模） ========= */
+var stageWrap = $('#stageWrap'), canvas = $('#bagCanvas'), hoverTag = $('#bookHoverTag');
+var renderer = null, scene, camera, raycaster, pointer = new THREE.Vector2();
+var bagGroup, doorPivot, doorPull, doorRoll, deskMesh, openRig = null;
+var bookMeshes = [], bagMats = [];
+var BAG_W = 3.5;
+var BOOK = { w: 2.62, h: 3.30, t: 0.235, pitch: 0.248 };
+var FONT = '"Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif';
+var doorVal = 0, doorGoal = 0, bagFade = 1, bagFadeGoal = 1;
+var lift = [], liftGoal = [];
+var looping = false, lastT = 0, vw = 1, vh = 1, fly = null, maxAniso = 1;
+
+function camFor(mode) {
+  var mob = window.innerWidth < 860;
+  if (mode === 'side') {
+    // 纯侧面：镜头正对书包侧面开口，12 条书脊从左到右一字排开
+    return mob ? { tx: -0.3, ty: 1.30, tz: -0.06, phi: -Math.PI / 2, el: 0.05, D: 16.8 }
+               : { tx: -0.3, ty: 2.50, tz: -0.06, phi: -Math.PI / 2, el: 0.05, D: 11.2 };
+  }
+  return mob ? { tx: 0.32, ty: 2.45, tz: 0, phi: 0.34, el: 0.13, D: 19.4 }
+             : { tx: 0.35, ty: 2.78, tz: 0, phi: 0.34, el: 0.13, D: 12.6 };
+}
+var cam0 = camFor('front');
+var cam = { target: new THREE.Vector3(cam0.tx, cam0.ty, cam0.tz), phi: cam0.phi, el: cam0.el, D: cam0.D };
+var camGoal = camFor('front');
+
+function clamp01(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
+function ez(x) { x = clamp01(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
+
+function canvasTex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c);
+  t.encoding = THREE.sRGBEncoding;
+  t.anisotropy = maxAniso;
+  return t;
+}
+function rr(g, x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  g.beginPath();
+  g.moveTo(x + r, y); g.lineTo(x + w - r, y); g.quadraticCurveTo(x + w, y, x + w, y + r);
+  g.lineTo(x + w, y + h - r); g.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  g.lineTo(x + r, y + h); g.quadraticCurveTo(x, y + h, x, y + h - r);
+  g.lineTo(x, y + r); g.quadraticCurveTo(x, y, x + r, y); g.closePath();
+}
+function roundedShape(w, h, rB, rT) {
+  var hw = w / 2, s = new THREE.Shape();
+  s.moveTo(-hw + rB, 0); s.lineTo(hw - rB, 0); s.quadraticCurveTo(hw, 0, hw, rB);
+  s.lineTo(hw, h - rT); s.quadraticCurveTo(hw, h, hw - rT, h);
+  s.lineTo(-hw + rT, h); s.quadraticCurveTo(-hw, h, -hw, h - rT);
+  s.lineTo(-hw, rB); s.quadraticCurveTo(-hw, 0, -hw + rB, 0);
+  return s;
+}
+// 书包侧面轮廓（shape.x = 世界 z，shape.y = 世界 y）：后背平直、顶部大圆角
+function profilePath(s, z0, z1, y0, y1, rB, rTB, rTF) {
+  s.moveTo(z0 + rB, y0); s.lineTo(z1 - rB, y0); s.quadraticCurveTo(z1, y0, z1, y0 + rB);
+  s.lineTo(z1, y1 - rTF); s.quadraticCurveTo(z1, y1, z1 - rTF, y1);
+  s.lineTo(z0 + rTB, y1); s.quadraticCurveTo(z0, y1, z0, y1 - rTB);
+  s.lineTo(z0, y0 + rB); s.quadraticCurveTo(z0, y0, z0 + rB, y0);
+  return s;
+}
+// 沿 X 方向挤出侧面轮廓（中心对齐 x = cx）
+function extrudeX(shape, width, bt, bs, segs, cx) {
+  var dep = Math.max(0.01, width - 2 * bt);
+  var geo = new THREE.ExtrudeGeometry(shape, {
+    depth: dep, bevelEnabled: bt > 0, bevelThickness: bt, bevelSize: bs, bevelSegments: segs || 2, curveSegments: 12
+  });
+  geo.rotateY(-Math.PI / 2);
+  geo.translate(dep / 2 + (cx || 0), 0, 0);
+  return geo;
+}
+function tubeAlong(points2D, mapFn, radius, mat, closed, segs) {
+  var pts = points2D.map(mapFn);
+  if (closed) pts.pop();
+  var curve = new THREE.CatmullRomCurve3(pts, !!closed);
+  var m = new THREE.Mesh(new THREE.TubeGeometry(curve, segs || 72, radius, 6, !!closed), mat);
+  m.castShadow = true;
+  return m;
+}
+function fabricMat(hex, extra) {
+  var tex = canvasTex(128, 128, function (g, w, h) {
+    g.fillStyle = hex; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(255,255,255,.045)'; g.lineWidth = 1;
+    for (var i = 0; i < w; i += 8) { g.beginPath(); g.moveTo(i + 0.5, 0); g.lineTo(i + 0.5, h); g.stroke(); }
+    g.strokeStyle = 'rgba(0,0,0,.03)';
+    for (var j = 4; j < h; j += 8) { g.beginPath(); g.moveTo(0, j + 0.5); g.lineTo(w, j + 0.5); g.stroke(); }
+  });
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  var opt = { map: tex, roughness: 0.86 };
+  if (extra) for (var k in extra) opt[k] = extra[k];
+  return new THREE.MeshStandardMaterial(opt);
+}
+
+/* ---- 课本贴图：封面 / 清晰书脊 / 书口 / 扉页 ---- */
+function coverTexFor(bk) {
+  return canvasTex(384, 484, function (g, w, h) {
+    g.fillStyle = bk.color; g.fillRect(0, 0, w, h);
+    var grd = g.createLinearGradient(0, 0, w, h);
+    grd.addColorStop(0, 'rgba(255,255,255,.20)'); grd.addColorStop(1, 'rgba(0,0,0,.10)');
+    g.fillStyle = grd; g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(0,0,0,.14)'; g.fillRect(18, 0, 5, h);
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    var cx = w / 2 + 10;
+    g.fillStyle = 'rgba(255,255,255,.92)'; g.font = '700 22px ' + FONT;
+    g.fillText('粤教科技版 · 小学', cx, 42);
+    g.fillStyle = '#fff'; g.font = '900 78px ' + FONT;
+    g.fillText('科 学', cx, 112);
+    g.fillStyle = bk.accent; rr(g, 50, 166, w - 80, 236, 28); g.fill();
+    // 小星球插画
+    g.fillStyle = bk.color; g.beginPath(); g.arc(cx, 246, 46, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = '#ffd45e'; g.lineWidth = 7;
+    g.beginPath(); g.ellipse(cx, 248, 76, 20, -0.25, 0, Math.PI * 2); g.stroke();
+    g.fillStyle = '#ffd45e';
+    [[cx - 92, 196, 6], [cx + 96, 204, 5], [cx + 70, 290, 4], [cx - 70, 296, 4]].forEach(function (s) { g.beginPath(); g.arc(s[0], s[1], s[2], 0, Math.PI * 2); g.fill(); });
+    g.fillStyle = '#2b2218'; g.font = '900 42px ' + FONT;
+    g.fillText(bk.label, cx, 358);
+    g.fillStyle = bk.ready ? '#16a34a' : 'rgba(0,0,0,.28)'; rr(g, 92, 418, w - 164, 46, 23); g.fill();
+    g.fillStyle = '#fff'; g.font = '800 24px ' + FONT;
+    g.fillText(bk.ready ? '点我翻开 →' : '待制作', cx, 442);
+  });
+}
+// 64×1024 = 书脊真实比例（0.235 × 3.30 ≈ 1:16），文字不被挤压，侧面看清清楚楚
+function spineTexFor(bk) {
+  return canvasTex(64, 1024, function (g, w, h) {
+    g.fillStyle = bk.spine; g.fillRect(0, 0, w, h);
+    var grd = g.createLinearGradient(0, 0, w, 0);
+    grd.addColorStop(0, 'rgba(0,0,0,.26)'); grd.addColorStop(0.2, 'rgba(255,255,255,.10)');
+    grd.addColorStop(0.5, 'rgba(255,255,255,.18)'); grd.addColorStop(0.8, 'rgba(255,255,255,.06)');
+    grd.addColorStop(1, 'rgba(0,0,0,.28)');
+    g.fillStyle = grd; g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(255,255,255,.85)'; g.fillRect(0, 30, w, 5); g.fillRect(0, h - 36, w, 5);
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillStyle = '#fff'; g.font = '900 34px ' + FONT;
+    g.fillText('科', w / 2, 80); g.fillText('学', w / 2, 120);
+    g.fillStyle = '#fffaf0'; rr(g, 6, 156, w - 12, 340, 12); g.fill();
+    g.fillStyle = bk.spine; g.font = '900 42px ' + FONT;
+    bk.label.split('').forEach(function (ch, i) { g.fillText(ch, w / 2, 196 + i * 64); });
+    if (bk.ready) {
+      g.fillStyle = '#ffd34d'; g.beginPath(); g.arc(w / 2, 590, 22, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#b4500a'; g.font = '900 26px sans-serif'; g.fillText('★', w / 2, 591);
+    } else {
+      g.fillStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.arc(w / 2, 590, 9, 0, Math.PI * 2); g.fill();
+    }
+    g.fillStyle = 'rgba(255,255,255,.82)'; g.font = '700 20px ' + FONT;
+    '粤教科技版'.split('').forEach(function (ch, i) { g.fillText(ch, w / 2, 790 + i * 30); });
+  });
+}
+var pagesTex = null;
+function getPagesTex() {
+  if (pagesTex) return pagesTex;
+  pagesTex = canvasTex(64, 64, function (g, w, h) {
+    g.fillStyle = '#fbf4e4'; g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(150,126,92,.22)';
+    for (var i = 2; i < w; i += 4) g.fillRect(i, 0, 1, h);
+  });
+  return pagesTex;
+}
+function firstPageTex(bk) {
+  return canvasTex(384, 484, function (g, w, h) {
+    g.fillStyle = '#fffaf0'; g.fillRect(0, 0, w, h);
+    var grd = g.createLinearGradient(0, 0, 40, 0);
+    grd.addColorStop(0, 'rgba(120,90,45,.22)'); grd.addColorStop(1, 'rgba(120,90,45,0)');
+    g.fillStyle = grd; g.fillRect(0, 0, 40, h);
+    g.fillStyle = bk.color; rr(g, 46, 40, 92, 30, 15); g.fill();
+    g.fillStyle = '#e4d6bc'; g.fillRect(46, 88, w - 86, 3);
+    for (var r = 0; r < 9; r++) {
+      var y = 120 + r * 36;
+      g.fillStyle = '#eadfca'; rr(g, 46, y, 150 + (r % 3) * 30, 12, 6); g.fill();
+      g.fillStyle = '#efe6d4'; rr(g, w - 92, y, 48, 12, 6); g.fill();
+    }
+  });
+}
+function insideCoverTex(bk) {
+  return canvasTex(128, 160, function (g, w, h) {
+    g.fillStyle = bk.accent; g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(0,0,0,.06)';
+    for (var y = 8; y < h; y += 16) for (var x = (y / 16 % 2) * 8 + 4; x < w; x += 16) { g.beginPath(); g.arc(x, y, 2, 0, Math.PI * 2); g.fill(); }
+  });
+}
+
+function init3D() {
+  if (!window.THREE) return;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+  } catch (e) { renderer = null; return; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  maxAniso = Math.min(8, renderer.capabilities.getMaxAnisotropy ? renderer.capabilities.getMaxAnisotropy() : 1);
+
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(35, 1, 0.1, 160);
+  raycaster = new THREE.Raycaster();
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xd2b38c, 0.60));
+  var key = new THREE.DirectionalLight(0xfff2de, 0.80);
+  key.position.set(6, 14, 12);
+  key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024);
+  var sc = key.shadow.camera; sc.left = -9; sc.right = 9; sc.top = 10; sc.bottom = -6; sc.near = 1; sc.far = 50;
+  key.shadow.bias = -0.0006;
+  scene.add(key);
+  var fillL = new THREE.DirectionalLight(0xe2eeff, 0.50);   // 照亮书包左侧开口与书脊
+  fillL.position.set(-12, 7, 3);
+  scene.add(fillL);
+  var rimL = new THREE.DirectionalLight(0xffffff, 0.22);
+  rimL.position.set(-3, 8, -12);
+  scene.add(rimL);
+
+  // 暖橡木书桌
+  var deskTex = canvasTex(512, 512, function (g, w, h) {
+    g.fillStyle = '#dcc199'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(120,84,42,.06)'; g.lineWidth = 2;
+    for (var y = 0; y < h; y += 32) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+    for (var i = 0; i < 60; i++) {
+      g.fillStyle = 'rgba(110,76,36,' + (Math.random() * 0.03).toFixed(3) + ')';
+      g.fillRect(0, Math.random() * h, w, 2);
+    }
+  });
+  deskTex.wrapS = deskTex.wrapT = THREE.RepeatWrapping;
+  deskTex.repeat.set(4, 4);
+  deskMesh = new THREE.Mesh(new THREE.CylinderGeometry(16, 16, 0.6, 48), new THREE.MeshStandardMaterial({ map: deskTex, roughness: 0.9 }));
+  deskMesh.position.y = -0.3; deskMesh.receiveShadow = true;
+  scene.add(deskMesh);
+  var matRing = new THREE.Mesh(new THREE.RingGeometry(3.3, 3.5, 56),
+    new THREE.MeshBasicMaterial({ color: 0xe56d17, transparent: true, opacity: 0.16, side: THREE.DoubleSide }));
+  matRing.rotation.x = -Math.PI / 2; matRing.position.y = 0.01;
+  scene.add(matRing);
+
+  /* ===== 圆润布艺小学生书包：正面 +Z，水杯在右侧 +X，左侧 -X 拉链侧门打开后露出 12 条书脊 ===== */
+  bagGroup = new THREE.Group();
+  scene.add(bagGroup);
+
+  var bodyMat   = fabricMat('#4c9ff0');
+  var flapMat   = fabricMat('#2f70d2');
+  var padMat    = fabricMat('#2a5faa');
+  var pocketMat = fabricMat('#ffb23c', { roughness: 0.8 });
+  var liningMat = new THREE.MeshStandardMaterial({ color: 0xffe6c0, emissive: 0xffe2b8, emissiveIntensity: 0.32, roughness: 0.92, side: THREE.BackSide });
+  var pipeMat   = new THREE.MeshStandardMaterial({ color: 0xfff3d8, roughness: 0.55 });
+  var goldMat   = new THREE.MeshStandardMaterial({ color: 0xffd35c, roughness: 0.32, metalness: 0.12 });
+  var orangeMat = new THREE.MeshStandardMaterial({ color: 0xff8a3d, roughness: 0.6 });
+  var mintMat   = new THREE.MeshStandardMaterial({ color: 0x86dcbb, roughness: 0.45 });
+  var creamMat  = new THREE.MeshStandardMaterial({ color: 0xfffaee, roughness: 0.7 });
+  var footMat   = new THREE.MeshStandardMaterial({ color: 0x1f3f6c, roughness: 0.9 });
+
+  function add(mesh, shadow) { if (shadow !== false) { mesh.castShadow = true; mesh.receiveShadow = true; } bagGroup.add(mesh); return mesh; }
+
+  // 1) 主包身：侧面轮廓（带内腔开孔）沿 X 挤出成一个空心布袋
+  var outer = profilePath(new THREE.Shape(), -1.80, 1.78, 0.30, 4.68, 0.38, 0.80, 0.95);
+  outer.holes.push(profilePath(new THREE.Path(), -1.57, 1.57, 0.50, 4.44, 0.16, 0.55, 0.60));
+  add(new THREE.Mesh(extrudeX(outer, BAG_W, 0.06, 0.05, 2, 0), bodyMat));
+  // 右侧 (+X) 封口
+  var capGeo = new THREE.ExtrudeGeometry(profilePath(new THREE.Shape(), -1.57, 1.57, 0.50, 4.44, 0.16, 0.55, 0.60), { depth: 0.12, bevelEnabled: false, curveSegments: 12 });
+  capGeo.rotateY(-Math.PI / 2); capGeo.translate(BAG_W / 2 - 0.06, 0, 0);
+  add(new THREE.Mesh(capGeo, bodyMat));
+  // 暖米色内衬（只从开口看得到，衬托彩色书脊）
+  var lining = new THREE.Mesh(new THREE.BoxGeometry(BAG_W - 0.22, 3.72, 3.02), liningMat);
+  lining.position.set(-0.07, 2.41, 0); lining.receiveShadow = true;
+  bagGroup.add(lining);
+
+  // 2) 两侧轮廓米白滚边
+  var pipeShape = profilePath(new THREE.Shape(), -1.86, 1.84, 0.24, 4.74, 0.42, 0.86, 1.01);
+  var pipePts = pipeShape.getSpacedPoints(96);
+  [-1, 1].forEach(function (sx) {
+    add(tubeAlong(pipePts, function (p) { return new THREE.Vector3(sx * (BAG_W / 2 - 0.02), p.y, p.x); }, 0.055, pipeMat, true, 96));
+  });
+
+  // 3) 左侧 (-X) 拉链侧门 + 金色拉链框（侧转时“唰”地拉开卷到底部）
+  var doorShape = profilePath(new THREE.Shape(), -1.55, 1.55, 0.0, 3.92, 0.15, 0.53, 0.58);
+  var doorGeo = new THREE.ExtrudeGeometry(doorShape, { depth: 0.06, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.02, bevelSegments: 2, curveSegments: 10 });
+  doorGeo.rotateY(-Math.PI / 2);
+  doorPivot = new THREE.Group();
+  doorPivot.position.set(-BAG_W / 2 + 0.07, 0.51, 0);
+  var doorMesh = new THREE.Mesh(doorGeo, bodyMat); doorMesh.castShadow = true;
+  doorPivot.add(doorMesh);
+  bagGroup.add(doorPivot);
+  var zipPts = profilePath(new THREE.Shape(), -1.585, 1.585, 0.47, 4.47, 0.18, 0.58, 0.63).getSpacedPoints(96);
+  add(tubeAlong(zipPts, function (p) { return new THREE.Vector3(-BAG_W / 2 - 0.01, p.y, p.x); }, 0.034, goldMat, true, 96));
+  doorPull = add(new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.30, 0.15), goldMat));
+  doorPull.position.set(-BAG_W / 2 - 0.06, 4.30, 0.0);
+  doorRoll = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 3.0, 16), bodyMat);
+  doorRoll.rotation.x = Math.PI / 2; doorRoll.position.set(-BAG_W / 2 - 0.02, 0.62, 0); doorRoll.visible = false;
+  bagGroup.add(doorRoll);
+
+  // 4) 顶部翻盖：包住顶部的弧形盖片 + 正面圆角舌片 + 滚边 + 金色搭扣
+  var band = new THREE.Shape();
+  band.moveTo(1.96, 3.62); band.lineTo(1.96, 3.73); band.quadraticCurveTo(1.96, 4.86, 0.83, 4.86);
+  band.lineTo(-1.0, 4.86); band.quadraticCurveTo(-1.98, 4.86, -1.98, 3.88); band.lineTo(-1.98, 3.60);
+  band.lineTo(-1.85, 3.60); band.lineTo(-1.85, 3.88); band.quadraticCurveTo(-1.85, 4.73, -1.0, 4.73);
+  band.lineTo(0.83, 4.73); band.quadraticCurveTo(1.83, 4.73, 1.83, 3.73); band.lineTo(1.83, 3.62);
+  band.closePath();
+  add(new THREE.Mesh(extrudeX(band, BAG_W + 0.06, 0.04, 0.03, 2, 0), flapMat));
+  var lipGeo = new THREE.ExtrudeGeometry(roundedShape(3.56, 0.86, 0.55, 0.02), { depth: 0.07, bevelEnabled: true, bevelThickness: 0.035, bevelSize: 0.03, bevelSegments: 2, curveSegments: 10 });
+  var lip = add(new THREE.Mesh(lipGeo, flapMat)); lip.position.set(0, 2.98, 1.86);
+  var lipPath = new THREE.Path();
+  lipPath.moveTo(-1.82, 3.70); lipPath.lineTo(-1.82, 3.53); lipPath.quadraticCurveTo(-1.82, 2.94, -1.23, 2.94);
+  lipPath.lineTo(1.23, 2.94); lipPath.quadraticCurveTo(1.82, 2.94, 1.82, 3.53); lipPath.lineTo(1.82, 3.70);
+  add(tubeAlong(lipPath.getSpacedPoints(64), function (p) { return new THREE.Vector3(p.x, p.y, 1.90); }, 0.042, pipeMat, false, 64));
+  var claspGeo = new THREE.ExtrudeGeometry(roundedShape(0.66, 0.36, 0.14, 0.14), { depth: 0.05, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 2, curveSegments: 6 });
+  var clasp = add(new THREE.Mesh(claspGeo, goldMat)); clasp.position.set(0, 2.86, 1.97);
+  var claspDot = add(new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.09, 0.04), orangeMat)); claspDot.position.set(0, 3.04, 2.06);
+
+  // 5) “科学书包”刺绣名牌
+  var labelTex = canvasTex(400, 104, function (g, w, h) {
+    g.clearRect(0, 0, w, h);
+    g.fillStyle = '#fffaf0'; rr(g, 4, 4, w - 8, h - 8, 30); g.fill();
+    g.setLineDash([9, 6]); g.strokeStyle = '#4c9ff0'; g.lineWidth = 3; rr(g, 12, 12, w - 24, h - 24, 24); g.stroke(); g.setLineDash([]);
+    g.fillStyle = '#ff9a3c'; g.beginPath(); g.arc(62, h / 2, 26, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = '#2f70d2'; g.lineWidth = 5; g.beginPath(); g.ellipse(62, h / 2 + 1, 40, 11, -0.3, 0, Math.PI * 2); g.stroke();
+    g.fillStyle = '#21497f'; g.font = '900 46px ' + FONT; g.textAlign = 'left'; g.textBaseline = 'middle';
+    g.fillText('科学书包', 116, h / 2 + 2);
+  });
+  var label = new THREE.Mesh(new THREE.PlaneGeometry(1.95, 0.507), new THREE.MeshStandardMaterial({ map: labelTex, transparent: true, alphaTest: 0.5, roughness: 0.75 }));
+  label.position.set(0, 2.55, 1.845);
+  bagGroup.add(label);
+
+  // 6) 正面鼓鼓的橙黄色前袋 + 车线滚边 + 金色拉链 + 星球徽章
+  var pocketGeo = new THREE.ExtrudeGeometry(roundedShape(2.62, 1.40, 0.45, 0.40), { depth: 0.30, bevelEnabled: true, bevelThickness: 0.14, bevelSize: 0.12, bevelSegments: 3, curveSegments: 10 });
+  var pocket = add(new THREE.Mesh(pocketGeo, pocketMat)); pocket.position.set(0, 0.66, 1.72);
+  var pocketPipe = roundedShape(2.88, 1.66, 0.57, 0.52).getSpacedPoints(80);
+  add(tubeAlong(pocketPipe, function (p) { return new THREE.Vector3(p.x, p.y + 0.53, 1.87); }, 0.045, pipeMat, true, 80));
+  var zipCurve = [new THREE.Vector3(-1.05, 1.86, 2.165), new THREE.Vector3(0, 1.93, 2.175), new THREE.Vector3(1.05, 1.86, 2.165)];
+  var zipM = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(zipCurve), 24, 0.028, 6, false), goldMat);
+  bagGroup.add(zipM);
+  var pull = add(new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.30, 0.05), creamMat)); pull.position.set(0.66, 1.72, 2.19); pull.rotation.z = 0.12;
+  var pullRing = add(new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.02, 6, 12), goldMat)); pullRing.position.set(0.66, 1.90, 2.19);
+  var patchTex = canvasTex(256, 256, function (g, w, h) {
+    g.fillStyle = '#fffaf0'; g.beginPath(); g.arc(w / 2, h / 2, 124, 0, Math.PI * 2); g.fill();
+    g.setLineDash([10, 7]); g.strokeStyle = '#ff8a3d'; g.lineWidth = 5; g.beginPath(); g.arc(w / 2, h / 2, 108, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
+    g.fillStyle = '#4c9ff0'; g.beginPath(); g.arc(w / 2, h / 2 + 4, 52, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = '#ffb23c'; g.lineWidth = 11; g.beginPath(); g.ellipse(w / 2, h / 2 + 6, 86, 24, -0.32, 0, Math.PI * 2); g.stroke();
+    g.fillStyle = '#ffb23c'; [[70, 70, 8], [190, 78, 6], [186, 190, 7]].forEach(function (s) { g.beginPath(); g.arc(s[0], s[1], s[2], 0, Math.PI * 2); g.fill(); });
+  });
+  var patch = new THREE.Mesh(new THREE.CircleGeometry(0.36, 32), new THREE.MeshStandardMaterial({ map: patchTex, roughness: 0.8 }));
+  patch.position.set(-0.55, 1.28, 2.168);
+  bagGroup.add(patch);
+
+  // 7) 右侧 (+X) 网兜 + 薄荷绿圆头水杯
+  var bx = BAG_W / 2 + 0.48;
+  add(new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.42, 1.25, 20), flapMat)).position.set(bx, 0.92, 0.25);
+  var rim = add(new THREE.Mesh(new THREE.TorusGeometry(0.46, 0.05, 8, 24), pipeMat)); rim.rotation.x = Math.PI / 2; rim.position.set(bx, 1.55, 0.25);
+  add(new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 1.95, 20), mintMat)).position.set(bx, 1.48, 0.25);
+  add(new THREE.Mesh(new THREE.CylinderGeometry(0.37, 0.37, 0.16, 20), creamMat)).position.set(bx, 2.40, 0.25);
+  add(new THREE.Mesh(new THREE.SphereGeometry(0.36, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2), creamMat)).position.set(bx, 2.47, 0.25);
+  add(new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.035, 8, 14), orangeMat)).position.set(bx, 2.90, 0.25);
+
+  // 8) 后背软垫 + S 形双肩背带 + 顶部提手 + 四个小脚垫
+  var padGeo = new THREE.ExtrudeGeometry(roundedShape(2.9, 3.6, 0.5, 0.8), { depth: 0.08, bevelEnabled: true, bevelThickness: 0.06, bevelSize: 0.06, bevelSegments: 2, curveSegments: 8 });
+  var pad = add(new THREE.Mesh(padGeo, padMat)); pad.position.set(0, 0.62, -1.98);
+  [-0.95, 0.95].forEach(function (sx) {
+    var curve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(sx * 0.80, 4.25, -1.92), new THREE.Vector3(sx * 0.98, 3.55, -2.32),
+      new THREE.Vector3(sx * 1.05, 2.10, -2.34), new THREE.Vector3(sx * 1.00, 0.95, -2.12), new THREE.Vector3(sx * 0.95, 0.62, -1.98)
+    ]);
+    add(new THREE.Mesh(new THREE.TubeGeometry(curve, 28, 0.13, 8, false), flapMat));
+    var adj = add(new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.18, 0.10), orangeMat)); adj.position.set(sx * 1.02, 1.30, -2.26);
+  });
+  var handle = add(new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.095, 10, 24, Math.PI), orangeMat)); handle.position.set(0, 4.84, -0.55);
+  [[-1.25, -1.25], [1.25, -1.25], [-1.25, 1.25], [1.25, 1.25]].forEach(function (p) {
+    add(new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.24, 0.26, 14), footMat)).position.set(p[0], 0.13, p[1]);
+  });
+
+  bagGroup.traverse(function (o) {
+    if (o.material && bagMats.indexOf(o.material) < 0) bagMats.push(o.material);
+  });
+
+  /* ===== 12 册课本：封面朝正面，从后往前一本本塞进书包，书脊整齐朝向左侧开口 ===== */
+  // 从侧面看：左 → 右 依次是 一年级上册 … 六年级下册
+  BOOKS.forEach(function (bk, idx) {
+    var pageMat  = new THREE.MeshStandardMaterial({ map: getPagesTex(), roughness: 0.92 });
+    var topMat   = new THREE.MeshStandardMaterial({ map: getPagesTex(), roughness: 0.92 });
+    var botMat   = new THREE.MeshStandardMaterial({ map: getPagesTex(), roughness: 0.92 });
+    var sTex = spineTexFor(bk);
+    var spineMat = new THREE.MeshStandardMaterial({ map: sTex, emissive: 0xffffff, emissiveMap: sTex, emissiveIntensity: 0.26, roughness: 0.66 });
+    var cTex = coverTexFor(bk);
+    var coverMat = new THREE.MeshStandardMaterial({ map: cTex, emissive: 0xffffff, emissiveMap: cTex, emissiveIntensity: 0.08, roughness: 0.62 });
+    var backMat  = new THREE.MeshStandardMaterial({ color: bk.color, roughness: 0.75 });
+    var bz = -1.488 + BOOK.pitch / 2 + idx * BOOK.pitch;
+    var baseX = -BAG_W / 2 + 0.13 + BOOK.w / 2;
+    var baseY = 0.57 + BOOK.h / 2;
+    // [+X 书口, -X 书脊(朝侧门), +Y 顶, -Y 底, +Z 封面(朝书包正面), -Z 封底]
+    var mesh = new THREE.Mesh(new THREE.BoxGeometry(BOOK.w, BOOK.h, BOOK.t), [pageMat, spineMat, topMat, botMat, coverMat, backMat]);
+    mesh.position.set(baseX, baseY, bz);
+    mesh.castShadow = true; mesh.receiveShadow = true;
+    mesh.userData = { bookIdx: idx, baseX: baseX, baseY: baseY, baseZ: bz };
+    scene.add(mesh);
+    bookMeshes.push(mesh);
+    lift.push(0); liftGoal.push(0);
+  });
+
+  applyDoor();
+  render3D();
+}
+
+/* ---- 摊开动画用的“真”课本（封面可绕书脊翻开） ---- */
+function buildOpenRig(idx) {
+  var bk = BOOKS[idx], mats = bookMeshes[idx].material;
+  var colorMat = mats[5], pageMat = mats[0];
+  var fpMat = new THREE.MeshStandardMaterial({ map: firstPageTex(bk), emissive: 0xffffff, emissiveMap: null, emissiveIntensity: 0, roughness: 0.9 });
+  var inMat = new THREE.MeshStandardMaterial({ map: insideCoverTex(bk), roughness: 0.9 });
+  var g = new THREE.Group();
+  var block = new THREE.Mesh(new THREE.BoxGeometry(BOOK.w - 0.05, BOOK.h - 0.07, BOOK.t - 0.05), [pageMat, colorMat, pageMat, pageMat, fpMat, colorMat]);
+  block.position.set(0.025, 0, -0.004);
+  g.add(block);
+  var back = new THREE.Mesh(new THREE.BoxGeometry(BOOK.w, BOOK.h, 0.022), colorMat);
+  back.position.z = -BOOK.t / 2 + 0.011; g.add(back);
+  var spine = new THREE.Mesh(new THREE.BoxGeometry(0.024, BOOK.h, BOOK.t), [colorMat, mats[1], colorMat, colorMat, colorMat, colorMat]);
+  spine.position.x = -BOOK.w / 2 + 0.012; g.add(spine);
+  var pivot = new THREE.Group(); pivot.position.set(-BOOK.w / 2, 0, BOOK.t / 2 - 0.011); g.add(pivot);
+  var cover = new THREE.Mesh(new THREE.BoxGeometry(BOOK.w, BOOK.h, 0.022), [colorMat, colorMat, colorMat, colorMat, mats[4], inMat]);
+  cover.position.x = BOOK.w / 2; pivot.add(cover);
+  g.userData = { pivot: pivot, own: [fpMat, inMat] };
+  scene.add(g);
+  return g;
+}
+function disposeRig() {
+  if (!openRig) return;
+  scene.remove(openRig);
+  openRig.traverse(function (o) { if (o.geometry) o.geometry.dispose(); });
+  openRig.userData.own.forEach(function (m) { if (m.map) m.map.dispose(); m.dispose(); });
+  openRig = null;
+}
+
+function updateCam3D() {
+  if (!camera) return;
+  var ce = Math.cos(cam.el);
+  camera.position.set(
+    cam.target.x + cam.D * ce * Math.sin(cam.phi),
+    cam.target.y + cam.D * Math.sin(cam.el),
+    cam.target.z + cam.D * ce * Math.cos(cam.phi)
+  );
+  camera.lookAt(cam.target);
+}
+function render3D() {
+  if (!renderer) return;
+  updateCam3D();
+  renderer.render(scene, camera);
+}
+function kick3D() {
+  if (!renderer || looping) return;
+  looping = true; lastT = performance.now();
+  renderer.setAnimationLoop(frame3D);
+}
+function setMatFade(m, v) {
+  var tr = v < 0.995;
+  if (m.transparent !== tr && !m.alphaTest) { m.transparent = tr; m.needsUpdate = true; }
+  else if (m.alphaTest && !m.transparent) { m.transparent = true; m.needsUpdate = true; }
+  m.opacity = v;
+}
+function applyFade(v) {
+  if (!bagGroup) return;
+  bagMats.forEach(function (m) { setMatFade(m, v); });
+  bookMeshes.forEach(function (bm, i) {
+    var keep = fly && fly.idx === i;
+    var ov = keep ? 1 : v;
+    bm.material.forEach(function (m) { setMatFade(m, ov); });
+    if (!(keep && openRig)) bm.visible = keep || v > 0.01;
+  });
+  bagGroup.visible = v > 0.01;
+}
+function applyDoor() {
+  if (!doorPivot) return;
+  var s = Math.max(0.035, 1 - 0.965 * doorVal);
+  doorPivot.scale.y = s;
+  doorPull.position.y = 0.51 + 3.92 * s - 0.16;
+  doorRoll.visible = doorVal > 0.12;
+  var rs = 0.45 + 0.55 * doorVal;
+  doorRoll.scale.set(rs, 1, rs);
+}
+
+function stepFly(dt) {
+  fly.t += dt;
+  var t = fly.t, bm = bookMeshes[fly.idx], ud = bm.userData;
+  var a = ez(t / 0.55);            // 从侧门滑出
+  var b = ez((t - 0.38) / 0.80);   // 往上飞，镜头跟着一起飞
+  var r = ez((t - 0.78) / 0.60);   // 转身，封面正对镜头
+  var o = ez((t - 1.32) / 0.72);   // 封面绕书脊翻开
+  var px = ud.baseX - a * 3.1;
+  var py = ud.baseY + fly.l0 * 0.40 * (1 - a) + a * 0.30 + b * 3.0;
+  var pz = ud.baseZ * (1 - r);
+  bm.position.set(px, py, pz);
+  bm.rotation.set(0, -r * Math.PI / 2, 0);
+  bagFade = 1 - clamp01((t - 0.42) / 0.62);   // 书包渐渐消失
+  applyFade(bagFade);
+  if (o > 0.001 && !openRig) { openRig = buildOpenRig(fly.idx); bm.visible = false; }
+  if (openRig) {
+    openRig.position.copy(bm.position);
+    openRig.rotation.copy(bm.rotation);
+    openRig.userData.pivot.rotation.y = -o * Math.PI * 0.97;
+  }
+  var mob = window.innerWidth < 860;
+  var Dfin = mob ? 16 : 7.6;
+  var c0 = fly.c0;
+  camGoal.tx = c0.tx + (px - c0.tx) * b;
+  camGoal.ty = c0.ty + (py - c0.ty) * b;
+  camGoal.tz = c0.tz + ((pz - o * BOOK.w / 2) - c0.tz) * Math.max(b, r);
+  camGoal.D = c0.D + (Dfin - c0.D) * b;
+  camGoal.phi = -Math.PI / 2; camGoal.el = 0.05;
+  if (t >= 2.05 && !fly.done) { fly.done = true; setBagMode('book'); }
+  if (fly && t >= 2.6) fly = null;
+}
+
+function frame3D(now) {
+  var dt = Math.max(0.001, Math.min((now - lastT) / 1000, 0.05)); lastT = now;
+  var k = 1 - Math.exp(-5.2 * dt);
+  var kl = 1 - Math.exp(-13 * dt);
+  var kd = 1 - Math.exp(-6.5 * dt);
+  var moving = false;
+
+  if (fly) { stepFly(dt); moving = true; }
+
+  [['phi', 'phi'], ['el', 'el'], ['D', 'D']].forEach(function (p) {
+    var diff = camGoal[p[1]] - cam[p[0]];
+    if (Math.abs(diff) > 0.0015) { cam[p[0]] += diff * k; moving = true; }
+    else cam[p[0]] = camGoal[p[1]];
+  });
+  [['x', 'tx'], ['y', 'ty'], ['z', 'tz']].forEach(function (p) {
+    var diff = camGoal[p[1]] - cam.target[p[0]];
+    if (Math.abs(diff) > 0.0015) { cam.target[p[0]] += diff * k; moving = true; }
+    else cam.target[p[0]] = camGoal[p[1]];
+  });
+
+  if (Math.abs(doorGoal - doorVal) > 0.002) { doorVal += (doorGoal - doorVal) * kd; moving = true; }
+  else doorVal = doorGoal;
+  applyDoor();
+
+  if (!fly) {
+    if (Math.abs(bagFadeGoal - bagFade) > 0.004) { bagFade += (bagFadeGoal - bagFade) * kd; moving = true; applyFade(bagFade); }
+    else if (bagFade !== bagFadeGoal) { bagFade = bagFadeGoal; applyFade(bagFade); }
+  }
+
+  bookMeshes.forEach(function (m, i) {
+    if (fly && fly.idx === i) return;
+    var goal = Math.max(liftGoal[i], (S.bagMode === 'side' && i === S.selBook) ? 0.2 : 0);
+    var d = goal - lift[i];
+    if (Math.abs(d) > 0.002) { lift[i] += d * kl; moving = true; } else lift[i] = goal;
+    var ud = m.userData;
+    m.position.set(ud.baseX - lift[i] * 0.10, ud.baseY + lift[i] * 0.40, ud.baseZ);
+    m.rotation.set(0, 0, 0);
+    m.material[1].emissiveIntensity = 0.26 + lift[i] * 0.30;
+  });
+
+  render3D();
+  if (!moving) { renderer.setAnimationLoop(null); looping = false; }
+}
+
+function resize3D() {
+  if (!renderer || S.view !== 'bag') return;
+  vw = stageWrap.clientWidth; vh = stageWrap.clientHeight;
+  if (!vw || !vh) return;
+  renderer.setSize(vw, vh, false);
+  camera.aspect = vw / vh;
+  camera.updateProjectionMatrix();
+  if (!fly && (S.bagMode === 'front' || S.bagMode === 'side')) { camGoal = camFor(S.bagMode); kick3D(); }
+  render3D();
+}
+
+function resetShelf() {
+  fly = null;
+  disposeRig();
+  bookMeshes.forEach(function (bm) {
+    var ud = bm.userData;
+    bm.visible = true;
+    bm.rotation.set(0, 0, 0);
+    bm.position.set(ud.baseX, ud.baseY, ud.baseZ);
+  });
+}
+
+/* ========= 书包状态切换（正面 → 纯侧面看书脊 → 书飞起展开） ========= */
+function setBagMode(mode) {
+  if (mode !== 'book') resetShelf();
+  S.bagMode = mode;
+  var isFront = mode === 'front';
+  var isSide = mode === 'side';
+  var isBook = mode === 'book';
+  $('#bagHud').hidden = isBook;
+  $('#frontCta').hidden = !isFront;
+  $('#shelfDock').hidden = !isSide;
+  $('#bagBackFront').hidden = !isSide;
+  $('#bookOverlay').classList.toggle('show', isBook);
+  hoverTag.classList.remove('show');
+  for (var i = 0; i < liftGoal.length; i++) liftGoal[i] = 0;
+
+  if (isFront) {
+    doorGoal = 0; bagFadeGoal = 1;
+    camGoal = camFor('front');
+    $('#bagTipTxt').innerHTML = ruby('点一点书包，打开看看里面的科学书！', 'diǎn yì diǎn shū bāo dǎ kāi kàn kan lǐ miàn de kē xué shū');
+  } else if (isSide) {
+    doorGoal = 1; bagFadeGoal = 1;
+    camGoal = camFor('side');
+    updateBookSelection(S.selBook);
+    $('#bagTipTxt').innerHTML = ruby('滑过书脊挑一本，点一下就飞出来翻开！', 'huá guò shū jǐ tiāo yì běn diǎn yí xià jiù fēi chū lái fān kāi');
+  } else if (isBook) {
+    bagFadeGoal = 0;
+  }
+  if (!isBook) kick3D();
+  if (isBook) renderSpread(S.spread, null);
+  saveState();
+}
+
+function updateBookSelection(idx) {
+  S.selBook = idx;
+  var bk = BOOKS[idx];
+  $$('.bpill').forEach(function (el, i) { el.classList.toggle('sel', i === idx); });
+  var btn = $('#pullBookBtn'), txt = $('#pullBookTxt');
+  if (bk.ready) {
+    if (VOLUMES[bk.id] && S.vol !== bk.id) selectVolume(bk.id, { resetSpread: true, silentRender: true });
+    var v = VOLUMES[bk.id];
+    var cnt = v ? v.liveIds.length : 14;
+    btn.disabled = false;
+    btn.classList.add('primary');
+    txt.textContent = '抽出并翻开《' + bk.label + '》';
+    $('#shelfInfo').innerHTML = '当前选中：<em>《科学》' + bk.label + '</em>（' + cnt + ' 张 3D 活页已就绪，点书脊就能飞出翻开）';
+  } else {
+    btn.disabled = true;
+    btn.classList.remove('primary');
+    txt.textContent = '《' + bk.label + '》待制作';
+    $('#shelfInfo').innerHTML = '当前查看：<em>《科学》' + bk.label + '</em>（敬请期待 · 可点 <em>一年级上册</em> 或 <em>一年级下册</em>）';
+  }
+  kick3D();
+}
+function bounceBook(idx) {
+  if (lift[idx] !== undefined) { lift[idx] = 1.25; kick3D(); }
+}
+
+function pullAndOpenBook(idx) {
+  var bk = BOOKS[idx];
+  if (!bk || !bk.ready) { updateBookSelection(idx); bounceBook(idx); return; }
+  if (VOLUMES[bk.id]) selectVolume(bk.id, { resetSpread: S.vol !== bk.id, silentRender: true });
+  if (!renderer || !bookMeshes.length) { setBagMode('book'); return; }
+  if (fly) return;
+  updateBookSelection(idx);
+  sfxSlide();
+  S.bagMode = 'pulling';
+  $('#bagHud').hidden = true;
+  hoverTag.classList.remove('show');
+  for (var i = 0; i < liftGoal.length; i++) liftGoal[i] = 0;
+  doorGoal = 1;
+  fly = { idx: idx, t: 0, l0: lift[idx] || 0, done: false,
+          c0: { tx: cam.target.x, ty: cam.target.y, tz: cam.target.z, D: cam.D } };
+  kick3D();
+}
+
+/* ========= 书脊悬停“波浪”、点击飞出 ========= */
+var dragOrb = null;
+function spineScreen(i) {
+  var rect = canvas.getBoundingClientRect(), ud = bookMeshes[i].userData, v = new THREE.Vector3();
+  var sx = ud.baseX - BOOK.w / 2;
+  v.set(sx, ud.baseY, ud.baseZ).project(camera);
+  var cx = (v.x + 1) / 2 * rect.width, cy = (1 - v.y) / 2 * rect.height;
+  v.set(sx, ud.baseY + BOOK.h / 2, ud.baseZ).project(camera);
+  var ty = (1 - v.y) / 2 * rect.height;
+  v.set(sx, ud.baseY - BOOK.h / 2, ud.baseZ).project(camera);
+  var by = (1 - v.y) / 2 * rect.height;
+  return { x: cx, y: cy, top: ty, bot: by, clientX: rect.left + cx, clientY: rect.top + cy };
+}
+function clearWave() {
+  var had = false;
+  for (var i = 0; i < liftGoal.length; i++) { if (liftGoal[i]) had = true; liftGoal[i] = 0; }
+  S.hoverBook = -1;
+  hoverTag.classList.remove('show');
+  if (had) kick3D();
+}
+function waveCenter(idx) {
+  for (var i = 0; i < liftGoal.length; i++) { var d = i - idx; liftGoal[i] = Math.exp(-d * d / 1.6); }
+  kick3D();
+}
+function waveAt(e) {
+  if (!renderer || S.bagMode !== 'side' || fly || !bookMeshes.length) return -1;
+  var rect = canvas.getBoundingClientRect();
+  var mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  var ps = bookMeshes.map(function (_, i) { return spineScreen(i); });
+  var n = ps.length;
+  var pitch = Math.abs(ps[1].x - ps[0].x) || 1;
+  var x0 = Math.min(ps[0].x, ps[n - 1].x) - pitch * 1.1, x1 = Math.max(ps[0].x, ps[n - 1].x) + pitch * 1.1;
+  if (mx < x0 || mx > x1 || my < ps[0].top - 50 || my > ps[0].bot + 30) {
+    clearWave(); canvas.style.cursor = 'default'; return -1;
+  }
+  var best = 0, bd = 1e9;
+  ps.forEach(function (p, i) {
+    var d = (mx - p.x) / pitch;
+    liftGoal[i] = Math.exp(-d * d / 1.6);   // 高斯波峰：鼠标滑过时相邻书依次抬起再落下
+    if (Math.abs(d) < bd) { bd = Math.abs(d); best = i; }
+  });
+  S.hoverBook = best;
+  var bk = BOOKS[best];
+  var srect = stageWrap.getBoundingClientRect();
+  hoverTag.textContent = bk.label + (bk.ready ? ' · 点一下飞出翻开' : ' · 待制作');
+  hoverTag.style.left = (rect.left - srect.left + ps[best].x) + 'px';
+  hoverTag.style.top = (rect.top - srect.top + ps[best].top - 34) + 'px';
+  hoverTag.classList.add('show');
+  canvas.style.cursor = 'pointer';
+  kick3D();
+  return best;
+}
+function hitBooks(e) {
+  if (!renderer || !bookMeshes.length) return null;
+  var rect = canvas.getBoundingClientRect();
+  pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+  var hits = raycaster.intersectObjects(bookMeshes.filter(function (m) { return m.visible; }), false);
+  if (hits.length) return { type: 'book', idx: hits[0].object.userData.bookIdx };
+  return null;
+}
+
+canvas.addEventListener('pointerdown', function (e) {
+  if (S.bagMode !== 'front' && S.bagMode !== 'side') return;
+  dragOrb = { x: e.clientX, y: e.clientY, phi: cam.phi, el: cam.el, moved: 0 };
+  try { canvas.setPointerCapture(e.pointerId); } catch (er) {}
+});
+canvas.addEventListener('pointermove', function (e) {
+  if (S.bagMode !== 'front' && S.bagMode !== 'side') return;
+  if (dragOrb) {
+    var dx = e.clientX - dragOrb.x, dy = e.clientY - dragOrb.y;
+    dragOrb.moved = Math.max(dragOrb.moved, Math.hypot(dx, dy));
+    if (S.bagMode === 'front' && dragOrb.moved > 6) {
+      cam.phi = THREE.MathUtils.clamp(dragOrb.phi - dx * 0.007, -0.9, 1.3);
+      cam.el = THREE.MathUtils.clamp(dragOrb.el + dy * 0.004, 0.04, 0.7);
+      camGoal.phi = cam.phi; camGoal.el = cam.el;
+      render3D();
+      return;
+    }
+  }
+  if (S.bagMode === 'side') waveAt(e);
+});
+canvas.addEventListener('pointerup', function (e) {
+  if (!dragOrb) return;
+  var moved = dragOrb.moved;
+  dragOrb = null;
+  if (S.bagMode === 'front') {
+    if (moved < 8) { sfxZip(); setBagMode('side'); }
+    return;
+  }
+  if (S.bagMode === 'side' && moved < 14) {
+    var h = hitBooks(e);
+    var idx = (h && h.type === 'book') ? h.idx : waveAt(e);
+    if (idx == null || idx < 0) return;
+    if (BOOKS[idx].ready) pullAndOpenBook(idx);
+    else { updateBookSelection(idx); bounceBook(idx); }
+  }
+});
+canvas.addEventListener('pointerleave', function () { if (S.bagMode === 'side') clearWave(); });
+$('#bookPills').addEventListener('pointerover', function (e) {
+  var b = e.target.closest('.bpill');
+  if (b && S.bagMode === 'side') waveCenter(+b.dataset.bidx);
+});
+$('#bookPills').addEventListener('pointerleave', function () { if (S.bagMode === 'side') clearWave(); });
+window.__hubSpine = function (i) { return renderer && bookMeshes[i] ? spineScreen(i) : null; };
+window.__hubFlyT = function () { return fly ? fly.t : -1; };
+
+/* ========= 构建 12 册书脊胶囊 ========= */
+var bookPillsEl = $('#bookPills');
+bookPillsEl.innerHTML = BOOKS.map(function (bk, idx) {
+  return '<button class="bpill' + (bk.ready ? ' ready' : '') + (idx === 0 ? ' sel' : '') + '" type="button" data-bidx="' + idx + '">' +
+    '<span>' + bk.label + '</span><span class="btag">' + (bk.tag || (bk.ready ? '已就绪' : '待做')) + '</span></button>';
+}).join('');
+bookPillsEl.addEventListener('click', function (e) {
+  var btn = e.target.closest('.bpill');
+  if (!btn) return;
+  var idx = +btn.dataset.bidx;
+  if (S.selBook === idx && BOOKS[idx].ready) pullAndOpenBook(idx);
+  else updateBookSelection(idx);
+});
+
+/* ========= 立体翻书渲染（抽象排版横线 + 真实页码 + 互动格子） ========= */
+function absLinesHtml(cls, sketchLabel) {
+  return '<div class="abs-block ' + (cls || '') + '">' +
+    '<div class="abs-title"></div>' +
+    '<div class="abs-line w90"></div>' +
+    '<div class="abs-line w80"></div>' +
+    '<div class="abs-line w68"></div>' +
+    (sketchLabel ? '<div class="abs-sketch">' + esc(sketchLabel) + '</div>' : '<div class="abs-line w50"></div>') +
+  '</div>';
+}
+
+/* ========= 分册切换 + 独立学习进度与小红花读写（xk_k1a_progress / xk_k1b_progress） ========= */
+var pdfMetaByVol = { k1a: null, k1b: null };
+var builtinPagesByVol = { k1a: true, k1b: true };
+var showRealPdf = true;
+var pdfRenderSeq = 0;
+
+function readProgress(volId) {
+  var v = VOLUMES[volId || S.vol] || curVol();
+  try {
+    var raw = localStorage.getItem(v.progressKey);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) { return {}; }
+}
+function isLiveDone(fileId, volId) {
+  var p = readProgress(volId);
+  return !!(p && p[fileId] && p[fileId].done);
+}
+function lessonFlowersFor(lid, volId) {
+  var v = VOLUMES[volId || S.vol] || curVol();
+  var p = readProgress(v.id), cnt = 0;
+  v.liveIds.forEach(function (id) {
+    if ((id === lid || id.indexOf(lid + '-') === 0) && p[id] && p[id].done) cnt++;
+  });
+  return cnt;
+}
+function renderVolChrome() {
+  var v = curVol();
+  var cb = $('#crumbBook');
+  if (cb) cb.textContent = v.label;
+  var utb = $('#unitTabBtns');
+  if (utb) {
+    utb.innerHTML = v.unitTabs.map(function (t, i) {
+      return '<button class="utab' + (i === 0 ? ' act' : '') + '" type="button" data-sp="' + t.sp + '"><span class="udot" style="background:' + t.color + '"></span>' + esc(t.label) + '</button>';
+    }).join('');
+  }
+  var pr = $('#pageRange');
+  if (pr) { pr.max = String(v.maxSpread); pr.value = String(Math.min(S.spread, v.maxSpread)); }
+  var cf = $('#catFilters');
+  if (cf) {
+    cf.innerHTML = v.catFilters.map(function (f) {
+      return '<button class="f-pill" type="button" data-filter="' + f.key + '" aria-pressed="' + String(S.filter === f.key) + '"><span class="dot" style="background:' + f.color + '"></span>' + esc(f.label) + '</button>';
+    }).join('');
+  }
+  $$('#catVolTabs .mtab').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(b.dataset.vol === v.id));
+  });
+}
+function selectVolume(volId, opts) {
+  if (!VOLUMES[volId]) return;
+  opts = opts || {};
+  var changed = S.vol !== volId;
+  S.vol = volId;
+  S.selBook = VOLUMES[volId].bookIdx;
+  if (opts.resetSpread || changed) S.spread = 0;
+  if (changed) S.filter = 'all';
+  try { sessionStorage.setItem('xk_last_vol', volId); } catch (e) {}
+  renderVolChrome();
+  updateProgressUI();
+  syncPdfUi();
+  if (!opts.silentRender) {
+    if (S.view === 'catalog') renderCatalog();
+    if (S.view === 'bag' && S.bagMode === 'book') renderSpread(S.spread, null);
+  }
+  saveState();
+}
+
+function updateProgressUI() {
+  var v = curVol();
+  var p = readProgress(v.id);
+  var liveIds = v.liveIds;
+  var total = liveIds.length;
+  var doneCount = 0, flowerCount = 0;
+  liveIds.forEach(function (id) {
+    if (p[id] && p[id].done) {
+      doneCount++;
+      flowerCount += (p[id].flower === false ? 0 : 1);
+    }
+  });
+  var pct = total ? Math.round((doneCount / total) * 100) : 0;
+  var fEl = $('#progFlower'), bEl = $('#progBarFill'), tEl = $('#progTxt');
+  if (fEl) fEl.textContent = '🌸 ' + flowerCount + ' / ' + total;
+  if (bEl) bEl.style.width = pct + '%';
+  if (tEl) tEl.textContent = v.short + '已完成 ' + doneCount + ' / ' + total + ' 页';
+  var rBtn = $('#resumeBtn');
+  if (rBtn) {
+    var nextId = liveIds.find(function (id) { return !(p[id] && p[id].done); });
+    if (nextId) {
+      rBtn.href = 'lessons/' + nextId + '.html';
+      rBtn.textContent = doneCount === 0 ? '▶ 开始学' : '▶ 接着学';
+      rBtn.title = '一键进入《' + v.label + '》下一张未完成的活页（' + nextId + '）';
+    } else {
+      rBtn.href = 'lessons/' + liveIds[0] + '.html';
+      rBtn.textContent = '🎉 全部通关';
+      rBtn.title = '《' + v.label + '》全部 ' + total + ' 张活页都已拿到小红花啦！';
+    }
+  }
+  var ct = $('#catProgTitle'), cf = $('#catProgFill'), cfl = $('#catProgFlowers');
+  if (ct) ct.textContent = '🌸 ' + v.label + '小红花：' + doneCount + ' / ' + total + ' 张活页';
+  if (cf) cf.style.width = pct + '%';
+  if (cfl) {
+    var flHtml = '';
+    for (var i = 0; i < total; i++) {
+      flHtml += i < flowerCount ? '<span title="已获得小红花">🌸</span>' : '<span style="opacity:.25" title="待解锁">✿</span>';
+    }
+    cfl.innerHTML = flHtml;
+  }
+}
+
+function portalHtml(pd, cls) {
+  var v = curVol();
+  var l = v.lmap[pd.lid];
+  var targetFile = pd.file || l.id;
+  var done = isLiveDone(targetFile, v.id);
+  return '<a class="portal-slot ' + (cls || '') + (done ? ' is-done' : '') + '" href="lessons/' + targetFile + '.html" data-open-lesson="' + targetFile + '">' +
+    '<div class="portal-top"><span class="portal-pill">' + (done ? '🌸 已获小红花' : '✦ 3D 活页实验') + '</span><span class="portal-loc">本页' + pd.loc + '</span></div>' +
+    '<div class="portal-mid">' +
+      '<div class="portal-ico" aria-hidden="true">' + ICONS[l.ico] + '</div>' +
+      '<div class="portal-txt">' +
+        '<h4>' + ruby(pd.act, pd.actPy) + '</h4>' +
+        '<p>' + esc(pd.desc) + '</p>' +
+      '</div>' +
+    '</div>' +
+    '<span class="portal-go">' + (done ? '再去玩一次 →' : '直接动手玩 →') + '</span>' +
+  '</a>';
+}
+
+/* ========= 本地教材 PDF 与内置高清原书页状态（按分册独立管理：k1a / k1b） ========= */
+function curPdfMeta() { return pdfMetaByVol[S.vol] || null; }
+function curHasBuiltin() { return !!builtinPagesByVol[S.vol]; }
+
+function pad3(n) { return String(n).padStart(3, '0'); }
+
+function syncPdfUi(msg) {
+  var v = curVol(), meta = curPdfMeta(), hasBuiltin = curHasBuiltin();
+  var btn = $('#pdfImportBtn'), stat = $('#pdfStat'), tog = $('#pdfToggleBtn'), rem = $('#pdfRemoveBtn'), offRow = $('#pdfOffsetRow'), offVal = $('#pdfOffVal'), qBtn = $('#pdfQuietBtn');
+  if (!btn) return;
+  if (meta) {
+    btn.classList.remove('pdf-need');
+    btn.classList.toggle('pdf-on', showRealPdf);
+    btn.textContent = showRealPdf ? '📄 原书页 ✓' : '📄 占位页';
+    stat.textContent = msg || ('当前使用自定义导入 PDF：' + meta.name + '（' + meta.pages + ' 页，仅存本机）');
+    tog.hidden = false;
+    tog.textContent = showRealPdf ? '切回占位页' : '显示原书页';
+    rem.hidden = false;
+    offRow.hidden = false;
+    if (qBtn) qBtn.hidden = true;
+    var off = meta.offset || 0;
+    offVal.textContent = (off >= 0 ? '+' : '') + off;
+  } else if (hasBuiltin) {
+    btn.classList.remove('pdf-need');
+    btn.classList.toggle('pdf-on', showRealPdf);
+    btn.textContent = showRealPdf ? '📄 原书页 ✓' : '📄 占位页';
+    stat.textContent = msg || ('已内置《科学 ' + v.label + '》高清原书内页（P1–P' + v.maxPage + '，开箱即看）。');
+    tog.hidden = false;
+    tog.textContent = showRealPdf ? '切回占位页' : '显示原书页';
+    rem.hidden = true;
+    offRow.hidden = true;
+    if (qBtn) qBtn.hidden = true;
+  } else {
+    btn.classList.remove('pdf-on');
+    btn.classList.add('pdf-need');
+    btn.textContent = '📄 导入原书 PDF';
+    stat.textContent = msg || ('想看高清原书页？点下方选《' + v.pdfFile + '》（或直接把 PDF 拖到书页上），导入一次永久记住！');
+    tog.hidden = true;
+    rem.hidden = true;
+    offRow.hidden = true;
+    if (qBtn) qBtn.hidden = false;
+  }
+}
+var pdfPrompted = false;
+function maybeOfferPdf() {
+  if (curPdfMeta() || curHasBuiltin() || pdfPrompted) return;
+  try { if (localStorage.getItem('xk_pdf_quiet') === '1') return; } catch (e) {}
+  pdfPrompted = true;
+  syncPdfUi();
+  setTimeout(function () {
+    if (!curPdfMeta() && !curHasBuiltin() && S.view === 'bag' && S.bagMode === 'book') {
+      $('#pdfPop').classList.add('show');
+    }
+  }, 550);
+}
+
+function renderSinglePage(pNum, side) {
+  var v = curVol();
+  if (pNum === 0) {
+    var byUnit = { u1: [], u2: [], u3: [], u4: [] };
+    v.lessons.forEach(function (l) { byUnit[l.u].push(l); });
+    var html = '<div class="pg-head"><span class="pg-unit-tag" style="background:#e56d17">目 录</span><span class="pg-lesson-tag">点任意一课直接翻页</span></div>' +
+      '<div class="pg-body"><div class="toc-list">';
+    ['u1', 'u2', 'u3', 'u4'].forEach(function (uk) {
+      var u = v.units[uk];
+      html += '<div class="toc-u" style="color:' + u.color + '">' + u.num + ' · ' + u.name + '</div>';
+      byUnit[uk].forEach(function (l) {
+        var fc = lessonFlowersFor(l.id, v.id);
+        html += '<button class="toc-item" type="button" data-jump-sp="' + l.sp + '"><span>' + l.no + '. ' + l.name + (fc > 0 ? ' ' + '🌸'.repeat(fc) : '') + '</span><span class="tp">' + l.p + '</span></button>';
+      });
+    });
+    html += '</div></div><div class="pg-foot"><span>' + v.label + '</span><span>目录</span></div>';
+    return { html: html, isPdf: false };
+  }
+
+  if (pNum > v.maxPage) {
+    var endHtml = '<div class="pg-head"><span class="pg-unit-tag" style="background:#16a34a">全册完</span><span class="pg-lesson-tag">' + v.label + '</span></div>' +
+      '<div class="pg-body"><div class="abs-block span2 row2" style="align-items:center;text-align:center">' +
+        '<div style="font-size:44px">🌸</div>' +
+        '<div style="font-size:18px;font-weight:900;color:#4a3f2f">《科学·' + v.label + '》翻完啦！</div>' +
+        '<div style="font-size:13.5px;color:#7b705e">点左上角“放回书包”可以换另一册继续探索哦</div>' +
+      '</div></div><div class="pg-foot"><span>封底</span><span>粤教科技版</span></div>';
+    return { html: endHtml, isPdf: false };
+  }
+
+  var pd = v.pages[pNum] || { u: 'u1', label: '课本页', pos: 'none' };
+  var u = v.units[pd.u];
+  var l = pd.lid ? v.lmap[pd.lid] : null;
+  var headTitle = l ? ('第 ' + l.no + ' 课 · ' + l.name) : pd.label;
+  var meta = curPdfMeta(), hasBuiltin = curHasBuiltin();
+
+  if (showRealPdf && ((meta && window.__xkPdfBook) || hasBuiltin)) {
+    var posCls = 'on-pdf pos-' + (pd.pos || 'bottom');
+    var overlay = (pd.pos && pd.pos !== 'none' && pd.lid) ? portalHtml(pd, posCls) : '';
+    if (meta && window.__xkPdfBook) {
+      var pdfHtml = '<div class="pdf-loading" data-pdf-loading="' + pNum + '">正在渲染原书第 ' + pNum + ' 页…</div>' +
+        '<img class="pdf-bg" data-pdf-img="' + pNum + '" alt="课本第' + pNum + '页" hidden>' +
+        overlay +
+        '<span class="pdf-pg-chip">原书 P' + pNum + '</span>';
+      return { html: pdfHtml, isPdf: true, pNum: pNum };
+    } else {
+      var imgSrc = 'pages/' + v.id + '/' + pad3(pNum) + '.jpg';
+      var builtinHtml = '<img class="pdf-bg" src="' + imgSrc + '" alt="课本第' + pNum + '页">' +
+        overlay +
+        '<span class="pdf-pg-chip">原书 P' + pNum + '</span>';
+      return { html: builtinHtml, isPdf: true, pNum: pNum };
+    }
+  }
+
+  var body = '';
+  if (pd.pos === 'none') {
+    body = absLinesHtml('span2', pd.sketch || '图文导读区') + absLinesHtml('span2', '阅读与思考横线区');
+  } else if (pd.pos === 'tl') {
+    body = portalHtml(pd) + absLinesHtml('', '插图区') + absLinesHtml('span2', '');
+  } else if (pd.pos === 'tr') {
+    body = absLinesHtml('', '导语区') + portalHtml(pd) + absLinesHtml('span2', '');
+  } else if (pd.pos === 'bl') {
+    body = absLinesHtml('span2', '思考与记录区') + portalHtml(pd) + absLinesHtml('', '');
+  } else if (pd.pos === 'br') {
+    body = absLinesHtml('span2', '思考与记录区') + absLinesHtml('', '') + portalHtml(pd);
+  } else if (pd.pos === 'top') {
+    body = portalHtml(pd, 'span2') + absLinesHtml('span2', '记录与交流横线区');
+  } else {
+    body = absLinesHtml('span2', '问题与观察横线区') + portalHtml(pd, 'span2');
+  }
+
+  return {
+    html: '<div class="pg-head"><span class="pg-unit-tag" style="background:' + u.color + '">' + u.num + '</span><span class="pg-lesson-tag">' + esc(headTitle) + '</span></div>' +
+      '<div class="pg-body">' + body + '</div>' +
+      '<div class="pg-foot"><span>P' + pNum + '</span><span>' + u.name + '</span></div>',
+    isPdf: false
+  };
+}
+
+function hydratePdfSpread(pair, seq) {
+  var v = curVol(), meta = curPdfMeta();
+  if (!meta || !showRealPdf || !window.__xkPdfBook) return;
+  pair.forEach(function (pNum) {
+    if (pNum <= 0 || pNum > v.maxPage) return;
+    window.__xkPdfBook.renderPrintedPage(v.id, pNum, 1080).then(function (url) {
+      if (seq !== pdfRenderSeq) return;
+      var img = document.querySelector('img[data-pdf-img="' + pNum + '"]');
+      var ld = document.querySelector('[data-pdf-loading="' + pNum + '"]');
+      if (url && img) {
+        img.src = url;
+        img.hidden = false;
+        if (ld) ld.hidden = true;
+      } else if (ld) {
+        ld.textContent = 'PDF 超出页码范围（可在右上角微调页码对齐）';
+      }
+    });
+  });
+  [pair[1] + 1, pair[1] + 2].forEach(function (np) {
+    if (np >= 1 && np <= v.maxPage) window.__xkPdfBook.renderPrintedPage(v.id, np, 1080);
+  });
+}
+
+function spreadPages(sp) {
+  if (sp === 0) return [0, 1];
+  return [sp * 2, sp * 2 + 1];
+}
+
+function renderSpread(sp, dir) {
+  var v = curVol();
+  sp = Math.max(0, Math.min(v.maxSpread, sp));
+  S.spread = sp;
+  var pair = spreadPages(sp);
+
+  if (dir) {
+    var leaf = $('#flipLeaf');
+    leaf.className = '';
+    void leaf.offsetWidth;
+    leaf.className = dir;
+    sfxFlip();
+    setTimeout(function () { leaf.className = ''; }, 440);
+  }
+
+  var rL = renderSinglePage(pair[0], 'left');
+  var rR = renderSinglePage(pair[1], 'right');
+  var elL = $('#pageLeft'), elR = $('#pageRight');
+  elL.classList.toggle('has-pdf', !!rL.isPdf);
+  elR.classList.toggle('has-pdf', !!rR.isPdf);
+  elL.innerHTML = rL.html;
+  elR.innerHTML = rR.html;
+  pdfRenderSeq++;
+  if (rL.isPdf || rR.isPdf) hydratePdfSpread(pair, pdfRenderSeq);
+
+  var label = pair[0] === 0 ? '目录 / P1' : (pair[1] > v.maxPage ? ('P' + pair[0] + ' / 封底') : ('P' + pair[0] + ' – P' + pair[1]));
+  $('#pgCounter').textContent = label + '（' + (sp + 1) + '/' + (v.maxSpread + 1) + '）';
+  $('#pageRange').max = String(v.maxSpread);
+  $('#pageRange').value = sp;
+
+  var pdL = v.pages[pair[0]], pdR = v.pages[pair[1]];
+  var activeL = (pdL && pdL.lid && v.lmap[pdL.lid]) || (pdR && pdR.lid && v.lmap[pdR.lid]);
+  $('#crumbLesson').textContent = activeL ? ('第 ' + activeL.no + ' 课《' + activeL.name + '》· ' + label) : label;
+
+  $('#prevPageBtn').disabled = sp <= 0;
+  $('#nextPageBtn').disabled = sp >= v.maxSpread;
+  $('#mobPrevBtn').disabled = sp <= 0;
+  $('#mobNextBtn').disabled = sp >= v.maxSpread;
+
+  var activeTab = 0;
+  v.unitTabs.forEach(function (t) {
+    if (t.min !== undefined && sp >= t.min && sp <= t.max) activeTab = t.sp;
+  });
+  $$('#unitTabs .utab').forEach(function (t) { t.classList.toggle('act', +t.dataset.sp === activeTab); });
+  maybeOfferPdf();
+  saveState();
+}
+
+/* ========= 目录总览模式渲染（与当前分册活页一一对应） ========= */
+function renderCatalog() {
+  var v = curVol();
+  var wrap = $('#catSections');
+  var liveList = [];
+  Object.keys(v.pages).sort(function (a, b) { return (+a) - (+b); }).forEach(function (pStr) {
+    var pd = v.pages[pStr];
+    if (pd && pd.pos !== 'none' && pd.lid) liveList.push({ p: +pStr, pd: pd, l: v.lmap[pd.lid] });
+  });
+  var html = '';
+  ['u1', 'u2', 'u3', 'u4'].forEach(function (uk) {
+    if (S.filter !== 'all' && S.filter !== uk) return;
+    var u = v.units[uk];
+    var list = liveList.filter(function (x) { return x.pd.u === uk; });
+    html += '<section class="unit-sec ' + (list.length === 3 ? 'cols3' : '') + '">' +
+      '<div class="unit-head"><div class="unit-title-wrap"><span class="unit-num" style="background:' + u.color + '">' + u.num + '</span><h2>' + ruby(u.name, u.py) + '</h2></div>' +
+      '<span style="font-size:14px;font-weight:700;color:#8a7b62">共 ' + list.length + ' 张活页</span></div>' +
+      '<div class="cat-grid">' +
+      list.map(function (x) {
+        var file = x.pd.file || x.l.id;
+        var done = isLiveDone(file, v.id);
+        return '<a class="ccard' + (done ? ' is-done' : '') + '" href="lessons/' + file + '.html">' +
+          '<div class="cthumb"><span class="cno">第 ' + x.l.no + ' 课 · ' + esc(x.l.name) + '</span><span class="cpg">P' + x.p + '</span>' + (done ? '<span class="cflower">🌸 已完成</span>' : '') + ICONS[x.l.ico] + '</div>' +
+          '<div class="cbody"><h3>' + ruby(x.pd.act, x.pd.actPy) + '</h3>' +
+          '<div class="ctags"><span class="ctag">' + esc(x.pd.desc) + '</span></div>' +
+          '<div class="cfoot"><span>' + esc(x.l.foot) + '</span><span class="go">' + (done ? '🌸 再玩一次 →' : '直接动手玩 →') + '</span></div></div></a>';
+      }).join('') +
+      '</div></section>';
+  });
+  wrap.innerHTML = html;
+}
+
+/* ========= 视图模式切换 & 状态记忆 ========= */
+function setViewMode(mode) {
+  S.view = mode;
+  var isBag = mode === 'bag';
+  $('#stageWrap').hidden = !isBag;
+  $('#catalogView').hidden = isBag;
+  document.body.classList.toggle('stage-locked', isBag);
+  $('#tabBag').setAttribute('aria-pressed', String(isBag));
+  $('#tabCatalog').setAttribute('aria-pressed', String(!isBag));
+  if (isBag) { resize3D(); if (S.bagMode === 'book') renderSpread(S.spread, null); }
+  else { renderVolChrome(); renderCatalog(); }
+  saveState();
+}
+
+function saveState() {
+  try {
+    sessionStorage.setItem('xk_bag_state', JSON.stringify({ vol: S.vol, view: S.view, bagMode: S.bagMode === 'pulling' ? 'book' : S.bagMode, spread: S.spread }));
+    sessionStorage.setItem('xk_last_vol', S.vol);
+  } catch (e) {}
+}
+function restoreState() {
+  try {
+    var qVol = new URLSearchParams(location.search).get('vol');
+    if (qVol && VOLUMES[qVol]) {
+      selectVolume(qVol, { resetSpread: true, silentRender: true });
+    }
+    var raw = sessionStorage.getItem('xk_bag_state') || sessionStorage.getItem('k1a_bag_state');
+    if (!raw) {
+      var lastV = sessionStorage.getItem('xk_last_vol');
+      if (!qVol && lastV && VOLUMES[lastV]) selectVolume(lastV, { resetSpread: true, silentRender: true });
+      return;
+    }
+    var st = JSON.parse(raw);
+    if (!qVol && st && st.vol && VOLUMES[st.vol]) {
+      selectVolume(st.vol, { resetSpread: false, silentRender: true });
+    }
+    if (st && typeof st.spread === 'number') S.spread = Math.max(0, Math.min(curVol().maxSpread, st.spread));
+    if (st && st.view === 'catalog') { setViewMode('catalog'); return; }
+    if (st && (st.bagMode === 'book' || st.bagMode === 'side')) setBagMode(st.bagMode);
+  } catch (e) {}
+}
+
+/* ========= 事件绑定 ========= */
+$('#openBagBtn').addEventListener('click', function () { sfxZip(); setBagMode('side'); });
+$('#bagBackFront').addEventListener('click', function () { sfxZip(); setBagMode('front'); });
+$('#pullBookBtn').addEventListener('click', function () { pullAndOpenBook(S.selBook); });
+$('#closeBookBtn').addEventListener('click', function () { sfxSlide(); setBagMode('side'); });
+$('#tabBag').addEventListener('click', function () { setViewMode('bag'); });
+$('#tabCatalog').addEventListener('click', function () { setViewMode('catalog'); });
+$('#pyBtn').addEventListener('click', function () {
+  S.pyOn = !S.pyOn;
+  document.body.classList.toggle('no-py', !S.pyOn);
+  this.setAttribute('aria-pressed', String(S.pyOn));
+  this.textContent = S.pyOn ? '拼音：开' : '拼音：关';
+});
+$('#prevPageBtn').addEventListener('click', function () { if (S.spread > 0) renderSpread(S.spread - 1, 'bwd'); });
+$('#nextPageBtn').addEventListener('click', function () { if (S.spread < curVol().maxSpread) renderSpread(S.spread + 1, 'fwd'); });
+$('#mobPrevBtn').addEventListener('click', function () { if (S.spread > 0) renderSpread(S.spread - 1, 'bwd'); });
+$('#mobNextBtn').addEventListener('click', function () { if (S.spread < curVol().maxSpread) renderSpread(S.spread + 1, 'fwd'); });
+$('#pageRange').addEventListener('input', function () {
+  var v = +this.value;
+  renderSpread(v, v > S.spread ? 'fwd' : v < S.spread ? 'bwd' : null);
+});
+$('#unitTabs').addEventListener('click', function (e) {
+  var b = e.target.closest('.utab');
+  if (!b) return;
+  var sp = +b.dataset.sp;
+  renderSpread(sp, sp > S.spread ? 'fwd' : sp < S.spread ? 'bwd' : null);
+});
+$('#bookShell').addEventListener('click', function (e) {
+  var jump = e.target.closest('[data-jump-sp]');
+  if (jump) { renderSpread(+jump.dataset.jumpSp, 'fwd'); return; }
+  var openL = e.target.closest('[data-open-lesson]');
+  if (openL) { saveState(); return; }
+});
+$('#catVolTabs').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-vol]');
+  if (!b) return;
+  selectVolume(b.dataset.vol, { resetSpread: true });
+});
+$('#catFilters').addEventListener('click', function (e) {
+  var p = e.target.closest('.f-pill');
+  if (!p) return;
+  S.filter = p.dataset.filter;
+  $$('#catFilters .f-pill').forEach(function (x) { x.setAttribute('aria-pressed', String(x === p)); });
+  renderCatalog();
+});
+
+/* ========= 本地导入 PDF 事件（按当前分册独立导入 / 切换 / 微调 / 移除） ========= */
+function handlePdfFile(file) {
+  var v = curVol();
+  if (!file || !/\.pdf$/i.test(file.name || '') && file.type !== 'application/pdf') {
+    syncPdfUi('请选择有效的 PDF 教材文件！');
+    return;
+  }
+  if (!window.__xkPdfBook) {
+    syncPdfUi('PDF 引擎未加载，请刷新页面重试');
+    return;
+  }
+  syncPdfUi('正在本地解析并存入浏览器，请稍候…');
+  window.__xkPdfBook.importFile(v.id, file, { defaultOffset: v.pdfOffset, printedTotal: v.maxPage }).then(function (meta) {
+    pdfMetaByVol[v.id] = meta;
+    showRealPdf = true;
+    syncPdfUi();
+    $('#pdfPop').classList.remove('show');
+    if (S.view === 'bag' && S.bagMode === 'book') renderSpread(S.spread, null);
+  }).catch(function (err) {
+    syncPdfUi('解析失败：' + (err && err.message ? err.message : '请确认文件未加密'));
+  });
+}
+$('#pdfImportBtn').addEventListener('click', function (e) {
+  e.stopPropagation();
+  $('#pdfPop').classList.toggle('show');
+});
+$('#pdfPickBtn').addEventListener('click', function () { $('#pdfFileInput').click(); });
+$('#pdfQuietBtn').addEventListener('click', function () {
+  try { localStorage.setItem('xk_pdf_quiet', '1'); } catch (e) {}
+  $('#pdfPop').classList.remove('show');
+});
+$('#pdfFileInput').addEventListener('change', function () {
+  var f = this.files && this.files[0];
+  this.value = '';
+  if (f) handlePdfFile(f);
+});
+$('#pdfToggleBtn').addEventListener('click', function () {
+  showRealPdf = !showRealPdf;
+  syncPdfUi();
+  if (S.view === 'bag' && S.bagMode === 'book') renderSpread(S.spread, null);
+});
+$('#pdfOffMinus').addEventListener('click', function () {
+  var v = curVol(), meta = curPdfMeta();
+  if (!meta || !window.__xkPdfBook) return;
+  window.__xkPdfBook.setOffset(v.id, (meta.offset || 0) - 1).then(function (m) {
+    if (m) pdfMetaByVol[v.id] = m;
+    syncPdfUi();
+    if (S.view === 'bag' && S.bagMode === 'book') renderSpread(S.spread, null);
+  });
+});
+$('#pdfOffPlus').addEventListener('click', function () {
+  var v = curVol(), meta = curPdfMeta();
+  if (!meta || !window.__xkPdfBook) return;
+  window.__xkPdfBook.setOffset(v.id, (meta.offset || 0) + 1).then(function (m) {
+    if (m) pdfMetaByVol[v.id] = m;
+    syncPdfUi();
+    if (S.view === 'bag' && S.bagMode === 'book') renderSpread(S.spread, null);
+  });
+});
+$('#pdfRemoveBtn').addEventListener('click', function () {
+  var v = curVol();
+  if (!window.__xkPdfBook) return;
+  window.__xkPdfBook.remove(v.id).then(function () {
+    pdfMetaByVol[v.id] = null;
+    syncPdfUi();
+    $('#pdfPop').classList.remove('show');
+    if (S.view === 'bag' && S.bagMode === 'book') renderSpread(S.spread, null);
+  });
+});
+var bookOverlayEl = $('#bookOverlay');
+bookOverlayEl.addEventListener('dragover', function (e) {
+  if (e.dataTransfer && e.dataTransfer.types && Array.from(e.dataTransfer.types).indexOf('Files') !== -1) {
+    e.preventDefault();
+    bookOverlayEl.classList.add('drag-pdf');
+  }
+});
+bookOverlayEl.addEventListener('dragleave', function (e) {
+  if (e.target === bookOverlayEl) bookOverlayEl.classList.remove('drag-pdf');
+});
+bookOverlayEl.addEventListener('drop', function (e) {
+  bookOverlayEl.classList.remove('drag-pdf');
+  var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if (f) { e.preventDefault(); handlePdfFile(f); }
+});
+
+/* ========= 顶栏快速搜索（双册全课题 / 页码 / 活页玩法直达） ========= */
+var SEARCH_INDEX = [];
+['k1a', 'k1b'].forEach(function (vk) {
+  var v = VOLUMES[vk];
+  Object.keys(v.pages).sort(function (a, b) { return (+a) - (+b); }).forEach(function (pStr) {
+    var pd = v.pages[pStr];
+    if (pd && pd.pos !== 'none' && pd.lid) {
+      var l = v.lmap[pd.lid];
+      var file = pd.file || l.id;
+      SEARCH_INDEX.push({
+        vol: vk,
+        short: v.short,
+        p: +pStr,
+        sp: Math.floor((+pStr) / 2),
+        file: file,
+        title: '[' + v.short + '] 第' + l.no + '课 · ' + pd.act,
+        sub: 'P' + pStr + ' · ' + l.name,
+        hay: (v.short + ' ' + v.label + ' p' + pStr + ' 第' + l.no + '课 ' + l.name + ' ' + pd.act + ' ' + pd.desc + ' ' + l.tags.join(' ') + ' ' + l.foot).toLowerCase()
+      });
+    }
+  });
+});
+var searchIn = $('#hubSearch'), searchDrop = $('#searchDrop');
+function updateSearchDrop() {
+  var q = (searchIn.value || '').trim().toLowerCase();
+  if (!q) { searchDrop.classList.remove('show'); return; }
+  var hits = SEARCH_INDEX.filter(function (x) { return x.hay.indexOf(q) !== -1; }).slice(0, 8);
+  var pm = q.match(/^p?(\d{1,2})$/i);
+  var html = '';
+  if (pm) {
+    var v = curVol();
+    var pn = Math.max(1, Math.min(v.maxPage, +pm[1]));
+    html += '<button class="sdrop-item" type="button" data-search-sp="' + Math.floor(pn / 2) + '"><span>📖 翻到《' + v.short + '》第 ' + pn + ' 页</span><small>P' + pn + '</small></button>';
+  }
+  hits.forEach(function (h) {
+    html += '<a class="sdrop-item" href="lessons/' + h.file + '.html"><span>' + esc(h.title) + (isLiveDone(h.file, h.vol) ? ' 🌸' : '') + '</span><small>' + esc(h.sub) + '</small></a>';
+  });
+  if (!html) html = '<div style="padding:8px 10px;font-size:12.5px;color:#8a7b62">没有找到匹配课目，试试输入“磁铁”“纸桥”“月亮”“P40”</div>';
+  searchDrop.innerHTML = html;
+  searchDrop.classList.add('show');
+}
+searchIn.addEventListener('input', updateSearchDrop);
+searchIn.addEventListener('focus', updateSearchDrop);
+searchDrop.addEventListener('click', function (e) {
+  var spBtn = e.target.closest('[data-search-sp]');
+  if (spBtn) {
+    searchDrop.classList.remove('show');
+    searchIn.value = '';
+    setViewMode('bag');
+    setBagMode('book');
+    renderSpread(+spBtn.dataset.searchSp, 'fwd');
+  }
+});
+document.addEventListener('click', function (e) {
+  if (!e.target.closest('#pdfWrap')) $('#pdfPop').classList.remove('show');
+  if (!e.target.closest('#searchWrap')) searchDrop.classList.remove('show');
+});
+
+window.addEventListener('keydown', function (e) {
+  if (document.activeElement === searchIn) return;
+  if (S.view !== 'bag' || S.bagMode !== 'book') return;
+  if (e.key === 'ArrowRight' && S.spread < curVol().maxSpread) renderSpread(S.spread + 1, 'fwd');
+  if (e.key === 'ArrowLeft' && S.spread > 0) renderSpread(S.spread - 1, 'bwd');
+});
+window.addEventListener('resize', resize3D);
+if (window.ResizeObserver) new ResizeObserver(resize3D).observe(stageWrap);
+
+/* ========= 自检接口 ========= */
+window.__hub = {
+  S: S,
+  VOLUMES: VOLUMES,
+  selectVolume: selectVolume,
+  setBagMode: setBagMode,
+  setViewMode: setViewMode,
+  renderSpread: renderSpread,
+  pullAndOpenBook: pullAndOpenBook,
+  updateProgressUI: updateProgressUI,
+  handlePdfFile: handlePdfFile,
+  pyErrors: pyErrors,
+  info: function () {
+    return renderer ? { triangles: renderer.info.render.triangles, looping: looping, pixelRatio: renderer.getPixelRatio(), vol: S.vol } : { webgl: false, vol: S.vol };
+  }
+};
+
+/* ========= 启动 ========= */
+renderVolChrome();
+updateProgressUI();
+window.addEventListener('pageshow', function () {
+  updateProgressUI();
+  renderCatalog();
+  if (S.view === 'bag' && S.bagMode === 'book') renderSpread(S.spread, null);
+});
+window.addEventListener('focus', function () {
+  updateProgressUI();
+});
+window.addEventListener('storage', function (e) {
+  if (e.key === 'xk_k1a_progress' || e.key === 'xk_k1b_progress') {
+    updateProgressUI();
+    renderCatalog();
+    if (S.view === 'bag' && S.bagMode === 'book') renderSpread(S.spread, null);
+  }
+});
+syncPdfUi();
+// 静默探测各册内置原书页是否存在；若删掉 pages/<vol>/ 则自动优雅回退到占位页
+['k1a', 'k1b'].forEach(function (vk) {
+  var testImg = new Image();
+  testImg.onerror = function () {
+    builtinPagesByVol[vk] = false;
+    if (S.vol === vk) {
+      syncPdfUi();
+      if (!curPdfMeta() && S.view === 'bag' && S.bagMode === 'book') renderSpread(S.spread, null);
+    }
+  };
+  testImg.src = 'pages/' + vk + '/001.jpg';
+});
+init3D();
+resize3D();
+renderCatalog();
+restoreState();
+if (window.__xkPdfBook) {
+  ['k1a', 'k1b'].forEach(function (vk) {
+    window.__xkPdfBook.restore(vk).then(function (meta) {
+      if (meta) {
+        pdfMetaByVol[vk] = meta;
+        if (S.vol === vk) {
+          syncPdfUi();
+          if (S.view === 'bag' && S.bagMode === 'book') renderSpread(S.spread, null);
+        }
+      }
+    });
+  });
+}
+})();
+</script>
+</body>
+</html>
