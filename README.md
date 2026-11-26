@@ -2,6 +2,8 @@
 
 把小学科学课堂活动逐课做成**离线可打开的交互式 3D HTML 活页**：孩子打开网页就能直接动手拖拽、实验、观察、比较，把纸面知识变成可互动的立体实验台。
 
+**[在线演示 · 打开绽放书包](https://niannianweike.top/tools/xiaoxuekexue/)**
+
 > **非商用与版权声明**
 > 1. **本仓库采用非商用双许可**：原创软件代码遵循 [PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/)，原创交互教具内容与离线引导语音遵循 [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)，详见 [LICENSE](LICENSE)。**本项目不商用**，仅限个人学习、家庭辅导与非营利教学交流。
 > 2. **对应教材版权归原出版社及著作权人所有**。本仓库**不包含、不分发**任何教材原始 PDF、整页扫描图片或全书原文；如需对照原书翻页，请在翻书界面点击「📄 导入原书 PDF」加载您通过正规渠道获取的合法教材（仅存于本机浏览器 IndexedDB，零上传、零分发）。
