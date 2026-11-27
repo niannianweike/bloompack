@@ -54,8 +54,28 @@
     }
 
     // 2) 单句模糊匹配（处理极少数带动态秒数/数字的句子，避免跳回机械音）
-    var fuzzy = findBestMatch(map, fullKey);
-    return fuzzy ? [fuzzy] : null;
+    // 先处理类似「改进款比上节课款多留空 0.8 秒...」的动态数字替换
+    var numNorm = fullKey.replace(/多留空\d+(?:\.\d+)?秒/g, '留空更久');
+    if (numNorm !== fullKey && map[numNorm]) return [map[numNorm]];
+    var fuzzy = findBestMatch(map, fullKey) || (numNorm !== fullKey ? findBestMatch(map, numNorm) : null);
+    if (fuzzy) return [fuzzy];
+
+    // 3) 兜底：若为「改进款落得更快！...」等组合诊断句，按关键词匹配对应预录豆包诊断句
+    if (fullKey.indexOf('改进款落得更快') !== -1) {
+      var diagTargets = [
+        ['尾巴太重', '改进款落得更快！因为尾巴太重，想让它落得更慢更稳，试着把折尾重量调到适中，再试飞一次'],
+        ['尾巴太轻', '改进款落得更快！因为尾巴太轻会摇晃，想让它落得更慢更稳，试着把折尾重量调到适中，再试飞一次'],
+        ['飞翼偏短', '改进款落得更快！因为飞翼偏短，想让它落得更慢更稳，试着把飞翼长度往右拉长，再试飞一次'],
+        ['飞翼偏窄', '改进款落得更快！因为飞翼偏窄，想让它落得更慢更稳，试着把飞翼宽度往右拉宽，再试飞一次'],
+        ['', '改进款落得更快！因为飞翼面积还不够大，想让它落得更慢更稳，试着把飞翼长度往右拉长，飞翼宽度往右拉宽，再试飞一次']
+      ];
+      for (var d = 0; d < diagTargets.length; d++) {
+        if ((!diagTargets[d][0] || fullKey.indexOf(diagTargets[d][0]) !== -1) && map[diagTargets[d][1]]) {
+          return [map[diagTargets[d][1]]];
+        }
+      }
+    }
+    return null;
   }
 
   function findBestMatch(map, key) {

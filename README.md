@@ -24,7 +24,7 @@
 ```text
 index.html      3D 书包翻书 + 目录总览双模式总入口
 lessons/        原创 3D 交互活页成品（一年级上册 16 张 + 一年级下册 14 张，共 30 张）
-audio/          离线预合成引导语音 MP3 与 manifest.js 索引（共 1292 条）
+audio/          离线预合成引导语音 MP3 与 manifest.js 索引（共 1530 条）
 vendor/         three.min.js、voice.js（离线语音）与 pdf.min.js / pdf-book.js（本机 PDF 渲染）
 studio/         本地造书工作台（用户自带合法教材与自己的 API Key 本地运行）
 tools/          语音合成、PDF 探测与自动化验收脚本
