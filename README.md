@@ -80,6 +80,12 @@ LICENSE         非商用双许可与教材版权归属声明
 
 ---
 
+## 联系我
+
+微信扫一扫，关注「念念微课」公众号。
+
+<img src="contact/wechat-official-account.jpg" alt="念念微课公众号二维码" width="180">
+
 ## 许可协议
 
 - 软件源代码：[PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/)
