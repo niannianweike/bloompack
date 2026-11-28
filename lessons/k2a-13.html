@@ -1,0 +1,1852 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第13课 橡皮筋小车改进与比赛 · 5米双车赛道与改装台</title>
+<style>
+:root{--accent:#e56d17;--ink:#2a2218;--line:#e4d5ba;--card:rgba(255,253,248,.95);--ok:#16a34a}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#5e4129;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.46em;color:#7a6a52;font-weight:500}
+body.no-py rt{display:none}
+
+/* 左上标题卡片 */
+#hudTL{position:fixed;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:9px;
+  padding:6px 13px 6px 8px;border-radius:15px;background:var(--card);border:1.5px solid var(--line);
+  box-shadow:0 4px 16px rgba(50,30,10,.18)}
+#backBtn{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:#5c4b34;font-size:18px;font-weight:900}
+#backBtn:hover{border-color:var(--accent);color:var(--accent)}
+.hd-t{font-size:15.5px;font-weight:900;line-height:1.45}
+.hd-sub{font-size:11px;color:#7b6c56;font-weight:700}
+
+/* 顶部中央动态分步小助手（U2） */
+#guideBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:6;
+  max-width:min(440px,calc(100vw - 660px));display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:15px;background:rgba(255,250,240,.97);
+  border:2px solid #f08a24;box-shadow:0 6px 18px rgba(130,68,12,.18);
+  font-size:13px;font-weight:800;color:#753a07;cursor:pointer;line-height:1.36}
+#guideBar:active{transform:translateX(-50%) scale(.98)}
+#guideBar.pulse{animation:guidePop .45s ease}
+@keyframes guidePop{0%{transform:translateX(-50%) scale(.94)}50%{transform:translateX(-50%) scale(1.03)}100%{transform:translateX(-50%) scale(1)}}
+
+/* 右上工具条 */
+#hudTR{position:fixed;top:12px;right:12px;z-index:7;display:flex;align-items:center;gap:6px}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:36px;padding:0 11px;border-radius:11px;border:1.5px solid var(--line);
+  background:var(--card);font:inherit;font-size:13px;font-weight:800;color:#4a3c28;cursor:pointer;
+  box-shadow:0 3px 0 #d9c8ab;transition:all .14s}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:#b8500a;color:#fff;box-shadow:0 3px 0 #b8500a}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#ffedd5;border:1.5px solid var(--accent);color:#b44908;font-size:10.5px;font-weight:900;
+  white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(229,109,23,.24);
+  animation:cuePop 1.6s ease-in-out infinite;transition:opacity .25s}
+body.interacted .entry-cue{opacity:0;animation:none}
+@keyframes cuePop{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+
+/* 右上窄版发现栏（D3 防遮挡） */
+#notes{position:fixed;top:56px;right:12px;z-index:6;width:220px;padding:8px 10px;border-radius:14px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 6px 18px rgba(50,30,10,.15)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:5px}
+.nt-title{font-size:13px;font-weight:900}
+.nt-cnt{font-size:12px;font-weight:900;color:var(--accent)}
+.nt-tog{padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:11px;font-weight:800;color:#6c5c45;cursor:pointer}
+.stamps{display:flex;gap:4px;margin-bottom:5px}
+.st{flex:1;text-align:center;padding:3px 2px;border-radius:8px;font-size:10.5px;font-weight:800;
+  border:1.5px dashed #d7c5a4;color:#9b8a70;background:#faf4e8;transition:all .2s;line-height:1.35}
+.st.lit{border-style:solid;border-color:var(--accent);background:#fff2df;color:#b8500a;animation:stPop .4s ease}
+@keyframes stPop{0%{transform:scale(.75)}60%{transform:scale(1.1)}100%{transform:scale(1)}}
+#ntList{display:flex;flex-direction:column;gap:4px;max-height:146px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList{display:none}
+.stk{padding:5px 7px;border-radius:9px;background:#fff;border:1px solid #ece0c9;font-size:11.5px;font-weight:700;line-height:1.36}
+
+/* 左侧轻量紧凑红车状态仪（彻底远离 3D 赛道与双车！） */
+#statusCard{position:fixed;left:12px;top:74px;z-index:5;width:188px;padding:8px 10px;border-radius:14px;
+  background:rgba(255,252,244,.94);border:1.5px solid var(--line);box-shadow:0 6px 16px rgba(50,30,10,.15)}
+.sc-h{font-size:12px;font-weight:900;color:#9a3412;display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.sc-row{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;font-weight:800;padding:3px 6px;
+  border-radius:8px;background:#faf4e8;margin-bottom:3px;border:1px solid #ece0c9}
+.sc-row.ok{background:#ecfdf5;border-color:#86efac;color:#15803d}
+.sc-row.warn{background:#fef2f2;border-color:#fca5a5;color:#b91c1c}
+.sc-bar-bg{height:7px;border-radius:99px;background:#efe6d4;overflow:hidden;margin:4px 0 3px}
+.sc-bar{height:100%;width:42%;border-radius:99px;background:linear-gradient(90deg,#f59e0b,#22c55e);transition:width .2s}
+.sc-bar.hot{background:linear-gradient(90deg,#f59e0b,#ef4444)}
+.sc-sub{font-size:10.5px;color:#6c5c45;font-weight:700;line-height:1.35}
+
+/* 赛后双车工程诊断对比卡 */
+#cmpBanner{position:fixed;left:12px;bottom:80px;z-index:7;width:300px;
+  padding:10px 12px;border-radius:16px;background:rgba(255,251,242,.97);border:2px solid #f08a24;
+  box-shadow:0 12px 28px rgba(70,38,8,.24);display:none;flex-direction:column;gap:7px}
+#cmpBanner.show{display:flex;animation:cmpIn .32s cubic-bezier(.2,1.4,.4,1)}
+#cmpBanner.win{border-color:#16a34a;background:linear-gradient(155deg,#fffdf8 0%,#ecfdf5 100%)}
+@keyframes cmpIn{0%{opacity:0;transform:translateY(10px) scale(.94)}100%{opacity:1;transform:none}}
+.cmp-hd{display:flex;align-items:center;justify-content:space-between;font-size:13.5px;font-weight:900;color:#b84906}
+#cmpBanner.win .cmp-hd{color:#15803d}
+.cmp-x{border:1px solid var(--line);background:#fff;color:#7a6544;border-radius:7px;width:22px;height:22px;font-weight:900;cursor:pointer;padding:0}
+.cmp-scores{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:6px 8px;border-radius:11px;background:#fff;border:1.5px solid #eedcc0;font-size:12px;font-weight:800}
+.cmp-sc{display:flex;flex-direction:column;align-items:center;flex:1}
+.cmp-sc b{font-size:18px;line-height:1.2}
+.cmp-sc.b b{color:#2563eb}
+.cmp-sc.m b{color:#dc2626}
+#cmpBanner.win .cmp-sc.m b{color:#16a34a}
+.cmp-vs{font-size:11px;font-weight:900;padding:2px 7px;border-radius:99px;background:#fff1df;color:#c2560c;white-space:nowrap}
+#cmpBanner.win .cmp-vs{background:#dcfce7;color:#15803d}
+.cmp-tags{display:flex;flex-wrap:wrap;gap:4px}
+.cmp-tag{padding:2px 7px;border-radius:8px;font-size:11.5px;font-weight:800;background:#f7eddc;color:#6c573c}
+.cmp-tag.good{background:#e7f8ed;color:#15803d}
+.cmp-tag.warn{background:#fee2e2;color:#b91c1c}
+.cmp-tip{padding:7px 9px;border-radius:11px;background:#fff5e6;border:1.5px dashed #e58e26;font-size:12px;font-weight:800;line-height:1.48;color:#7a3e08}
+#cmpBanner.win .cmp-tip{background:#ecfdf3;border-color:#22c55e;color:#156934}
+
+/* 3D 浮标层 */
+#labels{position:fixed;inset:0;pointer-events:none;z-index:8}
+.cue3d{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:6px 13px;border-radius:99px;
+  background:#fff7ed;border:2.5px solid #ea580c;color:#9a3412;font-size:13.5px;font-weight:900;white-space:nowrap;
+  box-shadow:0 6px 18px rgba(234,88,12,.34);animation:cueBob 1.15s ease-in-out infinite;display:none;pointer-events:none}
+.cue3d.show{display:block}
+.cue3d.urgent{background:#fef2f2;border-color:#dc2626;color:#991b1b;box-shadow:0 6px 20px rgba(220,38,38,.36)}
+@keyframes cueBob{0%,100%{transform:translate(-50%,-100%) translateY(0)}50%{transform:translate(-50%,-100%) translateY(-6px)}}
+.car-tag{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:3px 9px;border-radius:10px;
+  background:rgba(255,253,248,.94);border:2px solid #2563eb;color:#1e3a8a;font-size:12.5px;font-weight:900;
+  white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.18);display:none}
+.car-tag.red{border-color:#dc2626;color:#991b1b}
+.car-tag.show{display:block}
+.float-msg{position:absolute;left:0;top:0;transform:translate(-50%,-100%);font-size:18px;font-weight:900;
+  color:#c2560c;text-shadow:0 2px 0 #fff,0 0 8px #fff;white-space:nowrap;animation:fUp 1.5s ease-out forwards}
+.float-msg.ok{color:#15803d}
+.float-msg.bad{color:#dc2626}
+@keyframes fUp{0%{opacity:0;transform:translate(-50%,-40%) scale(.7)}18%{opacity:1;transform:translate(-50%,-100%) scale(1.05)}100%{opacity:0;transform:translate(-50%,-190%) scale(1)}}
+
+/* 底部极简 2 按钮控制坞（严格仅 2 个图标按钮：U7） */
+#dock{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:7;
+  display:flex;align-items:center;gap:10px;padding:7px 11px;border-radius:18px;
+  background:rgba(255,252,246,.96);border:1.5px solid var(--line);box-shadow:0 8px 22px rgba(50,30,10,.22)}
+.dock-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:13px;
+  border:2px solid #dfd1b8;background:#fff;font:inherit;font-size:15px;font-weight:900;
+  color:#3d3022;cursor:pointer;transition:all .15s;box-shadow:0 3px 0 #dfd1b8}
+.dock-btn:hover{border-color:#e56d17;color:#c2410c}
+.dock-btn.pri{background:#ea580c;border-color:#b84208;color:#fff;box-shadow:0 3px 0 #9a3412}
+.dock-btn.pri:hover{background:#f97316;color:#fff}
+.dock-btn.on{background:#e0f2fe;border-color:#0284c7;color:#0369a1;box-shadow:0 3px 0 #7dd3fc}
+.dock-btn.glow{animation:btnPulse 1.15s ease-in-out infinite}
+@keyframes btnPulse{0%,100%{box-shadow:0 3px 0 #9a3412,0 0 0 0 rgba(234,88,12,.55)}50%{box-shadow:0 3px 0 #9a3412,0 0 0 10px rgba(234,88,12,0)}}
+
+/* 通关彩带与巩固弹窗 */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+#winToast{position:fixed;inset:0;z-index:35;display:none;place-items:center;background:rgba(36,24,10,.36);padding:16px}
+#winToast.show{display:grid}
+.win-card{width:min(460px,100%);max-height:86vh;overflow-y:auto;background:#fffdf8;
+  border:2.5px solid var(--accent);border-radius:22px;padding:18px 20px;text-align:center;
+  box-shadow:0 20px 50px rgba(40,22,4,.28)}
+.win-concl{margin:10px 0;padding:10px 12px;border-radius:13px;background:#fff8eb;border:1.5px solid #f2cf9b;
+  text-align:left;font-size:13.5px;line-height:1.6;color:#5a3309;font-weight:700}
+.win-quiz{margin:10px 0;padding:10px 12px;border-radius:13px;background:#f8fafc;border:1.5px solid #d9e2ec;text-align:left}
+.win-quiz h4{margin:0 0 8px;font-size:13.5px;color:#2b3a4a}
+.qopts{display:flex;flex-direction:column;gap:7px}
+.qopt{padding:8px 11px;border-radius:11px;border:1.5px solid #d9d0be;background:#fff;
+  font:inherit;font-size:13px;font-weight:800;text-align:left;cursor:pointer;transition:all .14s;color:#2a2218}
+.qopt:hover{border-color:var(--accent);background:#fff9f0}
+.qopt.ok{border-color:#2b8a3e;background:#ebfbee;color:#2b8a3e}
+.qopt.bad{border-color:#e03131;background:#fff5f5;color:#c92a2a}
+.qfb{margin-top:7px;font-size:12.5px;font-weight:800;min-height:18px}
+.win-acts{display:flex;justify-content:center;gap:10px;margin-top:12px}
+
+@media (max-width:1120px){
+  #guideBar{top:58px;left:12px;transform:none;max-width:calc(100vw - 260px)}
+  #statusCard{top:110px;width:178px}
+}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="labels">
+  <div class="cue3d" id="targetCue">🚀 点这里先试跑诊断！</div>
+  <div class="car-tag" id="tag1">1.0 原版 · 0.0m</div>
+  <div class="car-tag red" id="tag2">2.0 改进 · 0.0m</div>
+</div>
+<canvas id="confetti"></canvas>
+
+<div id="hudTL">
+  <a id="backBtn" href="../index.html" title="返回书包">‹</a>
+  <div>
+    <div class="hd-t" data-py="dì kè xiàng pí jīn xiǎo chē gǎi jìn yǔ bǐ sài">第13课 橡皮筋小车改进与比赛</div>
+    <div class="hd-sub">活页 · 课本第 57 页「5 米双车赛道与改装台」</div>
+  </div>
+</div>
+
+<div id="guideBar" title="点我重听当前步骤">
+  <span id="guideIco">🚀</span>
+  <span id="guideTxt">第1步：先点底部「同场竞速」，看看1.0原版小车跑起来有哪些毛病！</span>
+</div>
+
+<div id="hudTR">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<aside id="statusCard">
+  <div class="sc-h"><span>🚗 红车 2.0 状态</span><span id="modeBadge">赛道模式</span></div>
+  <div class="sc-row warn" id="rowAlign"><span>外圈轮胎</span><span id="valAlign">偏左歪斜</span></div>
+  <div class="sc-row warn" id="rowBand"><span>防滑皮筋</span><span id="valBand">仅2根打滑</span></div>
+  <div class="sc-row warn" id="rowCard"><span>圆形纸板</span><span id="valCard">粗糙阻力大</span></div>
+  <div class="sc-row warn" id="rowWind"><span>发条圈数</span><span id="valWind">5 圈</span></div>
+  <div class="sc-bar-bg"><div class="sc-bar" id="windBar"></div></div>
+  <div class="sc-sub" id="scTip">可任意顺序点/拖红车改装</div>
+</aside>
+
+<aside id="notes">
+  <div class="nt-head">
+    <span class="nt-title" data-py="wǒ de fā xiàn">我的发现</span>
+    <span class="nt-cnt" id="ntCnt">0</span>
+    <button class="nt-tog" id="ntTog" type="button">收起</button>
+  </div>
+  <div class="stamps">
+    <span class="st" id="st1" data-py="shì pǎo zhěn duàn">试跑诊断</span>
+    <span class="st" id="st2" data-py="dòng shǒu gǎi zhuāng">动手改装</span>
+    <span class="st" id="st3" data-py="jìng sù duó guàn">竞速夺冠</span>
+  </div>
+  <div id="ntList"></div>
+</aside>
+
+<div id="cmpBanner">
+  <div class="cmp-hd"><span id="cmpTitle">📊 1.0 vs 2.0 赛道诊断报告</span><button class="cmp-x" id="cmpCloseBtn" type="button" title="收起">×</button></div>
+  <div class="cmp-scores">
+    <div class="cmp-sc b"><span>蓝车 1.0 原版</span><b id="cmpD1">0.0 m</b></div>
+    <span class="cmp-vs" id="cmpDiff">同起跑</span>
+    <div class="cmp-sc m"><span>红车 2.0 改进</span><b id="cmpD2">0.0 m</b></div>
+  </div>
+  <div class="cmp-tags" id="cmpTags"></div>
+  <div class="cmp-tip" id="cmpTip"></div>
+</div>
+
+<div id="dock">
+  <button class="dock-btn pri glow" id="raceBtn" type="button">🚀 同场竞速</button>
+  <button class="dock-btn" id="tuneBtn" type="button">🔧 改装调试</button>
+</div>
+
+<div id="winToast">
+  <div class="win-card">
+    <div style="font-size:38px">🏆</div>
+    <h3 style="margin:4px 0" data-py="tài bàng la xiǎo chē gǎi zhuāng guàn jūn">太棒啦！小车改装冠军！</h3>
+    <div class="win-concl">
+      <b>✨ 科学小结论：</b>把外圈轮胎摆正对称能防止跑偏，增加橡皮筋轮胎能增大防滑摩擦力、减少空转打滑，将圆形纸板翻到光滑面能减小竹棒摩擦阻力，再把发条上足圈数，小车就能跑得又直又远！
+    </div>
+    <div class="win-quiz">
+      <h4>💡 考考你 · 答对领小红花 🌸</h4>
+      <div style="font-size:13px;font-weight:800;margin-bottom:8px">发现橡皮筋小车一出发就往左边歪出赛道，应该先怎样改进？</div>
+      <div class="qopts" id="qOpts">
+        <button class="qopt" type="button" data-ok="1">⚙ 把歪斜的外圈橡皮筋轮胎摆正对称，并加装对称防滑胎</button>
+        <button class="qopt" type="button" data-hint="如果轮胎还是歪的，发条拧得越紧反而歪得越快哦，再想想！">⚡ 不管轮胎歪不歪，只要拼命拧紧发条就行</button>
+        <button class="qopt" type="button" data-hint="粗糙面阻力更大，而且不能解决车轮偏左跑偏的问题哦！">🚗 把所有轮胎都拆掉，只留光溜溜的罐身</button>
+      </div>
+      <div class="qfb" id="qFb"></div>
+    </div>
+    <div class="win-acts">
+      <button class="tbtn" id="winKeepBtn" type="button">继续玩</button>
+      <button class="tbtn on" id="winAgainBtn" type="button">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js?v=doubao-2"></script>
+<script src="../vendor/voice.js?v=doubao-2"></script>
+<script>
+(function () {
+'use strict';
+
+try { sessionStorage.setItem('xk_last_vol', 'k2a'); } catch (e) {}
+
+var LESSON_ID = 'k2a-13';
+var BOOK_PROGRESS_KEY = 'xk_k2a_progress';
+
+var $ = function (s) { return document.querySelector(s); };
+var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
+var HAN = /[\u3400-\u9fff]/;
+var pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function ruby(text, py) {
+  if (!py) return esc(text);
+  var syl = py.trim().split(/\s+/), i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) {
+      var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; }
+      out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>';
+    } else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+$$('[data-py]').forEach(function (el) { el.innerHTML = ruby(el.textContent, el.dataset.py); });
+
+$('#backBtn').addEventListener('click', function () {
+  try { sessionStorage.setItem('xk_last_vol', 'k2a'); } catch (e) {}
+});
+
+/* ===== 语音与音效 ===== */
+var voiceOn = true;
+function stopVoice() {
+  if (window.__xkVoice) window.__xkVoice.stop();
+  else if (window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
+}
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text, '../audio/', true); return; }
+}
+
+var audioCtx = null;
+function playTone(freq, dur, type, vol, delay) {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    var t0 = audioCtx.currentTime + (delay || 0);
+    var osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0.001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.11, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + (dur || 0.18));
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(t0); osc.stop(t0 + (dur || 0.18) + 0.02);
+  } catch (e) {}
+}
+function sfxSnap() { playTone(560, 0.09, 'triangle', 0.11); playTone(820, 0.12, 'triangle', 0.1, 0.05); }
+function sfxWind(turns) { playTone(320 + turns * 42, 0.07, 'sine', 0.1); playTone(440 + turns * 48, 0.07, 'triangle', 0.08, 0.04); }
+function sfxBoing() { playTone(260, 0.14, 'sawtooth', 0.09); playTone(180, 0.22, 'sawtooth', 0.08, 0.08); }
+function sfxFlip() { playTone(640, 0.08, 'sine', 0.1); playTone(960, 0.11, 'sine', 0.09, 0.05); }
+function sfxStart() { playTone(523, 0.12, 'square', 0.08); playTone(523, 0.12, 'square', 0.08, 0.22); playTone(880, 0.26, 'square', 0.11, 0.44); }
+function sfxWin() { [523, 659, 784, 1046].forEach(function (f, i) { playTone(f, 0.24, 'triangle', 0.13, i * 0.09); }); }
+
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem(BOOK_PROGRESS_KEY) || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem(BOOK_PROGRESS_KEY, JSON.stringify(d));
+  } catch (e) {}
+}
+
+/* ===== 彩带特效 ===== */
+var cfCv = $('#confetti'), cfCtx = cfCv.getContext('2d'), cfList = [];
+function launchConfetti() {
+  cfCv.width = window.innerWidth; cfCv.height = window.innerHeight;
+  var cols = ['#f97316', '#facc15', '#22c55e', '#38bdf8', '#ec4899', '#a855f7'];
+  cfList = [];
+  for (var i = 0; i < 95; i++) {
+    cfList.push({
+      x: Math.random() * cfCv.width,
+      y: -20 - Math.random() * 140,
+      vx: (Math.random() - 0.5) * 200,
+      vy: 150 + Math.random() * 210,
+      r: 5 + Math.random() * 6,
+      rot: Math.random() * 6.28,
+      vr: (Math.random() - 0.5) * 9,
+      c: cols[i % cols.length],
+      life: 3.4
+    });
+  }
+}
+function tickConfetti(dt) {
+  if (!cfList.length) return;
+  cfCtx.clearRect(0, 0, cfCv.width, cfCv.height);
+  for (var i = cfList.length - 1; i >= 0; i--) {
+    var p = cfList[i];
+    p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 170 * dt; p.rot += p.vr * dt; p.life -= dt;
+    if (p.life <= 0 || p.y > cfCv.height + 30) { cfList.splice(i, 1); continue; }
+    cfCtx.save(); cfCtx.translate(p.x, p.y); cfCtx.rotate(p.rot);
+    cfCtx.fillStyle = p.c; cfCtx.fillRect(-p.r / 2, -p.r * 0.35, p.r, p.r * 0.7);
+    cfCtx.restore();
+  }
+  if (!cfList.length) cfCtx.clearRect(0, 0, cfCv.width, cfCv.height);
+}
+
+/* ===== Three.js 场景（三光去塑料感，零 sRGBEncoding + Toon） ===== */
+var cv = $('#cv');
+var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color('#6b4a2f');
+var camera = new THREE.PerspectiveCamera(35, 16 / 9, 0.1, 80);
+
+scene.add(new THREE.HemisphereLight('#eef5ff', '#4b331d', 0.78));
+var sunL = new THREE.DirectionalLight('#fff6e4', 0.85);
+sunL.position.set(4.5, 13, 8.5);
+sunL.castShadow = true;
+sunL.shadow.mapSize.set(1024, 1024);
+sunL.shadow.bias = -0.001;
+sunL.shadow.camera.left = -9; sunL.shadow.camera.right = 9;
+sunL.shadow.camera.top = 7; sunL.shadow.camera.bottom = -7;
+scene.add(sunL);
+
+var fillL = new THREE.DirectionalLight('#cfe6ff', 0.32);
+fillL.position.set(-7, 6, -5);
+scene.add(fillL);
+
+var toon = function (col, extra) {
+  var opts = { color: col };
+  if (extra) { for (var k in extra) opts[k] = extra[k]; }
+  return new THREE.MeshToonMaterial(opts);
+};
+var live = new THREE.Group();
+scene.add(live);
+
+/* ===== 赛道几何常数：舒展安全画幅（0m 远离左上 HUD，5m 远离右上 #notes 绝不裁切！） ===== */
+var START_X = -3.7;
+var SCALE_M = 1.56;               // 5.0m 终点线在 x = +4.10
+var FINISH_X = START_X + 5.0 * SCALE_M;
+var LANE1_Z = -1.16;              // 蓝车 1.0 原版赛道（后道）
+var LANE2_Z = 0.96;               // 红车 2.0 改进赛道（前道）
+var TRACK_CENTER_X = 0.25;
+var TRACK_W = 9.8;                // 覆盖 x = -4.65 到 +5.15
+var TRACK_D = 4.25;               // 覆盖 z = -2.225 到 +2.025
+
+/* ===== 制作高清 5 米标尺赛道 CanvasTexture ===== */
+function makeTrackTexture() {
+  var c = document.createElement('canvas');
+  c.width = 2048; c.height = 680;
+  var ctx = c.getContext('2d');
+  // 深蓝灰科学工程垫底色（高对比度）
+  ctx.fillStyle = '#173142';
+  ctx.fillRect(0, 0, c.width, c.height);
+
+  // 精细工程格网
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 2;
+  for (var gx = 0; gx < c.width; gx += 48) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, c.height); ctx.stroke(); }
+  for (var gy = 0; gy < c.height; gy += 48) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(c.width, gy); ctx.stroke(); }
+
+  // 上下白边线
+  ctx.fillStyle = '#e2e8f0';
+  ctx.fillRect(0, 24, c.width, 10);
+  ctx.fillRect(0, c.height - 34, c.width, 10);
+
+  // 中央明黄虚线分道线
+  ctx.fillStyle = '#fbbf24';
+  for (var dx = 60; dx < c.width - 40; dx += 78) {
+    ctx.fillRect(dx, c.height / 2 - 5, 44, 10);
+  }
+
+  function xToPx(wx) { return ((wx - (TRACK_CENTER_X - TRACK_W / 2)) / TRACK_W) * c.width; }
+
+  // 车道水标识（放在 2.5m 正中，彻底避开 0.5m/1m 数字！）
+  var midLanePx = xToPx(START_X + 2.45 * SCALE_M);
+  ctx.textAlign = 'center';
+  ctx.font = '900 34px "Microsoft YaHei",sans-serif';
+  ctx.fillStyle = 'rgba(147,197,253,0.42)';
+  ctx.fillText('1.0 原版车赛道', midLanePx, 215);
+  ctx.fillStyle = 'rgba(252,165,165,0.46)';
+  ctx.fillText('2.0 改进车赛道', midLanePx, c.height - 185);
+
+  // 起跑线红白方格
+  var sx = xToPx(START_X);
+  for (var r = 0; r < 15; r++) {
+    ctx.fillStyle = r % 2 === 0 ? '#ef4444' : '#ffffff';
+    ctx.fillRect(sx - 12, 34 + r * 40.8, 24, 40.8);
+  }
+
+  // 每 0.5m 刻度线和数字
+  for (var m = 0; m <= 5.01; m += 0.5) {
+    var px = xToPx(START_X + m * SCALE_M);
+    var isInt = Math.abs(m - Math.round(m)) < 0.01;
+    ctx.fillStyle = isInt ? '#ffffff' : 'rgba(255,255,255,0.52)';
+    ctx.fillRect(px - (isInt ? 3 : 1.5), 34, isInt ? 6 : 3, isInt ? 40 : 22);
+    ctx.fillRect(px - (isInt ? 3 : 1.5), c.height - (isInt ? 74 : 56), isInt ? 6 : 3, isInt ? 40 : 22);
+    ctx.fillRect(px - (isInt ? 2 : 1), c.height / 2 - (isInt ? 16 : 10), isInt ? 4 : 2, isInt ? 32 : 20);
+
+    var lbl = isInt ? (Math.round(m) + 'm') : (m.toFixed(1) + 'm');
+    ctx.font = (isInt ? '900 36px' : '700 24px') + ' "Microsoft YaHei",sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = isInt ? '#fef08a' : '#cbd5e1';
+    ctx.fillText(lbl, px, 108);
+    ctx.fillText(lbl, px, c.height - 86);
+  }
+
+  // 5m 终点黑白方格线
+  var fx = xToPx(FINISH_X);
+  for (var fr = 0; fr < 15; fr++) {
+    for (var fc = 0; fc < 2; fc++) {
+      ctx.fillStyle = (fr + fc) % 2 === 0 ? '#111827' : '#ffffff';
+      ctx.fillRect(fx - 14 + fc * 14, 34 + fr * 40.8, 14, 40.8);
+    }
+  }
+
+  var tex = new THREE.CanvasTexture(c);
+  tex.anisotropy = 4;
+  return tex;
+}
+
+/* ===== 温润实木实验大桌 + 5 米标尺赛道 ===== */
+function makeWoodDeskTex() {
+  var c = document.createElement('canvas');
+  c.width = 1024; c.height = 512;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#735032';
+  ctx.fillRect(0, 0, 1024, 512);
+  for (var y = 0; y < 512; y += 6) {
+    ctx.fillStyle = y % 12 === 0 ? 'rgba(42,24,10,0.16)' : 'rgba(166,118,74,0.12)';
+    ctx.fillRect(0, y, 1024, 3);
+  }
+  return new THREE.CanvasTexture(c);
+}
+var bench = new THREE.Mesh(new THREE.BoxGeometry(14.8, 0.5, 8.6), new THREE.MeshToonMaterial({ map: makeWoodDeskTex() }));
+bench.position.set(0.2, -0.26, 0.45);
+bench.receiveShadow = true;
+live.add(bench);
+
+var benchTrim = new THREE.Mesh(new THREE.BoxGeometry(15.0, 0.16, 8.8), toon('#462d18'));
+benchTrim.position.set(0.2, -0.46, 0.45);
+live.add(benchTrim);
+
+var trackMat = new THREE.MeshBasicMaterial({ map: makeTrackTexture() });
+var trackMesh = new THREE.Mesh(new THREE.PlaneGeometry(TRACK_W, TRACK_D), trackMat);
+trackMesh.rotation.x = -Math.PI / 2;
+trackMesh.position.set(TRACK_CENTER_X, 0.008, -0.1);
+trackMesh.receiveShadow = true;
+live.add(trackMesh);
+
+// 5 米终点拱门（克制高度 + 清晰朝向相机，完整落在 #notes 下方安全画幅内！）
+var finishGroup = new THREE.Group();
+var postGeo = new THREE.CylinderGeometry(0.065, 0.075, 1.55, 14);
+var pL = new THREE.Mesh(postGeo, toon('#e2e8f0'));
+pL.position.set(FINISH_X, 0.775, -2.14); pL.castShadow = true;
+var pR = new THREE.Mesh(postGeo, toon('#e2e8f0'));
+pR.position.set(FINISH_X, 0.775, 1.94); pR.castShadow = true;
+var pBaseL = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.08, 16), toon('#475569'));
+pBaseL.position.set(FINISH_X, 0.04, -2.14);
+var pBaseR = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.08, 16), toon('#475569'));
+pBaseR.position.set(FINISH_X, 0.04, 1.94);
+
+var bannerCv = document.createElement('canvas');
+bannerCv.width = 512; bannerCv.height = 104;
+var bCtx = bannerCv.getContext('2d');
+bCtx.fillStyle = '#dc2626'; bCtx.fillRect(0, 0, 512, 104);
+bCtx.strokeStyle = '#fef08a'; bCtx.lineWidth = 6; bCtx.strokeRect(6, 6, 500, 92);
+bCtx.fillStyle = '#fef08a'; bCtx.font = '900 44px "Microsoft YaHei",sans-serif';
+bCtx.textAlign = 'center'; bCtx.fillText('5 米 终 点 线', 256, 68);
+var bannerTex = new THREE.CanvasTexture(bannerCv);
+var archBar = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.44, 4.22), [
+  new THREE.MeshBasicMaterial({ map: bannerTex }),
+  new THREE.MeshBasicMaterial({ map: bannerTex }),
+  toon('#b91c1c'), toon('#b91c1c'),
+  toon('#b91c1c'), toon('#b91c1c')
+]);
+archBar.position.set(FINISH_X, 1.58, -0.1);
+archBar.castShadow = true;
+finishGroup.add(pL, pR, pBaseL, pBaseR, archBar);
+live.add(finishGroup);
+
+// 起跑发车信号灯柱（清爽立在 0m 后缘，完全不撞左上状态卡）
+var lightPost = new THREE.Group();
+lightPost.position.set(START_X - 0.12, 0, -2.28);
+var lpBase = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.08, 14), toon('#334155'));
+lpBase.position.y = 0.04; lightPost.add(lpBase);
+var lpPole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 1.48, 12), toon('#475569'));
+lpPole.position.y = 0.74; lightPost.add(lpPole);
+var lpBox = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.56, 0.24), toon('#1e293b'));
+lpBox.position.y = 1.48; lpBox.castShadow = true; lightPost.add(lpBox);
+var sigRedMat = new THREE.MeshBasicMaterial({ color: '#ef4444' });
+var sigGrnMat = new THREE.MeshBasicMaterial({ color: '#1e3a2f' });
+var sigRed = new THREE.Mesh(new THREE.SphereGeometry(0.085, 14, 14), sigRedMat);
+sigRed.position.set(0.11, 1.61, 0.06); lightPost.add(sigRed);
+var sigGrn = new THREE.Mesh(new THREE.SphereGeometry(0.085, 14, 14), sigGrnMat);
+sigGrn.position.set(0.11, 1.35, 0.06); lightPost.add(sigGrn);
+live.add(lightPost);
+
+/* ===== 精致小蓝零件托盘（装 2 根细巧真实明黄橡皮筋，赛场与改装台自动归位！） ===== */
+var TRAY_TRACK_POS = new THREE.Vector3(-2.65, 0.03, 2.66);
+var TRAY_TUNE_POS = new THREE.Vector3(-2.12, 0.03, 1.82);
+var trayTargetPos = TRAY_TRACK_POS.clone();
+
+var trayGroup = new THREE.Group();
+trayGroup.position.copy(TRAY_TRACK_POS);
+live.add(trayGroup);
+
+var trayRim = new THREE.Mesh(new THREE.BoxGeometry(1.76, 0.09, 1.02), toon('#1e3a8a'));
+trayRim.position.y = 0.045; trayRim.receiveShadow = true; trayRim.castShadow = true;
+trayGroup.add(trayRim);
+var trayInner = new THREE.Mesh(new THREE.BoxGeometry(1.62, 0.03, 0.88), toon('#dbeafe'));
+trayInner.position.y = 0.085; trayInner.receiveShadow = true;
+trayGroup.add(trayInner);
+
+var trayLblCv = document.createElement('canvas');
+trayLblCv.width = 512; trayLblCv.height = 112;
+var tlCtx = trayLblCv.getContext('2d');
+tlCtx.fillStyle = '#1d4ed8'; tlCtx.fillRect(0, 0, 512, 112);
+tlCtx.strokeStyle = '#93c5fd'; tlCtx.lineWidth = 6; tlCtx.strokeRect(6, 6, 500, 100);
+tlCtx.fillStyle = '#ffffff'; tlCtx.font = '900 38px "Microsoft YaHei",sans-serif';
+tlCtx.textAlign = 'center'; tlCtx.fillText('新增 2 根细橡皮筋', 256, 70);
+var trayTop = new THREE.Mesh(new THREE.PlaneGeometry(1.62, 0.32), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(trayLblCv) }));
+trayTop.rotation.x = -Math.PI / 2;
+trayTop.position.set(0, 0.105, 0.27);
+trayGroup.add(trayTop);
+
+// 2 根真实细巧明黄橡皮筋（非游泳圈！微椭圆自然弹性细圈）
+var extraBandsGroup = new THREE.Group();
+extraBandsGroup.position.set(0, 0.135, -0.16);
+trayGroup.add(extraBandsGroup);
+var yellowBandMat = toon('#facc15');
+function makeSlimLooseBand(xOff, rotZ) {
+  var b = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.017, 12, 36), yellowBandMat);
+  b.rotation.x = Math.PI / 2;
+  b.rotation.z = rotZ;
+  b.scale.set(1.12, 0.88, 1.35);
+  b.position.x = xOff;
+  b.castShadow = true;
+  return b;
+}
+var band1 = makeSlimLooseBand(-0.36, 0.18);
+var band2 = makeSlimLooseBand(0.36, -0.15);
+extraBandsGroup.add(band1, band2);
+
+/* ===== 精雕易拉罐贴纸纹理（拉丝金属质感 + 正向大字 1.0 原版 / 2.0 改进） ===== */
+function makeCanLabelTex(baseHex, darkHex, stripeHex, titleStr, subStr) {
+  var c = document.createElement('canvas');
+  c.width = 1024; c.height = 512;
+  var ctx = c.getContext('2d');
+  // 拉丝金属渐变罐身
+  var grad = ctx.createLinearGradient(0, 0, 1024, 0);
+  grad.addColorStop(0.0, darkHex);
+  grad.addColorStop(0.18, baseHex);
+  grad.addColorStop(0.28, stripeHex);
+  grad.addColorStop(0.45, baseHex);
+  grad.addColorStop(0.68, darkHex);
+  grad.addColorStop(0.82, baseHex);
+  grad.addColorStop(0.92, stripeHex);
+  grad.addColorStop(1.0, darkHex);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 1024, 512);
+
+  // 细腻拉丝金属横纹
+  for (var y = 0; y < 512; y += 4) {
+    ctx.fillStyle = y % 8 === 0 ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
+    ctx.fillRect(0, y, 1024, 2);
+  }
+
+  // 上下银白双色装饰环
+  ctx.fillStyle = 'rgba(255,255,255,0.82)';
+  ctx.fillRect(0, 26, 1024, 16);
+  ctx.fillRect(0, 470, 1024, 16);
+  ctx.fillStyle = '#fde047';
+  ctx.fillRect(0, 46, 1024, 8);
+  ctx.fillRect(0, 458, 1024, 8);
+
+  // 沿罐身双面印制正向清晰标牌（无论从上俯视还是前侧改装视角都正向可读！）
+  [256, 768].forEach(function (cx) {
+    ctx.save();
+    ctx.translate(cx, 256);
+    ctx.rotate(-Math.PI / 2); // 旋转匹配横放圆柱朝向
+    ctx.fillStyle = 'rgba(15,23,42,0.28)';
+    ctx.fillRect(-165, -78, 330, 156);
+    ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(-165, -78, 330, 156);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 62px "Microsoft YaHei",sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(titleStr, 0, -4);
+    ctx.font = '800 34px "Microsoft YaHei",sans-serif';
+    ctx.fillStyle = '#fef08a';
+    ctx.fillText(subStr, 0, 52);
+    ctx.restore();
+  });
+
+  var tex = new THREE.CanvasTexture(c);
+  tex.anisotropy = 4;
+  return tex;
+}
+
+/* ===== 圆形纸板双面高清纹理：深棕瓦楞粗糙面 vs 浅蓝涂布光滑面 ===== */
+function makeCardboardTex(isSmooth) {
+  var c = document.createElement('canvas');
+  c.width = 512; c.height = 512;
+  var ctx = c.getContext('2d');
+  if (isSmooth) {
+    var sg = ctx.createLinearGradient(0, 0, 512, 512);
+    sg.addColorStop(0, '#bae6fd');
+    sg.addColorStop(0.5, '#7dd3fc');
+    sg.addColorStop(1, '#38bdf8');
+    ctx.fillStyle = sg;
+    ctx.fillRect(0, 0, 512, 512);
+    // 清晰高光斜反光条（一眼看出光滑低摩擦！）
+    ctx.fillStyle = 'rgba(255,255,255,0.58)';
+    ctx.beginPath(); ctx.moveTo(60, 0); ctx.lineTo(155, 0); ctx.lineTo(512, 355); ctx.lineTo(512, 450); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.34)';
+    ctx.beginPath(); ctx.moveTo(215, 0); ctx.lineTo(265, 0); ctx.lineTo(512, 245); ctx.lineTo(512, 295); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#0284c7'; ctx.lineWidth = 14;
+    ctx.beginPath(); ctx.arc(256, 256, 238, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = '#0c4a6e';
+    ctx.font = '900 72px "Microsoft YaHei",sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('光滑面', 256, 276);
+  } else {
+    ctx.fillStyle = '#8b5a2b';
+    ctx.fillRect(0, 0, 512, 512);
+    // 瓦楞槽纹
+    for (var y = 0; y < 512; y += 26) {
+      ctx.fillStyle = 'rgba(56,31,10,0.42)';
+      ctx.fillRect(0, y, 512, 10);
+      ctx.fillStyle = 'rgba(210,162,102,0.22)';
+      ctx.fillRect(0, y + 10, 512, 6);
+    }
+    // 粗糙牛皮纸颗粒噪点
+    for (var i = 0; i < 900; i++) {
+      ctx.fillStyle = i % 2 === 0 ? 'rgba(45,24,8,0.42)' : 'rgba(235,195,140,0.32)';
+      ctx.fillRect((i * 73) % 512, (i * 139) % 512, 6, 4);
+    }
+    ctx.strokeStyle = '#4a2c10'; ctx.lineWidth = 14;
+    ctx.beginPath(); ctx.arc(256, 256, 238, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = 'rgba(54,28,8,0.68)';
+    ctx.fillRect(96, 198, 320, 110);
+    ctx.fillStyle = '#fef3c7';
+    ctx.font = '900 72px "Microsoft YaHei",sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('粗糙面', 256, 278);
+  }
+  return new THREE.CanvasTexture(c);
+}
+var roughTex = makeCardboardTex(false);
+var smoothTex = makeCardboardTex(true);
+
+/* ===== 精雕 3D 易拉罐橡皮筋小车（真金属罐肩 + 细巧贴合橡皮筋 + 带竹节长竹棒！） ===== */
+function buildRubberCar(opts) {
+  var root = new THREE.Group();
+  var wheelPivot = new THREE.Group();
+  wheelPivot.position.y = 0.415;
+  root.add(wheelPivot);
+
+  var radius = 0.40, len = 1.22;
+
+  // 1) 拉丝金属易拉罐主体（沿 Z 轴水平横放，滚向 +X 方向）
+  var canMat = new THREE.MeshToonMaterial({
+    map: makeCanLabelTex(opts.color, opts.darkColor, opts.lightColor, opts.title, opts.sub)
+  });
+  var canMesh = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, len, 36, 1, true), canMat);
+  canMesh.rotation.x = Math.PI / 2;
+  canMesh.castShadow = true; canMesh.receiveShadow = true;
+  wheelPivot.add(canMesh);
+
+  // 2) 两端真实收口银色金属罐肩 + 卷边盖环
+  var aluMat = toon('#cbd5e1');
+  var aluDark = toon('#94a3b8');
+  var neckL = new THREE.Mesh(new THREE.CylinderGeometry(radius * 0.85, radius, 0.08, 32), aluMat);
+  neckL.rotation.x = Math.PI / 2; neckL.position.z = -len / 2 - 0.04;
+  var neckR = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius * 0.85, 0.08, 32), aluMat);
+  neckR.rotation.x = Math.PI / 2; neckR.position.z = len / 2 + 0.04;
+  var capL = new THREE.Mesh(new THREE.CylinderGeometry(radius * 0.83, radius * 0.83, 0.02, 28), aluDark);
+  capL.rotation.x = Math.PI / 2; capL.position.z = -len / 2 - 0.075;
+  var capR = new THREE.Mesh(new THREE.CylinderGeometry(radius * 0.83, radius * 0.83, 0.02, 28), aluDark);
+  capR.rotation.x = Math.PI / 2; capR.position.z = len / 2 + 0.075;
+  var rimGeo = new THREE.TorusGeometry(radius * 0.85, 0.017, 10, 32);
+  var rimL = new THREE.Mesh(rimGeo, toon('#e2e8f0')); rimL.position.z = -len / 2 - 0.078;
+  var rimR = new THREE.Mesh(rimGeo, toon('#e2e8f0')); rimR.position.z = len / 2 + 0.078;
+  wheelPivot.add(neckL, neckR, capL, capR, rimL, rimR);
+
+  // 左侧端固定短回形针/竹签销
+  var pinL = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.42, 10), toon('#64748b'));
+  pinL.position.set(0, 0, -len / 2 - 0.11);
+  wheelPivot.add(pinL);
+
+  // 右侧轴孔伸出的细弹性内筋（连接长竹棒）
+  var innerBand = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, 0.24, 12), toon('#d97706'));
+  innerBand.rotation.x = Math.PI / 2;
+  innerBand.position.set(0, 0, len / 2 + 0.14);
+  wheelPivot.add(innerBand);
+
+  // 3) 真实细巧外圈皮筋轮胎（紧贴罐身、扁平真实橡皮筋，绝非巨型甜甜圈！）
+  var baseTireMat = toon('#27272a');
+  var slimBandGeo = new THREE.TorusGeometry(radius + 0.008, 0.017, 12, 36);
+  var baseTires = new THREE.Group();
+  var t1 = new THREE.Mesh(slimBandGeo, baseTireMat);
+  t1.scale.set(1, 1, 1.55); t1.castShadow = true;
+  var t2 = new THREE.Mesh(slimBandGeo, baseTireMat);
+  t2.scale.set(1, 1, 1.55); t2.castShadow = true;
+  baseTires.add(t1, t2);
+  wheelPivot.add(baseTires);
+
+  // 4) 新增 2 根明黄细巧防滑橡皮筋（装上后变成 4 圈匀称细防滑胎！）
+  var extraTires = new THREE.Group();
+  var etGeo = new THREE.TorusGeometry(radius + 0.009, 0.018, 12, 36);
+  var et1 = new THREE.Mesh(etGeo, toon('#facc15'));
+  et1.scale.set(1, 1, 1.55); et1.position.z = -0.18; et1.castShadow = true;
+  var et2 = new THREE.Mesh(etGeo, toon('#facc15'));
+  et2.scale.set(1, 1, 1.55); et2.position.z = 0.18; et2.castShadow = true;
+  extraTires.add(et1, et2);
+  extraTires.visible = false;
+  wheelPivot.add(extraTires);
+
+  // 5) 罐底圆形纸板垫片（深棕瓦楞粗糙面 / 浅蓝涂布光滑面，180° 干脆翻转）
+  var cardPivot = new THREE.Group();
+  cardPivot.position.set(0, 0.415, len / 2 + 0.18);
+  root.add(cardPivot);
+  var cardSide = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.042, 28), toon('#784c24'));
+  cardSide.rotation.x = Math.PI / 2;
+  cardPivot.add(cardSide);
+  var faceRough = new THREE.Mesh(new THREE.CircleGeometry(0.32, 28), new THREE.MeshBasicMaterial({ map: roughTex }));
+  faceRough.position.z = 0.023;
+  var faceSmooth = new THREE.Mesh(new THREE.CircleGeometry(0.32, 28), new THREE.MeshBasicMaterial({ map: smoothTex }));
+  faceSmooth.rotation.y = Math.PI;
+  faceSmooth.position.z = -0.023;
+  cardPivot.add(faceRough, faceSmooth);
+
+  // 6) 带竹节的真实长竹棒（自然青黄竹竿 + 4道深绿竹节环 + 橡皮筋挂扣，告别红球棒棒糖！）
+  var stickPivot = new THREE.Group();
+  stickPivot.position.set(0, 0.415, len / 2 + 0.27);
+  root.add(stickPivot);
+
+  var bambooMat = toon('#c7a446');
+  var nodeMat = toon('#7c6724');
+  var stickBar = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.032, 1.48, 12), bambooMat);
+  stickBar.position.set(0, 0.42, 0);
+  stickBar.castShadow = true;
+  stickPivot.add(stickBar);
+
+  // 4 道逼真竹节凸环
+  [-0.08, 0.28, 0.64, 0.98].forEach(function (ny) {
+    var node = new THREE.Mesh(new THREE.TorusGeometry(0.031, 0.009, 8, 16), nodeMat);
+    node.rotation.x = Math.PI / 2;
+    node.position.set(0, ny, 0);
+    stickPivot.add(node);
+  });
+
+  // 轴心处橡皮筋缠绕结
+  var hubWrap = new THREE.Mesh(new THREE.TorusGeometry(0.045, 0.015, 8, 16), toon('#f59e0b'));
+  hubWrap.position.set(0, 0, -0.01);
+  stickPivot.add(hubWrap);
+
+  // 顶部圆润竹梢与轻微配色尾端（方便识别）
+  var tipCap = new THREE.Mesh(new THREE.SphereGeometry(0.034, 12, 12), toon('#9f7f29'));
+  tipCap.position.set(0, 1.16, 0);
+  stickPivot.add(tipCap);
+  var tailCap = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.026, 0.06, 10), nodeMat);
+  tailCap.position.set(0, -0.34, 0);
+  stickPivot.add(tailCap);
+
+  stickPivot.rotation.z = -0.52;
+
+  // 歪斜与对称摆正
+  function applyTires(aligned, hasExtra) {
+    if (aligned) {
+      t1.position.z = -0.45; t1.rotation.set(0, 0, 0);
+      t2.position.z = 0.45;  t2.rotation.set(0, 0, 0);
+    } else {
+      t1.position.z = -0.44; t1.rotation.set(0.14, 0.16, 0);
+      t2.position.z = -0.20; t2.rotation.set(-0.11, 0.19, 0);
+    }
+    extraTires.visible = !!hasExtra;
+  }
+  applyTires(false, false);
+
+  return {
+    root: root,
+    wheelPivot: wheelPivot,
+    baseTires: baseTires,
+    extraTires: extraTires,
+    cardPivot: cardPivot,
+    stickPivot: stickPivot,
+    applyTires: applyTires
+  };
+}
+
+var car1 = buildRubberCar({
+  color: '#2563eb', darkColor: '#1d4ed8', lightColor: '#60a5fa',
+  title: '1.0 原版', sub: '基线车'
+});
+car1.root.position.set(START_X, 0, LANE1_Z);
+live.add(car1.root);
+
+var car2 = buildRubberCar({
+  color: '#dc2626', darkColor: '#b91c1c', lightColor: '#f87171',
+  title: '2.0 改进', sub: '我的小车'
+});
+car2.root.position.set(START_X, 0, LANE2_Z);
+live.add(car2.root);
+
+/* ===== 拖橡皮筋靠近红车时的发光绿环 + 超大透明 Mesh 碰撞体（U8 拖拽 100% 必中！） ===== */
+var hitMat = new THREE.MeshBasicMaterial({ visible: false });
+
+var dropGlowMat = new THREE.MeshBasicMaterial({ color: '#22c55e', transparent: true, opacity: 0.0, side: THREE.DoubleSide });
+var carDropRing = new THREE.Mesh(new THREE.RingGeometry(0.68, 0.90, 36), dropGlowMat);
+carDropRing.rotation.x = -Math.PI / 2;
+carDropRing.position.set(0, 0.03, 0);
+car2.root.add(carDropRing);
+
+// 拖拽橡皮筋专用超大透明碰撞体（屏幕射线直命即亮绿环，松手 100% 装上！）
+var hitCarDrop = new THREE.Mesh(new THREE.BoxGeometry(1.95, 1.55, 2.05), hitMat);
+hitCarDrop.position.set(0, 0.52, 0.05);
+car2.root.add(hitCarDrop);
+
+// 4 项部件清晰分离碰撞体（零遮挡、宽容好点！）
+var hitTires = new THREE.Mesh(new THREE.BoxGeometry(0.96, 0.92, 1.15), hitMat);
+hitTires.position.set(-0.04, 0.44, -0.10);
+hitTires.userData.hitId = 'tires';
+car2.root.add(hitTires);
+
+var hitCard = new THREE.Mesh(new THREE.CylinderGeometry(0.40, 0.40, 0.16, 18), hitMat);
+hitCard.rotation.x = Math.PI / 2;
+hitCard.position.set(0, 0.42, 0.80);
+hitCard.userData.hitId = 'card';
+car2.root.add(hitCard);
+
+var hitStick = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.98, 0.34), hitMat);
+hitStick.position.set(0.46, 0.98, 0.92);
+hitStick.userData.hitId = 'stick';
+car2.root.add(hitStick);
+
+var hitExtraBands = new THREE.Mesh(new THREE.BoxGeometry(1.88, 0.65, 1.14), hitMat);
+hitExtraBands.position.set(0, 0.22, -0.02);
+hitExtraBands.userData.hitId = 'extraBands';
+trayGroup.add(hitExtraBands);
+
+// 拖拽时跟随鼠标的 2 根细巧明黄幽灵橡皮筋
+var dragBandsGhost = new THREE.Group();
+var gb1 = makeSlimLooseBand(-0.26, 0.15);
+var gb2 = makeSlimLooseBand(0.26, -0.15);
+dragBandsGhost.add(gb1, gb2);
+dragBandsGhost.visible = false;
+live.add(dragBandsGhost);
+
+/* ===== 赛道双车 3D 实时轨迹线 ===== */
+var MAX_TRAIL = 160;
+function makeTrailLine(hex, dashed) {
+  var geo = new THREE.BufferGeometry();
+  var pos = new Float32Array(MAX_TRAIL * 3);
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setDrawRange(0, 0);
+  var mat = dashed
+    ? new THREE.LineDashedMaterial({ color: hex, dashSize: 0.20, gapSize: 0.14 })
+    : new THREE.LineBasicMaterial({ color: hex });
+  var line = new THREE.Line(geo, mat);
+  line.frustumCulled = false;
+  live.add(line);
+  return { line: line, pos: pos, count: 0, dashed: dashed };
+}
+var trail1 = makeTrailLine('#93c5fd', true);
+var trail2 = makeTrailLine('#fde047', false);
+
+function resetTrails() {
+  trail1.count = 0; trail1.line.geometry.setDrawRange(0, 0);
+  trail2.count = 0; trail2.line.geometry.setDrawRange(0, 0);
+}
+function pushTrail(tr, x, z) {
+  if (tr.count >= MAX_TRAIL) return;
+  var idx = tr.count * 3;
+  tr.pos[idx] = x; tr.pos[idx + 1] = 0.04; tr.pos[idx + 2] = z;
+  tr.count++;
+  tr.line.geometry.attributes.position.needsUpdate = true;
+  tr.line.geometry.setDrawRange(0, tr.count);
+  if (tr.dashed) tr.line.computeLineDistances();
+}
+
+/* ===== 打滑白烟与摩擦火花粒子池 ===== */
+var particles = [];
+var smokeGeo = new THREE.SphereGeometry(0.10, 8, 8);
+var sparkGeo = new THREE.BoxGeometry(0.065, 0.065, 0.065);
+function spawnSlipFx(x, z) {
+  for (var i = 0; i < 2; i++) {
+    var isSpark = i === 1;
+    var m = new THREE.Mesh(isSpark ? sparkGeo : smokeGeo, new THREE.MeshBasicMaterial({
+      color: isSpark ? '#fb923c' : '#f1f5f9',
+      transparent: true, opacity: 0.85
+    }));
+    m.position.set(x - 0.14 + (Math.random() - 0.5) * 0.2, 0.1 + Math.random() * 0.14, z + (Math.random() - 0.5) * 0.52);
+    live.add(m);
+    particles.push({
+      mesh: m,
+      vx: -0.9 - Math.random() * 1.0,
+      vy: 0.5 + Math.random() * 0.7,
+      vz: (Math.random() - 0.5) * 0.6,
+      life: 0.45 + Math.random() * 0.25,
+      maxLife: 0.7
+    });
+  }
+}
+function clearParticles() {
+  for (var i = 0; i < particles.length; i++) live.remove(particles[i].mesh);
+  particles = [];
+}
+function tickParticles(dt) {
+  for (var i = particles.length - 1; i >= 0; i--) {
+    var p = particles[i];
+    p.life -= dt;
+    if (p.life <= 0) { live.remove(p.mesh); particles.splice(i, 1); continue; }
+    p.mesh.position.x += p.vx * dt;
+    p.mesh.position.y += p.vy * dt;
+    p.mesh.position.z += p.vz * dt;
+    p.mesh.scale.setScalar(1 + (1 - p.life / p.maxLife) * 0.85);
+    p.mesh.material.opacity = Math.max(0, p.life / p.maxLife);
+  }
+}
+
+/* ===== 游戏状态与工程参数 ===== */
+var mode = 'track'; // 'track' | 'tune'
+var state = {
+  tiresAligned: false,
+  extraTiresAdded: false,
+  cardSmooth: false,
+  windTurns: 5,
+  diagRunDone: false,
+  bestDist2: 0,
+  raceCount: 0,
+  lastD1: 0,
+  lastD2: 0
+};
+var found = {}, stamps = { s1: false, s2: false, s3: false }, celebrated = false, demo = false;
+var resetGen = 0;
+var curGuideSpeech = '第1步：先点底部同场竞速按钮，看看原版小车跑起来有哪些毛病！';
+
+var race = {
+  active: false,
+  countdown: 0,
+  t: 0,
+  c1: { x: START_X, z: LANE1_Z, vx: 0, yaw: 0, dist: 0, done: false, offTrack: false },
+  c2: { x: START_X, z: LANE2_Z, vx: 0, yaw: 0, dist: 0, done: false, offTrack: false },
+  slipAcc1: 0,
+  slipAcc2: 0,
+  trailAcc: 0
+};
+
+var cardFlipTarget = 0, cardFlipCur = 0;
+var stickAnimSpin = 0;
+var overwindShake = 0;
+var hoverDropCar = false;
+var car1IdleTarget = new THREE.Vector3(START_X, 0, LANE1_Z);
+
+/* ===== 舒展全景赛道镜头 & 独立清爽中央改装台镜头 ===== */
+var camPosTarget = new THREE.Vector3(0.25, 7.6, 11.4);
+var camLookTarget = new THREE.Vector3(0.20, 0.15, 0.15);
+camera.position.copy(camPosTarget);
+camera.lookAt(camLookTarget);
+
+function updateCameraTarget() {
+  if (mode === 'tune' && !race.active) {
+    // 蓝车彻底退至后方跑道远端，红车 2.0 独占中央特写改装台零干扰！
+    car1IdleTarget.set(5.85, 0, -1.65);
+    trayTargetPos.copy(TRAY_TUNE_POS);
+    // 左前 38° 工程特写：轮胎(左中)、圆纸板(正中)、竹节棒(右上)、小蓝托盘(右下) 100% 分离！
+    camPosTarget.set(START_X - 2.35, 2.65, 4.25);
+    camLookTarget.set(START_X + 0.35, 0.46, 1.20);
+  } else if (race.active) {
+    car1IdleTarget.set(START_X, 0, LANE1_Z);
+    trayTargetPos.copy(TRAY_TRACK_POS);
+    var leadX = Math.max(race.c1.x, race.c2.x);
+    var followX = Math.max(-0.2, Math.min(1.8, leadX * 0.38 + 0.3));
+    camPosTarget.set(followX, 7.3, 10.9);
+    camLookTarget.set(followX + 0.25, 0.15, 0.10);
+  } else {
+    car1IdleTarget.set(START_X, 0, LANE1_Z);
+    trayTargetPos.copy(TRAY_TRACK_POS);
+    // 全景安全构图：0m 彻底远离左上状态卡，5m 终点拱门完整落在右侧 #notes 下方！
+    camPosTarget.set(0.25, 7.6, 11.4);
+    camLookTarget.set(0.20, 0.15, 0.15);
+  }
+}
+
+/* ===== 屏幕投影与浮字 ===== */
+function project3D(vec) {
+  var v = vec.clone().project(camera);
+  return {
+    x: (v.x * 0.5 + 0.5) * window.innerWidth,
+    y: (-v.y * 0.5 + 0.5) * window.innerHeight,
+    inFront: v.z < 1
+  };
+}
+function floatText(worldPos, text, cls) {
+  var p = project3D(worldPos);
+  var el = document.createElement('div');
+  el.className = 'float-msg' + (cls ? ' ' + cls : '');
+  el.textContent = text;
+  el.style.left = Math.max(85, Math.min(window.innerWidth - 110, p.x)) + 'px';
+  el.style.top = Math.max(85, Math.min(window.innerHeight - 100, p.y)) + 'px';
+  $('#labels').appendChild(el);
+  setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1550);
+}
+
+/* ===== 更新左侧参数仪 & 状态 ===== */
+function refreshStatusUI() {
+  $('#modeBadge').textContent = mode === 'tune' ? '改装台中' : (race.active ? '竞速中' : '赛道模式');
+  var rA = $('#rowAlign'), rB = $('#rowBand'), rC = $('#rowCard'), rW = $('#rowWind');
+  rA.className = 'sc-row ' + (state.tiresAligned ? 'ok' : 'warn');
+  $('#valAlign').textContent = state.tiresAligned ? '对称摆正 ✓' : '偏左歪斜';
+
+  rB.className = 'sc-row ' + (state.extraTiresAdded ? 'ok' : 'warn');
+  $('#valBand').textContent = state.extraTiresAdded ? '4圈防滑 ✓' : '仅2根打滑';
+
+  rC.className = 'sc-row ' + (state.cardSmooth ? 'ok' : 'warn');
+  $('#valCard').textContent = state.cardSmooth ? '光滑低阻 ✓' : '粗糙阻力大';
+
+  var windOk = state.windTurns >= 8;
+  rW.className = 'sc-row ' + (windOk ? 'ok' : 'warn');
+  $('#valWind').textContent = state.windTurns + ' 圈' + (windOk ? ' ✓' : '');
+  var wb = $('#windBar');
+  wb.style.width = Math.min(100, (state.windTurns / 12) * 100) + '%';
+  wb.classList.toggle('hot', state.windTurns >= 11);
+
+  extraBandsGroup.visible = !state.extraTiresAdded;
+  car2.applyTires(state.tiresAligned, state.extraTiresAdded);
+  cardFlipTarget = state.cardSmooth ? Math.PI : 0;
+
+  if (state.tiresAligned && state.extraTiresAdded && state.cardSmooth && state.windTurns >= 8 && !stamps.s2) {
+    addDiscovery('mod_all', 's2', '✨ 3项改装全完成：对称防滑胎 + 光滑纸板 + 足圈发条！', '');
+  }
+
+  $('#tuneBtn').classList.toggle('on', mode === 'tune');
+  var readyToRace = !state.diagRunDone || (state.tiresAligned && state.extraTiresAdded && state.cardSmooth && state.windTurns >= 8);
+  $('#raceBtn').classList.toggle('glow', !race.active && readyToRace && !celebrated);
+  $('#tuneBtn').classList.toggle('glow', !race.active && state.diagRunDone && !readyToRace && mode !== 'tune');
+}
+
+/* ===== 发现栏与印章 ===== */
+function addDiscovery(key, stampKey, html, spoken) {
+  if (!found[key]) {
+    found[key] = true;
+    var el = document.createElement('div');
+    el.className = 'stk';
+    el.innerHTML = html;
+    $('#ntList').prepend(el);
+    $('#ntCnt').textContent = Object.keys(found).length;
+  }
+  if (stampKey && !stamps[stampKey]) {
+    stamps[stampKey] = true;
+    var sEl = $('#' + stampKey.replace('s', 'st'));
+    if (sEl) sEl.classList.add('lit');
+  }
+  updateGuide(false);
+  if (spoken && !demo) speak(spoken);
+}
+
+/* ===== 动态分步提示 & 单焦点 #targetCue（U2 + U10） ===== */
+function updateGuide(speakIt) {
+  var ico = '🚀';
+  if (race.active) {
+    ico = '🏁';
+    curGuideSpeech = '两辆小车同时出发啦！仔细观察它们的路线和距离变化！';
+  } else if (!state.diagRunDone && mode !== 'tune') {
+    ico = '🚀';
+    curGuideSpeech = '第1步：先点底部同场竞速按钮，看看原版小车跑起来有哪些毛病！';
+  } else if (mode !== 'tune' && (!state.tiresAligned || !state.extraTiresAdded || !state.cardSmooth || state.windTurns < 8)) {
+    ico = '🔧';
+    curGuideSpeech = '第2步：点底部改装调试，去给红色改进车修好轮胎、纸板和发条吧！';
+  } else if (!state.tiresAligned) {
+    ico = '⚙';
+    curGuideSpeech = '点击或横拖红色小车上歪斜的黑皮筋轮胎，把它摆正对称防止跑偏！';
+  } else if (!state.extraTiresAdded) {
+    ico = '✨';
+    curGuideSpeech = '拖动或点击蓝色托盘上的2根细明黄橡皮筋，套到红车上防打滑！';
+  } else if (!state.cardSmooth) {
+    ico = '🚗';
+    curGuideSpeech = '点击红车底端粗糙的圆形瓦楞纸板，翻到光滑浅蓝面减少摩擦阻力！';
+  } else if (state.windTurns < 8) {
+    ico = '⚡';
+    curGuideSpeech = '多点或拖动红车上的长竹棒把发条拧到8到10圈，蓄足弹性动力！';
+  } else if (!stamps.s3) {
+    ico = '🏁';
+    curGuideSpeech = '全部改装完成啦！快点同场竞速，和蓝色原版车来一场5米巅峰对决吧！';
+  } else {
+    ico = '🏆';
+    curGuideSpeech = '太棒啦！你可以随时再进改装台翻纸板或调圈数，继续对比实验！';
+  }
+  $('#guideIco').textContent = ico;
+  $('#guideTxt').textContent = curGuideSpeech;
+  var gb = $('#guideBar');
+  gb.classList.remove('pulse'); void gb.offsetWidth; gb.classList.add('pulse');
+  if (speakIt) speak(curGuideSpeech, true);
+}
+
+function updateTargetCue() {
+  var cue = $('#targetCue');
+  if (race.active || celebrated || $('#winToast').classList.contains('show')) {
+    cue.classList.remove('show');
+    return;
+  }
+  var worldPt = null, txt = '', urgent = false;
+  if (!state.diagRunDone && mode !== 'tune') {
+    var r = $('#raceBtn').getBoundingClientRect();
+    cue.textContent = '🚀 先点这里试跑诊断';
+    cue.className = 'cue3d show';
+    cue.style.left = (r.left + r.width / 2) + 'px';
+    cue.style.top = (r.top - 10) + 'px';
+    return;
+  }
+  var needMod = !state.tiresAligned || !state.extraTiresAdded || !state.cardSmooth || state.windTurns < 8;
+  if (needMod && mode !== 'tune') {
+    var tb = $('#tuneBtn').getBoundingClientRect();
+    cue.textContent = '🔧 点这里改装红车';
+    cue.className = 'cue3d show urgent';
+    cue.style.left = (tb.left + tb.width / 2) + 'px';
+    cue.style.top = (tb.top - 10) + 'px';
+    return;
+  }
+  if (!state.tiresAligned) {
+    worldPt = car2.root.position.clone().add(new THREE.Vector3(-0.08, 0.96, -0.22));
+    txt = '⚙ 点或横拖歪轮胎摆正';
+    urgent = true;
+  } else if (!state.extraTiresAdded) {
+    worldPt = trayGroup.position.clone().add(new THREE.Vector3(0, 0.45, -0.15));
+    txt = '✨ 拖2根细黄皮筋套红车';
+  } else if (!state.cardSmooth) {
+    worldPt = car2.root.position.clone().add(new THREE.Vector3(0, 0.92, 0.80));
+    txt = '🚗 点粗糙纸板翻光滑面';
+  } else if (state.windTurns < 8) {
+    worldPt = car2.root.position.clone().add(new THREE.Vector3(0.42, 1.32, 0.92));
+    txt = '⚡ 点竹棒拧发条（' + state.windTurns + '/8圈）';
+  } else if (!stamps.s3) {
+    var rb = $('#raceBtn').getBoundingClientRect();
+    cue.textContent = '🏁 点这里5米冲线决胜！';
+    cue.className = 'cue3d show';
+    cue.style.left = (rb.left + rb.width / 2) + 'px';
+    cue.style.top = (rb.top - 10) + 'px';
+    return;
+  }
+  if (!worldPt) { cue.classList.remove('show'); return; }
+  var p = project3D(worldPt);
+  if (!p.inFront) { cue.classList.remove('show'); return; }
+  cue.textContent = txt;
+  cue.className = 'cue3d show' + (urgent ? ' urgent' : '');
+  var cx = Math.max(120, Math.min(window.innerWidth - 260, p.x));
+  var cy = Math.max(105, Math.min(window.innerHeight - 100, p.y));
+  cue.style.left = cx + 'px';
+  cue.style.top = cy + 'px';
+}
+
+/* ===== 改装动作执行（零隐藏顺序锁死，想先改哪项就改哪项！） ===== */
+function doAlignTires() {
+  if (race.active) return;
+  state.tiresAligned = !state.tiresAligned;
+  sfxSnap();
+  refreshStatusUI();
+  var wp = car2.root.position.clone().add(new THREE.Vector3(0, 1.05, 0));
+  if (state.tiresAligned) {
+    floatText(wp, '外圈细胎摆正对称！✓', 'ok');
+    addDiscovery('align', null, '⚙ 摆正红车外圈轮胎，左右对称不再跑偏', '太棒了！歪斜的外圈轮胎已经摆正对称，小车不会再往左跑偏啦！');
+  } else {
+    floatText(wp, '轮胎改回歪斜状态', 'bad');
+    speak('你把轮胎调回歪斜了，待会儿可以再跑一次对比看看跑偏现象！');
+  }
+  updateGuide(false);
+}
+
+function doAddExtraBands() {
+  if (race.active || state.extraTiresAdded) return;
+  state.extraTiresAdded = true;
+  hoverDropCar = false;
+  sfxSnap();
+  refreshStatusUI();
+  floatText(car2.root.position.clone().add(new THREE.Vector3(0, 1.15, 0)), '套上2根明黄细防滑胎！✓', 'ok');
+  addDiscovery('bands', null, '✨ 加装2根明黄橡皮筋，变成4圈对称防滑胎', '真巧手！两根新的明黄橡皮筋套上去变成了四圈对称防滑胎，起步再也不会空转打滑啦！');
+  updateGuide(false);
+}
+
+function doFlipCardboard() {
+  if (race.active) return;
+  state.cardSmooth = !state.cardSmooth;
+  sfxFlip();
+  refreshStatusUI();
+  var wp = car2.root.position.clone().add(new THREE.Vector3(0, 0.95, 0.80));
+  if (state.cardSmooth) {
+    floatText(wp, '翻到光滑浅蓝面降阻！✓', 'ok');
+    addDiscovery('card', null, '🚗 圆形纸板翻成光滑面，大幅减小竹棒摩擦阻力', '好聪明！把粗糙的圆形纸板翻成光滑面，竹棒转动时的摩擦阻力小多了！');
+  } else {
+    floatText(wp, '翻回粗糙瓦楞面', 'bad');
+    speak('圆形纸板翻回了粗糙面，摩擦力会变大哦！');
+  }
+  updateGuide(false);
+}
+
+function doWindStick(delta) {
+  if (race.active) return;
+  var next = state.windTurns + (delta || 1);
+  if (next > 12) {
+    state.windTurns = 10;
+    overwindShake = 0.55;
+    sfxBoing();
+    refreshStatusUI();
+    floatText(car2.root.position.clone().add(new THREE.Vector3(0.4, 1.35, 0.9)), '太紧啦！退回10圈刚刚好', 'bad');
+    speak('太紧快绷断啦，十圈刚刚好！');
+    return;
+  }
+  if (next < 2) next = 2;
+  state.windTurns = next;
+  stickAnimSpin += Math.PI * 2;
+  sfxWind(state.windTurns);
+  refreshStatusUI();
+  floatText(car2.root.position.clone().add(new THREE.Vector3(0.4, 1.32, 0.9)), '发条 ' + state.windTurns + ' 圈！', state.windTurns >= 8 ? 'ok' : '');
+  if (state.windTurns === 8) {
+    addDiscovery('wind', null, '⚡ 长竹棒发条上足8圈以上，弹性势能大大增强', '发条已经拧到八圈啦，弹性动力很充足！还可以再拧到十圈试试，或者直接去同场竞速！');
+  } else if (state.windTurns === 10) {
+    speak('发条拧到十圈啦，动力满格刚刚好，快去同场竞速吧！');
+  }
+  updateGuide(false);
+}
+
+/* ===== 切回起跑线 ===== */
+function resetCarsToStart() {
+  race.active = false;
+  race.countdown = 0;
+  race.c1 = { x: START_X, z: LANE1_Z, vx: 0, yaw: 0, dist: 0, done: false, offTrack: false };
+  race.c2 = { x: START_X, z: LANE2_Z, vx: 0, yaw: 0, dist: 0, done: false, offTrack: false };
+  car1.root.position.set(START_X, 0, LANE1_Z); car1.root.rotation.set(0, 0, 0);
+  car2.root.position.set(START_X, 0, LANE2_Z); car2.root.rotation.set(0, 0, 0);
+  car1.wheelPivot.rotation.z = 0; car2.wheelPivot.rotation.z = 0;
+  sigRedMat.color.set('#ef4444'); sigGrnMat.color.set('#1e3a2f');
+  resetTrails();
+  clearParticles();
+  $('#tag1').classList.remove('show');
+  $('#tag2').classList.remove('show');
+}
+
+/* ===== 计算红车 2.0 真实工程物理参数 ===== */
+function computeCar2Physics() {
+  var aligned = state.tiresAligned;
+  var extra = state.extraTiresAdded;
+  var smooth = state.cardSmooth;
+  var turns = state.windTurns;
+
+  var energy = 0.65 + turns * 0.42;
+  var gripMult = extra ? 1.0 : 0.66;
+  var fricMult = smooth ? 1.0 : 0.78;
+  var rawDist = energy * gripMult * fricMult;
+
+  var steerRate = aligned ? 0.0 : -0.42;
+  var targetDist = aligned ? Math.min(4.85, Math.max(0.8, rawDist)) : Math.min(1.85, Math.max(1.25, rawDist * 0.95));
+  return {
+    targetDist: targetDist,
+    steerRate: steerRate,
+    slips: !extra,
+    initSpeed: Math.min(4.2, 1.50 + turns * 0.23) * (extra ? 1.05 : 0.76) * (smooth ? 1.0 : 0.85)
+  };
+}
+
+/* ===== 发车！双车同场竞速 ===== */
+var curCar2Phys = null;
+function startRace() {
+  if (race.active) return;
+  markInteracted();
+  mode = 'track';
+  $('#cmpBanner').classList.remove('show');
+  resetCarsToStart();
+  curCar2Phys = computeCar2Physics();
+  race.active = true;
+  race.countdown = 0.65;
+  race.t = 0;
+  race.slipAcc1 = 0; race.slipAcc2 = 0; race.trailAcc = 0;
+  state.raceCount++;
+  pushTrail(trail1, START_X, LANE1_Z);
+  pushTrail(trail2, START_X, LANE2_Z);
+  sfxStart();
+  refreshStatusUI();
+  updateCameraTarget();
+  updateGuide(false);
+  $('#tag1').classList.add('show');
+  $('#tag2').classList.add('show');
+  if (!state.diagRunDone) {
+    speak('各就各位，双车同时出发！仔细观察原版小车的路线和距离！');
+  } else {
+    speak('红车改进版与蓝车原版同场竞速开始！看看这次谁跑得更直更远！');
+  }
+}
+
+/* ===== 赛后工程诊断卡与通关判定 ===== */
+function finishRace() {
+  race.active = false;
+  var d1 = race.c1.dist;
+  var d2 = race.c2.dist;
+  state.lastD1 = d1; state.lastD2 = d2;
+  if (d2 > state.bestDist2) state.bestDist2 = d2;
+
+  $('#cmpD1').textContent = d1.toFixed(1) + ' m';
+  $('#cmpD2').textContent = d2.toFixed(1) + ' m';
+  var diff = d2 - d1;
+  $('#cmpDiff').textContent = diff > 0.25 ? ('领先 +' + diff.toFixed(1) + 'm') : (Math.abs(diff) <= 0.25 ? '打成平手' : '落后');
+
+  var tagsHtml = '';
+  tagsHtml += '<span class="cmp-tag ' + (state.tiresAligned ? 'good' : 'warn') + '">' + (state.tiresAligned ? '✓ 路线笔直' : '✗ 向左跑偏') + '</span>';
+  tagsHtml += '<span class="cmp-tag ' + (state.extraTiresAdded ? 'good' : 'warn') + '">' + (state.extraTiresAdded ? '✓ 4圈防滑' : '✗ 起步打滑') + '</span>';
+  tagsHtml += '<span class="cmp-tag ' + (state.cardSmooth ? 'good' : 'warn') + '">' + (state.cardSmooth ? '✓ 纸板光滑' : '✗ 纸板粗糙') + '</span>';
+  tagsHtml += '<span class="cmp-tag ' + (state.windTurns >= 8 ? 'good' : 'warn') + '">⚡ ' + state.windTurns + '圈发条</span>';
+  $('#cmpTags').innerHTML = tagsHtml;
+
+  var allModified = state.tiresAligned && state.extraTiresAdded && state.cardSmooth && state.windTurns >= 8;
+  var isWin = allModified && d2 >= 3.5;
+
+  var banner = $('#cmpBanner');
+  banner.classList.toggle('win', isWin);
+  banner.classList.add('show');
+
+  if (!state.diagRunDone && !isWin) {
+    state.diagRunDone = true;
+    $('#cmpTitle').textContent = '📊 1.0 故障诊断报告';
+    $('#cmpTip').textContent = '查出三大毛病：①外圈轮胎歪了导致跑偏；②仅2根皮筋起步打滑冒烟；③粗糙纸板+发条圈数少跑不远！快去改装红车！';
+    addDiscovery('diag', 's1', '🔍 1.0试跑诊断：跑偏打滑仅跑 ' + d1.toFixed(1) + 'm，发现3大毛病', '哎呀！两辆小车都打滑冒烟、向左歪出赛道，只跑了一点四米！查出三个毛病：第一，外圈轮胎歪在一边导致跑偏；第二，皮筋太少罐身打滑；第三，纸板粗糙发条也不够。快点改装调试去改造红车吧！');
+    refreshStatusUI();
+    updateGuide(false);
+    return;
+  }
+
+  if (!state.diagRunDone) {
+    state.diagRunDone = true;
+    addDiscovery('diag', 's1', '🔍 完成双车赛道对比测试', '');
+  }
+
+  if (!state.tiresAligned) {
+    $('#cmpTitle').textContent = '⚠ 诊断：小车还是跑偏啦！';
+    $('#cmpTip').textContent = '红车还是向左歪出赛道了！点「改装调试」，把红车外圈歪斜的轮胎摆正对称！';
+    speak('小车还是往左跑偏了！快看看红车外圈的橡皮筋轮胎是不是偏在一边不对称？点一点把它摆正并加上新轮胎！');
+    refreshStatusUI();
+    updateGuide(false);
+    return;
+  }
+  if (!state.extraTiresAdded) {
+    $('#cmpTitle').textContent = '⚠ 诊断：起步打滑浪费动力！';
+    $('#cmpTip').textContent = '路线变直啦，但起步还在空转打滑！快把蓝盘上的2根明黄橡皮筋套到红车上防滑！';
+    speak('路线变直啦，不过起步还在空转打滑！快回到改装台，把蓝色托盘上新增的两根明黄橡皮筋套到红车上防打滑！');
+    refreshStatusUI();
+    updateGuide(false);
+    return;
+  }
+  if (!state.cardSmooth) {
+    $('#cmpTitle').textContent = '⚠ 诊断：纸板太粗糙阻力大！';
+    $('#cmpTip').textContent = '小车很稳，但粗糙纸板卡住竹棒摩擦力太大！快点一下红车右侧圆形纸板翻到光滑面！';
+    speak('小车跑得很直，可是粗糙的圆形纸板摩擦力太大拖慢了速度！点一下红车右侧的圆形纸板翻到光滑面吧！');
+    refreshStatusUI();
+    updateGuide(false);
+    return;
+  }
+  if (state.windTurns < 8) {
+    $('#cmpTitle').textContent = '⚠ 诊断：发条动力还不够足！';
+    $('#cmpTip').textContent = '结构都改完美啦，但发条只有 ' + state.windTurns + ' 圈！回改装台把竹棒拧到8到10圈再冲线！';
+    speak('结构都改完美啦，但发条圈数还太少动力不够！回改装台把红车长竹棒拧到八到十圈，就能轻松冲过四米！');
+    refreshStatusUI();
+    updateGuide(false);
+    return;
+  }
+
+  if (isWin) {
+    $('#cmpTitle').textContent = '🏆 2.0 改进车大获全胜！';
+    $('#cmpTip').textContent = '完美！红车 2.0 直线冲出 ' + d2.toFixed(1) + ' 米，比 1.0 原版多跑 ' + diff.toFixed(1) + ' 米！对称防滑+光滑降阻+足圈发条立大功！';
+    addDiscovery('win_race', 's3', '🏆 2.0直线冲出 ' + d2.toFixed(1) + 'm，完胜1.0原版(' + d1.toFixed(1) + 'm)！', '');
+    sfxWin();
+    launchConfetti();
+    refreshStatusUI();
+    if (!demo && !celebrated) {
+      celebrated = true;
+      saveProgress(LESSON_ID, false);
+      var myGen = resetGen;
+      setTimeout(function () {
+        if (myGen !== resetGen) return;
+        $('#tag1').classList.remove('show');
+        $('#tag2').classList.remove('show');
+        $('#winToast').classList.add('show');
+        speak('太棒啦！你的红色改进小车笔直冲出四米多，大胜原版小车！快来看看科学小结论并答对问题领小红花吧！', true);
+      }, 950);
+    } else {
+      speak('太厉害啦！红色改进小车稳稳跑出直线好成绩！你可以继续调整零件对比不同组合的效果！');
+    }
+    updateGuide(false);
+  }
+}
+
+/* ===== 交互系统：屏幕射线直命超大红车碰撞体 + 绿环高亮 + 拖拽/轻点双通道 ===== */
+function markInteracted() { document.body.classList.add('interacted'); }
+var ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+var dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.42);
+var dragState = null;
+
+function getNDC(e) {
+  var r = cv.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+}
+
+function hitTestPriority() {
+  ray.setFromCamera(ptr, camera);
+  var targets = [hitExtraBands, hitStick, hitCard, hitTires];
+  var hits = ray.intersectObjects(targets, false);
+  for (var i = 0; i < hits.length; i++) {
+    var id = hits[i].object.userData.hitId;
+    if (id === 'extraBands' && state.extraTiresAdded) continue;
+    return id;
+  }
+  return null;
+}
+
+function checkDropOverCar() {
+  ray.setFromCamera(ptr, camera);
+  if (ray.intersectObject(hitCarDrop, false).length > 0) return true;
+  var carCenter = car2.root.position.clone().add(new THREE.Vector3(0, 0.42, 0));
+  return dragBandsGhost.position.distanceTo(carCenter) < 1.95;
+}
+
+cv.addEventListener('pointerdown', function (e) {
+  markInteracted();
+  if (race.active) return;
+  getNDC(e);
+  var id = hitTestPriority();
+  if (!id) return;
+  dragState = { hitId: id, sx: e.clientX, sy: e.clientY, moved: false };
+  try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+});
+
+cv.addEventListener('pointermove', function (e) {
+  if (!dragState) return;
+  var dx = e.clientX - dragState.sx, dy = e.clientY - dragState.sy;
+  if (!dragState.moved && Math.hypot(dx, dy) >= 14) {
+    dragState.moved = true;
+    if (dragState.hitId === 'extraBands' && !state.extraTiresAdded) {
+      dragBandsGhost.visible = true;
+      extraBandsGroup.visible = false;
+    }
+  }
+  if (dragState.moved && dragState.hitId === 'extraBands') {
+    getNDC(e);
+    ray.setFromCamera(ptr, camera);
+    var pt = new THREE.Vector3();
+    if (ray.ray.intersectPlane(dragPlane, pt)) {
+      dragBandsGhost.position.copy(pt);
+    }
+    hoverDropCar = checkDropOverCar();
+  }
+});
+
+cv.addEventListener('pointerup', function (e) {
+  if (!dragState) return;
+  var d = dragState;
+  dragState = null;
+  hoverDropCar = false;
+  try { cv.releasePointerCapture(e.pointerId); } catch (err) {}
+
+  if (d.hitId === 'extraBands') {
+    dragBandsGhost.visible = false;
+    if (!d.moved) {
+      doAddExtraBands();
+    } else {
+      getNDC(e);
+      if (checkDropOverCar()) {
+        doAddExtraBands();
+      } else {
+        extraBandsGroup.visible = true;
+        speak('把两根明黄橡皮筋拖到红色小车的罐身上亮绿环后松手，或者直接点一下就能套上去哦！');
+      }
+    }
+    return;
+  }
+
+  // 轮胎（轻点或横向拖动）、纸板（轻点翻转）、长竹棒（轻点或拖动拧发条）
+  if (d.hitId === 'tires') doAlignTires();
+  else if (d.hitId === 'card') doFlipCardboard();
+  else if (d.hitId === 'stick') doWindStick(1);
+});
+
+/* ===== 底部仅 2 个按钮：同场竞速 & 改装调试 ===== */
+$('#raceBtn').addEventListener('click', function () {
+  startRace();
+});
+
+$('#tuneBtn').addEventListener('click', function () {
+  markInteracted();
+  if (race.active) return;
+  $('#cmpBanner').classList.remove('show');
+  if (mode === 'tune') {
+    mode = 'track';
+    speak('回到5米大赛道全景，准备好就可以点同场竞速啦！');
+  } else {
+    mode = 'tune';
+    resetCarsToStart();
+    speak('进入改装工作台！直接点击或拖动红车上的歪轮胎、蓝盘里的黄皮筋、粗糙纸板和长竹棒进行改装吧！');
+  }
+  refreshStatusUI();
+  updateCameraTarget();
+  updateGuide(false);
+});
+
+/* ===== 右上 HUD 与演示动画 ===== */
+$('#voiceBtn').addEventListener('click', function () {
+  markInteracted();
+  voiceOn = !voiceOn;
+  this.classList.toggle('on', voiceOn);
+  if (voiceOn) updateGuide(true); else stopVoice();
+});
+$('#guideBar').addEventListener('click', function () { markInteracted(); updateGuide(true); });
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+$('#cmpCloseBtn').addEventListener('click', function () { $('#cmpBanner').classList.remove('show'); });
+$('#winKeepBtn').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgainBtn').addEventListener('click', resetAll);
+$('#resetBtn').addEventListener('click', resetAll);
+
+$('#qOpts').addEventListener('click', function (e) {
+  var b = e.target.closest('.qopt');
+  if (!b) return;
+  if (b.dataset.ok === '1') {
+    b.classList.add('ok');
+    $('#qFb').textContent = '🌸 答对啦！获得本课小红花！';
+    saveProgress(LESSON_ID, true);
+    sfxWin();
+    speak('答对啦！把歪斜的轮胎摆正对称并加装防滑胎，小车就能跑得又直又稳！获得本课小红花！', true);
+  } else {
+    b.classList.add('bad');
+    var h = b.dataset.hint || '再想想刚才实验的现象哦！';
+    $('#qFb').textContent = h;
+    sfxBoing();
+    speak(h, true);
+  }
+});
+
+function resetAll() {
+  resetGen++;
+  demo = false;
+  stopVoice();
+  mode = 'track';
+  state = {
+    tiresAligned: false,
+    extraTiresAdded: false,
+    cardSmooth: false,
+    windTurns: 5,
+    diagRunDone: false,
+    bestDist2: 0,
+    raceCount: 0,
+    lastD1: 0,
+    lastD2: 0
+  };
+  found = {}; stamps = { s1: false, s2: false, s3: false }; celebrated = false;
+  hoverDropCar = false;
+  $('#ntList').innerHTML = ''; $('#ntCnt').textContent = '0';
+  $$('.st').forEach(function (s) { s.classList.remove('lit'); });
+  $('#winToast').classList.remove('show');
+  $('#cmpBanner').classList.remove('show');
+  $('#qFb').textContent = '';
+  $$('.qopt').forEach(function (b) { b.classList.remove('ok', 'bad'); });
+  resetCarsToStart();
+  refreshStatusUI();
+  updateCameraTarget();
+  updateGuide(false);
+}
+
+/* ===== 慢速有声演示（▶ 演示） ===== */
+$('#demoBtn').addEventListener('click', function () {
+  markInteracted();
+  if (demo) return;
+  resetAll();
+  demo = true;
+  var myGen = resetGen;
+  speak('看我演示怎么诊断并改装橡皮筋小车！第一步先让两车试跑找出毛病。', true);
+  setTimeout(function () { if (myGen !== resetGen) return; startRace(); }, 1100);
+  setTimeout(function () {
+    if (myGen !== resetGen) return;
+    mode = 'tune'; resetCarsToStart(); refreshStatusUI(); updateCameraTarget();
+    speak('现在进入改装台，先摆正歪斜的轮胎，再套上两根明黄防滑皮筋！', true);
+  }, 4600);
+  setTimeout(function () { if (myGen !== resetGen) return; doAlignTires(); }, 5800);
+  setTimeout(function () { if (myGen !== resetGen) return; doAddExtraBands(); }, 7000);
+  setTimeout(function () { if (myGen !== resetGen) return; doFlipCardboard(); }, 8200);
+  setTimeout(function () { if (myGen !== resetGen) return; state.windTurns = 9; stickAnimSpin += Math.PI * 4; sfxWind(9); refreshStatusUI(); }, 9400);
+  setTimeout(function () { if (myGen !== resetGen) return; startRace(); }, 10600);
+  setTimeout(function () { if (myGen !== resetGen) return; demo = false; resetAll(); speak('演示完成啦，现在轮到你自己动手试跑和改装吧！', true); }, 14800);
+});
+
+/* ===== 窗口自适应与主帧循环 ===== */
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', fit);
+fit();
+
+var introT0 = performance.now(), lastT = performance.now();
+var lookCur = camLookTarget.clone();
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (now - lastT) / 1000));
+  lastT = now;
+
+  var pop = Math.min(1, (performance.now() - introT0) / 650);
+  var ease = 1 - Math.pow(1 - pop, 3);
+  live.scale.setScalar(0.01 + 0.99 * ease);
+
+  // 纸板平滑翻面
+  cardFlipCur += (cardFlipTarget - cardFlipCur) * Math.min(1, dt * 11);
+  car2.cardPivot.rotation.y = cardFlipCur;
+
+  // 托盘平滑切换到改装台旁侧 / 赛道旁侧
+  trayGroup.position.lerp(trayTargetPos, Math.min(1, dt * 7));
+
+  // 蓝车在改装模式下优雅退居后方跑道，让红车 2.0 独占中央特写！
+  if (!race.active) {
+    car1.root.position.lerp(car1IdleTarget, Math.min(1, dt * 6.5));
+  }
+
+  // 红车接橡皮筋发光绿环提示
+  var wantGlow = hoverDropCar ? (0.72 + Math.sin(now * 0.012) * 0.22) : 0;
+  dropGlowMat.opacity += (wantGlow - dropGlowMat.opacity) * Math.min(1, dt * 14);
+
+  // 竹棒旋转动画 & 过拧抖动
+  if (stickAnimSpin > 0.01) {
+    var step = Math.min(stickAnimSpin, dt * 15);
+    car2.stickPivot.rotation.z -= step;
+    stickAnimSpin -= step;
+  } else if (!race.active) {
+    var baseRot = -0.52 - (state.windTurns - 5) * 0.07;
+    car2.stickPivot.rotation.z += (baseRot - car2.stickPivot.rotation.z) * Math.min(1, dt * 8);
+  }
+  if (overwindShake > 0) {
+    overwindShake -= dt;
+    car2.root.position.x = START_X + Math.sin(now * 0.07) * 0.06;
+  } else if (!race.active) {
+    car2.root.position.x = START_X;
+  }
+
+  // 赛跑物理步进
+  if (race.active) {
+    if (race.countdown > 0) {
+      race.countdown -= dt;
+      if (race.countdown <= 0) {
+        sigRedMat.color.set('#450a0a');
+        sigGrnMat.color.set('#22c55e');
+        race.c1.vx = 1.85;
+        race.c2.vx = curCar2Phys.initSpeed;
+      }
+    } else {
+      race.t += dt;
+      race.trailAcc += dt;
+
+      // 蓝车 1.0 固定故障模拟：起步打滑 + 向左跑偏（-Z），1.4m 左右停下
+      if (!race.c1.done) {
+        var decel1 = 0.65;
+        race.c1.vx = Math.max(0, race.c1.vx - decel1 * dt);
+        race.c1.yaw -= 0.36 * dt;
+        var dx1 = Math.cos(race.c1.yaw) * race.c1.vx * dt;
+        var dz1 = Math.sin(race.c1.yaw) * race.c1.vx * dt;
+        race.c1.x += dx1;
+        race.c1.z += dz1;
+        race.c1.dist = Math.max(0, (race.c1.x - START_X) / SCALE_M);
+        car1.root.position.set(race.c1.x, 0, race.c1.z);
+        car1.root.rotation.y = -race.c1.yaw;
+        car1.wheelPivot.rotation.z -= (race.c1.vx * 2.8 + (race.t < 0.7 ? 7.5 : 0)) * dt;
+        if (race.t < 0.85) {
+          race.slipAcc1 += dt;
+          if (race.slipAcc1 > 0.08) { race.slipAcc1 = 0; spawnSlipFx(race.c1.x, race.c1.z); }
+        }
+        if (race.c1.dist >= 1.42 || race.c1.z <= -1.98 || race.c1.vx <= 0.05) {
+          race.c1.done = true; race.c1.offTrack = true;
+          race.c1.dist = Math.min(1.42, Math.max(1.35, race.c1.dist));
+        }
+      }
+
+      // 红车 2.0 动态物理模拟
+      if (!race.c2.done) {
+        var progress2 = race.c2.dist / Math.max(0.5, curCar2Phys.targetDist);
+        var targetVx = curCar2Phys.initSpeed * Math.max(0.18, 1 - progress2 * 0.82);
+        race.c2.vx += (targetVx - race.c2.vx) * Math.min(1, dt * 5);
+        race.c2.yaw += curCar2Phys.steerRate * dt;
+        var dx2 = Math.cos(race.c2.yaw) * race.c2.vx * dt;
+        var dz2 = Math.sin(race.c2.yaw) * race.c2.vx * dt;
+        race.c2.x += dx2;
+        race.c2.z += dz2;
+        race.c2.dist = Math.max(0, (race.c2.x - START_X) / SCALE_M);
+        car2.root.position.set(race.c2.x, 0, race.c2.z);
+        car2.root.rotation.y = -race.c2.yaw;
+        car2.wheelPivot.rotation.z -= (race.c2.vx * 2.5 + (curCar2Phys.slips && race.t < 0.8 ? 8.5 : 0)) * dt;
+        if (curCar2Phys.slips && race.t < 0.9) {
+          race.slipAcc2 += dt;
+          if (race.slipAcc2 > 0.075) { race.slipAcc2 = 0; spawnSlipFx(race.c2.x, race.c2.z); }
+        }
+        var hitSide = !state.tiresAligned && race.c2.z <= -0.05;
+        if (race.c2.dist >= curCar2Phys.targetDist || hitSide || race.t > 3.6) {
+          race.c2.done = true;
+          race.c2.offTrack = !state.tiresAligned;
+        }
+      }
+
+      if (race.trailAcc > 0.05) {
+        race.trailAcc = 0;
+        if (!race.c1.done) pushTrail(trail1, race.c1.x, race.c1.z);
+        if (!race.c2.done) pushTrail(trail2, race.c2.x, race.c2.z);
+      }
+
+      updateCameraTarget();
+
+      var p1 = project3D(car1.root.position.clone().add(new THREE.Vector3(0, 1.0, 0)));
+      var t1 = $('#tag1');
+      t1.textContent = '1.0 原版 · ' + race.c1.dist.toFixed(1) + 'm' + (race.c1.offTrack ? ' 跑偏!' : '');
+      t1.style.left = Math.max(240, Math.min(window.innerWidth - 260, p1.x)) + 'px';
+      t1.style.top = Math.max(76, Math.min(window.innerHeight - 95, p1.y)) + 'px';
+
+      var p2 = project3D(car2.root.position.clone().add(new THREE.Vector3(0, 1.0, 0)));
+      var t2 = $('#tag2');
+      t2.textContent = '2.0 改进 · ' + race.c2.dist.toFixed(1) + 'm' + (race.c2.offTrack ? ' 跑偏!' : '');
+      t2.style.left = Math.max(240, Math.min(window.innerWidth - 260, p2.x)) + 'px';
+      t2.style.top = Math.max(76, Math.min(window.innerHeight - 95, p2.y)) + 'px';
+
+      if (race.c1.done && race.c2.done) {
+        pushTrail(trail1, race.c1.x, race.c1.z);
+        pushTrail(trail2, race.c2.x, race.c2.z);
+        finishRace();
+      }
+    }
+  }
+
+  camera.position.lerp(camPosTarget, Math.min(1, dt * 5.2));
+  lookCur.lerp(camLookTarget, Math.min(1, dt * 5.2));
+  camera.lookAt(lookCur);
+
+  tickParticles(dt);
+  tickConfetti(dt);
+  updateTargetCue();
+  renderer.render(scene, camera);
+}
+
+/* ===== 调试与自动化验证接口 ===== */
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () {
+    return {
+      triangles: renderer.info.render.triangles,
+      celebrated: celebrated,
+      mode: mode,
+      raceActive: race.active,
+      tiresAligned: state.tiresAligned,
+      extraTiresAdded: state.extraTiresAdded,
+      cardSmooth: state.cardSmooth,
+      windTurns: state.windTurns,
+      diagRunDone: state.diagRunDone,
+      bestDist2: state.bestDist2
+    };
+  },
+  getState: function () {
+    return {
+      mode: mode,
+      celebrated: celebrated,
+      raceActive: race.active,
+      state: Object.assign({}, state),
+      stamps: Object.assign({}, stamps),
+      hitScreen: {
+        tires: project3D(car2.root.position.clone().add(new THREE.Vector3(-0.04, 0.44, -0.10))),
+        carCenter: project3D(car2.root.position.clone().add(new THREE.Vector3(0, 0.42, 0))),
+        extraBands: project3D(trayGroup.position.clone().add(new THREE.Vector3(0, 0.16, -0.10))),
+        card: project3D(car2.root.position.clone().add(new THREE.Vector3(0, 0.42, 0.80))),
+        stick: project3D(car2.root.position.clone().add(new THREE.Vector3(0.46, 0.98, 0.92)))
+      }
+    };
+  }
+};
+
+refreshStatusUI();
+updateCameraTarget();
+updateGuide(false);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

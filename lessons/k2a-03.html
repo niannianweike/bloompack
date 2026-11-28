@@ -1,0 +1,2048 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第3课 往水里加盐 · 食盐与白糖溶解微观实验台</title>
+<style>
+:root{--accent:#0284c7;--accent-dark:#0369a1;--ink:#231b12;--line:#e4d5ba;--card:rgba(255,253,248,.95)}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#4a311d;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas#cv.grabbing{cursor:grabbing}
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.46em;color:#6e5e48;font-weight:600}
+body.no-py rt{display:none}
+
+/* 左上标题卡片 */
+#hudTL{position:fixed;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:10px;
+  padding:7px 14px 7px 9px;border-radius:16px;background:var(--card);border:1.5px solid var(--line);
+  box-shadow:0 4px 16px rgba(15,23,42,.24)}
+#backBtn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:#5c4b34;font-size:19px;font-weight:900}
+#backBtn:hover{border-color:var(--accent);color:var(--accent)}
+.hd-t{font-size:16px;font-weight:900;line-height:1.5}
+.hd-sub{font-size:11.5px;color:#6b5c48;font-weight:700}
+
+/* 顶部中央动态分步小助手（U2） */
+#guideBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:6;
+  max-width:min(460px,calc(100vw - 630px));display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:15px;background:rgba(255,252,244,.97);
+  border:2px solid var(--accent);box-shadow:0 6px 18px rgba(2,132,199,.24);
+  font-size:13.5px;font-weight:800;color:#0c4a6e;cursor:pointer;line-height:1.38;transition:all .2s}
+#guideBar.flash{transform:translateX(-50%) scale(1.04)}
+#guideBar.done{border-color:#16a34a;background:#f0fdf4;color:#166534}
+
+/* 右上工具条 */
+#hudTR{position:fixed;top:12px;right:12px;z-index:7;display:flex;align-items:center;gap:6px}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:38px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);
+  background:var(--card);font-size:13.5px;font-weight:800;color:#4a3c28;cursor:pointer;
+  box-shadow:0 3px 0 #c8b698;transition:all .14s;white-space:nowrap}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:var(--accent-dark);color:#fff;box-shadow:0 3px 0 var(--accent-dark)}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#e0f2fe;border:1.5px solid var(--accent);color:#0369a1;font-size:10.5px;font-weight:900;
+  white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(2,132,199,.26);
+  animation:cuePop 1.6s ease-in-out infinite;transition:opacity .25s}
+body.interacted .entry-cue{opacity:0;animation:none}
+@keyframes cuePop{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+
+/* 右上可收起窄版发现栏（D3 防遮挡铁律） */
+#notes{position:fixed;top:60px;right:12px;z-index:6;width:224px;padding:9px 11px;border-radius:15px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 6px 18px rgba(15,23,42,.22)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+.nt-title{font-size:13.5px;font-weight:900}
+.nt-cnt{font-size:12.5px;font-weight:900;color:var(--accent)}
+.nt-tog{padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:11px;font-weight:800;color:#6c5c45;cursor:pointer}
+.stamps{display:flex;gap:4px;margin-bottom:6px}
+.st{flex:1;text-align:center;padding:3px 2px;border-radius:8px;font-size:11px;font-weight:800;
+  border:1.5px dashed #d7c5a4;color:#9b8a70;background:#faf4e8;transition:all .2s;line-height:1.4}
+.st.lit{border-style:solid;border-color:var(--accent);background:#e0f2fe;color:#0369a1}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList,#notes.collapsed .stamps{display:none}
+#notes.collapsed .nt-head{margin-bottom:0}
+.stk{padding:5px 8px;border-radius:10px;background:#fff;border:1px solid #ece0c9;font-size:12px;font-weight:700;line-height:1.4}
+.stk b{color:#0369a1}
+
+/* 左上进度徽章 */
+#progBadge{position:fixed;left:14px;top:74px;z-index:5;display:flex;align-items:center;gap:8px;
+  padding:6px 12px;border-radius:99px;background:rgba(255,253,248,.95);border:1.5px solid var(--line);
+  font-size:12.5px;font-weight:900;color:#33271a;box-shadow:0 4px 12px rgba(15,23,42,.18)}
+#progBadge span.num{color:#0284c7;font-size:13.5px}
+
+/* 3D 浮标与名称标签 */
+#nameTags{position:fixed;inset:0;pointer-events:none;z-index:3}
+.ntag{position:absolute;transform:translate(-50%,-100%);padding:3px 10px;border-radius:99px;
+  background:rgba(15,23,42,.88);color:#f8fafc;font-size:11.5px;font-weight:800;white-space:nowrap;
+  border:1.5px solid rgba(148,163,184,.58);box-shadow:0 3px 10px rgba(0,0,0,.28);transition:opacity .18s}
+.ntag.beaker{background:rgba(12,74,110,.92);border-color:#7dd3fc;font-size:12px;padding:3px 11px}
+.ntag.beaker.done{background:rgba(21,128,61,.94);border-color:#86efac}
+.ntag.tool{background:rgba(15,60,92,.92);border-color:#7dd3fc;font-size:12px;padding:3px 10px}
+.ntag.tool.rose{background:rgba(157,23,77,.92);border-color:#fbcfe8}
+.ntag.tool.amber{background:rgba(146,64,14,.92);border-color:#fde68a}
+.ntag.tool.teal{background:rgba(15,118,110,.92);border-color:#99f6e4}
+.ntag.tool.steel{background:rgba(51,65,85,.92);border-color:#cbd5e1}
+.ntag.tool.pulse{box-shadow:0 0 0 2px rgba(251,191,36,.75),0 4px 14px rgba(0,0,0,.32)}
+
+#labels{position:fixed;inset:0;pointer-events:none;z-index:5}
+.cue3d{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:5px 13px;border-radius:99px;
+  background:#fef3c7;border:2px solid #f59e0b;color:#78350f;font-size:13px;font-weight:900;white-space:nowrap;
+  box-shadow:0 4px 16px rgba(245,158,11,.40);animation:cueBob 1.25s ease-in-out infinite;display:none;pointer-events:none}
+.cue3d.show{display:block}
+@keyframes cueBob{0%,100%{transform:translate(-50%,-100%) translateY(0)}50%{transform:translate(-50%,-100%) translateY(-5px)}}
+
+.popword{position:absolute;transform:translate(-50%,-100%);padding:6px 14px;border-radius:99px;
+  background:rgba(12,74,110,.95);color:#fff;font-size:13.5px;font-weight:800;white-space:nowrap;
+  box-shadow:0 4px 14px rgba(0,0,0,.28);animation:popFloat 2.0s ease-out forwards;pointer-events:none}
+.popword.warn{background:rgba(194,65,12,.96)}
+.popword.good{background:rgba(21,128,61,.96)}
+@keyframes popFloat{0%{opacity:0;transform:translate(-50%,-70%) scale(.75)}16%{opacity:1;transform:translate(-50%,-110%) scale(1.05)}82%{opacity:1;transform:translate(-50%,-145%) scale(1)}100%{opacity:0;transform:translate(-50%,-185%) scale(.95)}}
+
+/* 280x280 圆形高清 2D Canvas 微观特写镜（U11 核心教学特写） */
+#microWrap{position:fixed;right:22px;bottom:18px;z-index:12;display:none;flex-direction:column;align-items:center;
+  padding:10px 12px 11px;border-radius:22px;background:rgba(15,23,42,.93);
+  border:2.5px solid #38bdf8;box-shadow:0 16px 40px rgba(0,0,0,.48);width:312px}
+#microWrap.show{display:flex;animation:microPop .28s cubic-bezier(.2,1.4,.4,1)}
+@keyframes microPop{0%{opacity:0;transform:scale(.75)}100%{opacity:1;transform:scale(1)}}
+.micro-hd{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;color:#e0f2fe}
+.micro-title{font-size:13px;font-weight:900}
+#microClose{width:26px;height:26px;border-radius:99px;border:1.5px solid #7dd3fc;background:#0c4a6e;
+  color:#fff;font-size:13px;font-weight:900;cursor:pointer;display:grid;place-items:center}
+#microClose:hover{background:#0284c7}
+.micro-ring{position:relative;width:280px;height:280px;border-radius:50%;overflow:hidden;
+  border:5px solid #fbbf24;box-shadow:0 0 0 3px #0c4a6e,inset 0 0 22px rgba(0,0,0,.45);background:#082f49}
+#microCv{width:280px;height:280px;display:block}
+.micro-cap{margin-top:8px;font-size:12px;font-weight:800;color:#fef08a;text-align:center;line-height:1.45}
+
+/* 通关彩带 + 结论与巩固题弹窗（D2 + U1 + U3） */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+#winToast{position:fixed;inset:0;z-index:35;display:none;place-items:center;background:rgba(15,23,42,.42);padding:16px}
+#winToast.show{display:grid}
+.win-card{width:min(460px,100%);max-height:86vh;overflow-y:auto;background:#fffdf8;
+  border:2.5px solid var(--accent);border-radius:22px;padding:18px 20px;text-align:center;
+  box-shadow:0 20px 50px rgba(15,23,42,.38)}
+.win-concl{margin:10px 0;padding:10px 12px;border-radius:13px;background:#e0f2fe;border:1.5px solid #7dd3fc;
+  text-align:left;font-size:13.5px;line-height:1.6;color:#0c4a6e}
+.win-quiz{margin:10px 0;padding:10px 12px;border-radius:13px;background:#f8fafc;border:1.5px solid #cbd5e1;text-align:left}
+.win-quiz h4{margin:0 0 8px;font-size:13.5px;color:#0369a1}
+.qopts{display:flex;flex-direction:column;gap:7px}
+.qopt{padding:8px 11px;border-radius:11px;border:1.5px solid #cbd5e1;background:#fff;
+  font-size:13.5px;font-weight:800;text-align:left;cursor:pointer;transition:all .14s;color:#1e293b}
+.qopt:hover{border-color:var(--accent);background:#f0f9ff}
+.qopt.ok{border-color:#16a34a;background:#dcfce7;color:#14532d}
+.qopt.bad{border-color:#e03131;background:#fff5f5;color:#c92a2a}
+.qfb{margin-top:7px;font-size:12.5px;font-weight:800;min-height:18px;color:#166534}
+.win-acts{display:flex;justify-content:center;gap:10px;margin-top:12px}
+
+@media (max-width:960px){
+  #guideBar{top:58px;max-width:min(420px,calc(100vw - 260px));font-size:12.5px}
+}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="nameTags"></div>
+<div id="labels">
+  <div class="cue3d" id="targetCue">👆 拖/点食盐碗倒入杯①</div>
+</div>
+
+<!-- 280x280 圆形高清 2D Canvas 微观特写镜 -->
+<div id="microWrap">
+  <div class="micro-hd">
+    <span class="micro-title" id="microTitle">🔬 微观特写镜 · 杯① 食盐水</span>
+    <button id="microClose" type="button" title="关闭特写镜">✕</button>
+  </div>
+  <div class="micro-ring"><canvas id="microCv" width="280" height="280"></canvas></div>
+  <div class="micro-cap" id="microCap">看！食盐大晶体拆分成极小微粒，均匀分散在蓝色水分子之间！</div>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<div id="hudTL">
+  <a id="backBtn" href="../index.html" title="返回书包">‹</a>
+  <div>
+    <div class="hd-t" data-py="dì kè wǎng shuǐ lǐ jiā yán">第3课 往水里加盐</div>
+    <div class="hd-sub">活页 · 课本第 11 页「加盐加糖溶解对比 + 微观放大镜」</div>
+  </div>
+</div>
+
+<div id="guideBar" title="点我重听当前步骤">
+  <span id="guideIco">🔬</span>
+  <span id="guideTxt">第1步：拖或点左侧食盐碗（或用小勺舀盐）倒入杯①！</span>
+</div>
+
+<div id="hudTR">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<div id="progBadge"><span>🔬 溶解实验进度：</span><span class="num" id="progNum">0 / 4</span></div>
+
+<aside id="notes">
+  <div class="nt-head">
+    <span class="nt-title" data-py="wǒ de fā xiàn">我的发现</span>
+    <span class="nt-cnt" id="ntCnt">0</span>
+    <button class="nt-tog" id="ntTog" type="button">收起</button>
+  </div>
+  <div class="stamps">
+    <span class="st" id="st1" data-py="shí yán róng jiě">食盐溶解</span>
+    <span class="st" id="st2" data-py="bái táng róng jiě">白糖溶解</span>
+    <span class="st" id="st3" data-py="wēi guān jiē mì">微观揭秘</span>
+  </div>
+  <div id="ntList"></div>
+</aside>
+
+<div id="winToast">
+  <div class="win-card">
+    <div style="font-size:38px">🏆</div>
+    <h3 style="margin:4px 0;color:#0c4a6e">太棒啦！食盐与白糖溶解实验全部通关！</h3>
+    <div class="win-concl">
+      <b>✨ 科学小结论：</b>食盐和白糖放进水里搅拌后，都会变成肉眼看不见的极小微粒，均匀分散在水中，这就是<b>溶解</b>！它们并没有凭空消失，水尝起来依然是咸的或甜的。
+    </div>
+    <div class="win-quiz">
+      <h4>💡 考考你 · 答对领小红花 🌸</h4>
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:8px">把一勺食盐放进清水里搅拌到看不见盐粒，这时食盐去哪儿了？</div>
+      <div class="qopts" id="qOpts">
+        <button class="qopt" type="button" data-ok="1">🔬 变成极小微粒，均匀分散在水里了</button>
+        <button class="qopt" type="button" data-hint="不对哦！刚才在微观放大镜里看到，食盐没有消失，而是拆分成极小微粒藏在水分子之间呢！">💨 凭空消失不见，水里没有盐了</button>
+        <button class="qopt" type="button" data-hint="不对哦！用沙漏静置观察后杯底清澈没有沉淀，食盐微粒均匀分散在整杯水里了！">💎 全部变成大块沉淀压在杯底</button>
+      </div>
+      <div class="qfb" id="qFb"></div>
+    </div>
+    <div class="win-acts">
+      <button class="tbtn" id="winKeepBtn" type="button">继续玩</button>
+      <button class="tbtn on" id="winAgainBtn" type="button">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js?v=doubao-2"></script>
+<script src="../vendor/voice.js?v=doubao-2"></script>
+<script>
+(function () {
+'use strict';
+
+try { sessionStorage.setItem('xk_last_vol', 'k2a'); } catch (e) {}
+
+var LESSON_ID = 'k2a-03';
+var BOOK_PROGRESS_KEY = 'xk_k2a_progress';
+var $ = function (s) { return document.querySelector(s); };
+var $$ = function (s) { return document.querySelectorAll(s); };
+
+/* ===== 精确拼音渲染与自检 ===== */
+var HAN = /[\u3400-\u9fff]/;
+var pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function ruby(text, py) {
+  if (!py) return esc(text);
+  var syl = py.trim().split(/\s+/), i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) {
+      var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; }
+      out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>';
+    } else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+$$('[data-py]').forEach(function (el) { el.innerHTML = ruby(el.textContent, el.dataset.py); });
+
+/* ===== 音效 + 豆包离线语音 ===== */
+var actx = null;
+function beep(freqs, dur) {
+  try {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    var t = actx.currentTime;
+    freqs.forEach(function (f, idx) {
+      var o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'triangle'; o.frequency.setValueAtTime(f, t + idx * 0.08);
+      g.gain.setValueAtTime(0.001, t + idx * 0.08);
+      g.gain.exponentialRampToValueAtTime(0.11, t + idx * 0.08 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.08 + (dur || 0.2));
+      o.connect(g); g.connect(actx.destination);
+      o.start(t + idx * 0.08); o.stop(t + idx * 0.08 + (dur || 0.22));
+    });
+  } catch (e) {}
+}
+
+var voiceOn = true;
+function stopVoice() {
+  if (window.__xkVoice) window.__xkVoice.stop();
+  else if (window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
+}
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text, '../audio/', true); return; }
+}
+
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem(BOOK_PROGRESS_KEY) || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem(BOOK_PROGRESS_KEY, JSON.stringify(d));
+  } catch (e) {}
+}
+
+/* ===== 通关彩带 ===== */
+var cfCanvas = $('#confetti'), cfCtx = cfCanvas.getContext('2d'), cfParts = [], cfOn = false;
+function fireConfetti() {
+  cfCanvas.width = window.innerWidth; cfCanvas.height = window.innerHeight;
+  cfParts = [];
+  var cols = ['#38bdf8', '#22c55e', '#f59e0b', '#ec4899', '#a855f7', '#fde047'];
+  for (var i = 0; i < 96; i++) {
+    cfParts.push({
+      x: cfCanvas.width * (0.12 + Math.random() * 0.76), y: -15 - Math.random() * 120,
+      vx: (Math.random() - 0.5) * 210, vy: 120 + Math.random() * 200,
+      r: 5 + Math.random() * 5, a: Math.random() * 6.28, va: (Math.random() - 0.5) * 9,
+      c: cols[i % cols.length]
+    });
+  }
+  cfOn = true;
+}
+
+/* ===== Three.js 去塑料感三光 + 深胡桃木桌 + 深海蓝实验垫（U11） ===== */
+var cv = $('#cv');
+var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color('#4a311d');
+var camera = new THREE.PerspectiveCamera(35, 16 / 9, 0.1, 80);
+camera.position.set(0.0, 5.72, 8.72);
+camera.lookAt(-0.12, 0.42, 0.25);
+
+scene.add(new THREE.HemisphereLight('#fff5e6', '#2e1f14', 0.74));
+var keyL = new THREE.DirectionalLight('#fff3df', 0.88);
+keyL.position.set(-4.6, 10.6, 6.2);
+keyL.castShadow = true;
+keyL.shadow.mapSize.set(512, 512);
+keyL.shadow.camera.left = -7.0; keyL.shadow.camera.right = 7.0;
+keyL.shadow.camera.top = 7.0; keyL.shadow.camera.bottom = -7.0;
+keyL.shadow.bias = -0.001;
+scene.add(keyL);
+
+var rimL = new THREE.DirectionalLight('#bae6fd', 0.36);
+rimL.position.set(5.5, 5.8, -4.2);
+scene.add(rimL);
+
+var ramp = new THREE.DataTexture(new Uint8Array([115,115,115,255, 185,185,185,255, 234,234,234,255, 255,255,255,255]), 4, 1, THREE.RGBAFormat);
+ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+
+function toon(hex, extra) {
+  var o = { color: new THREE.Color(hex), gradientMap: ramp };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshToonMaterial(o);
+}
+function mesh(geo, mat) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+function ctex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c);
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+
+// 细腻盐堆/糖堆颗粒程序纹理（柔和明暗层次，绝不死白过曝！）
+var saltTex = ctex(256, 256, function (g, w, h) {
+  var grd = g.createLinearGradient(0, 0, 0, h);
+  grd.addColorStop(0, '#f8fafc');
+  grd.addColorStop(0.55, '#e2e8f0');
+  grd.addColorStop(1, '#cbd5e1');
+  g.fillStyle = grd; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 2400; i++) {
+    var v = 225 + Math.floor(Math.random() * 30);
+    g.fillStyle = Math.random() < 0.35 ? 'rgba(148,163,184,0.28)' : 'rgba(' + v + ',' + v + ',255,0.85)';
+    var s = 1 + Math.random() * 2.4;
+    g.fillRect(Math.random() * w, Math.random() * h, s, s);
+  }
+});
+var sugarTex = ctex(256, 256, function (g, w, h) {
+  var grd = g.createLinearGradient(0, 0, 0, h);
+  grd.addColorStop(0, '#fffdf0');
+  grd.addColorStop(0.55, '#f6e7c1');
+  grd.addColorStop(1, '#dfc896');
+  g.fillStyle = grd; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 2200; i++) {
+    g.fillStyle = Math.random() < 0.4 ? 'rgba(255,255,255,0.82)' : 'rgba(180,140,80,0.25)';
+    var s = 1.4 + Math.random() * 2.8;
+    g.fillRect(Math.random() * w, Math.random() * h, s, s);
+  }
+});
+
+// 深胡桃木桌纹理
+var walnutTex = ctex(512, 512, function (g, w, h) {
+  g.fillStyle = '#5a3a22'; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 110; i++) {
+    g.fillStyle = i % 2 === 0 ? 'rgba(30,15,6,0.13)' : 'rgba(138,94,56,0.08)';
+    g.fillRect(0, Math.random() * h, w, 2 + Math.random() * 5);
+  }
+});
+walnutTex.wrapS = walnutTex.wrapT = THREE.RepeatWrapping; walnutTex.repeat.set(3, 3);
+var deskFloor = new THREE.Mesh(new THREE.PlaneGeometry(55, 55), new THREE.MeshLambertMaterial({ map: walnutTex }));
+deskFloor.rotation.x = -Math.PI / 2; deskFloor.position.y = -0.13; deskFloor.receiveShadow = true;
+scene.add(deskFloor);
+
+var live = new THREE.Group();
+scene.add(live);
+
+// 深海蓝实验垫（简洁清爽，无臃肿大圆盘）
+var matTex = ctex(640, 400, function (g, w, h) {
+  g.fillStyle = '#15304b'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(125,211,252,0.10)'; g.lineWidth = 1.5;
+  for (var x = 28; x < w; x += 32) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); }
+  for (var y = 28; y < h; y += 32) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+  g.strokeStyle = 'rgba(56,189,248,0.65)'; g.lineWidth = 5; g.strokeRect(10, 10, w - 20, h - 20);
+  g.fillStyle = 'rgba(186,230,253,0.45)'; g.font = 'bold 16px "Microsoft YaHei",sans-serif'; g.textAlign = 'center';
+  g.fillText('溶解对比实验区 · 食盐 vs 白糖', w / 2, h - 20);
+});
+var labMat = new THREE.Mesh(
+  new THREE.BoxGeometry(9.2, 0.10, 5.5),
+  [toon('#0d2237'), toon('#0d2237'), new THREE.MeshLambertMaterial({ map: matTex }), toon('#0d2237'), toon('#0d2237'), toon('#0d2237')]
+);
+labMat.position.set(-0.22, -0.05, 0.35); labMat.receiveShadow = true;
+live.add(labMat);
+
+var HIT_MAT = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false });
+var toolVisMeshes = [], toolHitMeshes = [], beakerDropHits = [], bowlDropHits = [];
+
+/* ===== 2 只写实玻璃烧杯（杯① 食盐杯，杯② 白糖杯，远离右上 #notes） ===== */
+var BEAKERS = {};
+
+function buildBeaker(id, label, x, z, grainCol, accentCol) {
+  var g = new THREE.Group();
+  g.position.set(x, 0, z);
+  live.add(g);
+
+  // 低调实验垫细线圆圈标记（非厚重圆盘）
+  var baseMark = new THREE.Mesh(
+    new THREE.RingGeometry(0.75, 0.81, 36),
+    new THREE.MeshBasicMaterial({ color: '#7dd3fc', transparent: true, opacity: 0.32, side: THREE.DoubleSide, depthWrite: false })
+  );
+  baseMark.rotation.x = -Math.PI / 2; baseMark.position.y = 0.008; g.add(baseMark);
+
+  var padRing = new THREE.Mesh(
+    new THREE.RingGeometry(0.82, 0.96, 36),
+    new THREE.MeshBasicMaterial({ color: '#fbbf24', transparent: true, opacity: 0.0, side: THREE.DoubleSide, depthWrite: false })
+  );
+  padRing.rotation.x = -Math.PI / 2; padRing.position.y = 0.012; g.add(padRing);
+
+  // 透明玻璃杯底 + 杯壁 + 倒口唇边 + 刻度线
+  var glassMat = new THREE.MeshPhongMaterial({
+    color: '#e0f2fe', transparent: true, opacity: 0.26, shininess: 130,
+    specular: '#ffffff', side: THREE.DoubleSide, depthWrite: false
+  });
+  var cupWall = new THREE.Mesh(new THREE.CylinderGeometry(0.73, 0.69, 1.62, 32, 1, true), glassMat);
+  cupWall.position.y = 0.84; cupWall.renderOrder = 4; g.add(cupWall);
+
+  var cupBottom = new THREE.Mesh(new THREE.CylinderGeometry(0.69, 0.69, 0.06, 28),
+    new THREE.MeshPhongMaterial({ color: '#bae6fd', transparent: true, opacity: 0.42, shininess: 120, depthWrite: false }));
+  cupBottom.position.y = 0.04; g.add(cupBottom);
+
+  var rim = new THREE.Mesh(new THREE.TorusGeometry(0.73, 0.028, 12, 32),
+    new THREE.MeshPhongMaterial({ color: '#f0f9ff', transparent: true, opacity: 0.78, shininess: 140, specular: '#ffffff' }));
+  rim.rotation.x = Math.PI / 2; rim.position.y = 1.65; g.add(rim);
+
+  // 拖拽经过烧杯口时亮起的金色光环提示可松手！
+  var rimGlow = new THREE.Mesh(
+    new THREE.TorusGeometry(0.78, 0.046, 12, 36),
+    new THREE.MeshBasicMaterial({ color: '#fbbf24', transparent: true, opacity: 0.0, depthWrite: false })
+  );
+  rimGlow.rotation.x = Math.PI / 2; rimGlow.position.y = 1.66; rimGlow.renderOrder = 7; g.add(rimGlow);
+
+  // 玻璃反光条 + 刻度线
+  var hiStrip = new THREE.Mesh(new THREE.PlaneGeometry(0.10, 1.32),
+    new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.28, depthWrite: false }));
+  hiStrip.position.set(-0.46, 0.86, 0.54); hiStrip.rotation.y = -0.58; g.add(hiStrip);
+
+  for (var k = 0; k < 4; k++) {
+    var tick = new THREE.Mesh(new THREE.BoxGeometry(k % 2 === 0 ? 0.24 : 0.15, 0.015, 0.015),
+      new THREE.MeshBasicMaterial({ color: '#e0f2fe', transparent: true, opacity: 0.68 }));
+    tick.position.set(0.32, 0.36 + k * 0.28, 0.63); tick.rotation.y = 0.42; g.add(tick);
+  }
+
+  // 清澈水体 + 水面
+  var waterMat = new THREE.MeshPhongMaterial({
+    color: '#38bdf8', transparent: true, opacity: 0.27, shininess: 100,
+    specular: '#e0f2fe', depthWrite: false
+  });
+  var waterCyl = new THREE.Mesh(new THREE.CylinderGeometry(0.66, 0.63, 1.12, 28), waterMat);
+  waterCyl.position.y = 0.63; waterCyl.renderOrder = 2; g.add(waterCyl);
+
+  var waterTop = new THREE.Mesh(new THREE.CircleGeometry(0.66, 28),
+    new THREE.MeshPhongMaterial({ color: '#7dd3fc', transparent: true, opacity: 0.40, shininess: 120, side: THREE.DoubleSide, depthWrite: false }));
+  waterTop.rotation.x = -Math.PI / 2; waterTop.position.y = 1.19; waterTop.renderOrder = 3; g.add(waterTop);
+
+  // 搅拌漩涡环
+  var swirlGroup = new THREE.Group();
+  swirlGroup.position.y = 1.205;
+  swirlGroup.visible = false;
+  [0.18, 0.34, 0.50].forEach(function (rad, idx) {
+    var arc = new THREE.Mesh(
+      new THREE.RingGeometry(rad, rad + 0.038, 24, 1, idx * 1.4, Math.PI * 1.35),
+      new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.78, side: THREE.DoubleSide, depthWrite: false })
+    );
+    arc.rotation.x = -Math.PI / 2;
+    swirlGroup.add(arc);
+  });
+  g.add(swirlGroup);
+
+  // 杯底清晰颗粒堆（34 颗立体晶体 + 锥堆）
+  var grainsGroup = new THREE.Group();
+  g.add(grainsGroup);
+  var grains = [];
+  var grainGeo = id === 'salt' ? new THREE.BoxGeometry(0.075, 0.075, 0.075) : new THREE.OctahedronGeometry(0.064, 0);
+  var grainMat = new THREE.MeshPhongMaterial({
+    color: grainCol, shininess: 90, specular: '#ffffff'
+  });
+  for (var i = 0; i < 34; i++) {
+    var ang = Math.random() * Math.PI * 2;
+    var rad0 = Math.sqrt(Math.random()) * 0.45;
+    var layerY = 0.10 + (1 - rad0 / 0.50) * 0.14 + Math.random() * 0.03;
+    var gm = new THREE.Mesh(grainGeo, grainMat);
+    gm.position.set(Math.cos(ang) * rad0, layerY, Math.sin(ang) * rad0);
+    gm.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3);
+    gm.visible = false;
+    grainsGroup.add(gm);
+    grains.push({
+      m: gm, baseAng: ang, baseR: rad0, baseY: layerY,
+      swirlSpeed: 4.5 + Math.random() * 3.5, liftAmp: 0.25 + Math.random() * 0.55
+    });
+  }
+
+  var moundMat = new THREE.MeshLambertMaterial({
+    map: id === 'salt' ? saltTex : sugarTex, transparent: true, opacity: 0.94
+  });
+  var mound = new THREE.Mesh(new THREE.ConeGeometry(0.42, 0.22, 20), moundMat);
+  mound.position.y = 0.18;
+  mound.visible = false;
+  g.add(mound);
+
+  // 超大透明 Mesh 碰撞体（用于屏幕射线 100% 命中！）
+  var hitBox = new THREE.Mesh(new THREE.CylinderGeometry(0.98, 0.94, 2.08, 16), HIT_MAT);
+  hitBox.position.y = 1.02;
+  hitBox.userData.beakerId = id;
+  g.add(hitBox);
+  beakerDropHits.push(hitBox);
+
+  var tag = document.createElement('div');
+  tag.className = 'ntag beaker';
+  tag.textContent = label + ' · 清水';
+  $('#nameTags').appendChild(tag);
+
+  var b = {
+    id: id, label: label, x: x, z: z, g: g,
+    padRing: padRing, rimGlow: rimGlow, waterMat: waterMat, swirlGroup: swirlGroup,
+    grains: grains, mound: mound, moundMat: moundMat, tagEl: tag,
+    added: false, stirring: false, stirT: 0, dissolveProg: 0,
+    dissolved: false, settled: false, settleT: 0, microSeen: false,
+    everDissolved: false, everSettled: false
+  };
+  BEAKERS[id] = b;
+  return b;
+}
+
+buildBeaker('salt', '杯① 食盐杯', -0.52, -0.78, '#f8fafc', '#38bdf8');
+buildBeaker('sugar', '杯② 白糖杯', 1.44, -0.78, '#fef3c7', '#f59e0b');
+
+/* ===== 桌面 3D 道具精雕（零厚重圆盘底座，用低调细圆线标记！） ===== */
+var TOOLS = {};
+
+function createCeramicBowlMesh(outerHex, innerHex, lipHex, radius) {
+  var r = radius || 0.44;
+  var pts = [
+    new THREE.Vector2(0.01, 0.0),
+    new THREE.Vector2(r * 0.56, 0.0),
+    new THREE.Vector2(r * 0.60, 0.04),
+    new THREE.Vector2(r * 0.84, 0.14),
+    new THREE.Vector2(r * 0.98, 0.27),
+    new THREE.Vector2(r * 1.00, 0.36),
+    new THREE.Vector2(r * 0.92, 0.37),
+    new THREE.Vector2(r * 0.86, 0.26),
+    new THREE.Vector2(r * 0.68, 0.13),
+    new THREE.Vector2(0.01, 0.09)
+  ];
+  var geo = new THREE.LatheGeometry(pts, 22);
+  var mat = new THREE.MeshPhongMaterial({
+    color: outerHex, shininess: 95, specular: '#ffffff'
+  });
+  var bowl = mesh(geo, mat);
+  var lip = new THREE.Mesh(
+    new THREE.TorusGeometry(r * 0.96, 0.022, 8, 22),
+    new THREE.MeshPhongMaterial({ color: lipHex || '#f8fafc', shininess: 110, specular: '#ffffff' })
+  );
+  lip.rotation.x = Math.PI / 2; lip.position.y = 0.365;
+  bowl.add(lip);
+  var innerDisk = new THREE.Mesh(
+    new THREE.CircleGeometry(r * 0.82, 24),
+    new THREE.MeshLambertMaterial({ color: innerHex })
+  );
+  innerDisk.rotation.x = -Math.PI / 2; innerDisk.position.y = 0.24;
+  bowl.add(innerDisk);
+  return bowl;
+}
+
+function registerTool(id, grp, homePos, ringCol, tagText, tagY, tagCls, stationR) {
+  var sr = stationR || 0.48;
+  // 极简低调实验垫圆圈标记线（彻底去掉巨大刺眼彩色圆盘底座！）
+  var stationLine = new THREE.Mesh(
+    new THREE.RingGeometry(sr, sr + 0.032, 36),
+    new THREE.MeshBasicMaterial({ color: ringCol, transparent: true, opacity: 0.36, side: THREE.DoubleSide, depthWrite: false })
+  );
+  stationLine.rotation.x = -Math.PI / 2; stationLine.position.set(homePos.x, 0.008, homePos.z);
+  live.add(stationLine);
+
+  var padRing = new THREE.Mesh(
+    new THREE.RingGeometry(sr + 0.04, sr + 0.13, 36),
+    new THREE.MeshBasicMaterial({ color: '#fbbf24', transparent: true, opacity: 0.0, side: THREE.DoubleSide, depthWrite: false })
+  );
+  padRing.rotation.x = -Math.PI / 2; padRing.position.set(homePos.x, 0.012, homePos.z);
+  live.add(padRing);
+
+  var hitSph = new THREE.Mesh(new THREE.SphereGeometry(0.64, 12, 10), HIT_MAT);
+  hitSph.position.set(0, 0.38, 0);
+  hitSph.userData.isHitHelper = true;
+  grp.add(hitSph);
+
+  grp.position.copy(homePos);
+  live.add(grp);
+
+  var tag = document.createElement('div');
+  tag.className = 'ntag tool' + (tagCls ? ' ' + tagCls : '');
+  tag.textContent = tagText;
+  $('#nameTags').appendChild(tag);
+
+  var rec = {
+    id: id, g: grp, home: homePos.clone(), goal: homePos.clone(),
+    stationLine: stationLine, padRing: padRing, tagEl: tag, tagY: tagY || 0.88,
+    tiltT: 0, flipT: 0, stirCup: null, halo: null
+  };
+  grp.traverse(function (ch) {
+    if (ch.isMesh) {
+      ch.userData.toolRef = rec;
+      if (ch.userData.isHitHelper) toolHitMeshes.push(ch);
+      else toolVisMeshes.push(ch);
+    }
+  });
+  TOOLS[id] = rec;
+  return rec;
+}
+
+// 1. 🧂 食盐碗（深青瓷碗 + 细腻雪白盐粒堆，左后方，与白糖碗左右大错位绝不遮挡！）
+(function buildSaltBowl() {
+  var g = new THREE.Group();
+  var bowl = createCeramicBowlMesh('#0d5f73', '#083a47', '#e0f2fe', 0.45);
+  g.add(bowl);
+
+  var heap = mesh(new THREE.ConeGeometry(0.39, 0.25, 24), new THREE.MeshLambertMaterial({ map: saltTex }));
+  heap.position.y = 0.37; g.add(heap);
+  // 细腻小盐粒点缀
+  var crMat = new THREE.MeshPhongMaterial({ color: '#ffffff', shininess: 120, specular: '#ffffff' });
+  for (var i = 0; i < 16; i++) {
+    var a = i * 2.399;
+    var r = 0.08 + (i / 16) * 0.26;
+    var cr = new THREE.Mesh(new THREE.BoxGeometry(0.034, 0.034, 0.034), crMat);
+    cr.position.set(Math.cos(a) * r, 0.48 - r * 0.52, Math.sin(a) * r);
+    cr.rotation.set(i * 0.7, i * 1.1, i * 0.4);
+    g.add(cr);
+  }
+  var halo = new THREE.Mesh(
+    new THREE.TorusGeometry(0.47, 0.036, 10, 32),
+    new THREE.MeshBasicMaterial({ color: '#fbbf24', transparent: true, opacity: 0.0, depthWrite: false })
+  );
+  halo.rotation.x = Math.PI / 2; halo.position.y = 0.39; g.add(halo);
+
+  var dropHit = new THREE.Mesh(new THREE.CylinderGeometry(0.76, 0.76, 0.96, 14), HIT_MAT);
+  dropHit.position.y = 0.42; dropHit.userData.bowlKind = 'salt'; dropHit.userData.isHitHelper = true;
+  g.add(dropHit);
+  bowlDropHits.push(dropHit);
+
+  var rec = registerTool('salt', g, new THREE.Vector3(-3.58, 0.01, -0.45), '#38bdf8', '🧂 食盐碗', 0.80, '', 0.46);
+  rec.halo = halo;
+})();
+
+// 2. 🍬 白糖碗（暖粉瓷碗 + 晶莹半透明颗粒堆，右前方明显错位！）
+(function buildSugarBowl() {
+  var g = new THREE.Group();
+  var bowl = createCeramicBowlMesh('#d96b86', '#9d3c56', '#fff1f2', 0.45);
+  g.add(bowl);
+
+  var heap = mesh(new THREE.ConeGeometry(0.39, 0.24, 24), new THREE.MeshLambertMaterial({ map: sugarTex }));
+  heap.position.y = 0.36; g.add(heap);
+  var crMat = new THREE.MeshPhongMaterial({ color: '#fffbeb', transparent: true, opacity: 0.88, shininess: 150, specular: '#ffffff' });
+  for (var i = 0; i < 16; i++) {
+    var a = i * 2.399 + 0.5;
+    var r = 0.07 + (i / 16) * 0.26;
+    var cr = new THREE.Mesh(new THREE.OctahedronGeometry(0.032, 0), crMat);
+    cr.position.set(Math.cos(a) * r, 0.47 - r * 0.50, Math.sin(a) * r);
+    cr.rotation.set(i, i * 0.5, 0);
+    g.add(cr);
+  }
+  var halo = new THREE.Mesh(
+    new THREE.TorusGeometry(0.47, 0.036, 10, 32),
+    new THREE.MeshBasicMaterial({ color: '#fbbf24', transparent: true, opacity: 0.0, depthWrite: false })
+  );
+  halo.rotation.x = Math.PI / 2; halo.position.y = 0.39; g.add(halo);
+
+  var dropHit = new THREE.Mesh(new THREE.CylinderGeometry(0.76, 0.76, 0.96, 14), HIT_MAT);
+  dropHit.position.y = 0.42; dropHit.userData.bowlKind = 'sugar'; dropHit.userData.isHitHelper = true;
+  g.add(dropHit);
+  bowlDropHits.push(dropHit);
+
+  var rec = registerTool('sugar', g, new THREE.Vector3(-2.18, 0.01, 0.52), '#f472b6', '🍬 白糖碗', 0.80, 'rose', 0.46);
+  rec.halo = halo;
+})();
+
+// 3. 🥄 不锈钢小勺（精雕弧度曲面勺斗 + 细颈金属光泽银灰勺柄 + 尾端圆孔 + 动态舀盐/舀糖堆！）
+var spoonSaltHeap = null, spoonSugarHeap = null;
+(function buildSpoon() {
+  var g = new THREE.Group();
+  var steelMat = new THREE.MeshPhongMaterial({
+    color: '#d8e1eb', shininess: 155, specular: '#ffffff', side: THREE.DoubleSide
+  });
+  var steelDark = new THREE.MeshPhongMaterial({
+    color: '#94a3b8', shininess: 120, specular: '#f1f5f9'
+  });
+
+  // 桌面极简小勺托架（横托勺颈，让整把不锈钢勺优雅舒展）
+  var restBar = mesh(new THREE.CylinderGeometry(0.032, 0.040, 0.28, 12), toon('#475569'));
+  restBar.rotation.z = Math.PI / 2; restBar.position.set(0.08, 0.035, 0); restBar.castShadow = false;
+  // 勺身独立组（倾斜/舀料时整体随动）
+  var spoonBody = new THREE.Group();
+  spoonBody.rotation.y = 0.35; // 微微斜摆，3D 立体轮廓一眼可辨！
+  g.add(spoonBody);
+
+  // (a) 真正带弧度的深凹椭圆勺斗（Lathe 曲面壳体 + 圆滑边沿）
+  var scoopPts = [
+    new THREE.Vector2(0.005, 0.0),
+    new THREE.Vector2(0.08, 0.012),
+    new THREE.Vector2(0.15, 0.045),
+    new THREE.Vector2(0.19, 0.105),
+    new THREE.Vector2(0.20, 0.145)
+  ];
+  var scoopGeo = new THREE.LatheGeometry(scoopPts, 24);
+  var scoop = mesh(scoopGeo, steelMat);
+  scoop.scale.set(0.78, 0.88, 1.18);
+  scoop.position.set(0, 0.08, -0.34);
+  spoonBody.add(scoop);
+
+  var scoopRim = new THREE.Mesh(new THREE.TorusGeometry(0.196, 0.012, 8, 24), steelMat);
+  scoopRim.rotation.x = Math.PI / 2;
+  scoopRim.scale.set(0.78, 1.18, 1);
+  scoopRim.position.set(0, 0.208, -0.34);
+  spoonBody.add(scoopRim);
+
+  // (b) 细颈优雅微弯金属勺柄（CatmullRomCurve3 曲面管 + 渐变宽扁尾端）
+  var handleCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0, 0.19, -0.13),
+    new THREE.Vector3(0, 0.22, 0.04),
+    new THREE.Vector3(0, 0.26, 0.26),
+    new THREE.Vector3(0, 0.29, 0.48),
+    new THREE.Vector3(0, 0.30, 0.62)
+  ]);
+  var neckTube = mesh(new THREE.TubeGeometry(handleCurve, 22, 0.028, 10, false), steelMat);
+  neckTube.scale.set(1.25, 0.55, 1.0);
+  neckTube.position.y = 0.09;
+  spoonBody.add(neckTube);
+
+  // 勺柄微宽金属握段
+  var tailGrip = mesh(new THREE.CylinderGeometry(0.056, 0.036, 0.32, 14), steelMat);
+  tailGrip.scale.set(1.15, 1, 0.36);
+  tailGrip.rotation.x = Math.PI / 2 - 0.10;
+  tailGrip.position.set(0, 0.24, 0.46);
+  spoonBody.add(tailGrip);
+
+  // (c) 尾端圆孔挂环（真实汤勺标志细节！）
+  var endRing = mesh(new THREE.TorusGeometry(0.056, 0.017, 10, 20), steelDark);
+  endRing.rotation.x = Math.PI / 2 - 0.10;
+  endRing.position.set(0, 0.26, 0.65);
+  spoonBody.add(endRing);
+
+  // (d) 舀起的盐粒/糖粒堆（空勺时隐藏，舀到盐或糖立刻装满！）
+  spoonSaltHeap = mesh(new THREE.SphereGeometry(0.13, 16, 12), new THREE.MeshLambertMaterial({ map: saltTex }));
+  spoonSaltHeap.scale.set(0.86, 0.56, 1.18);
+  spoonSaltHeap.position.set(0, 0.21, -0.34);
+  spoonSaltHeap.visible = false;
+  spoonBody.add(spoonSaltHeap);
+
+  spoonSugarHeap = mesh(new THREE.SphereGeometry(0.13, 16, 12), new THREE.MeshLambertMaterial({ map: sugarTex }));
+  spoonSugarHeap.scale.set(0.86, 0.56, 1.18);
+  spoonSugarHeap.position.set(0, 0.21, -0.34);
+  spoonSugarHeap.visible = false;
+  spoonBody.add(spoonSugarHeap);
+
+  registerTool('spoon', g, new THREE.Vector3(-2.78, 0.02, 1.98), '#94a3b8', '🥄 不锈钢小勺', 0.68, 'steel', 0.48);
+})();
+
+// 4. 🔄 玻璃搅拌棒（精致高硼硅细玻璃棒 + 圆润端头）
+(function buildRod() {
+  var g = new THREE.Group();
+  var rodGlass = new THREE.MeshPhongMaterial({
+    color: '#d6f0ff', transparent: true, opacity: 0.72, shininess: 160, specular: '#ffffff'
+  });
+  var coreMat = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.42 });
+
+  var rodAssembly = new THREE.Group();
+  rodAssembly.rotation.z = -0.18;
+  g.add(rodAssembly);
+
+  var shaft = mesh(new THREE.CylinderGeometry(0.036, 0.036, 1.32, 18), rodGlass);
+  shaft.position.y = 0.70; rodAssembly.add(shaft);
+  var innerCore = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, 1.28, 10), coreMat);
+  innerCore.position.y = 0.70; rodAssembly.add(innerCore);
+  var topCap = mesh(new THREE.SphereGeometry(0.038, 12, 10), rodGlass);
+  topCap.position.y = 1.36; rodAssembly.add(topCap);
+  var botCap = mesh(new THREE.SphereGeometry(0.038, 12, 10), rodGlass);
+  botCap.position.y = 0.04; rodAssembly.add(botCap);
+  // 细巧蓝色防滑硅胶识别环
+  var band = mesh(new THREE.TorusGeometry(0.044, 0.013, 8, 18), toon('#0ea5e9'));
+  band.rotation.x = Math.PI / 2; band.position.y = 1.16; rodAssembly.add(band);
+
+  registerTool('rod', g, new THREE.Vector3(-1.08, 0.02, 1.98), '#38bdf8', '🔄 玻璃搅拌棒', 1.46, '', 0.40);
+})();
+
+// 5. ⏳ 3D 沙漏（合比例精致玻璃双锥体 + 胡桃木上下盖 + 细金沙流，中心枢轴翻转绝不穿地！）
+var sandTopCone = null, sandBotCone = null, sandStream = null, hgPivot = null;
+(function buildHourglass() {
+  var g = new THREE.Group();
+  hgPivot = new THREE.Group();
+  hgPivot.position.y = 0.405;
+  g.add(hgPivot);
+
+  var woodMat = new THREE.MeshPhongMaterial({ color: '#784826', shininess: 42, specular: '#d4a259' });
+  var brassMat = new THREE.MeshPhongMaterial({ color: '#d4a259', shininess: 120, specular: '#fef08a' });
+
+  var botCap = mesh(new THREE.CylinderGeometry(0.27, 0.30, 0.055, 24), woodMat);
+  botCap.position.y = 0.03 - 0.405; hgPivot.add(botCap);
+  var topCap = mesh(new THREE.CylinderGeometry(0.30, 0.27, 0.055, 24), woodMat);
+  topCap.position.y = 0.78 - 0.405; hgPivot.add(topCap);
+
+  for (var i = 0; i < 3; i++) {
+    var a = i * Math.PI * 2 / 3 + 0.4;
+    var pillar = mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.72, 10), brassMat);
+    pillar.position.set(Math.cos(a) * 0.23, 0, Math.sin(a) * 0.23); hgPivot.add(pillar);
+  }
+
+  var bulbPts = [
+    new THREE.Vector2(0.01, 0.058 - 0.405),
+    new THREE.Vector2(0.19, 0.062 - 0.405),
+    new THREE.Vector2(0.20, 0.16 - 0.405),
+    new THREE.Vector2(0.14, 0.29 - 0.405),
+    new THREE.Vector2(0.028, 0),
+    new THREE.Vector2(0.14, 0.52 - 0.405),
+    new THREE.Vector2(0.20, 0.65 - 0.405),
+    new THREE.Vector2(0.19, 0.75 - 0.405),
+    new THREE.Vector2(0.01, 0.752 - 0.405)
+  ];
+  var glMat = new THREE.MeshPhongMaterial({
+    color: '#e0f2fe', transparent: true, opacity: 0.36, shininess: 140,
+    specular: '#ffffff', side: THREE.DoubleSide, depthWrite: false
+  });
+  var bulb = new THREE.Mesh(new THREE.LatheGeometry(bulbPts, 24), glMat);
+  bulb.renderOrder = 4; hgPivot.add(bulb);
+
+  var sandMat = new THREE.MeshLambertMaterial({ color: '#eab308' });
+  sandTopCone = mesh(new THREE.ConeGeometry(0.14, 0.20, 16), sandMat);
+  sandTopCone.rotation.x = Math.PI; sandTopCone.position.y = 0.54 - 0.405; hgPivot.add(sandTopCone);
+  sandBotCone = mesh(new THREE.ConeGeometry(0.15, 0.17, 16), sandMat);
+  sandBotCone.position.y = 0.15 - 0.405; hgPivot.add(sandBotCone);
+  sandStream = mesh(new THREE.CylinderGeometry(0.010, 0.010, 0.28, 8), sandMat);
+  sandStream.position.y = 0.31 - 0.405; sandStream.visible = false; hgPivot.add(sandStream);
+
+  registerTool('hourglass', g, new THREE.Vector3(0.62, 0.02, 1.98), '#f59e0b', '⏳ 3D沙漏（静置）', 0.96, 'amber', 0.42);
+})();
+
+// 6. 🔍 微观放大镜（精致圆木柄 + 金属铜/蓝镜框 + 半透明淡蓝反光镜片，微倾 25° 展示立体感，零大绿圆盘！）
+(function buildMagnifier() {
+  var g = new THREE.Group();
+  var magTilt = new THREE.Group();
+  magTilt.rotation.x = -0.44; // 微微倾斜 25° 立体展示镜面反光！
+  magTilt.rotation.y = -0.20;
+  magTilt.position.set(0, 0.08, 0);
+  g.add(magTilt);
+
+  var woodHandleMat = new THREE.MeshPhongMaterial({ color: '#7c4a2a', shininess: 48, specular: '#d4a259' });
+  var copperMat = new THREE.MeshPhongMaterial({ color: '#c0843d', shininess: 135, specular: '#fef08a' });
+  var frameBlueMat = new THREE.MeshPhongMaterial({ color: '#1d4ed8', shininess: 115, specular: '#93c5fd' });
+
+  // 车制圆木柄（优雅收腰曲线）
+  var hPts = [
+    new THREE.Vector2(0.008, 0.0),
+    new THREE.Vector2(0.048, 0.015),
+    new THREE.Vector2(0.058, 0.12),
+    new THREE.Vector2(0.050, 0.28),
+    new THREE.Vector2(0.044, 0.40),
+    new THREE.Vector2(0.052, 0.44)
+  ];
+  var handle = mesh(new THREE.LatheGeometry(hPts, 18), woodHandleMat);
+  magTilt.add(handle);
+
+  // 铜质手柄端帽与连接套箍
+  var pommel = mesh(new THREE.SphereGeometry(0.048, 14, 10), copperMat);
+  pommel.scale.set(1, 0.65, 1); pommel.position.y = 0.012; magTilt.add(pommel);
+  var ferrule = mesh(new THREE.CylinderGeometry(0.052, 0.056, 0.08, 16), copperMat);
+  ferrule.position.y = 0.46; magTilt.add(ferrule);
+
+  // 金属双层镜框（铜金外圈 + 光学蓝内圈，纤细精致！）
+  var outerRim = mesh(new THREE.TorusGeometry(0.28, 0.030, 10, 24), copperMat);
+  outerRim.position.set(0, 0.78, 0); magTilt.add(outerRim);
+  var innerRim = mesh(new THREE.TorusGeometry(0.252, 0.014, 8, 22), frameBlueMat);
+  innerRim.position.set(0, 0.78, 0); magTilt.add(innerRim);
+
+  // 真实双凸透镜玻璃片 + 弧形高光反射
+  var lensMat = new THREE.MeshPhongMaterial({
+    color: '#bae6fd', transparent: true, opacity: 0.42, shininess: 180, specular: '#ffffff', side: THREE.DoubleSide
+  });
+  var lens = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 12), lensMat);
+  lens.scale.set(1, 1, 0.18);
+  lens.position.set(0, 0.78, 0);
+  lens.renderOrder = 5;
+  magTilt.add(lens);
+
+  var glint = new THREE.Mesh(
+    new THREE.RingGeometry(0.16, 0.20, 20, 1, Math.PI * 0.62, Math.PI * 0.34),
+    new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.68, side: THREE.DoubleSide, depthWrite: false })
+  );
+  glint.position.set(0, 0.78, 0.048); magTilt.add(glint);
+
+  registerTool('magnifier', g, new THREE.Vector3(2.26, 0.02, 1.98), '#2dd4bf', '🔍 微观放大镜', 1.34, 'teal', 0.44);
+})();
+
+/* ===== 粒子特效（倒盐/倒糖倾洒、金星，严格 D4 定时销毁） ===== */
+var fxParts = [];
+function spawnFX(x, y, z, colHex, count, durSec, mode) {
+  var maxL = durSec || 1.4;
+  for (var i = 0; i < count; i++) {
+    var geo = mode === 'star' ? new THREE.OctahedronGeometry(0.068, 0) : new THREE.BoxGeometry(0.052, 0.052, 0.052);
+    var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: colHex, transparent: true, opacity: 0.95 }));
+    m.position.set(x + (Math.random() - 0.5) * 0.24, y + Math.random() * 0.22, z + (Math.random() - 0.5) * 0.24);
+    live.add(m);
+    fxParts.push({
+      m: m,
+      vx: (Math.random() - 0.5) * (mode === 'pour' ? 0.32 : 0.88),
+      vy: mode === 'pour' ? (-1.2 - Math.random() * 0.55) : (0.8 + Math.random() * 0.65),
+      vz: (Math.random() - 0.5) * (mode === 'pour' ? 0.32 : 0.88),
+      grav: mode === 'pour' ? -1.8 : -0.3,
+      life: maxL, maxLife: maxL
+    });
+  }
+}
+
+/* ===== 280x280 圆形高清 2D Canvas 微观特写镜渲染器 ===== */
+var microCv = $('#microCv'), mCtx = microCv.getContext('2d');
+var microOpen = false, microCupId = 'salt', microMode = 'dissolved', microT = 0;
+var microWaterMols = [], microSoluteMols = [];
+
+function initMicroParticles(cupId, mode) {
+  microCupId = cupId;
+  microMode = mode;
+  microT = 0;
+  microWaterMols = [];
+  microSoluteMols = [];
+  for (var i = 0; i < 34; i++) {
+    microWaterMols.push({
+      x: 20 + Math.random() * 240, y: 20 + Math.random() * 240,
+      vx: (Math.random() - 0.5) * 32, vy: (Math.random() - 0.5) * 32,
+      r: 8 + Math.random() * 3, ph: Math.random() * 6.28
+    });
+  }
+  for (var j = 0; j < 28; j++) {
+    var ang = Math.random() * 6.28;
+    var rad = 18 + Math.random() * 98;
+    microSoluteMols.push({
+      cx: 140 + (j % 7 - 3) * 10, cy: 140 + (Math.floor(j / 7) - 1.5) * 10,
+      tx: 140 + Math.cos(ang) * rad, ty: 140 + Math.sin(ang) * rad,
+      vx: (Math.random() - 0.5) * 38, vy: (Math.random() - 0.5) * 38,
+      x: 140, y: 140, ph: Math.random() * 6.28
+    });
+  }
+}
+
+function drawMicroCanvas(dt) {
+  if (!microOpen) return;
+  microT += dt;
+  var w = 280, h = 280;
+  var grd = mCtx.createRadialGradient(110, 95, 18, 140, 140, 148);
+  grd.addColorStop(0, '#0ea5e9');
+  grd.addColorStop(0.65, '#0369a1');
+  grd.addColorStop(1, '#082f49');
+  mCtx.fillStyle = grd;
+  mCtx.fillRect(0, 0, w, h);
+
+  mCtx.strokeStyle = 'rgba(186,230,253,0.16)';
+  mCtx.lineWidth = 1;
+  mCtx.beginPath();
+  mCtx.moveTo(140, 10); mCtx.lineTo(140, 270);
+  mCtx.moveTo(10, 140); mCtx.lineTo(270, 140);
+  mCtx.stroke();
+
+  microWaterMols.forEach(function (wm) {
+    wm.x += wm.vx * dt; wm.y += wm.vy * dt;
+    if (wm.x < 18 || wm.x > 262) wm.vx *= -1;
+    if (wm.y < 18 || wm.y > 262) wm.vy *= -1;
+    mCtx.fillStyle = 'rgba(125,211,252,0.52)';
+    mCtx.beginPath(); mCtx.arc(wm.x, wm.y, wm.r, 0, Math.PI * 2); mCtx.fill();
+    mCtx.fillStyle = 'rgba(224,242,254,0.75)';
+    mCtx.beginPath(); mCtx.arc(wm.x - 3, wm.y - 3, wm.r * 0.32, 0, Math.PI * 2); mCtx.fill();
+  });
+
+  var isSalt = (microCupId === 'salt');
+  if (microMode === 'unstirred') {
+    mCtx.fillStyle = isSalt ? '#ffffff' : '#fef08a';
+    mCtx.strokeStyle = isSalt ? '#94a3b8' : '#d97706';
+    mCtx.lineWidth = 2;
+    for (var k = 0; k < 14; k++) {
+      var bx = 78 + (k % 5) * 26 + Math.sin(k * 2.1) * 5;
+      var by = 188 + Math.floor(k / 5) * 20;
+      mCtx.fillRect(bx, by, 22, 22);
+      mCtx.strokeRect(bx, by, 22, 22);
+    }
+    mCtx.fillStyle = '#fef08a';
+    mCtx.font = 'bold 13px "Microsoft YaHei",sans-serif';
+    mCtx.textAlign = 'center';
+    mCtx.fillText('大晶体抱团沉底，还没散开！', 140, 48);
+  } else {
+    var spread = Math.min(1, microT / 1.55);
+    var ease = 1 - Math.pow(1 - spread, 3);
+    microSoluteMols.forEach(function (sm) {
+      if (spread < 1) {
+        sm.x = sm.cx + (sm.tx - sm.cx) * ease;
+        sm.y = sm.cy + (sm.ty - sm.cy) * ease;
+      } else {
+        sm.x += sm.vx * dt; sm.y += sm.vy * dt;
+        var dx = sm.x - 140, dy = sm.y - 140;
+        if (Math.hypot(dx, dy) > 118) { sm.vx *= -1; sm.vy *= -1; }
+      }
+      var sz = 7.5 - 3.2 * ease;
+      mCtx.fillStyle = isSalt ? '#ffffff' : '#fde047';
+      mCtx.shadowColor = isSalt ? '#ffffff' : '#fbbf24';
+      mCtx.shadowBlur = 7;
+      mCtx.beginPath();
+      if (isSalt) mCtx.fillRect(sm.x - sz, sm.y - sz, sz * 2, sz * 2);
+      else { mCtx.arc(sm.x, sm.y, sz, 0, Math.PI * 2); mCtx.fill(); }
+      mCtx.shadowBlur = 0;
+    });
+
+    mCtx.fillStyle = 'rgba(8,47,73,0.82)';
+    mCtx.fillRect(36, 232, 208, 28);
+    mCtx.fillStyle = isSalt ? '#ffffff' : '#fde047';
+    mCtx.fillRect(48, 241, 10, 10);
+    mCtx.fillStyle = '#e0f2fe';
+    mCtx.font = 'bold 12px "Microsoft YaHei",sans-serif';
+    mCtx.textAlign = 'left';
+    mCtx.fillText(isSalt ? '食盐微粒' : '白糖微粒', 64, 250);
+    mCtx.fillStyle = '#7dd3fc';
+    mCtx.beginPath(); mCtx.arc(146, 246, 5, 0, Math.PI * 2); mCtx.fill();
+    mCtx.fillStyle = '#e0f2fe';
+    mCtx.fillText('水分子', 156, 250);
+  }
+
+  mCtx.strokeStyle = 'rgba(255,255,255,0.28)';
+  mCtx.lineWidth = 5;
+  mCtx.beginPath();
+  mCtx.arc(140, 140, 126, -Math.PI * 0.78, -Math.PI * 0.45);
+  mCtx.stroke();
+}
+
+function openMicroScope(cupId, mode) {
+  var isSalt = (cupId === 'salt');
+  initMicroParticles(cupId, mode);
+  microOpen = true;
+  $('#microTitle').textContent = isSalt ? '🔬 微观特写镜 · 杯① 食盐水' : '🔬 微观特写镜 · 杯② 白糖水';
+  if (mode === 'unstirred') {
+    $('#microCap').textContent = isSalt
+      ? '放大镜下：白色食盐晶体还大块抱团沉在杯底，快用搅拌棒搅一搅！'
+      : '放大镜下：白糖颗粒还大块沉在杯底，快用搅拌棒搅一搅！';
+  } else {
+    $('#microCap').textContent = isSalt
+      ? '看！白色食盐大晶体拆分成极小微粒，均匀分散在蓝色水分子之间！'
+      : '看！白糖晶体也拆分成极小微粒，均匀分散在蓝色水分子之间！';
+  }
+  $('#microWrap').classList.add('show');
+}
+function closeMicroScope() {
+  microOpen = false;
+  $('#microWrap').classList.remove('show');
+}
+$('#microClose').addEventListener('click', closeMicroScope);
+
+/* ===== 科学流程状态、自然双路径舀盐 + 防呆与严苛通关判定 ===== */
+var found = {}, stamps = { s1: false, s2: false, s3: false };
+var celebrated = false, demo = false, resetGen = 0;
+var curGuideSpeech = '第1步：拖或点左侧的食盐碗（或用小勺舀盐），把一勺食盐倒入杯①！';
+var forceCueTarget = null, forceCueTimer = null;
+var spoonCarrying = null; // null | 'salt' | 'sugar'
+
+function setSpoonCarry(kind) {
+  spoonCarrying = kind;
+  if (spoonSaltHeap) spoonSaltHeap.visible = (kind === 'salt');
+  if (spoonSugarHeap) spoonSugarHeap.visible = (kind === 'sugar');
+  TOOLS.spoon.tagEl.textContent = kind === 'salt' ? '🥄 小勺（已盛食盐）' : (kind === 'sugar' ? '🥄 小勺（已盛白糖）' : '🥄 不锈钢小勺');
+}
+
+function markInteracted() { document.body.classList.add('interacted'); }
+
+function popLabelAt3D(worldPos, text, cls) {
+  var v = worldPos.clone().project(camera);
+  var x = (v.x * 0.5 + 0.5) * window.innerWidth;
+  var y = (-v.y * 0.5 + 0.5) * window.innerHeight;
+  var el = document.createElement('div');
+  el.className = 'popword' + (cls ? ' ' + cls : '');
+  el.textContent = text;
+  el.style.left = Math.max(120, Math.min(window.innerWidth - 120, x)) + 'px';
+  el.style.top = Math.max(82, Math.min(window.innerHeight - 100, y - 16)) + 'px';
+  $('#labels').appendChild(el);
+  setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 2050);
+}
+
+function addDiscovery(key, html, spoken) {
+  if (!found[key]) {
+    found[key] = true;
+    var el = document.createElement('div');
+    el.className = 'stk';
+    el.innerHTML = html;
+    $('#ntList').prepend(el);
+    $('#ntCnt').textContent = Object.keys(found).length;
+  }
+  checkMilestones();
+  if (spoken && !demo) speak(spoken);
+}
+
+function lightStamp(id, key) {
+  if (!stamps[key]) {
+    stamps[key] = true;
+    var el = $('#' + id);
+    if (el) el.classList.add('lit');
+    beep([523, 659, 784], 0.2);
+  }
+}
+
+function updateBeakerTag(b) {
+  var status = '清水';
+  b.tagEl.classList.remove('done');
+  if (b.stirring) status = '搅拌溶解中...';
+  else if (b.added && !b.dissolved) status = '杯底有颗粒';
+  else if (b.dissolved && !b.settled) status = '已看不见颗粒';
+  else if (b.settled && !b.microSeen) status = '清澈无沉淀 ✓';
+  else if (b.settled && b.microSeen) { status = '溶解+微观 ✓'; b.tagEl.classList.add('done'); }
+  b.tagEl.textContent = b.label + ' · ' + status;
+}
+
+function countMilestones() {
+  var n = 0;
+  if (BEAKERS.salt.everSettled) n++;
+  if (BEAKERS.salt.microSeen) n++;
+  if (BEAKERS.sugar.everSettled) n++;
+  if (BEAKERS.sugar.microSeen) n++;
+  return n;
+}
+
+function checkMilestones() {
+  var bs = BEAKERS.salt, bg = BEAKERS.sugar;
+  if (bs.everSettled) lightStamp('st1', 's1');
+  if (bg.everSettled) lightStamp('st2', 's2');
+  if (bs.microSeen && bg.microSeen) lightStamp('st3', 's3');
+
+  $('#progNum').textContent = countMilestones() + ' / 4';
+  updateBeakerTag(bs);
+  updateBeakerTag(bg);
+  updateGuide(false);
+
+  if (!demo && !celebrated && bs.everSettled && bg.everSettled && bs.microSeen && bg.microSeen) {
+    celebrated = true;
+    saveProgress(LESSON_ID, true);
+    fireConfetti();
+    beep([523, 659, 784, 1046], 0.28);
+    var g = resetGen;
+    setTimeout(function () {
+      if (g !== resetGen) return;
+      closeMicroScope();
+      $('#winToast').classList.add('show');
+      speak('太棒啦！食盐和白糖的溶解实验和微观观察都完成了！它们并没有消失，而是均匀分散在水里，快来看看科学小结论并领小红花吧！', true);
+    }, 900);
+  }
+}
+
+function updateGuide(speakIt) {
+  Object.keys(TOOLS).forEach(function (k) { TOOLS[k].tagEl.classList.remove('pulse'); });
+  var bs = BEAKERS.salt, bg = BEAKERS.sugar;
+  $('#guideBar').classList.remove('done');
+
+  if (spoonCarrying === 'salt') {
+    curGuideSpeech = '小勺已舀起食盐！把小勺拖到杯①上方松手倒进去吧！';
+    TOOLS.spoon.tagEl.classList.add('pulse');
+  } else if (spoonCarrying === 'sugar') {
+    curGuideSpeech = '小勺已舀起白糖！把小勺拖到杯②上方松手倒进去吧！';
+    TOOLS.spoon.tagEl.classList.add('pulse');
+  } else if (!bs.everSettled) {
+    if (!bs.added && !bs.dissolved) {
+      curGuideSpeech = '第1步：拖或点左侧的食盐碗（或拿小勺去舀盐），倒入杯①！';
+      TOOLS.salt.tagEl.classList.add('pulse');
+    } else if (bs.added && !bs.dissolved) {
+      curGuideSpeech = '第2步：杯底有白色盐粒！拿起玻璃搅拌棒搅一搅杯①吧！';
+      TOOLS.rod.tagEl.classList.add('pulse');
+    } else {
+      curGuideSpeech = '第3步：盐粒看不见啦！点桌上的 3D 沙漏静置观察杯①！';
+      TOOLS.hourglass.tagEl.classList.add('pulse');
+    }
+  } else if (!bs.microSeen) {
+    curGuideSpeech = '第4步：盐真的消失了吗？拖或点微观放大镜贴近杯①看看！';
+    TOOLS.magnifier.tagEl.classList.add('pulse');
+  } else if (!bg.everSettled) {
+    if (!bg.added && !bg.dissolved) {
+      curGuideSpeech = '第5步：再来对比白糖！拖或点粉色的白糖碗（或用小勺舀糖）倒入杯②！';
+      TOOLS.sugar.tagEl.classList.add('pulse');
+    } else if (bg.added && !bg.dissolved) {
+      curGuideSpeech = '第6步：白糖沉在杯②底部啦！拿起玻璃搅拌棒搅一搅杯②！';
+      TOOLS.rod.tagEl.classList.add('pulse');
+    } else {
+      curGuideSpeech = '第7步：点 3D 沙漏静置观察杯②，看看杯底有没有沉淀！';
+      TOOLS.hourglass.tagEl.classList.add('pulse');
+    }
+  } else if (!bg.microSeen) {
+    curGuideSpeech = '最后一步：用微观放大镜贴近杯②，看看白糖微粒跑哪儿去了！';
+    TOOLS.magnifier.tagEl.classList.add('pulse');
+  } else {
+    $('#guideBar').classList.add('done');
+    curGuideSpeech = '太棒啦！食盐和白糖都能溶解，还可以继续加盐加糖自由探索！';
+  }
+  $('#guideTxt').textContent = curGuideSpeech;
+  $('#guideBar').classList.remove('flash');
+  void $('#guideBar').offsetWidth;
+  $('#guideBar').classList.add('flash');
+  if (speakIt) speak(curGuideSpeech, true);
+}
+
+/* ===== 核心实验操作（碗倒 / 小勺舀盐倒 → 搅拌 → 沙漏静置 → 微观放大镜） ===== */
+function setForceCue(toolId, ms) {
+  forceCueTarget = toolId;
+  if (forceCueTimer) clearTimeout(forceCueTimer);
+  var g = resetGen;
+  forceCueTimer = setTimeout(function () {
+    if (g === resetGen) forceCueTarget = null;
+  }, ms || 4200);
+}
+
+function scoopWithSpoon(kind, silent) {
+  if (spoonCarrying === kind) return;
+  setSpoonCarry(kind);
+  beep([587, 740], 0.12);
+  var bowlPos = TOOLS[kind].g.position;
+  spawnFX(bowlPos.x, 0.56, bowlPos.z, kind === 'salt' ? 0xffffff : 0xfef08a, 8, 0.7, 'star');
+  popLabelAt3D(new THREE.Vector3(bowlPos.x, 0.95, bowlPos.z),
+    kind === 'salt' ? '🥄 舀起一勺食盐！快拖进杯①' : '🥄 舀起一勺白糖！快拖进杯②', 'good');
+  if (!silent && !demo) {
+    speak(kind === 'salt'
+      ? '舀起一勺白色食盐啦！把小勺拖到杯一上方倒进去吧！'
+      : '舀起一勺白糖啦！把小勺拖到杯二上方倒进去吧！', true);
+  }
+  updateGuide(false);
+}
+
+function pourIntoBeaker(kind) {
+  markInteracted();
+  var b = BEAKERS[kind];
+  if (b.stirring) return;
+  b.added = true;
+  b.dissolved = false;
+  b.settled = false;
+  b.dissolveProg = 0;
+  b.mound.visible = true;
+  b.mound.scale.set(1, 1, 1);
+  b.moundMat.opacity = 0.94;
+  b.grains.forEach(function (gr) {
+    gr.m.visible = true;
+    gr.m.scale.setScalar(1);
+    gr.m.position.set(Math.cos(gr.baseAng) * gr.baseR, gr.baseY, Math.sin(gr.baseAng) * gr.baseR);
+  });
+  spawnFX(b.x, 1.68, b.z, kind === 'salt' ? 0xffffff : 0xfef08a, 16, 0.95, 'pour');
+  beep([480, 560], 0.14);
+  if (kind === 'salt') {
+    popLabelAt3D(new THREE.Vector3(b.x, 1.78, b.z), '🧂 食盐沉在杯①底部！', '');
+    addDiscovery('salt_add', '🧂 <b>杯① 加盐</b>：白色食盐粒清晰沉在杯底', '食盐倒进杯一啦！看，白色食盐粒清楚地沉在杯底，拿起玻璃搅拌棒搅一搅吧！');
+  } else {
+    popLabelAt3D(new THREE.Vector3(b.x, 1.78, b.z), '🍬 白糖沉在杯②底部！', '');
+    addDiscovery('sugar_add', '🍬 <b>杯② 加糖</b>：白糖颗粒沉在杯底', '白糖倒进杯二啦！白糖粒也沉在杯底，拿起玻璃搅拌棒搅一搅看看！');
+  }
+}
+
+function stirBeaker(cupId) {
+  markInteracted();
+  var b = BEAKERS[cupId];
+  if (!b.added && !b.dissolved) {
+    TOOLS.rod.goal.copy(TOOLS.rod.home);
+    beep([320, 260], 0.15);
+    popLabelAt3D(new THREE.Vector3(b.x, 1.78, b.z), '💧 还是清水呢！先加' + (cupId === 'salt' ? '食盐' : '白糖') + '吧', 'warn');
+    setForceCue(cupId, 3500);
+    if (!demo) speak(cupId === 'salt' ? '杯一里现在还是清水呢，先往杯一里加一勺食盐再搅拌吧！' : '杯二里现在还是清水呢，先往杯二里加一勺白糖再搅拌吧！', true);
+    return;
+  }
+  if (b.stirring) return;
+  forceCueTarget = null;
+  b.stirring = true;
+  b.stirT = 1.65;
+  b.swirlGroup.visible = true;
+  TOOLS.rod.stirCup = b;
+  beep([523, 587, 659, 784], 0.16);
+  popLabelAt3D(new THREE.Vector3(b.x, 1.86, b.z), '🔄 搅拌形成漩涡，颗粒慢慢变小...', '');
+  updateBeakerTag(b);
+
+  var g = resetGen;
+  setTimeout(function () {
+    if (g !== resetGen) return;
+    b.stirring = false;
+    b.dissolved = true;
+    b.everDissolved = true;
+    b.swirlGroup.visible = false;
+    b.mound.visible = false;
+    b.grains.forEach(function (gr) { gr.m.visible = false; });
+    TOOLS.rod.stirCup = null;
+    TOOLS.rod.goal.copy(TOOLS.rod.home);
+    spawnFX(b.x, 1.25, b.z, 0x7dd3fc, 10, 1.3, 'star');
+    beep([587, 740, 880], 0.2);
+    if (cupId === 'salt') {
+      popLabelAt3D(new THREE.Vector3(b.x, 1.82, b.z), '✨ 盐粒越来越小，肉眼看不见了！', 'good');
+      addDiscovery('salt_stir', '🔄 <b>杯① 搅拌</b>：盐粒随漩涡变小直至看不见', '哇！杯一水面转出漩涡，食盐粒越来越小，肉眼看不见啦！点一下沙漏静置观察吧！');
+    } else {
+      popLabelAt3D(new THREE.Vector3(b.x, 1.82, b.z), '✨ 白糖粒也完全看不见了！', 'good');
+      addDiscovery('sugar_stir', '🔄 <b>杯② 搅拌</b>：白糖粒随漩涡变小直至看不见', '哇！杯二里的白糖粒也越转越小看不见了！点一下沙漏静置观察有没有沉淀吧！');
+    }
+  }, 1650);
+}
+
+function settleWithHourglass(targetCupId) {
+  markInteracted();
+  var b = targetCupId ? BEAKERS[targetCupId] : null;
+  if (!b) {
+    if (BEAKERS.salt.dissolved && !BEAKERS.salt.settled) b = BEAKERS.salt;
+    else if (BEAKERS.sugar.dissolved && !BEAKERS.sugar.settled) b = BEAKERS.sugar;
+    else if (BEAKERS.salt.added && !BEAKERS.salt.dissolved) b = BEAKERS.salt;
+    else if (BEAKERS.sugar.added && !BEAKERS.sugar.dissolved) b = BEAKERS.sugar;
+    else b = BEAKERS.salt;
+  }
+
+  if (b.added && !b.dissolved) {
+    TOOLS.hourglass.flipT = 1.1;
+    beep([290, 230], 0.18);
+    setForceCue('rod', 4800);
+    if (b.id === 'salt') {
+      popLabelAt3D(new THREE.Vector3(b.x, 1.82, b.z), '⏳ 盐粒还沉在杯底！先用搅拌棒搅一搅', 'warn');
+      if (!demo) speak('盐粒都沉在杯底还没散开呢，拿起玻璃搅拌棒搅一搅看看！', true);
+    } else {
+      popLabelAt3D(new THREE.Vector3(b.x, 1.82, b.z), '⏳ 白糖还沉在杯底！先用搅拌棒搅一搅', 'warn');
+      if (!demo) speak('白糖粒都沉在杯底还没散开呢，拿起玻璃搅拌棒搅一搅看看！', true);
+    }
+    return;
+  }
+
+  if (!b.added && !b.dissolved) {
+    beep([310, 260], 0.15);
+    popLabelAt3D(new THREE.Vector3(b.x, 1.78, b.z), '💧 还没加材料呢，先倒食盐或白糖吧！', 'warn');
+    if (!demo) speak('水杯里还是清水呢，先往杯子里倒食盐或白糖再静置观察吧！', true);
+    return;
+  }
+
+  TOOLS.hourglass.flipT = 1.45;
+  b.settleT = 1.35;
+  beep([523, 659], 0.16);
+  popLabelAt3D(new THREE.Vector3(b.x, 1.82, b.z), '⏳ 沙漏静置观察中...', '');
+
+  var g = resetGen;
+  setTimeout(function () {
+    if (g !== resetGen) return;
+    b.settled = true;
+    b.everSettled = true;
+    spawnFX(b.x, 1.25, b.z, 0xfde047, 10, 1.4, 'star');
+    beep([523, 659, 784], 0.22);
+    if (b.id === 'salt') {
+      popLabelAt3D(new THREE.Vector3(b.x, 1.86, b.z), '✓ 静置后依然清澈无沉淀！', 'good');
+      addDiscovery('salt_settle', '⏳ <b>杯① 静置</b>：水清澈透明，杯底无盐沉淀', '静置一会儿后，杯一的水清澈透明，杯底一点沉淀也没有！快拿微观放大镜贴近杯一看看盐跑哪儿去了！');
+    } else {
+      popLabelAt3D(new THREE.Vector3(b.x, 1.86, b.z), '✓ 静置后依然清澈无沉淀！', 'good');
+      addDiscovery('sugar_settle', '⏳ <b>杯② 静置</b>：水清澈透明，杯底无糖沉淀', '静置后杯二的水也清澈透明没有沉淀！快用微观放大镜贴近杯二看一看白糖微粒吧！');
+    }
+  }, 1100);
+}
+
+function inspectWithMagnifier(cupId) {
+  markInteracted();
+  var b = BEAKERS[cupId];
+  var g = resetGen;
+  TOOLS.magnifier.goal.set(b.x + 0.52, 0.85, b.z + 0.65);
+
+  if (b.added && !b.dissolved) {
+    openMicroScope(cupId, 'unstirred');
+    beep([290, 230], 0.18);
+    setForceCue('rod', 4800);
+    if (cupId === 'salt') {
+      popLabelAt3D(new THREE.Vector3(b.x, 1.86, b.z), '🔍 盐粒抱团沉底啦！先用搅拌棒搅一搅', 'warn');
+      if (!demo) speak('盐粒都沉在杯底还没散开呢，拿起玻璃搅拌棒搅一搅看看！', true);
+    } else {
+      popLabelAt3D(new THREE.Vector3(b.x, 1.86, b.z), '🔍 白糖抱团沉底啦！先用搅拌棒搅一搅', 'warn');
+      if (!demo) speak('白糖粒都沉在杯底还没散开呢，拿起玻璃搅拌棒搅一搅看看！', true);
+    }
+    setTimeout(function () { if (g === resetGen && draggingTool !== TOOLS.magnifier) TOOLS.magnifier.goal.copy(TOOLS.magnifier.home); }, 1250);
+    return;
+  }
+
+  if (!b.added && !b.dissolved) {
+    beep([310, 260], 0.15);
+    popLabelAt3D(new THREE.Vector3(b.x, 1.80, b.z), '💧 里面只有清水分子哦，先加盐或加糖！', 'warn');
+    if (!demo) speak('杯子里现在只有清水呢，先倒食盐或白糖并搅拌后再用放大镜观察吧！', true);
+    setTimeout(function () { if (g === resetGen && draggingTool !== TOOLS.magnifier) TOOLS.magnifier.goal.copy(TOOLS.magnifier.home); }, 950);
+    return;
+  }
+
+  openMicroScope(cupId, 'dissolved');
+  b.microSeen = true;
+  spawnFX(b.x, 1.35, b.z, 0x2dd4bf, 12, 1.5, 'star');
+  beep([587, 740, 880, 1046], 0.22);
+  if (cupId === 'salt') {
+    popLabelAt3D(new THREE.Vector3(b.x, 1.88, b.z), '🔬 盐微粒均匀分散在水中！', 'good');
+    addDiscovery('salt_micro', '🔬 <b>食盐微观</b>：拆分成极小微粒均匀分散在水中，没有消失！', '看微观放大镜！白色食盐大晶体拆分成无数极小微粒，均匀分散在蓝色水分子之间！原来盐不是没了，是溶解在水里了！');
+  } else {
+    popLabelAt3D(new THREE.Vector3(b.x, 1.88, b.z), '🔬 白糖也均匀分散在水中！', 'good');
+    addDiscovery('sugar_micro', '🔬 <b>白糖微观</b>：和食盐一样拆分成极小微粒均匀溶解！', '看微观放大镜！白糖也拆分成极小微粒均匀分散在水里，和食盐一样都能溶解！');
+  }
+  setTimeout(function () {
+    if (g === resetGen && draggingTool !== TOOLS.magnifier) TOOLS.magnifier.goal.copy(TOOLS.magnifier.home);
+  }, 1450);
+}
+
+/* ===== 指哪落哪 100% 命中拖放引擎（屏幕射线直测超大碰撞体优先 + 宽松 3D/屏幕兜底） ===== */
+var ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+var dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.95);
+var dragPt = new THREE.Vector3();
+var draggingTool = null, armedTool = null;
+var hoveredBeaker = null, hoveredBowlKind = null;
+var downX = 0, downY = 0, didDrag = false;
+var tmpProj = new THREE.Vector3();
+
+function getNDCFromXY(clientX, clientY) {
+  var r = cv.getBoundingClientRect();
+  ptr.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
+}
+
+function projectToScreen(x, y, z) {
+  tmpProj.set(x, y, z).project(camera);
+  return { x: (tmpProj.x * 0.5 + 0.5) * window.innerWidth, y: (-tmpProj.y * 0.5 + 0.5) * window.innerHeight };
+}
+
+function detectDropTarget(clientX, clientY, toolId) {
+  getNDCFromXY(clientX, clientY);
+  ray.setFromCamera(ptr, camera);
+
+  // 1. 屏幕射线直测烧杯超大透明碰撞体（最高优先级，指哪落哪！）
+  var bHits = ray.intersectObjects(beakerDropHits, false);
+  if (bHits.length) {
+    return { type: 'beaker', beaker: BEAKERS[bHits[0].object.userData.beakerId] };
+  }
+
+  // 2. 若拖着不锈钢小勺，屏幕射线直测食盐碗/白糖碗碰撞体（舀盐/舀糖！）
+  if (toolId === 'spoon') {
+    var bowlHits = ray.intersectObjects(bowlDropHits, false);
+    if (bowlHits.length) {
+      return { type: 'bowl', kind: bowlHits[0].object.userData.bowlKind };
+    }
+  }
+
+  // 3. 宽松屏幕像素距离 + 3D 水平距离兜底
+  var bestB = null, bestScore = 1e9;
+  var hasPlane = !!ray.ray.intersectPlane(dragPlane, dragPt);
+  Object.keys(BEAKERS).forEach(function (k) {
+    var b = BEAKERS[k];
+    var sp = projectToScreen(b.x, 1.0, b.z);
+    var pxD = Math.hypot(sp.x - clientX, sp.y - clientY);
+    var d3 = hasPlane ? Math.hypot(b.x - dragPt.x, b.z - dragPt.z) : 99;
+    if ((pxD < 120 || d3 < 1.55) && pxD < bestScore) {
+      bestScore = pxD; bestB = b;
+    }
+  });
+  if (bestB) return { type: 'beaker', beaker: bestB };
+
+  if (toolId === 'spoon') {
+    var bestBowl = null, bestBS = 1e9;
+    ['salt', 'sugar'].forEach(function (k) {
+      var tl = TOOLS[k];
+      var sp = projectToScreen(tl.home.x, 0.36, tl.home.z);
+      var pxD = Math.hypot(sp.x - clientX, sp.y - clientY);
+      var d3 = hasPlane ? Math.hypot(tl.home.x - dragPt.x, tl.home.z - dragPt.z) : 99;
+      if ((pxD < 95 || d3 < 1.15) && pxD < bestBS) {
+        bestBS = pxD; bestBowl = k;
+      }
+    });
+    if (bestBowl) return { type: 'bowl', kind: bestBowl };
+  }
+  return null;
+}
+
+function clearDropHighlights() {
+  hoveredBeaker = null;
+  hoveredBowlKind = null;
+  Object.keys(BEAKERS).forEach(function (k) {
+    BEAKERS[k].padRing.material.opacity = 0;
+    BEAKERS[k].rimGlow.material.opacity = 0;
+  });
+  ['salt', 'sugar'].forEach(function (k) {
+    if (TOOLS[k] && TOOLS[k].halo) TOOLS[k].halo.material.opacity = 0;
+  });
+}
+
+function flyToolAction(tl, cupId) {
+  var g = resetGen;
+  armedTool = null;
+  if (tl.id === 'salt' || tl.id === 'sugar') {
+    var targetId = tl.id;
+    var tb = BEAKERS[targetId];
+    tl.goal.set(tb.x - 0.56, 1.78, tb.z + 0.14);
+    tl.tiltT = 0.85;
+    pourIntoBeaker(targetId);
+    setTimeout(function () { if (g === resetGen && draggingTool !== tl) tl.goal.copy(tl.home); }, 820);
+  } else if (tl.id === 'spoon') {
+    var sId = cupId || spoonCarrying || ((!BEAKERS.salt.everSettled && !BEAKERS.salt.added) ? 'salt' : ((!BEAKERS.sugar.everSettled && !BEAKERS.sugar.added) ? 'sugar' : 'salt'));
+    var sb = BEAKERS[sId];
+    if (!spoonCarrying) setSpoonCarry(sId);
+    tl.goal.set(sb.x - 0.15, 1.82, sb.z + 0.28);
+    tl.tiltT = 0.85;
+    pourIntoBeaker(sId);
+    setTimeout(function () {
+      if (g !== resetGen) return;
+      setSpoonCarry(null);
+      if (draggingTool !== tl) tl.goal.copy(tl.home);
+      updateGuide(false);
+    }, 780);
+  } else if (tl.id === 'rod') {
+    stirBeaker(cupId);
+  } else if (tl.id === 'hourglass') {
+    settleWithHourglass(cupId);
+  } else if (tl.id === 'magnifier') {
+    inspectWithMagnifier(cupId);
+  }
+}
+
+cv.addEventListener('pointerdown', function (e) {
+  markInteracted();
+  getNDCFromXY(e.clientX, e.clientY);
+  ray.setFromCamera(ptr, camera);
+  downX = e.clientX; downY = e.clientY; didDrag = false;
+
+  // 1. 优先拾取桌面 3D 道具（可视 Mesh → 宽松透明碰撞体）
+  var tHits = ray.intersectObjects(toolVisMeshes, false);
+  if (!tHits.length) tHits = ray.intersectObjects(toolHitMeshes, false);
+  if (tHits.length) {
+    draggingTool = tHits[0].object.userData.toolRef;
+    cv.classList.add('grabbing');
+    beep([494], 0.08);
+    return;
+  }
+
+  // 2. 点击烧杯（若手持道具则作用，否则给明确语音引导 D8）
+  var bHits = ray.intersectObjects(beakerDropHits, false);
+  if (bHits.length) {
+    var cupId = bHits[0].object.userData.beakerId;
+    if (armedTool) {
+      flyToolAction(armedTool, cupId);
+      return;
+    }
+    var b = BEAKERS[cupId];
+    beep([440], 0.08);
+    if (!b.added && !b.dissolved) {
+      popLabelAt3D(new THREE.Vector3(b.x, 1.78, b.z), cupId === 'salt' ? '👆 拖/点食盐碗倒进杯①' : '👆 拖/点白糖碗倒进杯②', '');
+      speak(cupId === 'salt' ? '这是杯一清水杯，拖或点左侧食盐碗把一勺盐倒进来吧！' : '这是杯二清水杯，拖或点粉色白糖碗把一勺糖倒进来吧！', true);
+    } else if (b.added && !b.dissolved) {
+      popLabelAt3D(new THREE.Vector3(b.x, 1.78, b.z), '🔄 拿起玻璃搅拌棒搅一搅！', '');
+      speak('杯底有颗粒还没散开，拖或点玻璃搅拌棒来搅一搅吧！', true);
+    } else if (b.dissolved && !b.settled) {
+      popLabelAt3D(new THREE.Vector3(b.x, 1.78, b.z), '⏳ 点 3D 沙漏静置观察！', '');
+      speak('颗粒看不见了，点一下沙漏静置观察有没有沉淀吧！', true);
+    } else {
+      inspectWithMagnifier(cupId);
+    }
+  }
+});
+
+window.addEventListener('pointermove', function (e) {
+  if (!draggingTool) return;
+  if (!didDrag && Math.hypot(e.clientX - downX, e.clientY - downY) >= 14) didDrag = true;
+  if (!didDrag) return;
+
+  armedTool = null;
+  var hit = detectDropTarget(e.clientX, e.clientY, draggingTool.id);
+  clearDropHighlights();
+
+  if (hit && hit.type === 'beaker') {
+    hoveredBeaker = hit.beaker;
+    hoveredBeaker.rimGlow.material.opacity = 0.92;
+    hoveredBeaker.padRing.material.opacity = 0.85;
+    // 拖拽经过有效烧杯时自然对齐烧杯口上方，手眼合一！
+    var b = hit.beaker;
+    if (draggingTool.id === 'salt' || draggingTool.id === 'sugar') {
+      draggingTool.goal.set(b.x - 0.48, 1.72, b.z + 0.14);
+    } else if (draggingTool.id === 'spoon') {
+      draggingTool.goal.set(b.x - 0.08, 1.76, b.z + 0.26);
+    } else if (draggingTool.id === 'magnifier') {
+      draggingTool.goal.set(b.x + 0.45, 0.92, b.z + 0.62);
+    } else {
+      draggingTool.goal.set(b.x, 1.38, b.z + 0.15);
+    }
+    return;
+  }
+
+  if (hit && hit.type === 'bowl' && draggingTool.id === 'spoon') {
+    hoveredBowlKind = hit.kind;
+    var bowlTl = TOOLS[hit.kind];
+    if (bowlTl.halo) bowlTl.halo.material.opacity = 0.92;
+    // 只有空勺经过碗上方时才自动舀起；若已盛盐/糖，路过邻碗绝不误覆盖！
+    if (!spoonCarrying) {
+      draggingTool.goal.set(bowlTl.home.x + 0.18, 0.72, bowlTl.home.z + 0.25);
+      scoopWithSpoon(hit.kind, false);
+      return;
+    }
+  }
+
+  // 普通自由拖拽（平面高度与视觉高度精确匹配 y = 0.95！）
+  getNDCFromXY(e.clientX, e.clientY);
+  ray.setFromCamera(ptr, camera);
+  if (ray.ray.intersectPlane(dragPlane, dragPt)) {
+    var gx = Math.max(-4.1, Math.min(3.5, dragPt.x));
+    var gz = Math.max(-1.6, Math.min(2.6, dragPt.z));
+    draggingTool.goal.set(gx, 0.95, gz);
+  }
+});
+
+window.addEventListener('pointerup', function (e) {
+  cv.classList.remove('grabbing');
+  if (!draggingTool) return;
+  var tl = draggingTool;
+  draggingTool = null;
+  clearDropHighlights();
+
+  if (!didDrag) {
+    // 轻点单通道自动飞去 / 智能直达（6-8 岁友好 U8）
+    if (tl.id === 'salt') { flyToolAction(tl, 'salt'); return; }
+    if (tl.id === 'sugar') { flyToolAction(tl, 'sugar'); return; }
+    if (tl.id === 'spoon') { flyToolAction(tl, spoonCarrying || null); return; }
+    if (tl.id === 'rod') {
+      if (BEAKERS.salt.added && !BEAKERS.salt.dissolved) { stirBeaker('salt'); return; }
+      if (BEAKERS.sugar.added && !BEAKERS.sugar.dissolved) { stirBeaker('sugar'); return; }
+      if (armedTool === tl) { stirBeaker(BEAKERS.salt.added ? 'salt' : 'sugar'); armedTool = null; return; }
+      armedTool = tl;
+      tl.goal.set(tl.home.x, tl.home.y + 0.35, tl.home.z);
+      popLabelAt3D(tl.g.position.clone().add(new THREE.Vector3(0, 1.35, 0)), '🔄 点杯①或杯②开始搅拌！', '');
+      speak('拿起玻璃搅拌棒啦！点杯一或杯二就能搅拌！');
+      return;
+    }
+    if (tl.id === 'hourglass') { settleWithHourglass(null); return; }
+    if (tl.id === 'magnifier') {
+      var pick = null;
+      if (BEAKERS.salt.everSettled && !BEAKERS.salt.microSeen) pick = 'salt';
+      else if (BEAKERS.sugar.everSettled && !BEAKERS.sugar.microSeen) pick = 'sugar';
+      else if (BEAKERS.salt.dissolved && !BEAKERS.salt.microSeen) pick = 'salt';
+      else if (BEAKERS.sugar.dissolved && !BEAKERS.sugar.microSeen) pick = 'sugar';
+      else if (BEAKERS.salt.added && !BEAKERS.salt.dissolved) pick = 'salt';
+      else if (BEAKERS.sugar.added && !BEAKERS.sugar.dissolved) pick = 'sugar';
+      else pick = (microOpen && microCupId === 'salt') ? 'sugar' : 'salt';
+      inspectWithMagnifier(pick);
+      return;
+    }
+    return;
+  }
+
+  // 真实鼠标松手检测（屏幕射线优先，100% 命中！）
+  var hit = detectDropTarget(e.clientX, e.clientY, tl.id);
+  if (hit && hit.type === 'bowl' && tl.id === 'spoon') {
+    scoopWithSpoon(hit.kind, false);
+    tl.goal.copy(tl.home);
+    return;
+  }
+  if (hit && hit.type === 'beaker') {
+    var dropB = hit.beaker;
+    if (tl.id === 'salt' || tl.id === 'sugar') {
+      if (dropB.id !== tl.id) {
+        // 温情提醒对应杯子，同时也可引导正确杯口
+        popLabelAt3D(new THREE.Vector3(dropB.x, 1.80, dropB.z),
+          tl.id === 'salt' ? '🧂 食盐请倒入左侧杯①哦！' : '🍬 白糖请倒入右侧杯②哦！', 'warn');
+        speak(tl.id === 'salt' ? '杯二是留给白糖对比的，把食盐倒入左边的杯一里吧！' : '杯一是食盐杯，把白糖倒入右边的杯二里对比吧！', true);
+        tl.goal.copy(tl.home);
+        return;
+      }
+      flyToolAction(tl, dropB.id);
+    } else if (tl.id === 'spoon') {
+      var targetKind = spoonCarrying || dropB.id;
+      if (spoonCarrying && spoonCarrying !== dropB.id) {
+        popLabelAt3D(new THREE.Vector3(dropB.x, 1.80, dropB.z),
+          spoonCarrying === 'salt' ? '🥄 勺里是食盐，请倒入杯①哦！' : '🥄 勺里是白糖，请倒入杯②哦！', 'warn');
+        speak(spoonCarrying === 'salt' ? '小勺里盛的是食盐，请倒入左边的杯一里吧！' : '小勺里盛的是白糖，请倒入右边的杯二里吧！', true);
+        tl.goal.copy(tl.home);
+        return;
+      }
+      flyToolAction(tl, targetKind);
+    } else if (tl.id === 'rod') {
+      stirBeaker(dropB.id);
+    } else if (tl.id === 'hourglass') {
+      tl.goal.copy(tl.home);
+      settleWithHourglass(dropB.id);
+    } else if (tl.id === 'magnifier') {
+      inspectWithMagnifier(dropB.id);
+    }
+  } else {
+    tl.goal.copy(tl.home);
+  }
+});
+
+/* ===== HUD 与弹窗事件 ===== */
+$('#backBtn').addEventListener('click', function () { try { sessionStorage.setItem('xk_last_vol', 'k2a'); } catch (e) {} });
+$('#voiceBtn').addEventListener('click', function () {
+  markInteracted();
+  voiceOn = !voiceOn;
+  this.classList.toggle('on', voiceOn);
+  if (voiceOn) updateGuide(true); else stopVoice();
+});
+$('#guideBar').addEventListener('click', function () { markInteracted(); updateGuide(true); });
+$('#resetBtn').addEventListener('click', resetAll);
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+$('#winKeepBtn').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgainBtn').addEventListener('click', resetAll);
+$('#qOpts').addEventListener('click', function (e) {
+  var b = e.target.closest('.qopt'); if (!b) return;
+  if (b.dataset.ok === '1') {
+    b.classList.add('ok');
+    $('#qFb').textContent = '🌸 答对啦！获得本课小红花！';
+    saveProgress(LESSON_ID, true);
+    beep([523, 659, 784, 1046], 0.24);
+    speak('答对啦！食盐变成极小微粒均匀分散在水里了，没有消失，获得本课小红花！', true);
+  } else {
+    b.classList.add('bad');
+    beep([260, 220], 0.16);
+    var h = b.dataset.hint || '再想想哦！';
+    $('#qFb').textContent = '💡 ' + h;
+    speak(h, true);
+  }
+});
+
+/* ===== 演示模式（全程不触发通关） ===== */
+function startDemo() {
+  markInteracted();
+  resetAll();
+  demo = true;
+  $('#demoBtn').classList.add('on');
+  var g = resetGen;
+  var steps = [
+    function () { flyToolAction(TOOLS.salt, 'salt'); speak('第1步，把白色食盐倒进杯一，看杯底清楚的白色盐粒！', true); },
+    function () { stirBeaker('salt'); speak('第2步，用玻璃搅拌棒搅一搅，盐粒随漩涡越变越小看不见了！', true); },
+    function () { settleWithHourglass('salt'); speak('第3步，点沙漏静置观察，水清澈透明没有沉淀！', true); },
+    function () { inspectWithMagnifier('salt'); speak('第4步，用微观放大镜看看，食盐拆分成极小微粒均匀分散在水中！用同样方法测白糖就能通关啦！', true); },
+    function () { demo = false; $('#demoBtn').classList.remove('on'); resetAll(); }
+  ];
+  steps.forEach(function (fn, idx) { setTimeout(function () { if (g === resetGen) fn(); }, idx * 3200); });
+}
+$('#demoBtn').addEventListener('click', startDemo);
+
+function resetAll() {
+  resetGen++;
+  stopVoice();
+  demo = false;
+  $('#demoBtn').classList.remove('on');
+  closeMicroScope();
+  found = {}; stamps = { s1: false, s2: false, s3: false }; celebrated = false;
+  draggingTool = null; armedTool = null; forceCueTarget = null;
+  setSpoonCarry(null);
+  clearDropHighlights();
+  if (forceCueTimer) { clearTimeout(forceCueTimer); forceCueTimer = null; }
+  cv.classList.remove('grabbing');
+
+  Object.keys(BEAKERS).forEach(function (k) {
+    var b = BEAKERS[k];
+    b.added = false; b.stirring = false; b.stirT = 0; b.dissolveProg = 0;
+    b.dissolved = false; b.settled = false; b.settleT = 0; b.microSeen = false;
+    b.everDissolved = false; b.everSettled = false;
+    b.swirlGroup.visible = false;
+    b.mound.visible = false;
+    b.grains.forEach(function (gr) { gr.m.visible = false; gr.m.scale.setScalar(1); });
+    updateBeakerTag(b);
+  });
+  Object.keys(TOOLS).forEach(function (k) {
+    var tl = TOOLS[k];
+    tl.goal.copy(tl.home); tl.g.position.copy(tl.home);
+    tl.g.rotation.set(0, 0, 0);
+    tl.tiltT = 0; tl.flipT = 0; tl.stirCup = null;
+  });
+  if (hgPivot) hgPivot.rotation.set(0, 0, 0);
+  fxParts.forEach(function (p) { live.remove(p.m); });
+  fxParts = [];
+  $('#ntList').innerHTML = ''; $('#ntCnt').textContent = '0';
+  $('#progNum').textContent = '0 / 4';
+  $$('.st').forEach(function (s) { s.classList.remove('lit'); });
+  $('#winToast').classList.remove('show');
+  $('#qFb').textContent = '';
+  $$('.qopt').forEach(function (b) { b.classList.remove('ok', 'bad'); });
+  updateGuide(false);
+}
+
+/* ===== 帧循环（wall-clock 弹出 + dt 严格钳位 [0.001, 0.05]） ===== */
+var introT0 = performance.now(), lastT = performance.now();
+var projV = new THREE.Vector3();
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', fit);
+fit();
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (now - lastT) / 1000));
+  lastT = now;
+  var t = now * 0.001;
+
+  var pop = Math.min(1, (performance.now() - introT0) / 680);
+  live.scale.setScalar(0.01 + 0.99 * (1 - Math.pow(1 - pop, 3)));
+
+  // 更新 2 只烧杯溶解漩涡动画 + 颗粒旋升变小
+  Object.keys(BEAKERS).forEach(function (k) {
+    var b = BEAKERS[k];
+    if (b.stirring) {
+      b.stirT = Math.max(0, b.stirT - dt);
+      b.dissolveProg = Math.min(1, 1 - b.stirT / 1.65);
+      b.swirlGroup.rotation.y += dt * 7.5;
+      var rem = Math.max(0.02, 1 - b.dissolveProg);
+      b.mound.scale.set(rem, rem, rem);
+      b.moundMat.opacity = 0.92 * rem;
+      b.grains.forEach(function (gr) {
+        var ang = gr.baseAng + b.dissolveProg * gr.swirlSpeed * 3.0;
+        var r = gr.baseR * (0.4 + 0.65 * Math.sin(b.dissolveProg * Math.PI));
+        var y = gr.baseY + Math.sin(b.dissolveProg * Math.PI) * gr.liftAmp;
+        gr.m.position.set(Math.cos(ang) * r, Math.min(1.10, y), Math.sin(ang) * r);
+        gr.m.rotation.y += dt * 8;
+        gr.m.scale.setScalar(rem);
+      });
+    }
+    if (b.settleT > 0) {
+      b.settleT = Math.max(0, b.settleT - dt);
+      b.padRing.material.opacity = 0.50 + 0.35 * Math.sin(t * 10);
+    } else if (hoveredBeaker !== b) {
+      b.padRing.material.opacity = 0;
+    }
+    projV.set(b.x, 1.84, b.z).project(camera);
+    b.tagEl.style.left = ((projV.x * 0.5 + 0.5) * window.innerWidth) + 'px';
+    b.tagEl.style.top = ((-projV.y * 0.5 + 0.5) * window.innerHeight) + 'px';
+  });
+
+  // 单焦点 #targetCue（始终精准指向目标，且绝不隐藏碗名标签！）
+  var cueEl = $('#targetCue'), cueTool = null, cueTxt = '';
+  if (!demo && !celebrated && !draggingTool) {
+    var bs = BEAKERS.salt, bg = BEAKERS.sugar;
+    if (spoonCarrying === 'salt') {
+      cueTool = TOOLS.spoon;
+      cueTxt = '👆 把盛盐小勺拖进杯①';
+    } else if (spoonCarrying === 'sugar') {
+      cueTool = TOOLS.spoon;
+      cueTxt = '👆 把盛糖小勺拖进杯②';
+    } else if (forceCueTarget && TOOLS[forceCueTarget]) {
+      cueTool = TOOLS[forceCueTarget];
+      cueTxt = forceCueTarget === 'rod' ? '👆 拖/点玻璃搅拌棒先搅一搅！' : '👆 先往杯里加盐或加糖！';
+    } else if (!bs.everSettled) {
+      if (!bs.added && !bs.dissolved) {
+        cueTool = TOOLS.salt;
+        cueTxt = '👆 拖/点食盐碗倒入杯①';
+      } else if (bs.added && !bs.dissolved && !bs.stirring) {
+        cueTool = TOOLS.rod;
+        cueTxt = '👆 拖/点搅拌棒搅杯①';
+      } else if (bs.dissolved && !bs.settled) {
+        cueTool = TOOLS.hourglass;
+        cueTxt = '👆 点3D沙漏静置观察杯①';
+      }
+    } else if (!bs.microSeen) {
+      cueTool = TOOLS.magnifier;
+      cueTxt = '👆 拖/点放大镜看杯①微观';
+    } else if (!bg.everSettled) {
+      if (!bg.added && !bg.dissolved) {
+        cueTool = TOOLS.sugar;
+        cueTxt = '👆 拖/点白糖碗倒入杯②';
+      } else if (bg.added && !bg.dissolved && !bg.stirring) {
+        cueTool = TOOLS.rod;
+        cueTxt = '👆 拖/点搅拌棒搅杯②';
+      } else if (bg.dissolved && !bg.settled) {
+        cueTool = TOOLS.hourglass;
+        cueTxt = '👆 点3D沙漏静置观察杯②';
+      }
+    } else if (!bg.microSeen) {
+      cueTool = TOOLS.magnifier;
+      cueTxt = '👆 拖/点放大镜看杯②微观';
+    }
+  }
+
+  // 更新 6 件 3D 道具动画与清晰不遮挡标签
+  Object.keys(TOOLS).forEach(function (k) {
+    var tl = TOOLS[k];
+    var isCue = (cueTool === tl);
+    var isArmed = (armedTool === tl);
+
+    if (k === 'rod' && tl.stirCup) {
+      var sc = tl.stirCup;
+      var ang = t * 9.5;
+      tl.goal.set(sc.x + Math.cos(ang) * 0.28, 0.48, sc.z + Math.sin(ang) * 0.28);
+      tl.g.rotation.z = Math.cos(ang) * 0.16;
+      tl.g.rotation.x = Math.sin(ang) * 0.16;
+    } else if (k === 'hourglass' && tl.flipT > 0) {
+      tl.flipT = Math.max(0, tl.flipT - dt);
+      var p = 1 - tl.flipT / 1.45;
+      if (hgPivot) hgPivot.rotation.z = p < 0.25 ? (p / 0.25) * Math.PI : Math.PI;
+      var flow = Math.max(0, Math.min(1, (p - 0.25) / 0.75));
+      if (sandTopCone) sandTopCone.scale.set(1 - flow * 0.65, Math.max(0.15, 1 - flow * 0.75), 1 - flow * 0.65);
+      if (sandBotCone) sandBotCone.scale.set(0.45 + flow * 0.55, 0.35 + flow * 0.75, 0.45 + flow * 0.55);
+      if (sandStream) sandStream.visible = (p >= 0.22 && p < 0.96);
+    } else {
+      if (k === 'hourglass') {
+        if (hgPivot) hgPivot.rotation.z *= 0.82;
+        if (sandStream) sandStream.visible = false;
+        if (sandTopCone) sandTopCone.scale.set(1, 1, 1);
+        if (sandBotCone) sandBotCone.scale.set(1, 1, 1);
+      }
+      if (tl.tiltT > 0) {
+        tl.tiltT = Math.max(0, tl.tiltT - dt);
+        tl.g.rotation.z = -0.68;
+      } else {
+        tl.g.rotation.z *= 0.84;
+        tl.g.rotation.x *= 0.84;
+      }
+    }
+
+    var bob = (draggingTool !== tl && !tl.stirCup && tl.tiltT <= 0 && tl.flipT <= 0)
+      ? Math.sin(t * (isCue || isArmed ? 4.8 : 2.2) + tl.home.x) * (isCue || isArmed ? 0.045 : 0.015) : 0;
+
+    tl.g.position.x += (tl.goal.x - tl.g.position.x) * Math.min(1, dt * 14);
+    tl.g.position.y += ((tl.goal.y + bob) - tl.g.position.y) * Math.min(1, dt * 14);
+    tl.g.position.z += (tl.goal.z - tl.g.position.z) * Math.min(1, dt * 14);
+
+    tl.padRing.material.opacity = (isCue || isArmed) ? (0.48 + 0.36 * Math.sin(t * 5.6)) : 0.0;
+    tl.padRing.scale.setScalar((isCue || isArmed) ? (1.0 + 0.08 * Math.sin(t * 5.6)) : 1);
+
+    // 所有在原位的碗和工具都清晰显示自己的名称标签（绝不把碗变无名！）
+    if (draggingTool === tl || tl.stirCup || tl.g.position.distanceTo(tl.home) > 0.45) {
+      tl.tagEl.style.opacity = '0';
+    } else {
+      tl.tagEl.style.opacity = '1';
+      projV.set(tl.home.x, tl.home.y + tl.tagY, tl.home.z).project(camera);
+      var tx = (projV.x * 0.5 + 0.5) * window.innerWidth;
+      var ty = (-projV.y * 0.5 + 0.5) * window.innerHeight;
+      tl.tagEl.style.left = tx + 'px';
+      tl.tagEl.style.top = ty + 'px';
+      if (isCue && cueTxt) {
+        // #targetCue 端正浮在名称标签正上方 34px，绝不压盖名称也绝不错指邻碗！
+        var cx = tx;
+        var cy = ty - 34;
+        if (cy < 280) cx = Math.min(window.innerWidth - 268, cx);
+        cueEl.textContent = cueTxt;
+        cueEl.style.left = Math.max(120, Math.min(window.innerWidth - 120, cx)) + 'px';
+        cueEl.style.top = Math.max(92, Math.min(window.innerHeight - 58, cy)) + 'px';
+        cueEl.classList.add('show');
+      }
+    }
+  });
+
+  if (!cueTool || !cueTxt) cueEl.classList.remove('show');
+
+  // 粒子自动消退（D4）
+  for (var i = fxParts.length - 1; i >= 0; i--) {
+    var d = fxParts[i];
+    d.life -= dt;
+    d.vy += d.grav * dt;
+    d.m.position.x += d.vx * dt;
+    d.m.position.y += d.vy * dt;
+    d.m.position.z += d.vz * dt;
+    d.m.rotation.y += dt * 4;
+    if (d.m.position.y < 0.06) d.m.position.y = 0.06;
+    d.m.material.opacity = Math.max(0, d.life / d.maxLife);
+    if (d.life <= 0) { live.remove(d.m); fxParts.splice(i, 1); }
+  }
+
+  drawMicroCanvas(dt);
+
+  if (cfOn) {
+    cfCtx.clearRect(0, 0, cfCanvas.width, cfCanvas.height);
+    var alive = 0;
+    cfParts.forEach(function (p) {
+      p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 240 * dt; p.a += p.va * dt;
+      if (p.y < cfCanvas.height + 24) {
+        alive++;
+        cfCtx.save(); cfCtx.translate(p.x, p.y); cfCtx.rotate(p.a);
+        cfCtx.fillStyle = p.c; cfCtx.fillRect(-p.r, -p.r * 0.5, p.r * 2, p.r);
+        cfCtx.restore();
+      }
+    });
+    if (!alive) { cfOn = false; cfCtx.clearRect(0, 0, cfCanvas.width, cfCanvas.height); }
+  }
+
+  renderer.render(scene, camera);
+}
+
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () {
+    return {
+      triangles: renderer.info.render.triangles,
+      celebrated: celebrated,
+      milestones: countMilestones(),
+      microOpen: microOpen,
+      forceCueTarget: forceCueTarget,
+      spoonCarrying: spoonCarrying
+    };
+  },
+  getState: function () {
+    return {
+      celebrated: celebrated,
+      microOpen: microOpen,
+      microMode: microMode,
+      microCupId: microCupId,
+      forceCueTarget: forceCueTarget,
+      spoonCarrying: spoonCarrying,
+      salt: { added: BEAKERS.salt.added, stirring: BEAKERS.salt.stirring, dissolved: BEAKERS.salt.dissolved, settled: BEAKERS.salt.settled, everSettled: BEAKERS.salt.everSettled, microSeen: BEAKERS.salt.microSeen },
+      sugar: { added: BEAKERS.sugar.added, stirring: BEAKERS.sugar.stirring, dissolved: BEAKERS.sugar.dissolved, settled: BEAKERS.sugar.settled, everSettled: BEAKERS.sugar.everSettled, microSeen: BEAKERS.sugar.microSeen }
+    };
+  },
+  project3D: function (x, y, z) {
+    var v = new THREE.Vector3(x, y, z).project(camera);
+    return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight };
+  },
+  getTargets: function () {
+    var self = this;
+    var tools = {};
+    Object.keys(TOOLS).forEach(function (k) {
+      var tl = TOOLS[k];
+      tools[k] = self.project3D(tl.g.position.x, tl.g.position.y + 0.34, tl.g.position.z);
+    });
+    return {
+      tools: tools,
+      beakers: {
+        salt: self.project3D(BEAKERS.salt.x, 0.95, BEAKERS.salt.z),
+        sugar: self.project3D(BEAKERS.sugar.x, 0.95, BEAKERS.sugar.z)
+      }
+    };
+  },
+  startDemo: startDemo,
+  resetAll: resetAll
+};
+
+updateGuide(false);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

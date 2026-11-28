@@ -1,0 +1,2009 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第7课 保护感觉器官 · 五官健康小医生 3D 诊所</title>
+<style>
+:root{--accent:#0f9d7a;--accent-dark:#0a7358;--warn:#dc2626;--ink:#232629;--line:#d9dfd8;--card:rgba(255,253,249,.95)}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#8ab4a0;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas#cv.grabbing{cursor:grabbing}
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.46em;color:#667068;font-weight:600}
+body.no-py rt{display:none}
+
+/* 左上标题卡片 */
+#hudTL{position:fixed;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:10px;
+  padding:7px 14px 7px 9px;border-radius:16px;background:var(--card);border:1.5px solid var(--line);
+  box-shadow:0 4px 16px rgba(18,48,38,.15)}
+#backBtn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:#46534b;font-size:19px;font-weight:900}
+#backBtn:hover{border-color:var(--accent);color:var(--accent)}
+.hd-t{font-size:16px;font-weight:900;line-height:1.5}
+.hd-sub{font-size:11.5px;color:#627068;font-weight:700}
+
+/* 顶部中央动态分步小助手（U2） */
+#guideBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:6;
+  max-width:min(450px,calc(100vw - 630px));display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:15px;background:rgba(255,252,244,.97);
+  border:2px solid var(--accent);box-shadow:0 6px 18px rgba(15,118,90,.18);
+  font-size:13.5px;font-weight:800;color:#0e5c47;cursor:pointer;line-height:1.38;transition:all .2s}
+#guideBar:active{transform:translateX(-50%) scale(.98)}
+#guideBar.warn{border-color:#dc2626;background:#fef2f2;color:#991b1b}
+#guideBar.done{border-color:#16a34a;background:#f0fdf4;color:#166534}
+
+/* 右上工具条 + 防遮挡微标签 */
+#hudTR{position:fixed;top:12px;right:12px;z-index:7;display:flex;align-items:center;gap:6px}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:38px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);
+  background:var(--card);font-family:inherit;font-size:13.5px;font-weight:800;color:#38443d;cursor:pointer;
+  box-shadow:0 3px 0 #c9d4cc;transition:all .14s;white-space:nowrap}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:var(--accent-dark);color:#fff;box-shadow:0 3px 0 var(--accent-dark)}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#dcfce7;border:1.5px solid var(--accent);color:#0a634b;font-size:10.5px;font-weight:900;
+  white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(15,157,122,.24);
+  animation:cuePop 1.6s ease-in-out infinite;transition:opacity .25s}
+body.interacted .entry-cue{opacity:0;animation:none}
+@keyframes cuePop{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+
+/* 左侧实时 2D 器官健康透视窗（240x160 Canvas） */
+#xrayCard{position:fixed;left:12px;top:76px;z-index:6;width:258px;padding:9px;border-radius:18px;
+  background:rgba(24,33,43,.92);border:2.5px solid #ef4444;box-shadow:0 12px 28px rgba(15,23,42,.32);
+  color:#f8fafc;transition:border-color .3s,box-shadow .3s}
+#xrayCard.healthy{border-color:#22c55e;box-shadow:0 12px 28px rgba(22,163,74,.28)}
+#xrayCard.alarm{animation:xrayShake .42s ease;border-color:#ff2e2e;box-shadow:0 0 0 5px rgba(239,68,68,.38),0 12px 28px rgba(185,28,28,.45)}
+@keyframes xrayShake{0%,100%{transform:translateX(0)}18%{transform:translateX(-7px) rotate(-1deg)}36%{transform:translateX(7px) rotate(1deg)}54%{transform:translateX(-5px)}72%{transform:translateX(5px)}}
+.xr-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-size:12.5px;font-weight:900}
+.xr-badge{padding:2px 8px;border-radius:99px;font-size:11px;font-weight:900;background:#ef4444;color:#fff}
+#xrayCard.healthy .xr-badge{background:#16a34a}
+.xr-screen{position:relative;width:240px;height:160px;border-radius:11px;overflow:hidden;border:1.5px solid rgba(255,255,255,.18);background:#0f172a}
+canvas#organCv{width:240px;height:160px;display:block}
+.xr-status{margin-top:6px;padding:5px 8px;border-radius:9px;background:rgba(239,68,68,.18);border:1px solid rgba(248,113,113,.45);
+  font-size:11.8px;font-weight:800;color:#fecaca;line-height:1.38}
+#xrayCard.healthy .xr-status{background:rgba(34,197,94,.18);border-color:rgba(74,222,128,.48);color:#bbf7d0}
+
+/* 右上可收起窄版发现栏（D3 限宽 224px） */
+#notes{position:fixed;top:60px;right:12px;z-index:6;width:224px;padding:9px 11px;border-radius:15px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 6px 18px rgba(20,45,35,.13)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+.nt-title{font-size:13.5px;font-weight:900}
+.nt-cnt{font-size:12.5px;font-weight:900;color:var(--accent)}
+.nt-tog{padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:11px;font-weight:800;color:#5d6b62;cursor:pointer}
+.stamps{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-bottom:6px}
+.st{text-align:center;padding:3px 1px;border-radius:8px;font-size:11px;font-weight:800;
+  border:1.5px dashed #c8d3cb;color:#839188;background:#f4f7f5;transition:all .2s;line-height:1.35}
+.st.lit{border-style:solid;border-color:var(--accent);background:#dcfce7;color:#14532d;animation:pop .36s cubic-bezier(.2,1.6,.4,1)}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList,#notes.collapsed .stamps{display:none}
+#notes.collapsed .nt-head{margin-bottom:0}
+.stk{padding:5px 8px;border-radius:10px;background:#fff;border:1px solid #dfebe4;font-size:11.8px;font-weight:700;line-height:1.4;animation:pop .35s ease}
+.stk b{color:#0f766e}
+@keyframes pop{0%{transform:scale(.7);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* 5 个纯图标五官站小圆徽（桌面左下边角，零底栏文字按钮，U7 extraBtns===0） */
+#stationDock{position:fixed;left:14px;bottom:14px;z-index:6;display:flex;align-items:center;gap:8px;
+  padding:7px 11px;border-radius:99px;background:var(--card);border:1.5px solid var(--line);
+  box-shadow:0 8px 22px rgba(15,40,32,.18)}
+.org-dot{position:relative;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
+  border:2px solid #d5dfd8;background:#fff;cursor:pointer;font-size:22px;line-height:1;transition:all .16s}
+.org-dot:hover{border-color:var(--accent);transform:translateY(-2px) scale(1.06)}
+.org-dot.active{border-color:var(--accent);background:#e6faf3;box-shadow:0 3px 0 #86d8be;transform:scale(1.08)}
+.org-dot.cured::after{content:'✓';position:absolute;top:-3px;right:-3px;width:17px;height:17px;border-radius:50%;
+  background:#16a34a;color:#fff;font-size:10.5px;font-weight:900;display:grid;place-items:center;
+  border:2px solid #fff;box-shadow:0 2px 5px rgba(22,163,74,.35)}
+
+/* 3D 浮动标牌与单焦点提示气泡 */
+#tagLayer{position:fixed;inset:0;pointer-events:none;z-index:4}
+.ptag{position:absolute;transform:translate(-50%,-100%);padding:4px 11px;border-radius:99px;
+  background:rgba(28,36,44,.86);color:#fff;font-size:12.5px;font-weight:800;white-space:nowrap;
+  box-shadow:0 3px 10px rgba(0,0,0,.24);border:1.5px solid rgba(255,255,255,.34);transition:opacity .15s,background .2s}
+.ptag.glow{background:rgba(15,157,122,.96);border-color:#a7f3d0;box-shadow:0 0 14px rgba(16,185,129,.55)}
+#targetCue{position:fixed;left:0;top:0;transform:translate(-50%,-100%);z-index:5;pointer-events:none;
+  padding:5px 13px;border-radius:99px;background:#fff7ed;border:2px solid #ea580c;color:#9a3412;
+  font-size:13px;font-weight:900;white-space:nowrap;box-shadow:0 4px 14px rgba(234,88,12,.32);
+  display:none;animation:cueBob 1.3s ease-in-out infinite}
+#targetCue.show{display:block}
+#targetCue.drop-ready{background:#ecfdf5;border-color:#16a34a;color:#14532d;box-shadow:0 4px 16px rgba(22,163,74,.38)}
+@keyframes cueBob{0%,100%{transform:translate(-50%,-100%) translateY(0)}50%{transform:translate(-50%,-100%) translateY(-6px)}}
+
+.popword{position:absolute;transform:translate(-50%,-100%);padding:5px 13px;border-radius:99px;
+  background:rgba(15,157,122,.96);color:#fff;font-size:14px;font-weight:900;white-space:nowrap;
+  box-shadow:0 4px 12px rgba(0,0,0,.2);animation:popFloat 1.7s ease-out forwards}
+.popword.warn{background:rgba(220,38,38,.96)}
+@keyframes popFloat{0%{opacity:0;transform:translate(-50%,-65%) scale(.75)}18%{opacity:1;transform:translate(-50%,-105%) scale(1.06)}80%{opacity:1;transform:translate(-50%,-145%) scale(1)}100%{opacity:0;transform:translate(-50%,-185%) scale(.95)}}
+
+/* 通关弹窗 */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+#winToast{position:fixed;inset:0;z-index:35;display:none;place-items:center;background:rgba(18,32,28,.38);padding:16px}
+#winToast.show{display:grid}
+.win-card{width:min(460px,100%);max-height:86vh;overflow-y:auto;background:#fffdf9;
+  border:2.5px solid var(--accent);border-radius:22px;padding:18px 20px;text-align:center;
+  box-shadow:0 20px 50px rgba(10,32,26,.3);animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+.win-concl{margin:10px 0;padding:10px 12px;border-radius:13px;background:#ecfdf5;border:1.5px solid #86efac;
+  text-align:left;font-size:13.5px;line-height:1.6;color:#14532d}
+.win-quiz{margin:10px 0;padding:10px 12px;border-radius:13px;background:#f8fafc;border:1.5px solid #d9e2ec;text-align:left}
+.win-quiz h4{margin:0 0 7px;font-size:13.5px;color:#0f766e}
+.qopts{display:flex;flex-direction:column;gap:7px}
+.qopt{padding:8px 11px;border-radius:11px;border:1.5px solid #d4dfd8;background:#fff;
+  font-family:inherit;font-size:13.5px;font-weight:800;text-align:left;cursor:pointer;transition:all .14s;color:var(--ink)}
+.qopt:hover{border-color:var(--accent);background:#ecfdf5}
+.qopt.ok{border-color:#16a34a;background:#dcfce7;color:#14532d}
+.qopt.bad{border-color:#dc2626;background:#fef2f2;color:#b91c1c}
+.qfb{margin-top:7px;font-size:12.5px;font-weight:800;min-height:18px;color:#b45309}
+.qfb.ok{color:#15803d}
+.win-acts{display:flex;justify-content:center;gap:10px;margin-top:12px}
+
+@media (max-width:1100px){
+  #guideBar{top:60px;max-width:min(420px,calc(100vw - 260px));font-size:12.5px}
+  #xrayCard{top:114px;transform:scale(.88);transform-origin:top left}
+}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="tagLayer"></div>
+<div id="targetCue">👆 把桌上正确的护具拖给小同学！</div>
+<canvas id="confetti"></canvas>
+
+<div id="hudTL">
+  <a id="backBtn" href="../index.html" title="返回书包">‹</a>
+  <div>
+    <div class="hd-t" data-py="dì kè bǎo hù gǎn jué qì guān">第7课 保护感觉器官</div>
+    <div class="hd-sub">活页 · 课本第 26 页「五官健康小医生 3D 诊所」</div>
+  </div>
+</div>
+
+<div id="guideBar" title="点我重听当前步骤">
+  <span id="guideIco">👁</span>
+  <span id="guideTxt">第1站（眼睛）：小同学趴在暗桌前看书！拖或点正确护具保护他的眼睛吧！</span>
+</div>
+
+<div id="hudTR">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<!-- 实时 2D 器官健康透视窗（240×160 Canvas） -->
+<div id="xrayCard">
+  <div class="xr-head">
+    <span id="xrTitle">👁 眼睛健康透视仪</span>
+    <span class="xr-badge" id="xrBadge">⚠ 受损预警</span>
+  </div>
+  <div class="xr-screen">
+    <canvas id="organCv" width="240" height="160"></canvas>
+  </div>
+  <div class="xr-status" id="xrStatus">灯光太暗又趴得太近，眼睛看字发虚、疲劳酸胀！</div>
+</div>
+
+<!-- 右上可收起窄版发现栏（D3） -->
+<aside id="notes">
+  <div class="nt-head">
+    <span class="nt-title" data-py="hù guān mì jí">护官秘籍</span>
+    <span class="nt-cnt" id="ntCnt">0/5</span>
+    <button class="nt-tog" id="ntTog" type="button">收起</button>
+  </div>
+  <div class="stamps">
+    <span class="st" id="st0" data-py="yǎn">眼</span>
+    <span class="st" id="st1" data-py="ěr">耳</span>
+    <span class="st" id="st2" data-py="bí">鼻</span>
+    <span class="st" id="st3" data-py="shé">舌</span>
+    <span class="st" id="st4" data-py="pí">皮</span>
+  </div>
+  <div id="ntList"></div>
+</aside>
+
+<!-- 左下角 5 个纯图标五官站圆徽（非 button 标签，零底栏文字按钮） -->
+<div id="stationDock" aria-label="五官护卫站">
+  <div class="org-dot active" role="button" tabindex="0" data-st="0" title="眼睛站" aria-label="眼睛站">👁</div>
+  <div class="org-dot" role="button" tabindex="0" data-st="1" title="耳朵站" aria-label="耳朵站">👂</div>
+  <div class="org-dot" role="button" tabindex="0" data-st="2" title="鼻子站" aria-label="鼻子站">👃</div>
+  <div class="org-dot" role="button" tabindex="0" data-st="3" title="舌头站" aria-label="舌头站">👅</div>
+  <div class="org-dot" role="button" tabindex="0" data-st="4" title="皮肤站" aria-label="皮肤站">✋</div>
+</div>
+
+<div id="winToast">
+  <div class="win-card">
+    <div style="font-size:38px">🏆</div>
+    <h3 style="margin:4px 0;color:#0f766e">太棒啦！五官健康小医生通关啦！</h3>
+    <div class="win-concl">
+      <b>✨ 科学小结论：</b>眼睛、耳朵、鼻子、舌头和皮肤是我们感知世界的感觉器官。平时要坐直开灯护眼、远离强噪音、不往鼻耳塞异物、少吃过烫过辣食物、防晒勤洗手，好好保护它们！
+    </div>
+    <div class="win-quiz">
+      <h4>💡 考考你 · 答对领小红花 🌸</h4>
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:8px">下面哪种做法能正确保护我们的感觉器官？</div>
+      <div class="qopts" id="qOpts">
+        <button class="qopt" type="button" data-ok="1">🛡 亮灯坐直看书、不戴大音量耳机、远离过烫辣食</button>
+        <button class="qopt" type="button" data-hint="脏手帕有很多细菌，揉眼睛很容易让眼睛发红发炎哦！">⚠ 眼睛痒时直接用脏手帕使劲揉一揉</button>
+        <button class="qopt" type="button" data-hint="尖头挖耳勺很容易戳伤耳道和耳膜，千万不能往耳朵鼻子里塞异物哦！">⚠ 用尖头挖耳勺自己用力掏耳朵</button>
+      </div>
+      <div class="qfb" id="qFb"></div>
+    </div>
+    <div class="win-acts">
+      <button class="tbtn" id="winKeepBtn" type="button">继续玩</button>
+      <button class="tbtn on" id="winAgainBtn" type="button">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js?v=doubao-2"></script>
+<script src="../vendor/voice.js?v=doubao-2"></script>
+<script>
+(function () {
+'use strict';
+
+try { sessionStorage.setItem('xk_last_vol', 'k2a'); } catch (e) {}
+
+var LESSON_ID = 'k2a-07';
+var BOOK_PROGRESS_KEY = 'xk_k2a_progress';
+var $ = function (s) { return document.querySelector(s); };
+var $$ = function (s) { return document.querySelectorAll(s); };
+
+/* ===== 严格 1 对 1 拼音标注 ===== */
+var HAN = /[\u3400-\u9fff]/;
+var pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function ruby(text, py) {
+  if (!py) return esc(text);
+  var syl = py.trim().split(/\s+/), i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) {
+      var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; }
+      out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>';
+    } else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+$$('[data-py]').forEach(function (el) { el.innerHTML = ruby(el.textContent, el.dataset.py); });
+
+/* ===== 轻量 WebAudio 音效与豆包离线语音 ===== */
+var actx = null;
+function beep(freqs, dur, type) {
+  try {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    var t = actx.currentTime;
+    freqs.forEach(function (f, idx) {
+      var o = actx.createOscillator(), g = actx.createGain();
+      o.type = type || 'triangle';
+      o.frequency.setValueAtTime(f, t + idx * 0.085);
+      g.gain.setValueAtTime(0.001, t + idx * 0.085);
+      g.gain.exponentialRampToValueAtTime(0.11, t + idx * 0.085 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.085 + (dur || 0.2));
+      o.connect(g); g.connect(actx.destination);
+      o.start(t + idx * 0.085); o.stop(t + idx * 0.085 + (dur || 0.22));
+    });
+  } catch (e) {}
+}
+
+var voiceOn = true;
+function stopVoice() {
+  if (window.__xkVoice) window.__xkVoice.stop();
+  else if (window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
+}
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text, '../audio/', true); return; }
+}
+
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem(BOOK_PROGRESS_KEY) || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem(BOOK_PROGRESS_KEY, JSON.stringify(d));
+  } catch (e) {}
+}
+
+/* ===== 彩带庆祝 ===== */
+var cfCanvas = $('#confetti'), cfCtx = cfCanvas.getContext('2d'), cfParts = [], cfOn = false;
+function fireConfetti() {
+  cfCanvas.width = window.innerWidth; cfCanvas.height = window.innerHeight;
+  cfParts = [];
+  var cols = ['#0f9d7a', '#f59e0b', '#38bdf8', '#f472b6', '#a855f7', '#4ade80'];
+  for (var i = 0; i < 90; i++) {
+    cfParts.push({
+      x: cfCanvas.width * (0.14 + Math.random() * 0.72), y: -14 - Math.random() * 120,
+      vx: (Math.random() - 0.5) * 210, vy: 130 + Math.random() * 195,
+      r: 5 + Math.random() * 5, a: Math.random() * 6.28, va: (Math.random() - 0.5) * 9,
+      c: cols[i % cols.length]
+    });
+  }
+  cfOn = true;
+}
+
+/* ===== 5 站护官核心数据（因果诊所） ===== */
+var STATIONS = [
+  {
+    id: 'eye', icon: '👁', name: '眼睛', title: '👁 眼睛健康透视仪',
+    goodSide: -1,
+    guideBad: '第1站（眼睛）：小同学趴在暗桌前看书！拖或点正确护具保护他的眼睛吧！',
+    guideGood: '眼睛站已治愈！开亮护眼台灯、坐直看绿植，眼睛明亮又舒服！',
+    symptomSpeak: '小同学正趴在昏暗的桌前贴着书本看书，眼睛又酸又累，快把桌上正确的护具拖给小同学吧！',
+    xrBad: '灯光太暗又趴得太近，眼睛看字发虚、疲劳酸胀！',
+    xrGood: '护眼台灯明亮柔和、坐姿端正并远眺绿植，视力清晰健康！',
+    goodLabel: '护眼台灯+绿盆栽',
+    badLabel: '脏手帕揉眼',
+    goodSpeak: '做得太棒啦！打开护眼台灯、坐直身子并常看绿色植物，眼睛马上恢复明亮清晰！',
+    badSpeak: '哎呀，脏手帕上有很多泥污和细菌，用来揉眼睛会让眼睛发红发炎哦！快换上护眼台灯和绿盆栽吧！',
+    demoSpeak: '看我演示：小同学趴在暗桌前看书伤眼睛，我们把护眼台灯和绿盆栽拖到他身边吧！',
+    recordHtml: '👁 <b>眼睛</b>：亮灯坐直看书，常看绿植远眺，不用脏手帕揉眼',
+    cueGood: '✨ 把【护眼台灯+绿盆栽】拖给小同学！'
+  },
+  {
+    id: 'ear', icon: '👂', name: '耳朵', title: '👂 耳朵健康透视仪',
+    goodSide: 1,
+    guideBad: '第2站（耳朵）：超大音量耳机震得耳朵难受！快选桌上正确护具保护耳朵吧！',
+    guideGood: '耳朵站已治愈！摘下爆音耳机换上硅胶降噪耳塞，耳膜终于安静啦！',
+    symptomSpeak: '小同学戴着音量超大的耳机，刺耳的噪音震得耳膜发疼，快选正确的护具帮他保护耳朵吧！',
+    xrBad: '耳机噪音红灯爆表，耳膜剧烈震颤、听力受损预警！',
+    xrGood: '换上柔软硅胶降噪耳塞远离强噪音，耳膜舒缓健康！',
+    goodLabel: '硅胶降噪耳塞盒',
+    badLabel: '尖头金属挖耳勺',
+    goodSpeak: '真棒！摘掉吵闹的大耳机、换上柔软的硅胶降噪耳塞，耳膜立刻安静舒缓下来了！',
+    badSpeak: '危险呀！尖头金属挖耳勺很容易戳伤娇嫩的耳道和耳膜，千万不能自己乱掏耳朵！快换上硅胶降噪耳塞吧！',
+    demoSpeak: '看我演示：超大音量耳机伤害耳膜，我们把柔软的硅胶降噪耳塞拖给小同学吧！',
+    recordHtml: '👂 <b>耳朵</b>：远离强噪音和大音量耳机，不用尖头挖耳勺掏耳',
+    cueGood: '✨ 把【硅胶降噪耳塞盒】拖给小同学！'
+  },
+  {
+    id: 'nose', icon: '👃', name: '鼻子', title: '👃 鼻子健康透视仪',
+    goodSide: -1,
+    guideBad: '第3站（鼻子）：不能用脏手和小棒挖鼻孔！快选正确护具呵护鼻子吧！',
+    guideGood: '鼻子站已治愈！用柔软面巾纸轻轻擦鼻，鼻腔干爽又通畅！',
+    symptomSpeak: '小同学正举着尖锐小棒想挖鼻子，鼻黏膜已经充血发红啦，快选桌上正确的护具帮帮他吧！',
+    xrBad: '尖物和脏手刺激鼻腔，鼻黏膜充血红肿、易流鼻血！',
+    xrGood: '用柔软白色面巾纸轻轻擦拭，鼻黏膜健康、呼吸顺畅！',
+    goodLabel: '清新抽纸盒',
+    badLabel: '彩色硬塑料弹珠',
+    goodSpeak: '太贴心啦！用清新抽纸盒里的柔软面巾纸轻轻擦鼻孔，鼻黏膜不再充血，呼吸清清爽爽！',
+    badSpeak: '千万不行！把彩色硬塑料小弹珠塞进鼻孔会卡在鼻腔里堵塞呼吸，非常危险！快换成清新抽纸盒吧！',
+    demoSpeak: '看我演示：不能挖鼻孔或塞异物，我们把清新抽纸盒拖给小同学吧！',
+    recordHtml: '👃 <b>鼻子</b>：用柔软面巾纸轻擦，不挖鼻孔不塞小弹珠',
+    cueGood: '✨ 把【清新抽纸盒】拖给小同学！'
+  },
+  {
+    id: 'tongue', icon: '👅', name: '舌头', title: '👅 舌头健康透视仪',
+    goodSide: 1,
+    guideBad: '第4站（舌头）：面前是滚烫的超辣热汤！快选正确护具保护舌头味蕾吧！',
+    guideGood: '舌头站已治愈！喝口温水漱口刷牙，味蕾清爽又灵敏！',
+    symptomSpeak: '小同学面前摆着滚滚冒热气的超辣热汤，直接喝会烫伤舌头上的味蕾，快选正确护具帮帮他吧！',
+    xrBad: '滚烫又辛辣的食物强烈刺激舌头，味蕾红肿冒火！',
+    xrGood: '喝温水轻漱口、用牙刷清洁口腔，舌头味蕾健康灵敏！',
+    goodLabel: '温水漱口杯+牙刷',
+    badLabel: '火红大尖辣椒',
+    goodSpeak: '选对啦！把烫汤放凉，喝温水轻轻漱口并刷牙，舌头上的味蕾马上恢复清爽健康！',
+    badSpeak: '太辣太烫啦！吃火红大尖辣椒会强烈刺激和烫伤舌头上的味蕾！快换成温水漱口杯和牙刷吧！',
+    demoSpeak: '看我演示：滚烫超辣的食物伤害味蕾，我们把温水漱口杯和牙刷拖给小同学吧！',
+    recordHtml: '👅 <b>舌头</b>：不吃过烫过辣食物，喝温水常漱口刷牙',
+    cueGood: '✨ 把【温水漱口杯+牙刷】拖给小同学！'
+  },
+  {
+    id: 'skin', icon: '✋', name: '皮肤', title: '✋ 皮肤健康透视仪',
+    goodSide: -1,
+    guideBad: '第5站（皮肤）：烈日暴晒得脸通红、小手也脏脏的！快选正确护具保护皮肤吧！',
+    guideGood: '皮肤站已治愈！撑开防晒遮阳伞、香皂洗净小手，皮肤清爽健康！',
+    symptomSpeak: '头顶的烈日把小同学晒得皮肤发红，小手上还沾着泥巴脏东西，快选正确护具保护皮肤吧！',
+    xrBad: '强紫外线暴晒使皮肤泛红刺痛，脏污细菌贴在皮肤上！',
+    xrGood: '蓝白遮阳伞挡住烈日、香皂洗净双手，皮肤白净清爽！',
+    goodLabel: '防晒遮阳伞+香皂',
+    badLabel: '灼热暴晒太阳',
+    goodSpeak: '太赞啦！撑开防晒遮阳伞挡住强烈阳光，再用香皂泡泡把小手洗干净，皮肤立刻清爽健康！',
+    badSpeak: '好危险呀！在烈日下赤膊暴晒会让皮肤通红脱皮、严重晒伤！快换上防晒遮阳伞和香皂泡泡吧！',
+    demoSpeak: '看我演示：烈日暴晒和脏污伤害皮肤，我们把防晒遮阳伞和香皂拖给小同学吧！',
+    recordHtml: '✋ <b>皮肤</b>：烈日撑遮阳伞防晒，勤用香皂洗手保持清洁',
+    cueGood: '✨ 把【防晒遮阳伞+香皂】拖给小同学！'
+  }
+];
+
+/* ===== Three.js r147 离线温馨 3D 小诊室 ===== */
+var cv = $('#cv');
+var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color('#d9eee4');
+var camera = new THREE.PerspectiveCamera(34, 16 / 9, 0.1, 80);
+camera.position.set(0.0, 3.55, 7.65);
+camera.lookAt(0.0, 1.06, 0.30);
+
+var hemiL = new THREE.HemisphereLight('#fffdf5', '#7e9c8e', 0.56);
+scene.add(hemiL);
+var sunL = new THREE.DirectionalLight('#fff7e8', 0.48);
+sunL.position.set(-4.2, 9.5, 6.8);
+sunL.castShadow = true;
+sunL.shadow.mapSize.set(1024, 1024);
+sunL.shadow.camera.left = -7; sunL.shadow.camera.right = 7;
+sunL.shadow.camera.top = 7; sunL.shadow.camera.bottom = -7;
+sunL.shadow.bias = -0.0008;
+scene.add(sunL);
+
+var fillL = new THREE.DirectionalLight('#e6f4ff', 0.14);
+fillL.position.set(4.5, 4.0, 4.5);
+scene.add(fillL);
+
+var deskLampLight = new THREE.PointLight('#ffe08a', 0, 3.8);
+deskLampLight.position.set(-0.70, 1.15, 0.35);
+scene.add(deskLampLight);
+
+var ramp = new THREE.DataTexture(new Uint8Array([128,128,128,255, 190,190,190,255, 236,236,236,255, 255,255,255,255]), 4, 1, THREE.RGBAFormat);
+ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+
+function toon(hex, extra) {
+  var o = { color: new THREE.Color(hex), gradientMap: ramp };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshToonMaterial(o);
+}
+function mesh(geo, mat) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+function ctex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c);
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+
+var live = new THREE.Group();
+scene.add(live);
+
+/* 诊室环境：温馨浅绿奶油墙 + 暖木护墙板 + 胡桃木诊疗桌 */
+var wallTex = ctex(512, 256, function (g, w, h) {
+  var gr = g.createLinearGradient(0, 0, 0, h);
+  gr.addColorStop(0, '#d2eadf'); gr.addColorStop(0.68, '#cbe4d8'); gr.addColorStop(0.68, '#e3ceb0'); gr.addColorStop(1, '#d3b68f');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#c49f72'; g.fillRect(0, h * 0.67, w, 6);
+  g.strokeStyle = 'rgba(130,90,45,.15)'; g.lineWidth = 3;
+  for (var x = 0; x < w; x += 36) { g.beginPath(); g.moveTo(x, h * 0.68); g.lineTo(x, h); g.stroke(); }
+});
+var wall = new THREE.Mesh(new THREE.PlaneGeometry(24, 11), new THREE.MeshLambertMaterial({ map: wallTex }));
+wall.position.set(0, 3.2, -2.5);
+wall.receiveShadow = true;
+live.add(wall);
+
+// 精致小巧挂牌，稳居人物头顶与 #guideBar 下方之间，绝不裁切！
+var posterTex = ctex(256, 112, function (g, w, h) {
+  g.fillStyle = '#fffdf8'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = '#0f9d7a'; g.lineWidth = 7; g.strokeRect(7, 7, w - 14, h - 14);
+  g.fillStyle = '#ef4444';
+  g.fillRect(24, 46, 42, 14); g.fillRect(38, 32, 14, 42);
+  g.fillStyle = '#0f766e'; g.font = 'bold 25px "Microsoft YaHei",sans-serif';
+  g.fillText('五官小诊所', 82, 54);
+  g.fillStyle = '#64748b'; g.font = 'bold 15px "Microsoft YaHei",sans-serif';
+  g.fillText('科学护官 · 健康成长', 82, 82);
+});
+var poster = mesh(new THREE.BoxGeometry(1.98, 0.86, 0.07), [
+  toon('#b48658'), toon('#b48658'), toon('#b48658'), toon('#b48658'),
+  new THREE.MeshBasicMaterial({ map: posterTex }), toon('#b48658')
+]);
+poster.position.set(0, 2.24, -2.42);
+live.add(poster);
+
+var floorTex = ctex(256, 256, function (g, w, h) {
+  g.fillStyle = '#a8845b'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(72,46,20,.14)'; g.lineWidth = 3;
+  for (var y = 0; y < h; y += 32) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+});
+floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping; floorTex.repeat.set(6, 6);
+var floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 20), new THREE.MeshLambertMaterial({ map: floorTex }));
+floor.rotation.x = -Math.PI / 2; floor.position.y = -0.35; floor.receiveShadow = true;
+live.add(floor);
+
+var deskTex = ctex(512, 256, function (g, w, h) {
+  g.fillStyle = '#68452a'; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 70; i++) {
+    g.fillStyle = 'rgba(38,20,8,' + (0.06 + Math.random() * 0.08).toFixed(3) + ')';
+    g.fillRect(0, Math.random() * h, w, 2 + Math.random() * 4);
+  }
+  g.fillStyle = '#24584b';
+  g.fillRect(w * 0.25, h * 0.07, w * 0.50, h * 0.42);
+  g.strokeStyle = '#7dd3bc'; g.lineWidth = 5;
+  g.strokeRect(w * 0.25 + 5, h * 0.07 + 5, w * 0.50 - 10, h * 0.42 - 10);
+});
+var deskTop = mesh(new THREE.BoxGeometry(7.8, 0.24, 4.2), [
+  toon('#56371f'), toon('#56371f'),
+  new THREE.MeshToonMaterial({ map: deskTex, gradientMap: ramp }),
+  toon('#442a17'), toon('#56371f'), toon('#56371f')
+]);
+deskTop.position.set(0, 0.12, 0.62);
+deskTop.castShadow = false;
+live.add(deskTop);
+
+// 柔和暖木小托盘（彻底告别巨大刺眼纯白飞盘！）
+var TRAY_Y = 0.26;
+var TRAY_Z = 1.66;
+var TRAY_X = 1.72;
+var woodTrayTex = ctex(256, 256, function (g, w, h) {
+  var gr = g.createRadialGradient(w / 2, h / 2, 16, w / 2, h / 2, w / 2);
+  gr.addColorStop(0, '#f3dcc0'); gr.addColorStop(0.82, '#e2be94'); gr.addColorStop(1, '#c89b6b');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(130,82,36,.16)'; g.lineWidth = 2;
+  for (var y = 8; y < h; y += 14) {
+    g.beginPath(); g.moveTo(0, y); g.bezierCurveTo(w * 0.35, y + 4, w * 0.65, y - 4, w, y); g.stroke();
+  }
+});
+function makeWoodTray(x) {
+  var tg = new THREE.Group(); tg.position.set(x, TRAY_Y, TRAY_Z);
+  var plate = mesh(new THREE.CylinderGeometry(0.66, 0.62, 0.055, 32), [
+    toon('#b98a58'),
+    new THREE.MeshToonMaterial({ map: woodTrayTex, gradientMap: ramp }),
+    toon('#9e7042')
+  ]);
+  tg.add(plate);
+  var rim = mesh(new THREE.TorusGeometry(0.65, 0.032, 10, 32), toon('#b38250'));
+  rim.rotation.x = Math.PI / 2; rim.position.y = 0.032;
+  tg.add(rim);
+  var innerRim = mesh(new THREE.TorusGeometry(0.57, 0.014, 8, 28), toon('#d4a776'));
+  innerRim.rotation.x = Math.PI / 2; innerRim.position.y = 0.030;
+  tg.add(innerRim);
+  live.add(tg);
+  return tg;
+}
+makeWoodTray(-TRAY_X);
+makeWoodTray(TRAY_X);
+
+/* ===== 拖拽松手柔和发光引导环（位于小同学诊疗区周围） ===== */
+var dropGuideGroup = new THREE.Group();
+dropGuideGroup.position.set(0, 0.28, 0.12);
+dropGuideGroup.visible = false;
+live.add(dropGuideGroup);
+var dropGuideRingMat = new THREE.MeshBasicMaterial({ color: '#34d399', transparent: true, opacity: 0.72, side: THREE.DoubleSide });
+var dropGuideRing = new THREE.Mesh(new THREE.RingGeometry(0.95, 1.15, 40), dropGuideRingMat);
+dropGuideRing.rotation.x = -Math.PI / 2;
+dropGuideGroup.add(dropGuideRing);
+var dropGuideHaloMat = new THREE.MeshBasicMaterial({ color: '#6ee7b7', transparent: true, opacity: 0.24, side: THREE.DoubleSide });
+var dropGuideHalo = new THREE.Mesh(new THREE.CircleGeometry(1.02, 36), dropGuideHaloMat);
+dropGuideHalo.rotation.x = -Math.PI / 2; dropGuideHalo.position.y = -0.005;
+dropGuideGroup.add(dropGuideHalo);
+
+/* ===== 精雕 Q 版 3D 小学生（温暖五官 + 真实脖子肩膀 + 校服红领巾 + 绝无血环！） ===== */
+var kidRoot = new THREE.Group();
+kidRoot.position.set(0, 0.24, -0.45);
+live.add(kidRoot);
+
+var kidTorso = new THREE.Group();
+kidTorso.position.set(0, 0.02, -0.14);
+kidRoot.add(kidTorso);
+
+var skinMat = toon('#ffe0c2');
+var shirtMat = toon('#f8fafc');
+var vestMat = toon('#2563eb');
+var scarfMat = toon('#ef4444');
+
+// 饱满校服躯干（白衬衣底 + 蓝背心马甲感 + 自然圆肩）
+var bodyMain = mesh(new THREE.CylinderGeometry(0.37, 0.46, 0.86, 24), vestMat);
+bodyMain.position.y = 0.43;
+kidTorso.add(bodyMain);
+// 胸前白衬衣 V 领三角
+var vShirt = mesh(new THREE.ConeGeometry(0.20, 0.34, 4), shirtMat);
+vShirt.rotation.x = Math.PI; vShirt.rotation.y = Math.PI / 4;
+vShirt.position.set(0, 0.72, 0.32); vShirt.scale.set(1.0, 1.0, 0.32);
+kidTorso.add(vShirt);
+// 两侧圆润肩膀球（彻底告别没肩膀！）
+[-0.38, 0.38].forEach(function (sx) {
+  var sh = mesh(new THREE.SphereGeometry(0.155, 16, 14), shirtMat);
+  sh.position.set(sx, 0.78, 0.02);
+  kidTorso.add(sh);
+});
+// 真实小脖子（彻底告别没脖子！）
+var neckMesh = mesh(new THREE.CylinderGeometry(0.115, 0.135, 0.22, 16), skinMat);
+neckMesh.position.set(0, 0.94, 0.02);
+kidTorso.add(neckMesh);
+// 白色校服翻领
+var collarL = mesh(new THREE.BoxGeometry(0.20, 0.05, 0.16), shirtMat);
+collarL.position.set(-0.14, 0.86, 0.22); collarL.rotation.set(0.35, 0.3, -0.25); kidTorso.add(collarL);
+var collarR = mesh(new THREE.BoxGeometry(0.20, 0.05, 0.16), shirtMat);
+collarR.position.set(0.14, 0.86, 0.22); collarR.rotation.set(0.35, -0.3, 0.25); kidTorso.add(collarR);
+// 鲜艳小学生红领巾（绕颈环 + 结扣 + 飘逸双角）
+var scarfNeck = mesh(new THREE.TorusGeometry(0.175, 0.036, 10, 22), scarfMat);
+scarfNeck.rotation.x = Math.PI / 2 + 0.15; scarfNeck.position.set(0, 0.86, 0.05); kidTorso.add(scarfNeck);
+var scarfKnot = mesh(new THREE.SphereGeometry(0.052, 12, 10), scarfMat);
+scarfKnot.position.set(0, 0.78, 0.35); kidTorso.add(scarfKnot);
+var scarfTip1 = mesh(new THREE.ConeGeometry(0.085, 0.30, 4), scarfMat);
+scarfTip1.rotation.set(Math.PI, Math.PI / 4, -0.14); scarfTip1.scale.set(1, 1, 0.28);
+scarfTip1.position.set(-0.04, 0.62, 0.38); kidTorso.add(scarfTip1);
+var scarfTip2 = mesh(new THREE.ConeGeometry(0.068, 0.24, 4), scarfMat);
+scarfTip2.rotation.set(Math.PI, Math.PI / 4, 0.18); scarfTip2.scale.set(1, 1, 0.28);
+scarfTip2.position.set(0.05, 0.64, 0.39); kidTorso.add(scarfTip2);
+
+// 头部组
+var kidHead = new THREE.Group();
+kidHead.position.set(0, 1.38, 0.03);
+kidTorso.add(kidHead);
+
+var headBall = mesh(new THREE.SphereGeometry(0.45, 28, 24), skinMat);
+headBall.scale.set(1.03, 0.98, 0.98);
+kidHead.add(headBall);
+
+// 温暖深栗色可爱短发（主发冠 + 柔和斜刘海 + 两侧鬓角）
+var hairMat = toon('#3a2820');
+var hairCap = mesh(new THREE.SphereGeometry(0.475, 26, 20, 0, Math.PI * 2, 0, Math.PI * 0.50), hairMat);
+hairCap.position.set(0, 0.04, -0.02); hairCap.rotation.x = -0.34;
+kidHead.add(hairCap);
+// 柔和刘海三簇
+[[-0.22, 0.24, 0.36, 0.22], [0.0, 0.26, 0.40, 0.05], [0.22, 0.23, 0.36, -0.25]].forEach(function (b) {
+  var bang = mesh(new THREE.SphereGeometry(0.13, 14, 12), hairMat);
+  bang.scale.set(1.25, 0.65, 0.55); bang.position.set(b[0], b[1], b[2]); bang.rotation.z = b[3];
+  kidHead.add(bang);
+});
+// 俏皮小呆毛
+var tuft1 = mesh(new THREE.ConeGeometry(0.08, 0.18, 10), hairMat);
+tuft1.position.set(-0.06, 0.49, 0.04); tuft1.rotation.z = 0.32; kidHead.add(tuft1);
+
+// 左右圆耳朵 + 浅粉耳窝
+[-1, 1].forEach(function (side) {
+  var ear = mesh(new THREE.SphereGeometry(0.105, 14, 12), skinMat);
+  ear.scale.set(0.65, 1.0, 0.85); ear.position.set(side * 0.46, 0.0, 0); kidHead.add(ear);
+  var earIn = mesh(new THREE.SphereGeometry(0.058, 10, 8), toon('#f4b49a'));
+  earIn.scale.set(0.5, 0.85, 0.5); earIn.position.set(side * 0.475, 0.0, 0.03); kidHead.add(earIn);
+});
+
+// 眉毛
+var browL = mesh(new THREE.BoxGeometry(0.12, 0.026, 0.03), hairMat);
+browL.position.set(-0.16, 0.18, 0.41); kidHead.add(browL);
+var browR = mesh(new THREE.BoxGeometry(0.12, 0.026, 0.03), hairMat);
+browR.position.set(0.16, 0.18, 0.41); kidHead.add(browR);
+
+// 健康明亮大眼（双高光）
+var eyeGroupGood = new THREE.Group(); kidHead.add(eyeGroupGood);
+[-0.16, 0.16].forEach(function (ex) {
+  var ew = mesh(new THREE.SphereGeometry(0.082, 16, 14), toon('#ffffff'));
+  ew.position.set(ex, 0.05, 0.395); ew.scale.set(1.0, 1.08, 0.55); eyeGroupGood.add(ew);
+  var iris = mesh(new THREE.SphereGeometry(0.054, 14, 12), toon('#2c1e16'));
+  iris.position.set(ex, 0.05, 0.432); iris.scale.set(1, 1.05, 0.65); eyeGroupGood.add(iris);
+  var h1 = mesh(new THREE.SphereGeometry(0.020, 10, 8), new THREE.MeshBasicMaterial({ color: '#ffffff' }));
+  h1.position.set(ex + 0.022, 0.075, 0.462); eyeGroupGood.add(h1);
+  var h2 = mesh(new THREE.SphereGeometry(0.010, 8, 8), new THREE.MeshBasicMaterial({ color: '#ffffff' }));
+  h2.position.set(ex - 0.018, 0.032, 0.460); eyeGroupGood.add(h2);
+});
+
+// 温和疲惫眯眼（微微半眯弧线 + 柔和淡粉眼下微晕 + 一滴淡蓝小泪珠，绝无恐怖血环！）
+var eyeGroupBad = new THREE.Group(); kidHead.add(eyeGroupBad);
+[-0.16, 0.16].forEach(function (ex) {
+  var lid = mesh(new THREE.TorusGeometry(0.068, 0.017, 10, 18, Math.PI), hairMat);
+  lid.position.set(ex, 0.02, 0.428);
+  lid.rotation.z = ex < 0 ? -0.12 : 0.12;
+  eyeGroupBad.add(lid);
+  var softPink = mesh(new THREE.SphereGeometry(0.068, 12, 10), toon('#fda4af', { transparent: true, opacity: 0.42 }));
+  softPink.scale.set(1.3, 0.45, 0.35); softPink.position.set(ex, -0.005, 0.422);
+  eyeGroupBad.add(softPink);
+  var tear = mesh(new THREE.SphereGeometry(0.024, 10, 8), new THREE.MeshBasicMaterial({ color: '#7dd3fc', transparent: true, opacity: 0.88 }));
+  tear.scale.set(0.85, 1.25, 0.85); tear.position.set(ex + (ex < 0 ? -0.058 : 0.058), 0.01, 0.435);
+  eyeGroupBad.add(tear);
+});
+
+// 小巧鼻子
+var noseMat = toon('#f4b48a');
+var noseMesh = mesh(new THREE.SphereGeometry(0.048, 12, 10), noseMat);
+noseMesh.position.set(0, -0.025, 0.445);
+kidHead.add(noseMesh);
+
+// 脸颊温暖红晕
+var cheekMat = toon('#ff98a4', { transparent: true, opacity: 0.38 });
+var cheekL = mesh(new THREE.SphereGeometry(0.088, 12, 10), cheekMat);
+cheekL.scale.set(1.15, 0.65, 0.32); cheekL.position.set(-0.24, -0.065, 0.385); kidHead.add(cheekL);
+var cheekR = mesh(new THREE.SphereGeometry(0.088, 12, 10), cheekMat);
+cheekR.scale.set(1.15, 0.65, 0.32); cheekR.position.set(0.24, -0.065, 0.385); kidHead.add(cheekR);
+
+// 嘴巴（灿烂微笑 / 微微难受嘟嘴 / 吐小粉舌）
+var mouthSmile = mesh(new THREE.TorusGeometry(0.088, 0.020, 10, 18, Math.PI), toon('#c2414c'));
+mouthSmile.position.set(0, -0.125, 0.415); mouthSmile.rotation.z = Math.PI;
+kidHead.add(mouthSmile);
+var mouthSad = mesh(new THREE.TorusGeometry(0.072, 0.019, 10, 16, Math.PI), toon('#9f1239'));
+mouthSad.position.set(0, -0.195, 0.415);
+kidHead.add(mouthSad);
+var tongueOut = new THREE.Group(); kidHead.add(tongueOut);
+var mouthOpen = mesh(new THREE.SphereGeometry(0.068, 12, 10), toon('#881337'));
+mouthOpen.scale.set(1.15, 0.8, 0.45); mouthOpen.position.set(0, -0.165, 0.42); tongueOut.add(mouthOpen);
+var tonguePink = mesh(new THREE.SphereGeometry(0.056, 12, 10), toon('#fb7185'));
+tonguePink.scale.set(0.95, 0.65, 0.72); tonguePink.position.set(0, -0.195, 0.445); tongueOut.add(tonguePink);
+
+// 自然双臂（白校服袖 + 圆润小手 + 可脏污泥斑）
+var armL = new THREE.Group(); armL.position.set(-0.42, 0.74, 0.05); kidTorso.add(armL);
+var sleeveL = mesh(new THREE.CylinderGeometry(0.095, 0.088, 0.48, 14), shirtMat); sleeveL.position.y = -0.22; armL.add(sleeveL);
+var cuffL = mesh(new THREE.TorusGeometry(0.088, 0.02, 8, 16), vestMat); cuffL.rotation.x = Math.PI / 2; cuffL.position.y = -0.44; armL.add(cuffL);
+var handL = mesh(new THREE.SphereGeometry(0.098, 14, 12), skinMat); handL.position.y = -0.50; armL.add(handL);
+var dirtL = mesh(new THREE.SphereGeometry(0.066, 10, 8), toon('#6b4f3a')); dirtL.position.set(0, -0.50, 0.058); armL.add(dirtL);
+
+var armR = new THREE.Group(); armR.position.set(0.42, 0.74, 0.05); kidTorso.add(armR);
+var sleeveR = mesh(new THREE.CylinderGeometry(0.095, 0.088, 0.48, 14), shirtMat); sleeveR.position.y = -0.22; armR.add(sleeveR);
+var cuffR = mesh(new THREE.TorusGeometry(0.088, 0.02, 8, 16), vestMat); cuffR.rotation.x = Math.PI / 2; cuffR.position.y = -0.44; armR.add(cuffR);
+var handR = mesh(new THREE.SphereGeometry(0.098, 14, 12), skinMat); handR.position.y = -0.50; armR.add(handR);
+var dirtR = mesh(new THREE.SphereGeometry(0.066, 10, 8), toon('#6b4f3a')); dirtR.position.set(0, -0.50, 0.058); armR.add(dirtR);
+
+/* ===== 5 站专属场景道具（挂在 kidRoot / kidHead 上，绝无倒插翻转！） ===== */
+
+// 1. 眼睛站：桌前书本 + 亮起的精致护眼台灯 + 绿盆栽
+var bookTex = ctex(256, 128, function (g, w, h) {
+  g.fillStyle = '#fffdf7'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#cbd5e1';
+  for (var y = 18; y < h - 14; y += 14) { g.fillRect(14, y, w * 0.40, 5); g.fillRect(w * 0.55, y, w * 0.36, 5); }
+  g.fillStyle = '#86efac'; g.fillRect(w * 0.55, 18, w * 0.30, 38);
+});
+var eyeBook = new THREE.Group(); eyeBook.position.set(0, 0.04, 0.78);
+var pgL = mesh(new THREE.BoxGeometry(0.54, 0.036, 0.42), new THREE.MeshToonMaterial({ map: bookTex, gradientMap: ramp }));
+pgL.position.x = -0.27; pgL.rotation.z = 0.07; eyeBook.add(pgL);
+var pgR = mesh(new THREE.BoxGeometry(0.54, 0.036, 0.42), new THREE.MeshToonMaterial({ map: bookTex, gradientMap: ramp }));
+pgR.position.x = 0.27; pgR.rotation.z = -0.07; eyeBook.add(pgR);
+var spine = mesh(new THREE.BoxGeometry(1.14, 0.028, 0.45), toon('#2563eb')); spine.position.y = -0.022; eyeBook.add(spine);
+kidRoot.add(eyeBook);
+
+var eyeSceneGood = new THREE.Group(); kidRoot.add(eyeSceneGood);
+// 治愈后桌左亮起的精致奶白护眼台灯
+var sLampBase = mesh(new THREE.CylinderGeometry(0.24, 0.28, 0.07, 22), toon('#f8fafc')); sLampBase.position.set(-1.08, 0.035, 0.56); eyeSceneGood.add(sLampBase);
+var sLampBtn = mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.03, 12), toon('#10b981')); sLampBtn.position.set(-0.96, 0.075, 0.64); eyeSceneGood.add(sLampBtn);
+var sLampArm1 = mesh(new THREE.CylinderGeometry(0.032, 0.036, 0.68, 12), toon('#e2e8f0')); sLampArm1.position.set(-1.14, 0.38, 0.56); sLampArm1.rotation.z = 0.22; eyeSceneGood.add(sLampArm1);
+var sLampJoint = mesh(new THREE.SphereGeometry(0.055, 12, 10), toon('#cbd5e1')); sLampJoint.position.set(-1.21, 0.70, 0.56); eyeSceneGood.add(sLampJoint);
+var sLampArm2 = mesh(new THREE.CylinderGeometry(0.028, 0.032, 0.56, 12), toon('#e2e8f0')); sLampArm2.position.set(-0.99, 0.89, 0.56); sLampArm2.rotation.z = -0.82; eyeSceneGood.add(sLampArm2);
+var sLampShade = mesh(new THREE.CylinderGeometry(0.11, 0.27, 0.24, 22), toon('#fffbeb')); sLampShade.position.set(-0.74, 1.00, 0.56); sLampShade.rotation.z = -0.35; eyeSceneGood.add(sLampShade);
+var sLampTrim = mesh(new THREE.TorusGeometry(0.27, 0.022, 8, 22), toon('#10b981')); sLampTrim.rotation.x = Math.PI / 2; sLampTrim.position.set(0, -0.12, 0); sLampShade.add(sLampTrim);
+var sLampBulb = mesh(new THREE.SphereGeometry(0.095, 14, 12), new THREE.MeshBasicMaterial({ color: '#fef08a' })); sLampBulb.position.set(0, -0.09, 0); sLampShade.add(sLampBulb);
+var sLampGlow = new THREE.Mesh(new THREE.ConeGeometry(0.62, 0.92, 20, 1, true), new THREE.MeshBasicMaterial({ color: '#fef08a', transparent: true, opacity: 0.24, side: THREE.DoubleSide, depthWrite: false }));
+sLampGlow.position.set(-0.55, 0.48, 0.56); sLampGlow.rotation.z = -0.25; eyeSceneGood.add(sLampGlow);
+// 治愈后桌右小巧绿盆栽
+var sPot = mesh(new THREE.CylinderGeometry(0.17, 0.12, 0.22, 18), toon('#d97706')); sPot.position.set(1.08, 0.11, 0.58); eyeSceneGood.add(sPot);
+var sPotRim = mesh(new THREE.TorusGeometry(0.17, 0.025, 8, 18), toon('#b45309')); sPotRim.rotation.x = Math.PI / 2; sPotRim.position.set(1.08, 0.22, 0.58); eyeSceneGood.add(sPotRim);
+var sSoil = mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.02, 14), toon('#5c3c24')); sSoil.position.set(1.08, 0.22, 0.58); eyeSceneGood.add(sSoil);
+for (var li = 0; li < 6; li++) {
+  var la = li * Math.PI / 3;
+  var lf = mesh(new THREE.SphereGeometry(0.11, 12, 10), toon(li % 2 ? '#16a34a' : '#22c55e'));
+  lf.scale.set(0.75, 1.35, 0.38);
+  lf.position.set(1.08 + Math.cos(la) * 0.13, 0.36 + (li % 2) * 0.08, 0.58 + Math.sin(la) * 0.13);
+  lf.rotation.set(Math.sin(la) * 0.45, -la, -Math.cos(la) * 0.45);
+  eyeSceneGood.add(lf);
+}
+
+// 2. 耳朵站：红色爆音大耳机 vs 硅胶降噪耳塞
+var earSceneBad = new THREE.Group(); kidHead.add(earSceneBad);
+var hpBand = mesh(new THREE.TorusGeometry(0.50, 0.055, 10, 26, Math.PI), toon('#dc2626'));
+hpBand.position.y = 0.04; earSceneBad.add(hpBand);
+var hpCupL = mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.14, 20), toon('#ef4444')); hpCupL.rotation.z = Math.PI / 2; hpCupL.position.set(-0.52, 0.02, 0); earSceneBad.add(hpCupL);
+var hpCupR = mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.14, 20), toon('#ef4444')); hpCupR.rotation.z = Math.PI / 2; hpCupR.position.set(0.52, 0.02, 0); earSceneBad.add(hpCupR);
+var noiseRings = [];
+[-1, 1].forEach(function (side) {
+  for (var ri = 0; ri < 2; ri++) {
+    var nr = new THREE.Mesh(new THREE.TorusGeometry(0.24 + ri * 0.12, 0.022, 8, 20), new THREE.MeshBasicMaterial({ color: '#ff3b30', transparent: true, opacity: 0.85 }));
+    nr.rotation.y = Math.PI / 2; nr.position.set(side * (0.64 + ri * 0.14), 0.02, 0);
+    nr.userData.side = side; nr.userData.idx = ri;
+    earSceneBad.add(nr); noiseRings.push(nr);
+  }
+});
+
+var earSceneGood = new THREE.Group(); kidHead.add(earSceneGood);
+[-0.49, 0.49].forEach(function (ex) {
+  var plug = mesh(new THREE.SphereGeometry(0.068, 12, 10), toon('#2dd4bf'));
+  plug.scale.set(1.2, 0.9, 0.9); plug.position.set(ex, 0.0, 0.03); earSceneGood.add(plug);
+  var softRing = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.014, 8, 20), new THREE.MeshBasicMaterial({ color: '#5eead4', transparent: true, opacity: 0.72 }));
+  softRing.rotation.y = Math.PI / 2; softRing.position.set(ex * 1.15, 0.0, 0.03); earSceneGood.add(softRing);
+});
+
+// 3. 鼻子站：举在鼻前的危险小棒 vs 柔软波浪白纸巾
+var noseSceneBad = new THREE.Group(); kidHead.add(noseSceneBad);
+var badStick = mesh(new THREE.CylinderGeometry(0.018, 0.028, 0.52, 10), toon('#eab308'));
+badStick.position.set(0.22, -0.14, 0.56); badStick.rotation.set(0.42, 0, 0.65); noseSceneBad.add(badStick);
+var badTip = mesh(new THREE.ConeGeometry(0.028, 0.08, 8), toon('#ef4444'));
+badTip.position.set(0.07, -0.02, 0.50); badTip.rotation.z = 0.8; noseSceneBad.add(badTip);
+
+var noseSceneGood = new THREE.Group(); kidHead.add(noseSceneGood);
+var softTissueGeo = new THREE.PlaneGeometry(0.24, 0.22, 8, 8);
+var stPos = softTissueGeo.attributes.position;
+for (var sti = 0; sti < stPos.count; sti++) {
+  var stx = stPos.getX(sti), sty = stPos.getY(sti);
+  stPos.setZ(sti, Math.sin(stx * 16) * 0.022 + Math.cos(sty * 14) * 0.015);
+}
+softTissueGeo.computeVertexNormals();
+var softTissue = mesh(softTissueGeo, toon('#ffffff', { side: THREE.DoubleSide }));
+softTissue.position.set(0.06, -0.08, 0.55); softTissue.rotation.set(-0.2, -0.22, 0.12);
+noseSceneGood.add(softTissue);
+
+// 4. 舌头站：滚烫辣汤锅 vs 温水漱口杯+牙刷
+var tongueSceneBad = new THREE.Group(); kidRoot.add(tongueSceneBad);
+var potBody = mesh(new THREE.CylinderGeometry(0.44, 0.33, 0.32, 22), toon('#b91c1c'));
+potBody.position.set(0, 0.16, 0.80); tongueSceneBad.add(potBody);
+var soupTop = mesh(new THREE.CylinderGeometry(0.40, 0.40, 0.04, 20), toon('#f97316'));
+soupTop.position.set(0, 0.31, 0.80); tongueSceneBad.add(soupTop);
+for (var ci = 0; ci < 3; ci++) {
+  var ch = mesh(new THREE.ConeGeometry(0.052, 0.22, 10), toon('#dc2626'));
+  ch.position.set(-0.15 + ci * 0.15, 0.36, 0.77 + (ci % 2) * 0.07);
+  ch.rotation.z = 0.7 - ci * 0.5; ch.rotation.x = 0.4; tongueSceneBad.add(ch);
+}
+var steamPuffs = [];
+for (var si = 0; si < 5; si++) {
+  var sp = new THREE.Mesh(new THREE.SphereGeometry(0.085 + (si % 2) * 0.028, 10, 8), new THREE.MeshBasicMaterial({ color: '#fed7aa', transparent: true, opacity: 0.74 }));
+  sp.position.set((si - 2) * 0.11, 0.48 + si * 0.12, 0.80);
+  sp.userData.phase = si * 1.2;
+  tongueSceneBad.add(sp); steamPuffs.push(sp);
+}
+
+var tongueSceneGood = new THREE.Group(); kidRoot.add(tongueSceneGood);
+var sCup = mesh(new THREE.CylinderGeometry(0.19, 0.15, 0.36, 20), toon('#f8fafc'));
+sCup.position.set(0, 0.18, 0.80); tongueSceneGood.add(sCup);
+var sCupHandle = mesh(new THREE.TorusGeometry(0.09, 0.024, 8, 16, Math.PI), toon('#38bdf8'));
+sCupHandle.position.set(0.18, 0.19, 0.80); sCupHandle.rotation.z = -Math.PI / 2; tongueSceneGood.add(sCupHandle);
+var sCupWater = mesh(new THREE.CylinderGeometry(0.165, 0.165, 0.03, 18), toon('#7dd3fc'));
+sCupWater.position.set(0, 0.34, 0.80); tongueSceneGood.add(sCupWater);
+var sBrushH = mesh(new THREE.CylinderGeometry(0.020, 0.022, 0.52, 10), toon('#22c55e'));
+sBrushH.position.set(0.07, 0.34, 0.80); sBrushH.rotation.z = -0.26; tongueSceneGood.add(sBrushH);
+var sBrushHd = mesh(new THREE.BoxGeometry(0.055, 0.11, 0.038), toon('#16a34a'));
+sBrushHd.position.set(0.14, 0.58, 0.80); sBrushHd.rotation.z = -0.26; tongueSceneGood.add(sBrushHd);
+var sBristle = mesh(new THREE.BoxGeometry(0.048, 0.095, 0.042), toon('#ffffff'));
+sBristle.position.set(0.10, 0.59, 0.80); sBristle.rotation.z = -0.26; tongueSceneGood.add(sBristle);
+
+// 5. 皮肤站：头顶烈日暴晒 vs 蓝白条纹正立遮阳伞+香皂泡泡
+var skinSceneBad = new THREE.Group(); kidRoot.add(skinSceneBad);
+var hotSun = mesh(new THREE.SphereGeometry(0.30, 18, 14), new THREE.MeshBasicMaterial({ color: '#f97316' }));
+hotSun.position.set(0.82, 2.52, 0.10); skinSceneBad.add(hotSun);
+for (var rayi = 0; rayi < 3; rayi++) {
+  var uvBeam = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.10, 1.0, 10), new THREE.MeshBasicMaterial({ color: '#fb923c', transparent: true, opacity: 0.45 }));
+  uvBeam.position.set(0.45 - rayi * 0.18, 2.00, 0.12); uvBeam.rotation.z = 0.55; skinSceneBad.add(uvBeam);
+}
+
+var umbrellaStripeTex = ctex(256, 128, function (g, w, h) {
+  for (var i = 0; i < 16; i++) {
+    g.fillStyle = i % 2 === 0 ? '#0284c7' : '#f8fafc';
+    g.fillRect(i * (w / 16), 0, w / 16 + 1, h);
+  }
+  g.fillStyle = '#fef08a'; g.fillRect(0, h - 12, w, 12);
+});
+var skinSceneGood = new THREE.Group(); kidRoot.add(skinSceneGood);
+var umbPole = mesh(new THREE.CylinderGeometry(0.030, 0.030, 2.45, 12), toon('#64748b'));
+umbPole.position.set(0.68, 1.24, -0.05); skinSceneGood.add(umbPole);
+var umbTop = mesh(new THREE.SphereGeometry(1.16, 24, 14, 0, Math.PI * 2, 0, Math.PI * 0.34), new THREE.MeshToonMaterial({ map: umbrellaStripeTex, gradientMap: ramp, side: THREE.DoubleSide }));
+umbTop.position.set(0.14, 1.72, -0.02); skinSceneGood.add(umbTop);
+var umbFinial = mesh(new THREE.SphereGeometry(0.07, 10, 8), toon('#f59e0b'));
+umbFinial.position.set(0.14, 2.90, -0.02); skinSceneGood.add(umbFinial);
+var soapBubbles = [];
+for (var bi = 0; bi < 6; bi++) {
+  var bbl = new THREE.Mesh(new THREE.SphereGeometry(0.07 + (bi % 3) * 0.024, 12, 10), new THREE.MeshBasicMaterial({ color: '#bae6fd', transparent: true, opacity: 0.72 }));
+  bbl.position.set(-0.55 + (bi % 3) * 0.55, 0.65 + Math.floor(bi / 3) * 0.48, 0.55);
+  bbl.userData.phase = bi * 1.1;
+  skinSceneGood.add(bbl); soapBubbles.push(bbl);
+}
+
+/* ===== 精雕 5 站 10 件 3D 护具 / 干扰错物（不看字 1 秒认出！） ===== */
+
+// 共享精雕纹理
+var dirtyClothTex = ctex(256, 256, function (g, w, h) {
+  g.fillStyle = '#ddd6c7'; g.fillRect(0, 0, w, h);
+  // 真实格子手帕纹路
+  g.strokeStyle = 'rgba(110,130,148,.32)'; g.lineWidth = 4;
+  for (var i = 24; i < w; i += 36) {
+    g.beginPath(); g.moveTo(i, 0); g.lineTo(i, h); g.stroke();
+    g.beginPath(); g.moveTo(0, i); g.lineTo(w, i); g.stroke();
+  }
+  g.strokeStyle = 'rgba(148,163,184,.55)'; g.lineWidth = 6; g.setLineDash([8, 6]);
+  g.strokeRect(10, 10, w - 20, h - 20); g.setLineDash([]);
+  // 自然晕染泥污脏渍（非僵硬圆饼！）
+  var stains = [[78, 86, 46], [164, 138, 52], [116, 178, 34], [186, 68, 28], [62, 168, 26]];
+  stains.forEach(function (st) {
+    var gr = g.createRadialGradient(st[0], st[1], 4, st[0], st[1], st[2]);
+    gr.addColorStop(0, 'rgba(92,64,40,.85)');
+    gr.addColorStop(0.55, 'rgba(116,86,58,.52)');
+    gr.addColorStop(1, 'rgba(130,104,76,0)');
+    g.fillStyle = gr;
+    g.beginPath(); g.arc(st[0], st[1], st[2], 0, Math.PI * 2); g.fill();
+  });
+});
+
+var tissueBoxTex = ctex(256, 128, function (g, w, h) {
+  g.fillStyle = '#7dd3fc'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#e0f2fe'; g.fillRect(0, h * 0.65, w, h * 0.35);
+  // 白色小云朵图案
+  g.fillStyle = '#ffffff';
+  [[52, 46, 18], [68, 42, 22], [86, 48, 16], [182, 42, 16], [198, 38, 20], [214, 44, 15]].forEach(function (c) {
+    g.beginPath(); g.arc(c[0], c[1], c[2], 0, Math.PI * 2); g.fill();
+  });
+  g.fillStyle = '#0369a1'; g.font = 'bold 26px "Microsoft YaHei",sans-serif';
+  g.textAlign = 'center'; g.fillText('柔润面巾纸', w / 2, 104);
+});
+
+var cupWaveTex = ctex(256, 128, function (g, w, h) {
+  g.fillStyle = '#fffdf9'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#bae6fd'; g.fillRect(0, 68, w, 60);
+  g.strokeStyle = '#0284c7'; g.lineWidth = 5;
+  for (var r = 0; r < 2; r++) {
+    g.beginPath();
+    for (var x = 0; x <= w; x += 16) {
+      var y = 68 + r * 20 + Math.sin(x * 0.08) * 6;
+      if (x === 0) g.moveTo(x, y); else g.lineTo(x, y);
+    }
+    g.stroke();
+  }
+  g.fillStyle = '#0369a1'; g.font = 'bold 24px "Microsoft YaHei",sans-serif';
+  g.textAlign = 'center'; g.fillText('温水漱口', w / 2, 44);
+});
+
+var warnPickTex = ctex(128, 128, function (g, w, h) {
+  g.fillStyle = '#fef2f2'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = '#dc2626'; g.lineWidth = 10;
+  g.beginPath(); g.arc(64, 64, 52, 0, Math.PI * 2); g.stroke();
+  g.beginPath(); g.moveTo(28, 28); g.lineTo(100, 100); g.stroke();
+  g.fillStyle = '#991b1b'; g.font = 'bold 34px "Microsoft YaHei",sans-serif';
+  g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('危险', 64, 66);
+});
+
+var quietBadgeTex = ctex(128, 128, function (g, w, h) {
+  g.fillStyle = '#ecfdf5'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = '#10b981'; g.lineWidth = 10;
+  g.beginPath(); g.arc(64, 64, 52, 0, Math.PI * 2); g.stroke();
+  g.fillStyle = '#059669'; g.font = 'bold 32px "Microsoft YaHei",sans-serif';
+  g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('降噪', 64, 66);
+});
+
+var uvWarnTex = ctex(160, 160, function (g, w, h) {
+  g.fillStyle = '#fff1f2'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = '#dc2626'; g.lineWidth = 9; g.strokeRect(8, 8, w - 16, h - 16);
+  // 晒红小警告三角
+  g.fillStyle = '#ef4444';
+  g.beginPath(); g.moveTo(80, 22); g.lineTo(132, 104); g.lineTo(28, 104); g.closePath(); g.fill();
+  g.fillStyle = '#ffffff'; g.font = 'bold 42px sans-serif'; g.textAlign = 'center'; g.fillText('!', 80, 92);
+  g.fillStyle = '#b91c1c'; g.font = 'bold 26px "Microsoft YaHei",sans-serif';
+  g.fillText('暴晒伤肤', 80, 140);
+});
+
+function buildPropModel(stationId, role) {
+  var g = new THREE.Group();
+
+  if (stationId === 'eye' && role === 'good') {
+    // 精致奶白/暖黄护眼台灯（底座+两段折臂+灯罩+发光灯泡）+ 旁立绿色盆栽
+    var lampG = new THREE.Group(); lampG.position.set(-0.14, 0, 0);
+    var base = mesh(new THREE.CylinderGeometry(0.22, 0.26, 0.075, 22), toon('#fffdf7')); base.position.y = 0.04; lampG.add(base);
+    var sw = mesh(new THREE.CylinderGeometry(0.036, 0.036, 0.025, 12), toon('#10b981')); sw.position.set(0.10, 0.085, 0.08); lampG.add(sw);
+    var arm1 = mesh(new THREE.CylinderGeometry(0.028, 0.032, 0.44, 12), toon('#e2e8f0')); arm1.position.set(-0.07, 0.27, 0); arm1.rotation.z = 0.28; lampG.add(arm1);
+    var jnt = mesh(new THREE.SphereGeometry(0.048, 12, 10), toon('#cbd5e1')); jnt.position.set(-0.13, 0.48, 0); lampG.add(jnt);
+    var arm2 = mesh(new THREE.CylinderGeometry(0.024, 0.028, 0.36, 12), toon('#e2e8f0')); arm2.position.set(0.02, 0.60, 0); arm2.rotation.z = -0.85; lampG.add(arm2);
+    var shade = mesh(new THREE.CylinderGeometry(0.085, 0.22, 0.20, 22), toon('#fef3c7')); shade.position.set(0.18, 0.64, 0); shade.rotation.z = -0.45; lampG.add(shade);
+    var shadeRim = mesh(new THREE.TorusGeometry(0.22, 0.018, 8, 22), toon('#10b981')); shadeRim.rotation.x = Math.PI / 2; shadeRim.position.set(0, -0.10, 0); shade.add(shadeRim);
+    var bulb = mesh(new THREE.SphereGeometry(0.082, 14, 12), new THREE.MeshBasicMaterial({ color: '#fde047' })); bulb.position.set(0, -0.08, 0); shade.add(bulb);
+    var cone = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.46, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#fef08a', transparent: true, opacity: 0.26, side: THREE.DoubleSide, depthWrite: false }));
+    cone.position.set(0.28, 0.32, 0); cone.rotation.z = -0.35; lampG.add(cone);
+    g.add(lampG);
+    // 旁立小巧绿色盆栽远眺标
+    var potG = new THREE.Group(); potG.position.set(0.30, 0, 0.14);
+    var pot = mesh(new THREE.CylinderGeometry(0.13, 0.095, 0.18, 16), toon('#d97706')); pot.position.y = 0.09; potG.add(pot);
+    var potTop = mesh(new THREE.TorusGeometry(0.13, 0.02, 8, 16), toon('#b45309')); potTop.rotation.x = Math.PI / 2; potTop.position.y = 0.18; potG.add(potTop);
+    for (var pi = 0; pi < 5; pi++) {
+      var pa = pi * Math.PI * 2 / 5;
+      var plf = mesh(new THREE.SphereGeometry(0.085, 10, 8), toon(pi % 2 ? '#16a34a' : '#22c55e'));
+      plf.scale.set(0.7, 1.35, 0.35);
+      plf.position.set(Math.cos(pa) * 0.09, 0.28 + (pi % 2) * 0.06, Math.sin(pa) * 0.09);
+      plf.rotation.set(Math.sin(pa) * 0.5, -pa, -Math.cos(pa) * 0.5);
+      potG.add(plf);
+    }
+    g.add(potG);
+
+  } else if (stationId === 'eye' && role === 'bad') {
+    // 真实褶皱发灰格子脏手帕（波浪折痕布面 + CanvasTexture 格子布纹与泥污脏渍，绝无水泥砖！）
+    function makeWavyCloth(w, d, amp, yBase, rotY) {
+      var geo = new THREE.PlaneGeometry(w, d, 18, 18);
+      geo.rotateX(-Math.PI / 2);
+      var pos = geo.attributes.position;
+      for (var i = 0; i < pos.count; i++) {
+        var vx = pos.getX(i), vz = pos.getZ(i);
+        var wave = Math.sin(vx * 7.5 + vz * 4.0) * amp + Math.cos(vz * 8.5 - vx * 3.0) * (amp * 0.7);
+        var lift = Math.max(0, 0.12 - (vx * vx + vz * vz) * 0.45);
+        pos.setY(i, Math.max(0.015, yBase + wave + lift));
+      }
+      geo.computeVertexNormals();
+      var m = mesh(geo, new THREE.MeshToonMaterial({ map: dirtyClothTex, gradientMap: ramp, side: THREE.DoubleSide }));
+      m.rotation.y = rotY;
+      return m;
+    }
+    g.add(makeWavyCloth(0.82, 0.76, 0.055, 0.04, 0.25));
+    var topFold = makeWavyCloth(0.56, 0.52, 0.068, 0.14, -0.55);
+    topFold.position.set(0.04, 0.05, -0.02);
+    topFold.rotation.z = 0.12;
+    g.add(topFold);
+    // 褶皱角翘起感
+    var corner = makeWavyCloth(0.32, 0.30, 0.045, 0.22, 0.9);
+    corner.position.set(-0.10, 0.06, 0.06); corner.rotation.x = 0.22;
+    g.add(corner);
+
+  } else if (stationId === 'ear' && role === 'good') {
+    // 一对柔软双伞帽蘑菇头硅胶降噪耳塞 + 透明小收纳盒 + 连接软线 + 安静绿标
+    var boxBase = mesh(new THREE.BoxGeometry(0.56, 0.14, 0.38), new THREE.MeshBasicMaterial({ color: '#bae6fd', transparent: true, opacity: 0.45 }));
+    boxBase.position.set(0, 0.08, -0.04); g.add(boxBase);
+    var boxFrame = mesh(new THREE.BoxGeometry(0.58, 0.03, 0.40), toon('#38bdf8')); boxFrame.position.set(0, 0.02, -0.04); g.add(boxFrame);
+    var boxLid = mesh(new THREE.BoxGeometry(0.56, 0.03, 0.36), new THREE.MeshBasicMaterial({ color: '#e0f2fe', transparent: true, opacity: 0.52 }));
+    boxLid.position.set(0, 0.24, -0.25); boxLid.rotation.x = -0.92; g.add(boxLid);
+
+    // Lathe 车削双层圆润硅胶伞帽耳塞
+    var plugPts = [
+      new THREE.Vector2(0.00, 0.00), new THREE.Vector2(0.028, 0.00), new THREE.Vector2(0.030, 0.12),
+      new THREE.Vector2(0.095, 0.14), new THREE.Vector2(0.075, 0.18), new THREE.Vector2(0.038, 0.20),
+      new THREE.Vector2(0.082, 0.23), new THREE.Vector2(0.055, 0.30), new THREE.Vector2(0.00, 0.33)
+    ];
+    var plugGeo = new THREE.LatheGeometry(plugPts, 20);
+    [-0.17, 0.17].forEach(function (px) {
+      var pg = mesh(plugGeo, toon('#14b8a6'));
+      pg.position.set(px, 0.14, 0.08);
+      pg.rotation.z = px < 0 ? 0.32 : -0.32;
+      pg.rotation.x = 0.22;
+      g.add(pg);
+    });
+    // 柔软硅胶防丢连接线
+    var cordCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-0.17, 0.16, 0.08),
+      new THREE.Vector3(-0.10, 0.08, 0.28),
+      new THREE.Vector3(0.0, 0.07, 0.32),
+      new THREE.Vector3(0.10, 0.08, 0.28),
+      new THREE.Vector3(0.17, 0.16, 0.08)
+    ]);
+    var cord = mesh(new THREE.TubeGeometry(cordCurve, 20, 0.016, 8, false), toon('#5eead4'));
+    g.add(cord);
+    // 绿色安静徽章（正立面向相机，文字清晰不歪！）
+    var qBadge = mesh(new THREE.BoxGeometry(0.30, 0.30, 0.04), [
+      toon('#10b981'), toon('#10b981'), toon('#10b981'), toon('#10b981'),
+      new THREE.MeshBasicMaterial({ map: quietBadgeTex }), toon('#10b981')
+    ]);
+    qBadge.position.set(0.30, 0.34, -0.12); qBadge.rotation.y = -0.22;
+    g.add(qBadge);
+
+  } else if (stationId === 'ear' && role === 'bad') {
+    // 真实细长金属银柄尖头挖耳勺 + 正立红警告牌
+    var pickG = new THREE.Group(); pickG.position.set(-0.08, 0.28, 0.04); pickG.rotation.z = -1.02; pickG.rotation.y = 0.22;
+    var silverMat = toon('#7c8fa6');
+    var darkSilver = toon('#475569');
+    var handle = mesh(new THREE.CylinderGeometry(0.036, 0.040, 0.74, 16), silverMat);
+    pickG.add(handle);
+    // 防滑金属滚花环
+    for (var gi = -2; gi <= 2; gi++) {
+      var grip = mesh(new THREE.TorusGeometry(0.042, 0.010, 8, 16), darkSilver);
+      grip.rotation.x = Math.PI / 2; grip.position.y = -0.08 + gi * 0.045; pickG.add(grip);
+    }
+    // 细颈 + 弯曲扁平尖勺头
+    var neck = mesh(new THREE.CylinderGeometry(0.020, 0.034, 0.22, 12), silverMat); neck.position.y = 0.46; pickG.add(neck);
+    var scoop = mesh(new THREE.SphereGeometry(0.048, 12, 10), toon('#94a3b8'));
+    scoop.scale.set(0.95, 1.55, 0.38); scoop.position.set(0.015, 0.59, 0.02); scoop.rotation.x = 0.45; pickG.add(scoop);
+    var tipRed = mesh(new THREE.ConeGeometry(0.030, 0.095, 10), toon('#ef4444'));
+    tipRed.position.set(0.02, 0.67, 0.04); tipRed.rotation.x = 0.45; pickG.add(tipRed);
+    // 尾部小棉头
+    var tailBall = mesh(new THREE.SphereGeometry(0.058, 12, 10), toon('#fde68a')); tailBall.position.y = -0.38; pickG.add(tailBall);
+    g.add(pickG);
+    // 醒目正立红警告牌
+    var wBadge = mesh(new THREE.BoxGeometry(0.32, 0.32, 0.042), [
+      toon('#dc2626'), toon('#dc2626'), toon('#dc2626'), toon('#dc2626'),
+      new THREE.MeshBasicMaterial({ map: warnPickTex }), toon('#dc2626')
+    ]);
+    wBadge.position.set(0.28, 0.30, -0.04); wBadge.rotation.y = 0.22;
+    g.add(wBadge);
+
+  } else if (stationId === 'nose' && role === 'good') {
+    // 清新抽纸盒（淡蓝云朵纸盒 + 顶部波浪飘逸白色面巾纸，1 秒认出！）
+    var tbox = mesh(new THREE.BoxGeometry(0.68, 0.30, 0.42), [
+      toon('#38bdf8'), toon('#38bdf8'), toon('#bae6fd'), toon('#0284c7'),
+      new THREE.MeshBasicMaterial({ map: tissueBoxTex }), toon('#38bdf8')
+    ]);
+    tbox.position.y = 0.16; g.add(tbox);
+    var slotOval = mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.02, 20), toon('#0369a1'));
+    slotOval.scale.set(1.35, 1, 0.45); slotOval.position.y = 0.315; g.add(slotOval);
+    // 波浪飘逸的白色柔软面巾纸
+    var tSheetGeo = new THREE.PlaneGeometry(0.42, 0.44, 14, 14);
+    var tp = tSheetGeo.attributes.position;
+    for (var ti = 0; ti < tp.count; ti++) {
+      var tx = tp.getX(ti), ty = tp.getY(ti);
+      var pinch = 0.38 + 0.62 * ((ty + 0.22) / 0.44);
+      tp.setX(ti, tx * pinch);
+      tp.setZ(ti, Math.sin(tx * 12) * 0.045 * pinch + Math.sin((ty + 0.22) * 6) * 0.055);
+    }
+    tSheetGeo.computeVertexNormals();
+    var sheet1 = mesh(tSheetGeo, toon('#ffffff', { side: THREE.DoubleSide }));
+    sheet1.position.set(0, 0.50, 0.01); sheet1.rotation.y = 0.18; g.add(sheet1);
+    var sheet2 = mesh(tSheetGeo, toon('#f1f5f9', { side: THREE.DoubleSide }));
+    sheet2.position.set(0.03, 0.46, -0.03); sheet2.rotation.set(-0.22, -0.35, 0.14); sheet2.scale.setScalar(0.84); g.add(sheet2);
+
+  } else if (stationId === 'nose' && role === 'bad') {
+    // 彩色硬塑料小弹珠 + 红色危险提示圈
+    var ring = mesh(new THREE.TorusGeometry(0.36, 0.042, 10, 26), toon('#ef4444'));
+    ring.rotation.x = Math.PI / 2; ring.position.y = 0.05; g.add(ring);
+    var slash = mesh(new THREE.BoxGeometry(0.68, 0.045, 0.06), toon('#ef4444'));
+    slash.position.y = 0.05; slash.rotation.y = 0.78; g.add(slash);
+    var beadCols = ['#ef4444', '#f59e0b', '#8b5cf6', '#3b82f6', '#ec4899', '#10b981'];
+    beadCols.forEach(function (bc, bi) {
+      var a = bi * Math.PI * 2 / 6;
+      var r = bi === 0 ? 0 : 0.21;
+      var bd = mesh(new THREE.SphereGeometry(0.105, 16, 14), toon(bc));
+      bd.position.set(Math.cos(a) * r, 0.16 + (bi === 0 ? 0.06 : 0), Math.sin(a) * r);
+      var hl = mesh(new THREE.SphereGeometry(0.028, 8, 8), new THREE.MeshBasicMaterial({ color: '#ffffff' }));
+      hl.position.set(0.04, 0.05, 0.06); bd.add(hl);
+      g.add(bd);
+    });
+
+  } else if (stationId === 'tongue' && role === 'good') {
+    // 陶瓷温水漱口杯（带把手+温水波浪图案）+ 卡通牙刷（清晰整排白刷毛）
+    var cup = mesh(new THREE.CylinderGeometry(0.24, 0.19, 0.44, 24), [
+      new THREE.MeshBasicMaterial({ map: cupWaveTex }), toon('#e0f2fe'), toon('#cbd5e1')
+    ]);
+    cup.position.set(-0.04, 0.23, 0); g.add(cup);
+    var cupRim = mesh(new THREE.TorusGeometry(0.235, 0.020, 8, 24), toon('#38bdf8'));
+    cupRim.rotation.x = Math.PI / 2; cupRim.position.set(-0.04, 0.445, 0); g.add(cupRim);
+    var cupHdl = mesh(new THREE.TorusGeometry(0.12, 0.030, 10, 18, Math.PI), toon('#38bdf8'));
+    cupHdl.position.set(0.19, 0.24, 0); cupHdl.rotation.z = -Math.PI / 2; g.add(cupHdl);
+    var water = mesh(new THREE.CylinderGeometry(0.21, 0.21, 0.03, 20), toon('#7dd3fc'));
+    water.position.set(-0.04, 0.41, 0); g.add(water);
+    // 卡通牙刷（绿白柄 + 刷头 + 整排清晰白色刷毛簇）
+    var tbG = new THREE.Group(); tbG.position.set(0.04, 0.44, 0.02); tbG.rotation.z = -0.34;
+    var tbStick = mesh(new THREE.CylinderGeometry(0.026, 0.030, 0.56, 12), toon('#22c55e')); tbG.add(tbStick);
+    var tbHead = mesh(new THREE.BoxGeometry(0.058, 0.15, 0.042), toon('#16a34a')); tbHead.position.set(0, 0.30, 0); tbG.add(tbHead);
+    for (var br = 0; br < 4; br++) {
+      var tuft = mesh(new THREE.BoxGeometry(0.055, 0.026, 0.044), toon('#ffffff'));
+      tuft.position.set(-0.052, 0.245 + br * 0.036, 0); tbG.add(tuft);
+    }
+    g.add(tbG);
+
+  } else if (stationId === 'tongue' && role === 'bad') {
+    // 弯曲火红大尖辣椒（真实弧形渐尖红椒 + 绿花萼椒蒂 + 冒火苗热气！）
+    function makeChili(scale) {
+      var cg = new THREE.Group();
+      var segs = [
+        { p: [0.00, 0.42, 0.00], r: 0.092 },
+        { p: [-0.04, 0.30, 0.02], r: 0.095 },
+        { p: [-0.02, 0.16, 0.03], r: 0.078 },
+        { p: [0.06, 0.04, 0.02], r: 0.054 },
+        { p: [0.16, -0.04, 0.00], r: 0.028 },
+        { p: [0.24, -0.07, -0.01], r: 0.008 }
+      ];
+      for (var i = 0; i < segs.length - 1; i++) {
+        var a = new THREE.Vector3(segs[i].p[0], segs[i].p[1], segs[i].p[2]);
+        var b = new THREE.Vector3(segs[i + 1].p[0], segs[i + 1].p[1], segs[i + 1].p[2]);
+        var dir = b.clone().sub(a);
+        var len = dir.length();
+        var cyl = mesh(new THREE.CylinderGeometry(segs[i].r, segs[i + 1].r, len * 1.15, 14), toon('#dc2626'));
+        cyl.position.copy(a).add(b).multiplyScalar(0.5);
+        cyl.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), dir.clone().normalize());
+        cg.add(cyl);
+      }
+      var topCap = mesh(new THREE.SphereGeometry(0.092, 12, 10), toon('#dc2626')); topCap.position.set(0, 0.42, 0); cg.add(topCap);
+      // 翠绿花萼与弯曲椒蒂
+      var calyx = mesh(new THREE.ConeGeometry(0.095, 0.10, 6), toon('#16a34a')); calyx.position.set(0.01, 0.49, 0); calyx.rotation.z = -0.18; cg.add(calyx);
+      var stemCurve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0.01, 0.51, 0), new THREE.Vector3(0.04, 0.61, 0), new THREE.Vector3(0.12, 0.65, 0)
+      ]);
+      var stem = mesh(new THREE.TubeGeometry(stemCurve, 10, 0.022, 8, false), toon('#15803d')); cg.add(stem);
+      cg.scale.setScalar(scale);
+      return cg;
+    }
+    var ch1 = makeChili(1.05); ch1.position.set(-0.08, 0.12, 0.04); ch1.rotation.z = -0.18; g.add(ch1);
+    var ch2 = makeChili(0.82); ch2.position.set(0.12, 0.08, -0.06); ch2.rotation.set(0.25, 0.8, -0.55); g.add(ch2);
+    // 小火苗辣气
+    [[-0.14, 0.68, 0.06], [0.16, 0.60, 0.08]].forEach(function (fp) {
+      var fl = mesh(new THREE.ConeGeometry(0.065, 0.16, 8), new THREE.MeshBasicMaterial({ color: '#f97316' }));
+      fl.position.set(fp[0], fp[1], fp[2]); g.add(fl);
+      var flIn = mesh(new THREE.ConeGeometry(0.036, 0.10, 8), new THREE.MeshBasicMaterial({ color: '#fde047' }));
+      flIn.position.set(fp[0], fp[1] - 0.02, fp[2] + 0.02); g.add(flIn);
+    });
+
+  } else if (stationId === 'skin' && role === 'good') {
+    // 撑开的蓝白条纹防晒遮阳伞（带 J 形伞柄）+ 浅粉香皂块（冒晶莹泡泡）
+    var uG = new THREE.Group(); uG.position.set(-0.10, 0, -0.02); uG.rotation.z = 0.12;
+    var uPole = mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.58, 10), toon('#64748b')); uPole.position.y = 0.36; uG.add(uPole);
+    var uHook = mesh(new THREE.TorusGeometry(0.055, 0.020, 8, 14, Math.PI), toon('#92400e'));
+    uHook.position.set(0.055, 0.08, 0); uHook.rotation.z = Math.PI; uG.add(uHook);
+    var uCanopy = mesh(new THREE.SphereGeometry(0.42, 22, 12, 0, Math.PI * 2, 0, Math.PI * 0.38), new THREE.MeshToonMaterial({ map: umbrellaStripeTex, gradientMap: ramp, side: THREE.DoubleSide }));
+    uCanopy.position.y = 0.36; uG.add(uCanopy);
+    var uTip = mesh(new THREE.SphereGeometry(0.04, 10, 8), toon('#f59e0b')); uTip.position.y = 0.79; uG.add(uTip);
+    g.add(uG);
+    // 蜜桃粉圆润香皂块 + 晶莹泡泡
+    var soap = mesh(new THREE.CylinderGeometry(0.17, 0.18, 0.12, 20), toon('#f472b6'));
+    soap.scale.set(1.24, 1, 0.82); soap.position.set(0.24, 0.08, 0.18); soap.rotation.y = -0.35; g.add(soap);
+    [[0.22, 0.24, 0.18, 0.072], [0.34, 0.32, 0.12, 0.054], [0.16, 0.36, 0.24, 0.044]].forEach(function (bb) {
+      var bub = new THREE.Mesh(new THREE.SphereGeometry(bb[3], 12, 10), new THREE.MeshBasicMaterial({ color: '#bae6fd', transparent: true, opacity: 0.78 }));
+      bub.position.set(bb[0], bb[1], bb[2]);
+      var gl = new THREE.Mesh(new THREE.SphereGeometry(bb[3] * 0.28, 8, 8), new THREE.MeshBasicMaterial({ color: '#ffffff' }));
+      gl.position.set(bb[3] * 0.35, bb[3] * 0.35, bb[3] * 0.5); bub.add(gl);
+      g.add(bub);
+    });
+
+  } else {
+    // 第 5 站干扰错物：灼热暴晒小太阳 + 晒红警告牌
+    var sunCore = mesh(new THREE.SphereGeometry(0.20, 18, 16), new THREE.MeshBasicMaterial({ color: '#f97316' }));
+    sunCore.position.set(-0.14, 0.44, 0); g.add(sunCore);
+    for (var r = 0; r < 10; r++) {
+      var ra = r * Math.PI * 2 / 10;
+      var spike = mesh(new THREE.ConeGeometry(0.05, 0.15, 6), new THREE.MeshBasicMaterial({ color: '#ef4444' }));
+      spike.position.set(-0.14 + Math.cos(ra) * 0.26, 0.44 + Math.sin(ra) * 0.26, 0);
+      spike.rotation.z = ra - Math.PI / 2;
+      g.add(spike);
+    }
+    var signPost = mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.22, 10), toon('#64748b'));
+    signPost.position.set(0.22, 0.11, 0.08); g.add(signPost);
+    var signBoard = mesh(new THREE.BoxGeometry(0.36, 0.36, 0.045), [
+      toon('#dc2626'), toon('#dc2626'), toon('#dc2626'), toon('#dc2626'),
+      new THREE.MeshBasicMaterial({ map: uvWarnTex }), toon('#dc2626')
+    ]);
+    signBoard.position.set(0.22, 0.34, 0.08); signBoard.rotation.y = -0.22; g.add(signBoard);
+  }
+
+  return g;
+}
+
+/* ===== 碰撞体（纯 Mesh 优先 + 超大小同学诊疗区碰撞体！） ===== */
+var HIT_MAT = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.001, depthWrite: false });
+var propHitMeshes = [];
+// 超大透明诊疗区碰撞体：无论把护具拖到小同学头、身还是书本区，屏幕射线 100% 命中！
+var kidDropZone = new THREE.Mesh(new THREE.BoxGeometry(3.2, 2.8, 2.2), HIT_MAT);
+kidDropZone.position.set(0, 1.35, 0.05);
+kidDropZone.userData.isKid = true;
+live.add(kidDropZone);
+
+var propGroupContainer = new THREE.Group();
+live.add(propGroupContainer);
+var activeProps = [];
+
+/* ===== 状态管理 ===== */
+var curIdx = 0;
+var cured = [false, false, false, false, false];
+var wrongTries = 0;
+var celebrated = false;
+var demoRunning = false;
+var resetGen = 0;
+var alarmTimer = 0;
+var curGuideSpeech = STATIONS[0].guideBad;
+var isOverDropZone = false;
+
+function buildStationProps(idx) {
+  while (propGroupContainer.children.length) propGroupContainer.remove(propGroupContainer.children[0]);
+  propHitMeshes = [];
+  activeProps = [];
+  var st = STATIONS[idx];
+  var configs = [
+    { role: 'good', x: st.goodSide * TRAY_X, label: st.goodLabel },
+    { role: 'bad', x: -st.goodSide * TRAY_X, label: st.badLabel }
+  ];
+  configs.forEach(function (cfg) {
+    var g = buildPropModel(st.id, cfg.role);
+    g.position.set(cfg.x, TRAY_Y + 0.04, TRAY_Z);
+    propGroupContainer.add(g);
+    var hit = new THREE.Mesh(new THREE.SphereGeometry(0.82, 12, 10), HIT_MAT);
+    hit.position.set(0, 0.32, 0);
+    hit.userData.propRole = cfg.role;
+    g.add(hit);
+    propHitMeshes.push(hit);
+    activeProps.push({
+      role: cfg.role, group: g, hit: hit, label: cfg.label,
+      homePos: new THREE.Vector3(cfg.x, TRAY_Y + 0.04, TRAY_Z),
+      flying: false, flyT: 0, flyStart: new THREE.Vector3(), flyTarget: new THREE.Vector3(), flyCb: null
+    });
+  });
+  rebuildPropTags();
+}
+
+var propTagEls = [];
+function rebuildPropTags() {
+  var layer = $('#tagLayer');
+  layer.querySelectorAll('.ptag').forEach(function (el) { el.remove(); });
+  propTagEls = [];
+  activeProps.forEach(function (p) {
+    var el = document.createElement('div');
+    el.className = 'ptag';
+    el.textContent = p.label;
+    layer.appendChild(el);
+    propTagEls.push({ prop: p, el: el });
+  });
+}
+
+function showPopWord(text, worldPos, isWarn) {
+  var sc = worldToScreen(worldPos);
+  var el = document.createElement('div');
+  el.className = 'popword' + (isWarn ? ' warn' : '');
+  el.textContent = text;
+  el.style.left = Math.max(95, Math.min(window.innerWidth - 95, sc.x)) + 'px';
+  el.style.top = Math.max(95, Math.min(window.innerHeight - 95, sc.y)) + 'px';
+  $('#tagLayer').appendChild(el);
+  setTimeout(function () { el.remove(); }, 1750);
+}
+
+/* ===== 场景站切换与姿态更新 ===== */
+function syncStationVisuals() {
+  var st = STATIONS[curIdx];
+  var isOk = cured[curIdx];
+
+  eyeBook.visible = (st.id === 'eye');
+  eyeSceneGood.visible = (st.id === 'eye' && isOk);
+  earSceneBad.visible = (st.id === 'ear' && !isOk);
+  earSceneGood.visible = (st.id === 'ear' && isOk);
+  noseSceneBad.visible = (st.id === 'nose' && !isOk);
+  noseSceneGood.visible = (st.id === 'nose' && isOk);
+  tongueSceneBad.visible = (st.id === 'tongue' && !isOk);
+  tongueSceneGood.visible = (st.id === 'tongue' && isOk);
+  skinSceneBad.visible = (st.id === 'skin' && !isOk);
+  skinSceneGood.visible = (st.id === 'skin' && isOk);
+
+  if (st.id === 'eye' && !isOk) {
+    hemiL.intensity = 0.38; sunL.intensity = 0.32; deskLampLight.intensity = 0;
+  } else if (st.id === 'eye' && isOk) {
+    hemiL.intensity = 0.56; sunL.intensity = 0.48; deskLampLight.intensity = 0.55;
+  } else {
+    hemiL.intensity = 0.56; sunL.intensity = 0.48; deskLampLight.intensity = 0;
+  }
+
+  eyeGroupGood.visible = isOk || (st.id !== 'eye');
+  eyeGroupBad.visible = !isOk && (st.id === 'eye');
+  browL.rotation.z = (!isOk && st.id === 'eye') ? 0.24 : 0.04;
+  browR.rotation.z = (!isOk && st.id === 'eye') ? -0.24 : -0.04;
+  mouthSmile.visible = isOk;
+  mouthSad.visible = !isOk && (st.id !== 'tongue');
+  tongueOut.visible = !isOk && (st.id === 'tongue');
+
+  noseMat.color.set(!isOk && st.id === 'nose' ? '#ef4444' : '#f4b48a');
+  skinMat.color.set(!isOk && st.id === 'skin' ? '#fca5a5' : '#ffe0c2');
+  cheekMat.opacity = (!isOk && (st.id === 'skin' || st.id === 'tongue')) ? 0.78 : 0.36;
+  dirtL.visible = (!isOk && st.id === 'skin');
+  dirtR.visible = (!isOk && (st.id === 'skin' || st.id === 'nose'));
+
+  // 眼站自然伏案（角度适中，不遮挡五官）vs 坐直端正
+  kidTorso.rotation.x = (!isOk && st.id === 'eye') ? 0.34 : 0.0;
+  kidTorso.position.z = (!isOk && st.id === 'eye') ? 0.06 : -0.14;
+
+  if (!isOk && st.id === 'ear') {
+    armL.rotation.set(-0.32, 0, -1.95); armR.rotation.set(-0.32, 0, 1.95);
+  } else if (!isOk && st.id === 'nose') {
+    armL.rotation.set(-0.2, 0, -0.15); armR.rotation.set(-1.25, 0, 0.52);
+  } else if (!isOk && st.id === 'eye') {
+    armL.rotation.set(-0.62, 0, 0.16); armR.rotation.set(-0.62, 0, -0.16);
+  } else {
+    armL.rotation.set(-0.34, 0, 0.18); armR.rotation.set(-0.34, 0, -0.18);
+  }
+
+  var xcard = $('#xrayCard');
+  xcard.classList.toggle('healthy', isOk);
+  $('#xrTitle').textContent = st.title;
+  $('#xrBadge').textContent = isOk ? '✓ 护官健康' : '⚠ 受损预警';
+  $('#xrStatus').textContent = isOk ? st.xrGood : st.xrBad;
+
+  $$('.org-dot').forEach(function (dot, i) {
+    dot.classList.toggle('active', i === curIdx);
+    dot.classList.toggle('cured', cured[i]);
+  });
+
+  updateGuide(false);
+}
+
+function selectStation(idx, speakIntro) {
+  curIdx = Math.max(0, Math.min(STATIONS.length - 1, idx));
+  buildStationProps(curIdx);
+  syncStationVisuals();
+  if (speakIntro) {
+    var st = STATIONS[curIdx];
+    speak(cured[curIdx] ? st.guideGood : st.symptomSpeak);
+  }
+}
+
+function updateGuide(speakIt) {
+  var st = STATIONS[curIdx];
+  var curedCnt = cured.filter(Boolean).length;
+  var gb = $('#guideBar');
+  gb.classList.remove('warn', 'done');
+  $('#guideIco').textContent = st.icon;
+  if (curedCnt === 5) {
+    gb.classList.add('done');
+    curGuideSpeech = '太棒啦！5站护官全部完成，点左下角五官徽章可继续自由体验正确与错误对比！';
+  } else if (!cured[curIdx]) {
+    curGuideSpeech = st.guideBad;
+  } else {
+    curGuideSpeech = st.guideGood;
+  }
+  $('#guideTxt').textContent = curGuideSpeech;
+  if (speakIt) speak(curGuideSpeech, true);
+}
+
+/* ===== 核心因果判定（正确护具治愈 vs 干扰危险品报警） ===== */
+var highlightCorrect = false;
+function applyPropToKid(prop) {
+  var st = STATIONS[curIdx];
+  var myGen = resetGen;
+  if (prop.role === 'bad') {
+    wrongTries++;
+    highlightCorrect = true;
+    beep([260, 195], 0.22, 'sawtooth');
+    var xcard = $('#xrayCard');
+    xcard.classList.remove('healthy', 'alarm');
+    void xcard.offsetWidth;
+    xcard.classList.add('alarm');
+    alarmTimer = 1.6;
+    $('#xrBadge').textContent = '⚠ 伤害警告！';
+    $('#xrStatus').textContent = '危险！' + st.badLabel + '会伤害' + st.name + '，快换正确护具！';
+    $('#guideBar').classList.add('warn');
+    $('#guideTxt').textContent = '⚠ 危险！' + st.badLabel + '会伤害' + st.name + '，请改用【' + st.goodLabel + '】！';
+    showPopWord('⚠ 危险！不能这样哦', new THREE.Vector3(0, 2.08, 0), true);
+    if (!demoRunning) speak(st.badSpeak, true);
+    flyProp(prop, prop.homePos, null);
+    setTimeout(function () {
+      if (resetGen !== myGen) return;
+      xcard.classList.remove('alarm');
+      if (!cured[curIdx]) syncStationVisuals();
+      else {
+        xcard.classList.add('healthy');
+        $('#xrBadge').textContent = '✓ 护官健康';
+        $('#xrStatus').textContent = st.xrGood;
+      }
+    }, 1700);
+    return;
+  }
+
+  highlightCorrect = false;
+  var wasNew = !cured[curIdx];
+  cured[curIdx] = true;
+  beep([523, 659, 784], 0.22, 'triangle');
+  showPopWord('✓ ' + st.name + '健康啦！', new THREE.Vector3(0, 2.08, 0), false);
+  flyProp(prop, prop.homePos, null);
+
+  if (wasNew) {
+    var el = document.createElement('div');
+    el.className = 'stk';
+    el.innerHTML = st.recordHtml;
+    $('#ntList').prepend(el);
+    var cnt = cured.filter(Boolean).length;
+    $('#ntCnt').textContent = cnt + '/5';
+    var stEl = $('#st' + curIdx);
+    if (stEl) stEl.classList.add('lit');
+  }
+
+  syncStationVisuals();
+
+  var curedTotal = cured.filter(Boolean).length;
+  if (!demoRunning && !celebrated && curedTotal === 5) {
+    celebrated = true;
+    saveProgress(LESSON_ID, true);
+    speak('太棒啦！五官健康小医生全部通关，快来查看科学小结论并答题领小红花吧！', true);
+    setTimeout(function () {
+      if (resetGen !== myGen) return;
+      fireConfetti();
+      beep([523, 659, 784, 1046], 0.28, 'triangle');
+      $('#winToast').classList.add('show');
+    }, 950);
+    return;
+  }
+
+  if (!demoRunning) speak(st.goodSpeak);
+
+  if (wasNew && curedTotal < 5) {
+    var nextIdx = -1;
+    for (var k = 1; k <= 5; k++) {
+      var cand = (curIdx + k) % 5;
+      if (!cured[cand]) { nextIdx = cand; break; }
+    }
+    if (nextIdx >= 0) {
+      setTimeout(function () {
+        if (resetGen !== myGen || demoRunning) return;
+        selectStation(nextIdx, false);
+        updateGuide(false);
+      }, 1350);
+    }
+  }
+}
+
+function flyProp(prop, target, onDone) {
+  prop.flying = true;
+  prop.flyT = 0;
+  prop.flyT0 = performance.now();
+  prop.flyStart.copy(prop.group.position);
+  prop.flyTarget.copy(target);
+  prop.flyCb = onDone;
+}
+
+/* ===== 2D 实时器官健康透视窗（Canvas 240×160 动态绘制） ===== */
+var organCv = $('#organCv'), og = organCv.getContext('2d');
+function drawOrganView(nowSec) {
+  var w = 240, h = 160;
+  var st = STATIONS[curIdx];
+  var isOk = cured[curIdx] && alarmTimer <= 0;
+
+  var gr = og.createLinearGradient(0, 0, 0, h);
+  if (isOk) { gr.addColorStop(0, '#062c22'); gr.addColorStop(1, '#0c4a38'); }
+  else { gr.addColorStop(0, '#2a0c12'); gr.addColorStop(1, '#450a14'); }
+  og.fillStyle = gr; og.fillRect(0, 0, w, h);
+
+  og.strokeStyle = isOk ? 'rgba(74,222,128,.16)' : 'rgba(248,113,113,.18)';
+  og.lineWidth = 1;
+  for (var x = 20; x < w; x += 24) { og.beginPath(); og.moveTo(x, 0); og.lineTo(x, h); og.stroke(); }
+  for (var y = 20; y < h; y += 24) { og.beginPath(); og.moveTo(0, y); og.lineTo(w, y); og.stroke(); }
+
+  var pulse = Math.sin(nowSec * 6) * 0.5 + 0.5;
+  var cx = 120, cy = 80;
+
+  if (st.id === 'eye') {
+    og.save();
+    og.beginPath();
+    og.moveTo(42, cy);
+    og.quadraticCurveTo(cx, isOk ? 24 : 44, 198, cy);
+    og.quadraticCurveTo(cx, isOk ? 136 : 116, 42, cy);
+    og.closePath();
+    og.fillStyle = isOk ? '#f8fafc' : '#fee2e2';
+    og.fill();
+    og.lineWidth = 4; og.strokeStyle = isOk ? '#22c55e' : '#ef4444'; og.stroke();
+
+    if (!isOk) {
+      og.strokeStyle = 'rgba(220,38,38,.85)'; og.lineWidth = 2;
+      og.beginPath(); og.moveTo(54, cy - 2); og.lineTo(76, cy - 10); og.lineTo(88, cy - 3); og.stroke();
+      og.beginPath(); og.moveTo(186, cy + 4); og.lineTo(162, cy + 12); og.lineTo(150, cy + 4); og.stroke();
+      og.globalAlpha = 0.45;
+      og.fillStyle = '#3b82f6';
+      og.beginPath(); og.arc(cx - 8 + pulse * 4, cy, 24, 0, Math.PI * 2); og.fill();
+      og.beginPath(); og.arc(cx + 8 - pulse * 4, cy, 24, 0, Math.PI * 2); og.fill();
+      og.globalAlpha = 1;
+    } else {
+      og.fillStyle = '#0ea5e9'; og.beginPath(); og.arc(cx, cy, 28, 0, Math.PI * 2); og.fill();
+      og.fillStyle = '#0f172a'; og.beginPath(); og.arc(cx, cy, 14, 0, Math.PI * 2); og.fill();
+      og.fillStyle = '#ffffff'; og.beginPath(); og.arc(cx + 10, cy - 10, 6, 0, Math.PI * 2); og.fill();
+      og.strokeStyle = 'rgba(74,222,128,.8)'; og.lineWidth = 3;
+      og.beginPath(); og.arc(cx, cy, 42 + pulse * 4, 0, Math.PI * 2); og.stroke();
+    }
+    og.restore();
+  } else if (st.id === 'ear') {
+    og.strokeStyle = isOk ? '#34d399' : '#f87171';
+    og.lineWidth = isOk ? 3 : 4;
+    og.beginPath();
+    for (var sx = 18; sx <= 148; sx += 4) {
+      var sy = cy + Math.sin(sx * (isOk ? 0.08 : 0.25) - nowSec * (isOk ? 4 : 18)) * (isOk ? 10 : 34);
+      if (sx === 18) og.moveTo(sx, sy); else og.lineTo(sx, sy);
+    }
+    og.stroke();
+    og.fillStyle = isOk ? '#10b981' : '#ef4444';
+    og.beginPath(); og.ellipse(182 + (isOk ? 0 : Math.sin(nowSec * 36) * 4), cy, 18, 42, 0, 0, Math.PI * 2); og.fill();
+    og.strokeStyle = '#ffffff'; og.lineWidth = 3; og.stroke();
+    og.fillStyle = isOk ? '#86efac' : '#fecaca';
+    og.font = 'bold 13px "Microsoft YaHei",sans-serif';
+    og.fillText(isOk ? '35 dB 柔和安全' : '110 dB 爆表震颤!', 16, 26);
+  } else if (st.id === 'nose') {
+    og.fillStyle = isOk ? '#a7f3d0' : '#fca5a5';
+    og.beginPath();
+    og.moveTo(120, 24); og.quadraticCurveTo(166, 85, 162, 126);
+    og.quadraticCurveTo(120, 146, 78, 126); og.quadraticCurveTo(74, 85, 120, 24);
+    og.fill();
+    og.strokeStyle = isOk ? '#10b981' : '#ef4444'; og.lineWidth = 4; og.stroke();
+    og.fillStyle = isOk ? '#065f46' : '#7f1d1d';
+    og.beginPath(); og.ellipse(100, 114, 14, 10, -0.2, 0, Math.PI * 2); og.fill();
+    og.beginPath(); og.ellipse(140, 114, 14, 10, 0.2, 0, Math.PI * 2); og.fill();
+    if (!isOk) {
+      og.fillStyle = '#dc2626';
+      for (var np = 0; np < 7; np++) {
+        og.beginPath(); og.arc(92 + np * 9, 76 + Math.sin(np * 2 + nowSec * 5) * 14, 5 + pulse * 2, 0, Math.PI * 2); og.fill();
+      }
+    } else {
+      og.strokeStyle = '#6ee7b7'; og.lineWidth = 3;
+      for (var af = 0; af < 2; af++) {
+        var ax = af === 0 ? 100 : 140;
+        og.beginPath(); og.moveTo(ax, 146); og.quadraticCurveTo(ax + (af ? 12 : -12), 120 - pulse * 16, ax, 86); og.stroke();
+      }
+    }
+  } else if (st.id === 'tongue') {
+    og.fillStyle = isOk ? '#f472b6' : '#dc2626';
+    og.beginPath();
+    og.moveTo(64, 34); og.lineTo(176, 34);
+    og.quadraticCurveTo(182, 134, 120, 140);
+    og.quadraticCurveTo(58, 134, 64, 34);
+    og.fill();
+    og.strokeStyle = isOk ? '#bbf7d0' : '#fef08a'; og.lineWidth = 3; og.stroke();
+    og.beginPath(); og.moveTo(120, 42); og.lineTo(120, 116); og.strokeStyle = 'rgba(255,255,255,.45)'; og.stroke();
+    if (!isOk) {
+      for (var fl = 0; fl < 5; fl++) {
+        var fx = 80 + fl * 20, fy = 78 + (fl % 2) * 18 - pulse * 8;
+        og.fillStyle = '#fb923c';
+        og.beginPath(); og.moveTo(fx, fy - 18); og.lineTo(fx + 9, fy + 6); og.lineTo(fx - 9, fy + 6); og.closePath(); og.fill();
+        og.fillStyle = '#fef08a';
+        og.beginPath(); og.arc(fx, fy, 4, 0, Math.PI * 2); og.fill();
+      }
+    } else {
+      og.fillStyle = '#bae6fd';
+      for (var bud = 0; bud < 6; bud++) {
+        og.beginPath(); og.arc(82 + bud * 15, 68 + (bud % 2) * 26, 4.5, 0, Math.PI * 2); og.fill();
+      }
+    }
+  } else {
+    og.fillStyle = isOk ? '#fde6d2' : '#fca5a5';
+    og.fillRect(16, 86, 208, 56);
+    og.fillStyle = isOk ? '#4ade80' : '#ef4444';
+    og.fillRect(16, 82, 208, 6);
+    if (!isOk) {
+      og.strokeStyle = '#fb923c'; og.lineWidth = 4;
+      for (var uv = 0; uv < 4; uv++) {
+        var ux = 44 + uv * 48;
+        og.beginPath(); og.moveTo(ux, 14); og.lineTo(ux, 74 + pulse * 6); og.stroke();
+      }
+      og.fillStyle = '#fef08a'; og.font = 'bold 13px "Microsoft YaHei",sans-serif';
+      og.fillText('UV 强紫外线暴晒!', 54, 118);
+    } else {
+      og.strokeStyle = '#38bdf8'; og.lineWidth = 4;
+      og.beginPath(); og.arc(120, 82, 74, Math.PI, 0); og.stroke();
+      og.fillStyle = 'rgba(186,230,253,.8)';
+      for (var bb = 0; bb < 5; bb++) {
+        og.beginPath(); og.arc(46 + bb * 36, 54 - Math.sin(nowSec * 3 + bb) * 6, 8, 0, Math.PI * 2); og.fill();
+      }
+      og.fillStyle = '#065f46'; og.font = 'bold 13px "Microsoft YaHei",sans-serif';
+      og.fillText('防晒洁净 · 皮肤屏障健康', 36, 118);
+    }
+  }
+
+  var scanY = ((nowSec * 48) % h);
+  og.fillStyle = isOk ? 'rgba(74,222,128,.16)' : 'rgba(248,113,113,.22)';
+  og.fillRect(0, scanY, w, 3);
+}
+
+/* ===== 坐标投影与单焦点 #targetCue（绝不遮挡小同学脸部！） ===== */
+function worldToScreen(v) {
+  var p = v.clone().project(camera);
+  return {
+    x: (p.x * 0.5 + 0.5) * window.innerWidth,
+    y: (-p.y * 0.5 + 0.5) * window.innerHeight
+  };
+}
+
+function updateTagsAndCue() {
+  propTagEls.forEach(function (item) {
+    var wp = item.prop.group.position.clone().add(new THREE.Vector3(0, 0.90, 0));
+    var sc = worldToScreen(wp);
+    item.el.style.left = sc.x + 'px';
+    item.el.style.top = sc.y + 'px';
+    item.el.classList.toggle('glow', highlightCorrect && item.prop.role === 'good');
+  });
+
+  var cue = $('#targetCue');
+  var st = STATIONS[curIdx];
+  if (demoRunning || $('#winToast').classList.contains('show')) {
+    cue.classList.remove('show', 'drop-ready');
+    return;
+  }
+
+  // 拖拽中：高亮提示松手给小同学！
+  if (dragInfo && dragInfo.moved) {
+    var wpDrop = new THREE.Vector3(0, 2.22, -0.30);
+    var scDrop = worldToScreen(wpDrop);
+    cue.textContent = isOverDropZone ? '✨ 松手！立刻给小同学用上！' : '👆 拖到小同学身边松手！';
+    cue.classList.toggle('drop-ready', isOverDropZone);
+    cue.style.left = Math.max(150, Math.min(window.innerWidth - 260, scDrop.x)) + 'px';
+    cue.style.top = Math.max(92, Math.min(window.innerHeight - 90, scDrop.y)) + 'px';
+    cue.classList.add('show');
+    return;
+  }
+
+  cue.classList.remove('drop-ready');
+  var goodProp = activeProps.find(function (p) { return p.role === 'good'; });
+  if (!cured[curIdx] && goodProp) {
+    var wp;
+    if (highlightCorrect) {
+      wp = goodProp.group.position.clone().add(new THREE.Vector3(0, 1.24, 0));
+      cue.textContent = st.cueGood;
+    } else {
+      // 放在桌前沿两托盘正中下方一点，绝不遮挡小同学面部！
+      wp = new THREE.Vector3(0, 0.34, TRAY_Z + 0.52);
+      cue.textContent = '👆 拖或点桌上的正确护具给小同学！';
+    }
+    var sc = worldToScreen(wp);
+    cue.style.left = Math.max(150, Math.min(window.innerWidth - 260, sc.x)) + 'px';
+    cue.style.top = Math.max(92, Math.min(window.innerHeight - 54, sc.y)) + 'px';
+    cue.classList.add('show');
+  } else {
+    cue.classList.remove('show');
+  }
+}
+
+/* ===== 3D 真鼠标顺滑拖拽 + 单点双通道（屏幕射线直命超大诊疗碰撞体！） ===== */
+var ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+// 拖拽斜面：从托盘 (y=0.35, z=1.66) 平滑斜向上至小同学诊疗区 (y=1.25, z=0.25)
+var dragPlane = new THREE.Plane().setFromNormalAndCoplanarPoint(
+  new THREE.Vector3(0, 0.48, 0.88).normalize(),
+  new THREE.Vector3(0, 0.95, 0.72)
+);
+var dragInfo = null;
+
+function setPtr(e) {
+  var r = cv.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+}
+
+function markInteracted() { document.body.classList.add('interacted'); }
+
+cv.addEventListener('pointerdown', function (e) {
+  markInteracted();
+  if (demoRunning) return;
+  setPtr(e);
+  var hits = ray.intersectObjects(propHitMeshes, false);
+  if (hits.length) {
+    var role = hits[0].object.userData.propRole;
+    var prop = activeProps.find(function (p) { return p.role === role; });
+    if (prop && !prop.flying) {
+      dragInfo = { prop: prop, startX: e.clientX, startY: e.clientY, moved: false };
+      isOverDropZone = false;
+      cv.classList.add('grabbing');
+      try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+    }
+    return;
+  }
+  var kidHits = ray.intersectObject(kidDropZone, false);
+  if (kidHits.length) {
+    var st = STATIONS[curIdx];
+    speak(cured[curIdx] ? st.guideGood : st.symptomSpeak, true);
+    showPopWord(cured[curIdx] ? '✓ 五官健康啦！' : '⚠ 快帮帮我呀！', new THREE.Vector3(0, 2.08, 0), !cured[curIdx]);
+  }
+});
+
+cv.addEventListener('pointermove', function (e) {
+  if (!dragInfo) return;
+  var dx = e.clientX - dragInfo.startX, dy = e.clientY - dragInfo.startY;
+  if (!dragInfo.moved && Math.hypot(dx, dy) >= 14) {
+    dragInfo.moved = true;
+    dropGuideGroup.visible = true;
+  }
+  if (dragInfo.moved) {
+    setPtr(e);
+    var pt = new THREE.Vector3();
+    if (ray.ray.intersectPlane(dragPlane, pt)) {
+      dragInfo.prop.group.position.set(
+        Math.max(-2.9, Math.min(2.9, pt.x)),
+        Math.max(0.36, Math.min(2.45, pt.y)),
+        Math.max(0.15, Math.min(1.75, pt.z))
+      );
+    }
+    // 实时用屏幕射线检测是否悬停在小同学诊疗区超大碰撞体上
+    var hitKid = ray.intersectObject(kidDropZone, false).length > 0;
+    var nearKid = dragInfo.prop.group.position.distanceTo(new THREE.Vector3(0, 1.25, 0.10)) < 1.95;
+    isOverDropZone = hitKid || nearKid;
+  }
+});
+
+function endDrag(e) {
+  if (!dragInfo) return;
+  var d = dragInfo;
+  dragInfo = null;
+  dropGuideGroup.visible = false;
+  cv.classList.remove('grabbing');
+  d.prop.group.scale.setScalar(1);
+
+  if (!d.moved) {
+    isOverDropZone = false;
+    flyProp(d.prop, new THREE.Vector3(0, 1.25, 0.25), function () {
+      applyPropToKid(d.prop);
+    });
+  } else {
+    if (e && typeof e.clientX === 'number') setPtr(e);
+    var rayHitKid = ray.intersectObject(kidDropZone, false).length > 0;
+    var dist = d.prop.group.position.distanceTo(new THREE.Vector3(0, 1.25, 0.15));
+    var hitOk = rayHitKid || isOverDropZone || dist < 2.15;
+    isOverDropZone = false;
+    if (hitOk) {
+      applyPropToKid(d.prop);
+    } else {
+      flyProp(d.prop, d.prop.homePos, null);
+    }
+  }
+}
+cv.addEventListener('pointerup', endDrag);
+cv.addEventListener('pointercancel', endDrag);
+
+/* ===== 顶部/边角控件 ===== */
+$$('.org-dot').forEach(function (dot) {
+  function pick() {
+    markInteracted();
+    if (demoRunning) return;
+    highlightCorrect = false;
+    selectStation(Number(dot.dataset.st), true);
+  }
+  dot.addEventListener('click', pick);
+  dot.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+});
+
+$('#voiceBtn').addEventListener('click', function () {
+  markInteracted();
+  voiceOn = !voiceOn;
+  this.classList.toggle('on', voiceOn);
+  if (voiceOn) updateGuide(true); else stopVoice();
+});
+$('#guideBar').addEventListener('click', function () { markInteracted(); updateGuide(true); });
+$('#pyBtn').addEventListener('click', function () { markInteracted(); document.body.classList.toggle('no-py'); });
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+
+function resetAll() {
+  resetGen++;
+  demoRunning = false;
+  $('#demoBtn').classList.remove('on');
+  stopVoice();
+  cured = [false, false, false, false, false];
+  wrongTries = 0;
+  celebrated = false;
+  highlightCorrect = false;
+  alarmTimer = 0;
+  isOverDropZone = false;
+  dropGuideGroup.visible = false;
+  $('#ntList').innerHTML = '';
+  $('#ntCnt').textContent = '0/5';
+  $$('.st').forEach(function (s) { s.classList.remove('lit'); });
+  $('#winToast').classList.remove('show');
+  $('#qFb').textContent = '';
+  $('#qFb').classList.remove('ok');
+  $$('.qopt').forEach(function (b) { b.classList.remove('ok', 'bad'); });
+  selectStation(0, false);
+}
+$('#resetBtn').addEventListener('click', function () { markInteracted(); resetAll(); });
+$('#winKeepBtn').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgainBtn').addEventListener('click', function () { resetAll(); });
+
+$('#qOpts').addEventListener('click', function (e) {
+  var b = e.target.closest('.qopt');
+  if (!b) return;
+  if (b.dataset.ok === '1') {
+    b.classList.add('ok');
+    $('#qFb').textContent = '🌸 答对啦！恭喜获得本课小红花！';
+    $('#qFb').classList.add('ok');
+    saveProgress(LESSON_ID, true);
+    beep([587, 784, 1046], 0.24, 'triangle');
+    speak('答对啦！恭喜你成为五官健康小医生，获得本课小红花！', true);
+  } else {
+    b.classList.add('bad');
+    var h = b.dataset.hint || '再仔细想想保护感觉器官的方法哦！';
+    $('#qFb').textContent = h;
+    $('#qFb').classList.remove('ok');
+    beep([260, 210], 0.2, 'sawtooth');
+    speak(h, true);
+  }
+});
+
+// ▶ 演示：温柔示范当前站护官操作
+$('#demoBtn').addEventListener('click', function () {
+  markInteracted();
+  if (demoRunning) { demoRunning = false; resetGen++; this.classList.remove('on'); stopVoice(); return; }
+  demoRunning = true;
+  this.classList.add('on');
+  var myGen = ++resetGen;
+  var targetIdx = cured.indexOf(false);
+  if (targetIdx < 0) targetIdx = 0;
+  selectStation(targetIdx, false);
+  var st = STATIONS[targetIdx];
+  speak(st.demoSpeak, true);
+  setTimeout(function () {
+    if (resetGen !== myGen) return;
+    var goodProp = activeProps.find(function (p) { return p.role === 'good'; });
+    if (goodProp) {
+      flyProp(goodProp, new THREE.Vector3(0, 1.25, 0.25), function () {
+        demoRunning = false;
+        $('#demoBtn').classList.remove('on');
+        applyPropToKid(goodProp);
+      });
+    }
+  }, 1100);
+});
+
+/* ===== 帧循环（dt 严格钳制 [0.001, 0.05]） ===== */
+var introT0 = performance.now(), lastT = performance.now();
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', fit);
+fit();
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (now - lastT) / 1000));
+  lastT = now;
+  var t = now / 1000;
+
+  var pop = Math.min(1, (now - introT0) / 680);
+  var ease = 1 - Math.pow(1 - pop, 3);
+  live.scale.setScalar(0.01 + 0.99 * ease);
+
+  if (alarmTimer > 0) alarmTimer = Math.max(0, alarmTimer - dt);
+
+  kidHead.position.y = 1.38 + Math.sin(t * 2.6) * 0.016;
+  kidHead.rotation.z = (!cured[curIdx] && STATIONS[curIdx].id === 'ear') ? Math.sin(t * 14) * 0.075 : Math.sin(t * 1.4) * 0.025;
+
+  // 拖拽引导环脉冲反馈
+  if (dropGuideGroup.visible) {
+    var pulseR = isOverDropZone ? (1.10 + Math.sin(t * 8) * 0.06) : (0.98 + Math.sin(t * 5) * 0.04);
+    dropGuideGroup.scale.setScalar(pulseR);
+    dropGuideRingMat.color.set(isOverDropZone ? '#10b981' : '#f59e0b');
+    dropGuideHaloMat.color.set(isOverDropZone ? '#34d399' : '#fde68a');
+    dropGuideHaloMat.opacity = isOverDropZone ? 0.34 : 0.18;
+  }
+
+  noiseRings.forEach(function (nr) {
+    var ph = (t * 2.4 + nr.userData.idx * 0.5) % 1;
+    nr.scale.setScalar(0.75 + ph * 0.65);
+    nr.material.opacity = 1 - ph;
+  });
+
+  steamPuffs.forEach(function (sp) {
+    var ph = (t * 0.9 + sp.userData.phase) % 1;
+    sp.position.y = 0.40 + ph * 0.85;
+    sp.scale.setScalar(0.6 + ph * 0.7);
+    sp.material.opacity = (1 - ph) * 0.72;
+  });
+
+  soapBubbles.forEach(function (b) {
+    b.position.y += Math.sin(t * 3 + b.userData.phase) * dt * 0.14;
+  });
+
+  activeProps.forEach(function (p) {
+    if (p.flying) {
+      p.flyT = Math.min(1, (now - p.flyT0) / 340);
+      var k = 1 - Math.pow(1 - p.flyT, 3);
+      p.group.position.lerpVectors(p.flyStart, p.flyTarget, k);
+      p.group.position.y += Math.sin(p.flyT * Math.PI) * 0.45;
+      if (p.flyT >= 1) {
+        p.flying = false;
+        var cb = p.flyCb; p.flyCb = null;
+        if (cb) cb();
+      }
+    } else if (dragInfo && dragInfo.prop === p && dragInfo.moved) {
+      p.group.scale.setScalar(isOverDropZone ? 1.12 : 1.04);
+    } else {
+      p.group.scale.setScalar(1);
+      p.group.position.y = p.homePos.y + Math.sin(t * 2.6 + (p.role === 'good' ? 0 : 2)) * 0.025;
+      p.group.rotation.y = Math.sin(t * 1.2 + (p.role === 'good' ? 0 : 1.8)) * 0.14;
+    }
+  });
+
+  drawOrganView(t);
+  updateTagsAndCue();
+
+  if (cfOn) {
+    cfCtx.clearRect(0, 0, cfCanvas.width, cfCanvas.height);
+    var alive = 0;
+    cfParts.forEach(function (p) {
+      p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 260 * dt; p.a += p.va * dt;
+      if (p.y < cfCanvas.height + 30) {
+        alive++;
+        cfCtx.save(); cfCtx.translate(p.x, p.y); cfCtx.rotate(p.a);
+        cfCtx.fillStyle = p.c; cfCtx.fillRect(-p.r, -p.r * 0.55, p.r * 2, p.r * 1.1);
+        cfCtx.restore();
+      }
+    });
+    if (!alive) cfOn = false;
+  }
+
+  renderer.render(scene, camera);
+}
+
+/* ===== 自检与自动化实测接口 ===== */
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () {
+    return {
+      triangles: renderer.info.render.triangles,
+      celebrated: celebrated,
+      curIdx: curIdx,
+      curedCount: cured.filter(Boolean).length,
+      wrongTries: wrongTries
+    };
+  },
+  getState: function () {
+    return {
+      curIdx: curIdx,
+      stationId: STATIONS[curIdx].id,
+      cured: cured.slice(),
+      curedCount: cured.filter(Boolean).length,
+      wrongTries: wrongTries,
+      celebrated: celebrated,
+      winOpen: $('#winToast').classList.contains('show')
+    };
+  },
+  screenPos: function (target) {
+    if (target === 'kid') return worldToScreen(new THREE.Vector3(0, 1.32, -0.20));
+    var p = activeProps.find(function (item) { return item.role === target; });
+    if (p) return worldToScreen(p.group.position.clone().add(new THREE.Vector3(0, 0.30, 0)));
+    return null;
+  }
+};
+
+selectStation(0, false);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

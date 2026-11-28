@@ -221,8 +221,8 @@ body.cues-off #notes{top:64px;max-height:calc(100% - 140px)}
 <svg id="hand" viewBox="0 0 64 64"><path d="M26 6c3 0 5 2 5 5v17l3-1c2-6 9-5 9 0 2-3 8-2 8 3 3-1 7 1 7 5v12c0 9-7 15-16 15h-6c-6 0-10-3-13-8L13 41c-2-3 0-7 4-7 2 0 3 1 4 2V11c0-3 2-5 5-5z" fill="#fff" stroke="#2a3040" stroke-width="3" stroke-linejoin="round"/></svg>
 
 <script src="../vendor/three.min.js"></script>
-<script src="../audio/manifest.js"></script>
-<script src="../vendor/voice.js"></script>
+<script src="../audio/manifest.js?v=doubao-2"></script>
+<script src="../vendor/voice.js?v=doubao-2"></script>
 <script>
 (function () {
 'use strict';
@@ -541,9 +541,7 @@ var WELCOME_TXT = '小朋友，把积木拖进对应的托盘里分一分，还�
 function stopVoice() { try { if ('speechSynthesis' in window) (window.__xkVoice ? window.__xkVoice.stop() : window.speechSynthesis.cancel()); } catch (e) {} }
 function speak(text, force) {
   if (!text || (!voiceOn && !force)) return;
-  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
-  if (!('speechSynthesis' in window)) return;
-  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+  if (window.__xkVoice) { window.__xkVoice.speak(text, '../audio/', true); return; }
 }
 function speakWelcomeOnce() {
   if (welcomeSpoken) return;
@@ -649,7 +647,7 @@ function updateGuide(speakIt) {
     var curName = MODES[curMode].name, nextName = MODES[nextM].name;
     txtEl.textContent = '按' + curName + '全分对啦！点上方「按' + nextName + '」换个标准吧';
     progEl.textContent = doneModes + '/3';
-    curGuideSpeech = '按' + curName + '全部分对啦！现在点上面的按' + nextName + '，换个标准分一分吧！';
+    curGuideSpeech = WELCOME_TXT;
     curGuideKey = 'switch:' + nextM;
   } else {
     var m = MODES[curMode];
@@ -657,9 +655,7 @@ function updateGuide(speakIt) {
     var rem = ITEMS.length - sortedCount;
     txtEl.textContent = '按' + m.name + '分类：已放好 ' + sortedCount + '/9 个积木（分进' + binNames + '盘）';
     progEl.textContent = sortedCount + '/9';
-    curGuideSpeech = sortedCount === 0
-      ? '现在按' + m.name + '分类，把 9 个积木拖进' + binNames + '三个托盘里吧！'
-      : '按' + m.name + '分类已经放好 ' + sortedCount + ' 个啦，还有 ' + rem + ' 个积木，全部放进对应的托盘吧！';
+    curGuideSpeech = WELCOME_TXT;
     curGuideKey = 'sort:' + curMode + ':' + sortedCount;
   }
   barEl.classList.remove('bump');

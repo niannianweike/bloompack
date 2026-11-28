@@ -1,13 +1,13 @@
 {
-  "name": "bloompack",
+  "name": "xiaoxuekexue-livebook",
   "version": "2.0.0",
   "private": true,
-  "license": "SEE LICENSE IN LICENSE",
-  "description": "绽放书包（BloomPack）· 小学科学 3D 离线互动书包与本地造书工作台（非商用）",
+  "description": "粤教科技版小学科学 3D 离线互动书包与活页（官网纯静态版 + 开源造书工作台 Studio）",
   "scripts": {
     "studio": "node studio/server.mjs",
     "tts:dry": "node tools/doubao_tts_sync.mjs --dry",
     "tts:sync": "node tools/doubao_tts_sync.mjs",
-    "tts:wire": "node tools/wire_doubao_voice.mjs"
+    "tts:wire": "node tools/wire_doubao_voice.mjs",
+    "verify": "node ../.agents/skills/science-livebook-builder/scripts/verify_book.mjs --root . --prefix k1a"
   }
 }

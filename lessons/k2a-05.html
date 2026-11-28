@@ -1,0 +1,1920 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第5课 认识感觉器官 · 3D 感官配对实验室</title>
+<style>
+:root{--accent:#e56d17;--accent-dark:#b8500a;--ink:#2a2218;--line:#e4d5ba;--card:rgba(255,253,248,.94)}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#c59d6e;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas#cv.grabbing{cursor:grabbing}
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.46em;color:#7a6a52;font-weight:600}
+body.no-py rt{display:none}
+
+/* 左上标题卡片 */
+#hudTL{position:fixed;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:10px;
+  padding:7px 14px 7px 9px;border-radius:16px;background:var(--card);border:1.5px solid var(--line);
+  box-shadow:0 4px 16px rgba(60,36,12,.14)}
+#backBtn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:#5c4b34;font-size:19px;font-weight:900}
+#backBtn:hover{border-color:var(--accent);color:var(--accent)}
+.hd-t{font-size:16px;font-weight:900;line-height:1.5}
+.hd-sub{font-size:11.5px;color:#7b6c56;font-weight:700}
+
+/* 顶部中央动态分步小助手（U2） */
+#guideBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:6;
+  max-width:min(450px,calc(100vw - 630px));display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:15px;background:rgba(255,250,240,.96);
+  border:2px solid var(--accent);box-shadow:0 6px 18px rgba(130,68,12,.16);
+  font-size:13.5px;font-weight:800;color:#753a07;cursor:pointer;line-height:1.38;transition:transform .2s,box-shadow .2s}
+#guideBar:active{transform:translateX(-50%) scale(.98)}
+#guideBar.flash{transform:translateX(-50%) scale(1.04);box-shadow:0 8px 24px rgba(229,109,23,.32)}
+
+/* 右上工具条 + 入口微标签（U2） */
+#hudTR{position:fixed;top:12px;right:12px;z-index:7;display:flex;align-items:center;gap:6px}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:38px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);
+  background:var(--card);font-size:13.5px;font-weight:800;color:#4a3c28;cursor:pointer;
+  box-shadow:0 3px 0 #d9c8ab;transition:all .14s;white-space:nowrap}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:var(--accent-dark);color:#fff;box-shadow:0 3px 0 var(--accent-dark)}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#ffedd5;border:1.5px solid var(--accent);color:#b44908;font-size:10.5px;font-weight:900;
+  white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(229,109,23,.24);
+  animation:cuePop 1.6s ease-in-out infinite;transition:opacity .25s}
+body.interacted .entry-cue{opacity:0;animation:none}
+@keyframes cuePop{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+
+/* 右上可收起窄版发现栏（D3 防遮挡铁律） */
+#notes{position:fixed;top:60px;right:12px;z-index:6;width:224px;padding:9px 11px;border-radius:15px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 6px 18px rgba(60,36,12,.12)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+.nt-title{font-size:13.5px;font-weight:900}
+.nt-cnt{font-size:12.5px;font-weight:900;color:var(--accent)}
+.nt-tog{padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:11px;font-weight:800;color:#6c5c45;cursor:pointer}
+.stamps{display:flex;gap:4px;margin-bottom:6px}
+.st{flex:1;text-align:center;padding:4px 2px;border-radius:8px;font-size:13px;font-weight:900;
+  border:1.5px dashed #d7c5a4;color:#9b8a70;background:#faf4e8;transition:all .22s;line-height:1.2}
+.st.lit{border-style:solid;border-color:#2b8a3e;background:#ebfbee;color:#1b6e2d;transform:scale(1.04)}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList,#notes.collapsed .stamps{display:none}
+#notes.collapsed .nt-head{margin-bottom:0}
+.stk{padding:5px 8px;border-radius:10px;background:#fff;border:1px solid #ece0c9;font-size:12px;font-weight:700;line-height:1.4}
+.stk b{color:#b8500a}
+
+/* 左侧 2D 高清感官信号特写窗（不遮娃娃、不遮道具、不遮右上 #notes） */
+#lensWrap{position:fixed;left:16px;top:82px;z-index:7;display:none;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+#lensWrap.show{display:flex;animation:lensPop .26s ease-out}
+@keyframes lensPop{0%{opacity:0;transform:scale(.82)}100%{opacity:1;transform:scale(1)}}
+.lens-ring{position:relative;width:222px;height:222px;border-radius:50%;padding:7px;
+  background:linear-gradient(135deg,#f59e0b,#e56d17,#fde68a);
+  box-shadow:0 12px 32px rgba(120,53,15,.34)}
+.lens-inner{position:relative;width:208px;height:208px;border-radius:50%;overflow:hidden;background:#fffdf7;border:3px solid #fff}
+canvas#lensCv{width:208px;height:208px;display:block}
+.lens-tag{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);padding:2px 11px;border-radius:99px;
+  background:rgba(154,52,18,.92);color:#fff;font-size:11.5px;font-weight:800;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.22)}
+.lens-caption{padding:5px 12px;border-radius:12px;background:rgba(255,253,248,.96);border:1.5px solid #f2b777;
+  font-size:12px;font-weight:900;color:#7c2d12;box-shadow:0 4px 12px rgba(0,0,0,.14);max-width:228px;text-align:center;line-height:1.35}
+
+/* 左侧轻提示（特写窗打开时自动让位） */
+#rotHint{position:fixed;left:14px;top:76px;z-index:5;padding:5px 11px;border-radius:99px;
+  background:rgba(255,253,248,.90);border:1.5px solid var(--line);font-size:12px;font-weight:800;color:#6c583f;
+  pointer-events:none;box-shadow:0 3px 10px rgba(60,36,12,.1);transition:opacity .2s}
+body.lens-open #rotHint{opacity:0}
+
+/* 3D 桌面物品轻量签 + 单焦点跳动引导气泡 */
+#itemTags{position:fixed;inset:0;pointer-events:none;z-index:3}
+.itag{position:absolute;transform:translate(-50%,0);padding:2px 9px;border-radius:99px;
+  background:rgba(42,34,24,.82);color:#fff;font-size:11.5px;font-weight:800;white-space:nowrap;
+  box-shadow:0 2px 8px rgba(0,0,0,.18);transition:background .2s,transform .15s}
+.itag.done{background:rgba(22,163,74,.92)}
+.itag.sel{background:rgba(229,109,23,.96);transform:translate(-50%,-4px) scale(1.06)}
+
+#labels{position:fixed;inset:0;pointer-events:none;z-index:5}
+.cue3d{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:4px 12px;border-radius:99px;
+  background:#fff7ed;border:2px solid #ea580c;color:#9a3412;font-size:13px;font-weight:900;white-space:nowrap;
+  box-shadow:0 4px 14px rgba(234,88,12,.3);animation:cueBob 1.3s ease-in-out infinite;display:none;pointer-events:none}
+.cue3d.show{display:block}
+@keyframes cueBob{0%,100%{transform:translate(-50%,-100%) translateY(0)}50%{transform:translate(-50%,-100%) translateY(-6px)}}
+.popword{position:absolute;transform:translate(-50%,-100%);padding:5px 12px;border-radius:99px;
+  background:rgba(22,101,52,.94);color:#fff;font-size:13.5px;font-weight:800;white-space:nowrap;
+  box-shadow:0 4px 12px rgba(0,0,0,.2);animation:popFloat 1.7s ease-out forwards}
+.popword.err{background:rgba(201,42,42,.94)}
+@keyframes popFloat{0%{opacity:0;transform:translate(-50%,-70%) scale(.78)}18%{opacity:1;transform:translate(-50%,-110%) scale(1.04)}82%{opacity:1;transform:translate(-50%,-140%) scale(1)}100%{opacity:0;transform:translate(-50%,-176%) scale(.95)}}
+
+/* 通关彩带 + 结论与1题巩固弹窗（D2 + U1 + U3） */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+#winToast{position:fixed;inset:0;z-index:35;display:none;place-items:center;background:rgba(36,24,10,.36);padding:16px}
+#winToast.show{display:grid}
+.win-card{width:min(460px,100%);max-height:86vh;overflow-y:auto;background:#fffdf8;
+  border:2.5px solid var(--accent);border-radius:22px;padding:18px 20px;text-align:center;
+  box-shadow:0 20px 50px rgba(40,22,4,.28)}
+.win-concl{margin:10px 0;padding:10px 12px;border-radius:13px;background:#fff8eb;border:1.5px solid #f2cf9b;
+  text-align:left;font-size:13.5px;line-height:1.58;color:#5a3309}
+.win-quiz{margin:10px 0;padding:10px 12px;border-radius:13px;background:#f8fafc;border:1.5px solid #d9e2ec;text-align:left}
+.win-quiz h4{margin:0 0 8px;font-size:13.5px;color:#9a3412}
+.qopts{display:flex;flex-direction:column;gap:7px}
+.qopt{padding:8px 11px;border-radius:11px;border:1.5px solid #d9d0be;background:#fff;
+  font-size:13.5px;font-weight:800;text-align:left;cursor:pointer;transition:all .14s}
+.qopt:hover{border-color:var(--accent);background:#fff9f0}
+.qopt.ok{border-color:#2b8a3e;background:#ebfbee;color:#2b8a3e}
+.qopt.bad{border-color:#e03131;background:#fff5f5;color:#c92a2a}
+.qfb{margin-top:7px;font-size:12.5px;font-weight:800;min-height:18px;color:#166534}
+.win-acts{display:flex;justify-content:center;gap:10px;margin-top:12px}
+
+@media (max-width:960px){
+  #guideBar{top:58px;max-width:min(420px,calc(100vw - 250px));font-size:12.5px}
+}
+@media (max-width:740px){
+  #guideBar{top:54px;left:10px;right:10px;transform:none;max-width:none}
+  #lensWrap{top:102px;left:8px;transform:scale(.82);transform-origin:top left}
+  #rotHint{display:none}
+}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="itemTags"></div>
+<div id="labels"><div id="targetCue" class="cue3d">✨ 拖起物品送到对应感觉器官！</div></div>
+<canvas id="confetti"></canvas>
+
+<div id="hudTL">
+  <a id="backBtn" href="../index.html" title="返回书包">‹</a>
+  <div>
+    <div class="hd-t" data-py="dì kè rèn shi gǎn jué qì guān">第5课 认识感觉器官</div>
+    <div class="hd-sub">活页 · 课本第 18 页「3D 感官配对实验室」</div>
+  </div>
+</div>
+
+<div id="guideBar" title="点我重听当前步骤">
+  <span id="guideIco">✨</span>
+  <span id="guideTxt">把桌上的 5 件物品拖给（或先点物品再点）娃娃对应的感觉器官吧！</span>
+</div>
+
+<div id="hudTR">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<div id="rotHint">👆 拖动桌上的 3D 物品到娃娃的感觉器官，或先点物品再点器官配对！</div>
+
+<!-- 左侧 2D 高清感官信号特写窗 -->
+<div id="lensWrap">
+  <div class="lens-ring" id="lensRing">
+    <div class="lens-inner">
+      <canvas id="lensCv" width="280" height="280"></canvas>
+      <div class="lens-tag" id="lensTag">✨ 感官信号特写</div>
+    </div>
+  </div>
+  <div class="lens-caption" id="lensCap">感官科学原理</div>
+</div>
+
+<aside id="notes">
+  <div class="nt-head">
+    <span class="nt-title" data-py="wǒ de fā xiàn">我的发现</span>
+    <span class="nt-cnt" id="ntCnt">0 / 5</span>
+    <button class="nt-tog" id="ntTog" type="button">收起</button>
+  </div>
+  <div class="stamps">
+    <span class="st" id="st_eye" title="待发现">？</span>
+    <span class="st" id="st_ear" title="待发现">？</span>
+    <span class="st" id="st_nose" title="待发现">？</span>
+    <span class="st" id="st_tongue" title="待发现">？</span>
+    <span class="st" id="st_skin" title="待发现">？</span>
+  </div>
+  <div id="ntList"></div>
+</aside>
+
+<div id="winToast">
+  <div class="win-card">
+    <div style="font-size:38px">🏆</div>
+    <h3 style="margin:4px 0;color:#9a3412">太棒啦！5 大感觉器官全部认识啦！</h3>
+    <div class="win-concl">
+      <b>✨ 科学小结论：</b>眼睛看颜色和形状，耳朵听声音，鼻子闻气味，舌头尝味道，皮肤感受冷暖和软硬。它们都是人体的感觉器官，帮我们认识身边的世界！
+    </div>
+    <div class="win-quiz">
+      <h4>💡 考考你 · 答对领小红花 🌸</h4>
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:8px">蒙上眼睛只用小手摸一摸，能分辨出冰块和温水吗？靠的是哪个感觉器官？</div>
+      <div class="qopts" id="qOpts">
+        <button class="qopt" type="button" data-ok="1">✋ 能！靠皮肤感受冷暖变化</button>
+        <button class="qopt" type="button" data-hint="耳朵主要用来听声音，感受冷暖要靠皮肤哦！">👂 靠耳朵听出冰块有多凉</button>
+        <button class="qopt" type="button" data-hint="鼻子主要用来闻气味，感受冰凉温热要靠皮肤哦！">👃 靠鼻子闻出冰块的冷暖</button>
+      </div>
+      <div class="qfb" id="qFb"></div>
+    </div>
+    <div class="win-acts">
+      <button class="tbtn" id="winKeepBtn" type="button">继续玩</button>
+      <button class="tbtn on" id="winAgainBtn" type="button">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js?v=doubao-2"></script>
+<script src="../vendor/voice.js?v=doubao-2"></script>
+<script>
+(function () {
+'use strict';
+
+try { sessionStorage.setItem('xk_last_vol', 'k2a'); } catch (e) {}
+
+var LESSON_ID = 'k2a-05';
+var BOOK_PROGRESS_KEY = 'xk_k2a_progress';
+var $ = function (s) { return document.querySelector(s); };
+var $$ = function (s) { return document.querySelectorAll(s); };
+
+/* ===== 拼音标注（1对1精确校验） ===== */
+var HAN = /[\u3400-\u9fff]/;
+var pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function ruby(text, py) {
+  if (!py) return esc(text);
+  var syl = py.trim().split(/\s+/), i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) {
+      var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; }
+      out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>';
+    } else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+$$('[data-py]').forEach(function (el) { el.innerHTML = ruby(el.textContent, el.dataset.py); });
+
+/* ===== WebAudio 感官音效 ===== */
+var actx = null;
+function ensureAudio() {
+  try {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    return actx;
+  } catch (e) { return null; }
+}
+function beep(freqs, dur) {
+  var c = ensureAudio(); if (!c) return;
+  var t = c.currentTime;
+  freqs.forEach(function (f, idx) {
+    var o = c.createOscillator(), g = c.createGain();
+    o.type = 'triangle'; o.frequency.setValueAtTime(f, t + idx * 0.075);
+    g.gain.setValueAtTime(0.001, t + idx * 0.075);
+    g.gain.exponentialRampToValueAtTime(0.11, t + idx * 0.075 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.075 + (dur || 0.2));
+    o.connect(g); g.connect(c.destination);
+    o.start(t + idx * 0.075); o.stop(t + idx * 0.075 + (dur || 0.22));
+  });
+}
+function playBellSound() {
+  var c = ensureAudio(); if (!c) return;
+  var t = c.currentTime;
+  [0, 0.16].forEach(function (off) {
+    [1318.5, 2637, 3951].forEach(function (f, hi) {
+      var o = c.createOscillator(), g = c.createGain();
+      o.type = 'sine'; o.frequency.setValueAtTime(f, t + off);
+      var amp = hi === 0 ? 0.11 : (hi === 1 ? 0.055 : 0.025);
+      g.gain.setValueAtTime(0.001, t + off);
+      g.gain.exponentialRampToValueAtTime(amp, t + off + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0008, t + off + 0.45);
+      o.connect(g); g.connect(c.destination);
+      o.start(t + off); o.stop(t + off + 0.48);
+    });
+  });
+}
+function playBoingError() {
+  var c = ensureAudio(); if (!c) return;
+  var t = c.currentTime;
+  [0, 0.14].forEach(function (off, idx) {
+    var o = c.createOscillator(), g = c.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(idx === 0 ? 280 : 210, t + off);
+    o.frequency.exponentialRampToValueAtTime(idx === 0 ? 185 : 135, t + off + 0.14);
+    g.gain.setValueAtTime(0.001, t + off);
+    g.gain.exponentialRampToValueAtTime(0.14, t + off + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.001, t + off + 0.16);
+    o.connect(g); g.connect(c.destination);
+    o.start(t + off); o.stop(t + off + 0.18);
+  });
+}
+
+/* ===== 语音（豆包离线预合成优先 + 静音控制） ===== */
+var muted = false;
+function stopVoice() {
+  if (window.__xkVoice) window.__xkVoice.stop();
+  else if (window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
+}
+function speak(txt, force) {
+  if (!txt || (muted && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(txt, '../audio/', true); return; }
+}
+
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem(BOOK_PROGRESS_KEY) || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem(BOOK_PROGRESS_KEY, JSON.stringify(d));
+  } catch (e) {}
+}
+
+/* ===== 彩带庆祝 ===== */
+var cfCanvas = $('#confetti'), cfCtx = cfCanvas.getContext('2d'), cfParts = [], cfOn = false;
+function fireConfetti() {
+  cfCanvas.width = window.innerWidth; cfCanvas.height = window.innerHeight;
+  cfParts = [];
+  var cols = ['#e56d17', '#f59e0b', '#ec4899', '#38bdf8', '#22c55e', '#a855f7'];
+  for (var i = 0; i < 92; i++) {
+    cfParts.push({
+      x: cfCanvas.width * (0.14 + Math.random() * 0.72), y: -16 - Math.random() * 120,
+      vx: (Math.random() - 0.5) * 210, vy: 120 + Math.random() * 190,
+      r: 5 + Math.random() * 5, a: Math.random() * 6.28, va: (Math.random() - 0.5) * 9,
+      c: cols[i % cols.length]
+    });
+  }
+  cfOn = true;
+}
+
+/* ===== Three.js r147 场景（去塑料感三光 + 暖木实验桌 + 精雕 Q 版小朋友 + 5 件一眼可辨 3D 物品） ===== */
+var cv = $('#cv');
+var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color('#ead7bc');
+var camera = new THREE.PerspectiveCamera(34, 16 / 9, 0.1, 80);
+camera.position.set(0.0, 2.95, 7.95);
+camera.lookAt(-0.10, 1.06, 0.22);
+
+// 去塑料感三光配置
+scene.add(new THREE.HemisphereLight('#fffdf6', '#5e432c', 0.66));
+var sunL = new THREE.DirectionalLight('#fff4e0', 0.78);
+sunL.position.set(-3.2, 8.8, 6.2);
+sunL.castShadow = true;
+sunL.shadow.mapSize.set(1024, 1024);
+sunL.shadow.camera.left = -6.0; sunL.shadow.camera.right = 6.0;
+sunL.shadow.camera.top = 6.0; sunL.shadow.camera.bottom = -6.0;
+sunL.shadow.bias = -0.001;
+scene.add(sunL);
+var fillL = new THREE.DirectionalLight('#dceeff', 0.26);
+fillL.position.set(4.5, 4.2, 5.5);
+scene.add(fillL);
+
+var ramp = new THREE.DataTexture(new Uint8Array([138,138,138,255, 198,198,198,255, 238,238,238,255, 255,255,255,255]), 4, 1, THREE.RGBAFormat);
+ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+
+function toon(hex, extra) {
+  var o = { color: new THREE.Color(hex), gradientMap: ramp };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshToonMaterial(o);
+}
+function mesh(geo, mat, noRecv) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = !noRecv;
+  return m;
+}
+function ctex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c);
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+
+var HIT_MAT = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.001, depthWrite: false });
+function addHit(parent, geo, x, y, z, ud) {
+  var h = new THREE.Mesh(geo, HIT_MAT);
+  h.position.set(x || 0, y || 0, z || 0);
+  h.castShadow = false; h.receiveShadow = false;
+  if (ud) for (var k in ud) h.userData[k] = ud[k];
+  parent.add(h);
+  return h;
+}
+
+var live = new THREE.Group();
+scene.add(live);
+
+// 暖色深胡桃木实验桌（自然木纹 + 清爽细阴影接触面，去掉大橙饼！）
+var woodTex = ctex(512, 512, function (g, w, h) {
+  g.fillStyle = '#7b5031'; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 95; i++) {
+    g.fillStyle = (i % 2 === 0 ? 'rgba(48,26,12,' : 'rgba(150,104,64,') + (0.04 + Math.random() * 0.055).toFixed(3) + ')';
+    g.fillRect(0, Math.random() * h, w, 2 + Math.random() * 4.5);
+  }
+});
+woodTex.wrapS = woodTex.wrapT = THREE.RepeatWrapping; woodTex.repeat.set(2, 2);
+
+var deskTop = mesh(new THREE.BoxGeometry(10.8, 0.36, 5.4), [
+  toon('#623d22'), toon('#623d22'),
+  new THREE.MeshToonMaterial({ map: woodTex, gradientMap: ramp }),
+  toon('#52321b'), toon('#6b4528'), toon('#623d22')
+]);
+deskTop.position.set(-0.1, -0.18, 0.45);
+deskTop.castShadow = false;
+live.add(deskTop);
+
+// 温馨柔光背景墙
+var wallTex = ctex(512, 256, function (g, w, h) {
+  var gr = g.createLinearGradient(0, 0, 0, h);
+  gr.addColorStop(0, '#f7ecd9'); gr.addColorStop(1, '#e4cba6');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  g.fillStyle = 'rgba(255,252,244,.25)';
+  for (var x = 0; x < w; x += 64) g.fillRect(x, 0, 2, h);
+});
+var backWall = new THREE.Mesh(new THREE.PlaneGeometry(24, 12), new THREE.MeshBasicMaterial({ map: wallTex }));
+backWall.position.set(0, 3.8, -2.5);
+live.add(backWall);
+
+// 柔和接触阴影圆贴图（替代丑陋大橙饼！）
+var shadowTex = ctex(128, 128, function (g, w, h) {
+  var gr = g.createRadialGradient(w / 2, h / 2, 6, w / 2, h / 2, w / 2);
+  gr.addColorStop(0, 'rgba(38,20,8,0.34)');
+  gr.addColorStop(0.65, 'rgba(38,20,8,0.14)');
+  gr.addColorStop(1, 'rgba(38,20,8,0.0)');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+});
+function addSoftShadow(parent, radius, x, z) {
+  var s = new THREE.Mesh(
+    new THREE.PlaneGeometry(radius * 2, radius * 2),
+    new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false })
+  );
+  s.rotation.x = -Math.PI / 2;
+  s.position.set(x || 0, 0.005, z || 0);
+  parent.add(s);
+  return s;
+}
+
+// 桌面 5 个体验物品位置（自然错落弧线，清爽细投影）
+var ITEM_HOMES = {
+  flower: new THREE.Vector3(-2.22, 0.0, 1.48),
+  bell: new THREE.Vector3(-1.14, 0.0, 1.72),
+  bread: new THREE.Vector3(-0.08, 0.0, 1.78),
+  candy: new THREE.Vector3(0.98, 0.0, 1.72),
+  icebowl: new THREE.Vector3(2.04, 0.0, 1.48)
+};
+Object.keys(ITEM_HOMES).forEach(function (k) {
+  var pos = ITEM_HOMES[k];
+  addSoftShadow(live, 0.44, pos.x, pos.z);
+  var ring = new THREE.Mesh(
+    new THREE.RingGeometry(0.32, 0.355, 28),
+    new THREE.MeshBasicMaterial({ color: 0xffe4bc, transparent: true, opacity: 0.28, depthWrite: false })
+  );
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.set(pos.x, 0.006, pos.z);
+  live.add(ring);
+});
+
+/* ===== 中央精雕 Q 版可爱小朋友（温暖微笑嘴 + 亮晶晶大眼 + 弯眉 + 圆耳 + 精致小翘鼻 + 5 指圆润小手！） ===== */
+var DOLL_X = -0.18;
+var DOLL_Z = -0.35;
+var dollG = new THREE.Group();
+dollG.position.set(DOLL_X, 0, DOLL_Z);
+live.add(dollG);
+
+// 清爽细投影 + 低调雅致胡桃木托座（绝不用巨型橙饼！）
+addSoftShadow(dollG, 0.96, 0, 0);
+var standBase = mesh(new THREE.CylinderGeometry(0.68, 0.74, 0.08, 32), toon('#5d3a20'));
+standBase.position.y = 0.04;
+dollG.add(standBase);
+var standTrim = mesh(new THREE.TorusGeometry(0.69, 0.016, 10, 36), toon('#d4a36a'));
+standTrim.rotation.x = Math.PI / 2; standTrim.position.y = 0.08;
+dollG.add(standTrim);
+
+// 身体与柔和天蓝针织毛衣 + 奶油白翻领
+var torsoG = new THREE.Group();
+dollG.add(torsoG);
+var sweaterMat = toon('#4aa3df');
+var skinMat = toon('#f7cba6');
+var bodyMesh = mesh(new THREE.CylinderGeometry(0.45, 0.66, 0.90, 28), sweaterMat);
+bodyMesh.position.y = 0.54;
+torsoG.add(bodyMesh);
+var hemRim = mesh(new THREE.TorusGeometry(0.64, 0.045, 10, 32), toon('#3b8bc4'));
+hemRim.rotation.x = Math.PI / 2; hemRim.position.y = 0.11;
+torsoG.add(hemRim);
+
+var shoulderL = mesh(new THREE.SphereGeometry(0.24, 18, 14), sweaterMat);
+shoulderL.position.set(-0.48, 0.84, 0); torsoG.add(shoulderL);
+var shoulderR = mesh(new THREE.SphereGeometry(0.24, 18, 14), sweaterMat);
+shoulderR.position.set(0.48, 0.84, 0); torsoG.add(shoulderR);
+
+// 自然垂下的左臂
+var leftArm = mesh(new THREE.CylinderGeometry(0.125, 0.115, 0.52, 16), sweaterMat);
+leftArm.position.set(-0.56, 0.54, 0.04); leftArm.rotation.z = 0.22;
+torsoG.add(leftArm);
+var leftCuff = mesh(new THREE.TorusGeometry(0.115, 0.025, 10, 20), toon('#fff8ec'));
+leftCuff.rotation.x = Math.PI / 2; leftCuff.rotation.y = -0.22; leftCuff.position.set(-0.62, 0.29, 0.05);
+torsoG.add(leftCuff);
+var leftFist = mesh(new THREE.SphereGeometry(0.125, 14, 12), skinMat, true);
+leftFist.position.set(-0.63, 0.21, 0.07);
+torsoG.add(leftFist);
+
+// 精致奶油白圆角翻领 + 温润木扣
+var collarL = mesh(new THREE.SphereGeometry(0.21, 16, 12), toon('#fffaf0'), true);
+collarL.scale.set(1.22, 0.30, 0.88); collarL.position.set(-0.19, 1.00, 0.33); collarL.rotation.z = 0.26;
+torsoG.add(collarL);
+var collarR = mesh(new THREE.SphereGeometry(0.21, 16, 12), toon('#fffaf0'), true);
+collarR.scale.set(1.22, 0.30, 0.88); collarR.position.set(0.19, 1.00, 0.33); collarR.rotation.z = -0.26;
+torsoG.add(collarR);
+[0.76, 0.52].forEach(function (by) {
+  var btn = mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.028, 16), toon('#f59e0b'));
+  btn.rotation.x = Math.PI / 2; btn.position.set(0, by, 0.53);
+  torsoG.add(btn);
+});
+
+// 脖子
+var neck = mesh(new THREE.CylinderGeometry(0.15, 0.18, 0.26, 16), toon('#f5c6a3'), true);
+neck.position.y = 1.08;
+torsoG.add(neck);
+
+// 自然伸向前右方的圆润 5 指小手（触觉皮肤器官，柔和饱满不过曝！）
+var handArmG = new THREE.Group();
+handArmG.position.set(0.52, 0.84, 0.14);
+torsoG.add(handArmG);
+var sleeveFore = mesh(new THREE.CylinderGeometry(0.135, 0.118, 0.52, 16), sweaterMat);
+sleeveFore.rotation.z = -1.16; sleeveFore.rotation.y = 0.30;
+sleeveFore.position.set(0.22, 0.07, 0.11);
+handArmG.add(sleeveFore);
+var cuffR = mesh(new THREE.TorusGeometry(0.122, 0.028, 10, 22), toon('#fffaf0'));
+cuffR.position.set(0.45, 0.15, 0.21); cuffR.rotation.y = Math.PI / 2 - 0.30;
+handArmG.add(cuffR);
+
+var handG = new THREE.Group();
+handG.position.set(0.64, 0.22, 0.30);
+handG.rotation.set(0.10, -0.18, -0.14);
+handArmG.add(handG);
+
+var handSkinMat = toon('#f9caa6');
+var palm = mesh(new THREE.SphereGeometry(0.185, 18, 14), handSkinMat, true);
+palm.scale.set(1.06, 1.02, 0.52);
+handG.add(palm);
+
+function addCapsuleFinger(parent, x, y, z, len, rTop, rBot, rz, rx) {
+  var fg = new THREE.Group();
+  fg.position.set(x, y, z);
+  fg.rotation.set(rx || 0, 0, rz || 0);
+  var seg = mesh(new THREE.CylinderGeometry(rTop, rBot, len, 12), handSkinMat, true);
+  seg.position.y = len * 0.5; fg.add(seg);
+  var topS = mesh(new THREE.SphereGeometry(rTop, 12, 10), handSkinMat, true);
+  topS.position.y = len; fg.add(topS);
+  var botS = mesh(new THREE.SphereGeometry(rBot, 10, 8), handSkinMat, true);
+  fg.add(botS);
+  parent.add(fg);
+}
+// 4 根柔和圆润手指 + 1 根自然展开大拇指
+addCapsuleFinger(handG, -0.115, 0.12, 0.01, 0.21, 0.036, 0.042, 0.22, 0.04);
+addCapsuleFinger(handG, -0.038, 0.15, 0.015, 0.24, 0.037, 0.043, 0.06, 0.02);
+addCapsuleFinger(handG, 0.042, 0.15, 0.015, 0.23, 0.036, 0.042, -0.06, 0.02);
+addCapsuleFinger(handG, 0.115, 0.11, 0.01, 0.18, 0.034, 0.039, -0.22, 0.04);
+addCapsuleFinger(handG, -0.15, -0.02, 0.035, 0.17, 0.038, 0.045, 0.92, 0.12);
+
+// ===== Q 版圆润可爱大头（noRecv=true 避免脏阴影割脸！） =====
+var headG = new THREE.Group();
+headG.position.set(0, 1.68, 0.0);
+dollG.add(headG);
+
+var headSphere = mesh(new THREE.SphereGeometry(0.75, 32, 26), skinMat, true);
+headSphere.scale.set(1.04, 0.96, 0.95);
+headG.add(headSphere);
+
+// 柔顺栗棕色圆润短发 + 自然饱满刘海 + 小花发夹
+var hairMat = toon('#633b22');
+var hairBack = mesh(new THREE.SphereGeometry(0.80, 28, 22), hairMat, true);
+hairBack.scale.set(1.05, 0.98, 0.96); hairBack.position.set(0, 0.08, -0.11);
+hairG_addHair(headG);
+function hairG_addHair(p) {
+  p.add(hairBack);
+  // 蓬松柔和的弧形刘海团，高举在眉上方不压眼
+  [
+    [-0.46, 0.44, 0.50, 0.30, 0.22],
+    [-0.22, 0.54, 0.61, 0.14, 0.23],
+    [0.02, 0.56, 0.64, 0.0, 0.24],
+    [0.26, 0.53, 0.60, -0.15, 0.23],
+    [0.48, 0.43, 0.49, -0.32, 0.22]
+  ].forEach(function (bg) {
+    var b = mesh(new THREE.SphereGeometry(bg[4], 16, 12), hairMat, true);
+    b.scale.set(1.08, 0.78, 0.64); b.position.set(bg[0], bg[1], bg[2]); b.rotation.z = bg[3];
+    b.castShadow = false;
+    p.add(b);
+  });
+  // 可爱小太阳花发夹
+  var clipG = new THREE.Group();
+  clipG.position.set(0.46, 0.48, 0.58); clipG.rotation.set(-0.15, 0.45, -0.25);
+  var clipCtr = mesh(new THREE.SphereGeometry(0.055, 10, 8), toon('#f59e0b'), true);
+  clipG.add(clipCtr);
+  for (var cp = 0; cp < 5; cp++) {
+    var ca = cp * Math.PI * 2 / 5;
+    var pet = mesh(new THREE.SphereGeometry(0.042, 8, 8), toon('#fef08a'), true);
+    pet.position.set(Math.cos(ca) * 0.065, Math.sin(ca) * 0.065, -0.01);
+    clipG.add(pet);
+  }
+  p.add(clipG);
+}
+
+// 柔和粉嫩小腮红
+[-0.43, 0.43].forEach(function (bx) {
+  var blush = mesh(new THREE.SphereGeometry(0.105, 14, 10), toon('#ffa2b2'), true);
+  blush.scale.set(1.32, 0.62, 0.28); blush.position.set(bx, -0.11, 0.64);
+  blush.castShadow = false;
+  headG.add(blush);
+});
+
+// 1. 圆润大眼睛（带亮晶晶双高光 + 温柔弯弯细眉，绝不凶！）
+var eyesG = new THREE.Group();
+headG.add(eyesG);
+var browL, browR;
+[-0.27, 0.27].forEach(function (ex, idx) {
+  var eg = new THREE.Group();
+  eg.position.set(ex, 0.08, 0.66);
+  eg.rotation.y = ex > 0 ? 0.24 : -0.24;
+  eyesG.add(eg);
+
+  var sclera = mesh(new THREE.SphereGeometry(0.152, 20, 16), toon('#ffffff'), true);
+  sclera.scale.set(1.02, 1.08, 0.38); eg.add(sclera);
+  var iris = mesh(new THREE.SphereGeometry(0.112, 18, 14), toon('#422616'), true);
+  iris.scale.set(1.0, 1.08, 0.40); iris.position.set(0, -0.004, 0.042); eg.add(iris);
+  var pupil = mesh(new THREE.SphereGeometry(0.068, 14, 12), toon('#1a0e08'), true);
+  pupil.scale.set(1.0, 1.06, 0.42); pupil.position.set(0, -0.008, 0.064); eg.add(pupil);
+
+  // 亮晶晶大小双高光白点（萌系灵魂！）
+  var gl1 = new THREE.Mesh(new THREE.SphereGeometry(0.042, 12, 10), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  gl1.position.set(0.038, 0.046, 0.088); eg.add(gl1);
+  var gl2 = new THREE.Mesh(new THREE.SphereGeometry(0.020, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  gl2.position.set(-0.034, -0.036, 0.088); eg.add(gl2);
+
+  // 纤柔上眼睫毛弧线
+  var lash = mesh(new THREE.TorusGeometry(0.148, 0.017, 8, 22, Math.PI * 0.82), toon('#3b2214'), true);
+  lash.position.set(0, 0.028, 0.034); lash.rotation.z = Math.PI * 0.09;
+  lash.castShadow = false;
+  eg.add(lash);
+
+  // 柔和弯弧眉毛（绝不用凶巴巴的平直方砖！）
+  var browPivot = new THREE.Group();
+  browPivot.position.set(ex, 0.28, 0.64);
+  browPivot.rotation.y = ex > 0 ? 0.22 : -0.22;
+  var browArc = mesh(new THREE.TorusGeometry(0.135, 0.022, 8, 18, Math.PI * 0.62), toon('#5a331c'), true);
+  browArc.position.set(0, -0.09, 0);
+  browArc.rotation.z = Math.PI * 0.19;
+  browArc.castShadow = false;
+  browPivot.add(browArc);
+  headG.add(browPivot);
+  if (idx === 0) browL = browPivot; else browR = browPivot;
+});
+
+// 2. 可爱圆润双耳（立体外张轮廓 + 柔粉耳窝，彻底告别贴头扁耳！）
+var earsG = new THREE.Group();
+headG.add(earsG);
+var earMeshes = [];
+[-0.76, 0.76].forEach(function (ex) {
+  var ear = new THREE.Group();
+  ear.position.set(ex, -0.02, 0.03);
+  ear.rotation.y = ex > 0 ? -0.28 : 0.28;
+  earsG.add(ear);
+  var outer = mesh(new THREE.SphereGeometry(0.195, 18, 16), skinMat, true);
+  outer.scale.set(0.76, 1.12, 0.66); ear.add(outer);
+  var rim = mesh(new THREE.TorusGeometry(0.145, 0.036, 10, 22, Math.PI * 1.4), skinMat, true);
+  rim.rotation.z = ex > 0 ? -Math.PI * 0.7 : Math.PI * 0.3;
+  rim.position.set(0, 0, 0.045); ear.add(rim);
+  var inner = mesh(new THREE.SphereGeometry(0.105, 14, 12), toon('#f5a59f'), true);
+  inner.scale.set(0.68, 0.92, 0.42); inner.position.set(ex > 0 ? -0.01 : 0.01, -0.01, 0.068);
+  ear.add(inner);
+  earMeshes.push(ear);
+});
+
+// 3. 精致可爱小翘鼻（自然立体微翘！）
+var noseG = new THREE.Group();
+noseG.position.set(0, -0.07, 0.72);
+headG.add(noseG);
+var noseBridge = mesh(new THREE.SphereGeometry(0.072, 16, 14), toon('#f6bc98'), true);
+noseBridge.scale.set(0.95, 0.88, 1.25);
+noseG.add(noseBridge);
+var noseTip = mesh(new THREE.SphereGeometry(0.048, 14, 12), toon('#f2aa89'), true);
+noseTip.position.set(0, 0.016, 0.056);
+noseG.add(noseTip);
+
+// 4. 嘴巴三态：平时温暖可爱微笑 / 配对棒棒糖或舔糖时开心微张嘴吐可爱粉红小舌头 / 纠错时可爱嘟嘴！
+var mouthG = new THREE.Group();
+mouthG.position.set(0, -0.28, 0.68);
+headG.add(mouthG);
+
+// 状态 A：平时温暖微笑弧线嘴（柔和、甜美、完全不吓人！）
+var gentleSmilePart = new THREE.Group();
+mouthG.add(gentleSmilePart);
+var smileCurve = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-0.14, 0.035, 0.01),
+  new THREE.Vector3(-0.07, -0.025, 0.045),
+  new THREE.Vector3(0.0, -0.045, 0.055),
+  new THREE.Vector3(0.07, -0.025, 0.045),
+  new THREE.Vector3(0.14, 0.035, 0.01)
+]);
+var smileArcMesh = mesh(new THREE.TubeGeometry(smileCurve, 20, 0.021, 10, false), toon('#d46072'), true);
+smileArcMesh.castShadow = false;
+gentleSmilePart.add(smileArcMesh);
+// 两端甜美小梨涡
+[-0.145, 0.145].forEach(function (dx) {
+  var dimp = mesh(new THREE.SphereGeometry(0.018, 8, 8), toon('#e27a88'), true);
+  dimp.position.set(dx, 0.036, 0.012); dimp.castShadow = false;
+  gentleSmilePart.add(dimp);
+});
+
+// 状态 B：开心张嘴吐出可爱粉红小舌头（仅配对棒棒糖或拖动接近嘴边时显现！）
+var tongueSmilePart = new THREE.Group();
+tongueSmilePart.visible = false;
+mouthG.add(tongueSmilePart);
+var openMouthBg = mesh(new THREE.SphereGeometry(0.135, 18, 14), toon('#a63244'), true);
+openMouthBg.scale.set(1.12, 0.78, 0.36); openMouthBg.position.set(0, -0.02, 0.01);
+tongueSmilePart.add(openMouthBg);
+var upperLip = mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-0.15, 0.04, 0.02),
+  new THREE.Vector3(0, 0.065, 0.055),
+  new THREE.Vector3(0.15, 0.04, 0.02)
+]), 16, 0.018, 8, false), toon('#e06878'), true);
+tongueSmilePart.add(upperLip);
+// 可爱小巧粉红小舌头（圆润俏皮，绝无恐怖白砖牙！）
+var tongueMesh = mesh(new THREE.SphereGeometry(0.095, 16, 14), toon('#ff7890'), true);
+tongueMesh.scale.set(1.02, 0.56, 1.28);
+tongueMesh.position.set(0, -0.075, 0.082);
+tongueSmilePart.add(tongueMesh);
+
+// 状态 C：错误纠错可爱嘟嘴
+var poutPart = new THREE.Group();
+poutPart.visible = false;
+mouthG.add(poutPart);
+var poutCurve = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-0.10, -0.045, 0.02),
+  new THREE.Vector3(0.0, 0.01, 0.055),
+  new THREE.Vector3(0.10, -0.045, 0.02)
+]);
+var poutArc = mesh(new THREE.TubeGeometry(poutCurve, 16, 0.021, 8, false), toon('#c85a6a'), true);
+poutArc.castShadow = false;
+poutPart.add(poutArc);
+
+/* ===== 5 大感觉器官超大互不重叠纯 Mesh 碰撞区与柔和光环 ===== */
+var ORGANS = {
+  eye: {
+    id: 'eye', name: '眼睛', ico: '👁', sense: '视觉',
+    worldPos: function () { return new THREE.Vector3(DOLL_X, 1.79, DOLL_Z + 0.72); },
+    ringPos: new THREE.Vector3(0, 0.10, 0.75), ringParent: headG, ringRx: 0.46, ringRy: 0.20,
+    discoverHtml: '👁 <b>眼睛</b>：看物体的颜色和形状',
+    winSpeech: '配对成功！眼睛能帮我们看清花朵五彩缤纷的颜色和形状，它是视觉器官！',
+    lensTag: '👁 视觉信号',
+    lensCap: '彩色光线进入眼睛，帮我们看清颜色和形状！'
+  },
+  ear: {
+    id: 'ear', name: '耳朵', ico: '👂', sense: '听觉',
+    worldPos: function () { return new THREE.Vector3(DOLL_X - 0.80, 1.66, DOLL_Z + 0.06); },
+    ringPos: new THREE.Vector3(-0.79, -0.02, 0.14), ringParent: headG, ringRx: 0.18, ringRy: 0.25,
+    discoverHtml: '👂 <b>耳朵</b>：听周围各种声音',
+    winSpeech: '配对成功！叮当叮当的声波传进耳朵，帮我们听清清脆的铃声，它是听觉器官！',
+    lensTag: '👂 听觉信号',
+    lensCap: '铃铛振动产生声波，传进耳朵让我们听见声音！'
+  },
+  nose: {
+    id: 'nose', name: '鼻子', ico: '👃', sense: '嗅觉',
+    worldPos: function () { return new THREE.Vector3(DOLL_X, 1.61, DOLL_Z + 0.82); },
+    ringPos: new THREE.Vector3(0, -0.07, 0.84), ringParent: headG, ringRx: 0.14, ringRy: 0.14,
+    discoverHtml: '👃 <b>鼻子</b>：闻物体的各种气味',
+    winSpeech: '配对成功！热烤面包的香气分子飘进鼻子，帮我们闻到香喷喷的味道，它是嗅觉器官！',
+    lensTag: '👃 嗅觉信号',
+    lensCap: '面包散发的香气分子飘进鼻子，闻出诱人香味！'
+  },
+  tongue: {
+    id: 'tongue', name: '舌头', ico: '👅', sense: '味觉',
+    worldPos: function () { return new THREE.Vector3(DOLL_X, 1.38, DOLL_Z + 0.78); },
+    ringPos: new THREE.Vector3(0, -0.30, 0.80), ringParent: headG, ringRx: 0.22, ringRy: 0.14,
+    discoverHtml: '👅 <b>舌头</b>：品尝酸甜苦辣等味道',
+    winSpeech: '配对成功！舌头上的小味蕾尝出棒棒糖甜甜的味道，它是味觉器官！',
+    lensTag: '👅 味觉信号',
+    lensCap: '棒棒糖的甜味信号落在舌头味蕾上，尝出香甜！'
+  },
+  skin: {
+    id: 'skin', name: '皮肤', ico: '✋', sense: '触觉',
+    worldPos: function () {
+      var wp = new THREE.Vector3(0, 0.10, 0.08);
+      handG.localToWorld(wp);
+      return wp;
+    },
+    ringPos: new THREE.Vector3(0, 0.10, 0.12), ringParent: handG, ringRx: 0.30, ringRy: 0.32,
+    discoverHtml: '✋ <b>皮肤</b>：感受冷暖、软硬与光滑',
+    winSpeech: '配对成功！小手皮肤马上感受到冰水凉丝丝的温度，皮肤是感受冷暖软硬的感觉器官！',
+    lensTag: '✋ 触觉信号',
+    lensCap: '冰凉的水花接触小手皮肤，感受冷暖与湿润！'
+  }
+};
+
+var organHitMeshes = [];
+var organRings = {};
+var organRightEarRing = null;
+
+function makeGlowRing(rx, ry) {
+  var m = new THREE.Mesh(
+    new THREE.TorusGeometry(1.0, 0.048, 10, 32),
+    new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.0 })
+  );
+  m.scale.set(rx, ry, 1);
+  return m;
+}
+
+Object.keys(ORGANS).forEach(function (k) {
+  var o = ORGANS[k];
+  var ring = makeGlowRing(o.ringRx, o.ringRy);
+  ring.position.copy(o.ringPos);
+  o.ringParent.add(ring);
+  organRings[k] = ring;
+});
+organRightEarRing = makeGlowRing(0.18, 0.25);
+organRightEarRing.position.set(0.79, -0.02, 0.14);
+headG.add(organRightEarRing);
+
+// 5 个超大宽松、严格零重叠的纯 Mesh 碰撞体（鼻子与嘴唇/舌头严格分层，松手 100% 精准识别！）
+organHitMeshes.push(addHit(headG, new THREE.SphereGeometry(0.145, 14, 12), 0, -0.05, 0.85, { organId: 'nose' }));
+organHitMeshes.push(addHit(headG, new THREE.BoxGeometry(1.04, 0.34, 0.56), 0, 0.17, 0.64, { organId: 'eye' }));
+organHitMeshes.push(addHit(headG, new THREE.SphereGeometry(0.42, 14, 12), -0.84, -0.02, 0.08, { organId: 'ear' }));
+organHitMeshes.push(addHit(headG, new THREE.SphereGeometry(0.42, 14, 12), 0.84, -0.02, 0.08, { organId: 'ear' }));
+organHitMeshes.push(addHit(headG, new THREE.BoxGeometry(0.60, 0.30, 0.62), 0, -0.35, 0.78, { organId: 'tongue' }));
+organHitMeshes.push(addHit(handG, new THREE.SphereGeometry(0.54, 14, 12), 0, 0.10, 0.05, { organId: 'skin' }));
+
+/* ===== 5 件精雕 3D 体验物品（一眼认出 + 可视感官信号） ===== */
+var ITEMS = {
+  flower: {
+    id: 'flower', name: '七彩小花束', target: 'eye', ico: '💐', centerY: 0.42,
+    pickSpeech: '选好七彩小花束啦！看看五颜六色的花瓣，应该送给娃娃的哪个感觉器官呢？',
+    wrongSpeech: {
+      ear: '耳朵只能听声音，看不见七彩花束鲜艳的颜色呀！看颜色和形状应该找哪个感觉器官呢？',
+      nose: '鼻子闻气味很厉害，但要看清花朵五颜六色的形状，最主要该找哪个感觉器官呢？',
+      tongue: '小花束不能放进嘴里尝呀！看花朵五颜六色的样子应该找哪个感觉器官呢？',
+      skin: '小手摸不出花朵红红黄黄的颜色呀！看颜色和形状应该找哪个感觉器官呢？'
+    }
+  },
+  bell: {
+    id: 'bell', name: '金色小铃铛', target: 'ear', ico: '🔔', centerY: 0.44,
+    pickSpeech: '摇一摇金色小铃铛，叮当叮当真清脆！听声音应该送给哪个感觉器官呢？',
+    wrongSpeech: {
+      eye: '眼睛能看见铃铛亮晶晶，可听不见叮当叮当的铃声呀！听声音应该找哪个感觉器官呢？',
+      nose: '鼻子闻不到叮当叮当的声音呀！听声音应该找哪个感觉器官呢？',
+      tongue: '金属小铃铛可不能放嘴里尝，也尝不出铃声呀！听声音应该找哪个感觉器官呢？',
+      skin: '小手摸不到叮当叮当的清脆铃声呀！听声音应该找哪个感觉器官呢？'
+    }
+  },
+  bread: {
+    id: 'bread', name: '香烤面包', target: 'nose', ico: '🍞', centerY: 0.32,
+    pickSpeech: '热腾腾的香烤面包飘出阵阵香味！闻气味应该送给哪个感觉器官呢？',
+    wrongSpeech: {
+      eye: '眼睛能看到面包金黄黄的，但闻不到飘出来的烤面包香味呀！闻气味该找哪个器官呢？',
+      ear: '耳朵听不到面包的香味呀！闻香气应该找哪个感觉器官呢？',
+      tongue: '想先闻一闻面包飘出的阵阵香气，应该送给哪个感觉器官呢？',
+      skin: '小手摸不出面包香喷喷的气味呀！闻气味应该找哪个感觉器官呢？'
+    }
+  },
+  candy: {
+    id: 'candy', name: '螺旋棒棒糖', target: 'tongue', ico: '🍭', centerY: 0.52,
+    pickSpeech: '彩色螺旋棒棒糖一定很甜！尝出甜甜的味道应该送给哪个感觉器官呢？',
+    wrongSpeech: {
+      eye: '眼睛只能看到棒棒糖很漂亮，尝不出它有多甜呀！尝味道应该找哪个感觉器官呢？',
+      ear: '耳朵既听不见甜味也尝不出甜味呀！尝味道应该找哪个感觉器官呢？',
+      nose: '鼻子能闻到一点糖香，但要真正尝出甜甜的味道，应该找哪个感觉器官呢？',
+      skin: '小手皮肤可尝不出棒棒糖甜甜的味道呀！尝味道应该找哪个感觉器官呢？'
+    }
+  },
+  icebowl: {
+    id: 'icebowl', name: '冰块凉水碗', target: 'skin', ico: '❄', centerY: 0.28,
+    pickSpeech: '盛满冰块的小蓝碗冒着丝丝凉气！感受冰凉凉的触感应该送给哪个感觉器官呢？',
+    wrongSpeech: {
+      eye: '眼睛能看见冰块，但感受不到冰水有多冰凉呀！感受冷暖应该找哪个感觉器官呢？',
+      ear: '耳朵听不出凉水有多冰凉呀！感受冷暖和触感应该找哪个感觉器官呢？',
+      nose: '鼻子闻不出冰水有多凉呀！感受冷暖应该找哪个感觉器官呢？',
+      tongue: '冰水碗直接给小手摸一摸最安全，感受冷暖应该找娃娃的哪个感觉器官呢？'
+    }
+  }
+};
+var ITEM_KEYS = ['flower', 'bell', 'bread', 'candy', 'icebowl'];
+var itemGroups = {};
+var itemGoals = {};
+var itemHitMeshes = [];
+var itemTagEls = {};
+var itemSignals = { flower: [], bell: [], bread: [], candy: [], icebowl: [] };
+
+function registerItem(id, grp) {
+  var home = ITEM_HOMES[id];
+  grp.position.copy(home);
+  live.add(grp);
+  itemGroups[id] = grp;
+  itemGoals[id] = home.clone();
+  var h = addHit(grp, new THREE.CylinderGeometry(0.48, 0.48, 1.08, 14), 0, 0.46, 0, { itemId: id });
+  itemHitMeshes.push(h);
+
+  var tag = document.createElement('div');
+  tag.className = 'itag';
+  tag.textContent = ITEMS[id].ico + ' ' + ITEMS[id].name;
+  $('#itemTags').appendChild(tag);
+  itemTagEls[id] = tag;
+}
+
+// 1. 七彩小花束（牛皮纸筒 + 白纱内衬 + 红丝带 + 5 朵层次立体花 + 翠绿叶片）
+(function buildFlower() {
+  var g = new THREE.Group();
+  var wrapOuter = mesh(new THREE.ConeGeometry(0.28, 0.54, 18), toon('#d9a86c'));
+  wrapOuter.rotation.x = Math.PI; wrapOuter.position.y = 0.29; g.add(wrapOuter);
+  var wrapLiner = mesh(new THREE.TorusGeometry(0.26, 0.032, 10, 22), toon('#fff8ee'));
+  wrapLiner.rotation.x = Math.PI / 2; wrapLiner.position.y = 0.54; g.add(wrapLiner);
+  var rib = mesh(new THREE.TorusGeometry(0.135, 0.032, 10, 22), toon('#e11d48'));
+  rib.rotation.x = Math.PI / 2; rib.position.y = 0.28; g.add(rib);
+  // 丝带蝴蝶结
+  [-0.08, 0.08].forEach(function (bx) {
+    var bow = mesh(new THREE.SphereGeometry(0.058, 10, 8), toon('#f43f5e'));
+    bow.scale.set(1.3, 0.72, 0.55); bow.position.set(bx, 0.28, 0.14); bow.rotation.z = bx > 0 ? -0.35 : 0.35;
+    g.add(bow);
+  });
+  var bloomCols = ['#f43f5e', '#facc15', '#a855f7', '#38bdf8', '#fb7185'];
+  var bloomPos = [
+    [0, 0.72, 0.02, 0.18, 0],
+    [-0.21, 0.62, 0.12, 0.35, 0.35],
+    [0.21, 0.62, 0.12, 0.35, -0.35],
+    [-0.16, 0.65, -0.14, -0.22, 0.25],
+    [0.16, 0.65, -0.14, -0.22, -0.25]
+  ];
+  bloomPos.forEach(function (bp, idx) {
+    var fl = new THREE.Group();
+    fl.position.set(bp[0], bp[1], bp[2]);
+    fl.rotation.set(bp[3], 0, bp[4]);
+    g.add(fl);
+    var pMat = toon(bloomCols[idx]);
+    for (var p = 0; p < 5; p++) {
+      var a = p * Math.PI * 2 / 5;
+      var pet = mesh(new THREE.SphereGeometry(0.072, 12, 10), pMat);
+      pet.scale.set(1.05, 0.55, 1.05); pet.position.set(Math.cos(a) * 0.078, 0.01, Math.sin(a) * 0.078);
+      fl.add(pet);
+    }
+    var ctr = mesh(new THREE.SphereGeometry(0.05, 10, 8), toon('#fde047'));
+    ctr.position.y = 0.032; fl.add(ctr);
+  });
+  for (var l = 0; l < 6; l++) {
+    var la = l * Math.PI / 3 + 0.3;
+    var lf = mesh(new THREE.SphereGeometry(0.105, 10, 8), toon('#16a34a'));
+    lf.scale.set(1.35, 0.28, 0.62); lf.position.set(Math.cos(la) * 0.26, 0.53, Math.sin(la) * 0.26);
+    lf.rotation.y = -la; lf.rotation.z = 0.25; g.add(lf);
+  }
+  for (var s = 0; s < 6; s++) {
+    var sp = new THREE.Mesh(new THREE.OctahedronGeometry(0.04, 0), new THREE.MeshBasicMaterial({ color: bloomCols[s % 5], transparent: true, opacity: 0.9 }));
+    g.add(sp);
+    itemSignals.flower.push({ m: sp, ph: s * 1.05 });
+  }
+  registerItem('flower', g);
+})();
+
+// 2. 金色手摇小铃铛（LatheGeometry 优雅喇叭铜铃 + 圆润胡桃木手柄 + 金属铃舌）
+var bellSwingG;
+(function buildBell() {
+  var g = new THREE.Group();
+  bellSwingG = new THREE.Group(); bellSwingG.position.y = 0.50; g.add(bellSwingG);
+  // 精致车削木柄
+  var handlePts = [
+    new THREE.Vector2(0.01, 0.44),
+    new THREE.Vector2(0.068, 0.41),
+    new THREE.Vector2(0.072, 0.34),
+    new THREE.Vector2(0.044, 0.22),
+    new THREE.Vector2(0.056, 0.12)
+  ];
+  var handle = mesh(new THREE.LatheGeometry(handlePts, 20), toon('#854d0e'));
+  bellSwingG.add(handle);
+  var collar = mesh(new THREE.TorusGeometry(0.068, 0.022, 10, 20), toon('#ca8a04'));
+  collar.rotation.x = Math.PI / 2; collar.position.y = 0.12; bellSwingG.add(collar);
+  // 经典喇叭弧度铜铃身
+  var bellPts = [
+    new THREE.Vector2(0.05, 0.12),
+    new THREE.Vector2(0.15, 0.08),
+    new THREE.Vector2(0.19, -0.02),
+    new THREE.Vector2(0.22, -0.14),
+    new THREE.Vector2(0.31, -0.24),
+    new THREE.Vector2(0.32, -0.27),
+    new THREE.Vector2(0.27, -0.27)
+  ];
+  var bellBody = mesh(new THREE.LatheGeometry(bellPts, 28), toon('#eab308'));
+  bellSwingG.add(bellBody);
+  var rim = mesh(new THREE.TorusGeometry(0.282, 0.022, 10, 28), toon('#fde047'));
+  rim.rotation.x = Math.PI / 2; rim.position.y = -0.255; bellSwingG.add(rim);
+  var clapper = mesh(new THREE.SphereGeometry(0.072, 14, 12), toon('#b45309'));
+  clapper.position.y = -0.31; bellSwingG.add(clapper);
+
+  for (var w = 0; w < 3; w++) {
+    var wr = new THREE.Mesh(new THREE.TorusGeometry(0.30, 0.018, 8, 28), new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.78 }));
+    wr.position.y = 0.40;
+    g.add(wr);
+    itemSignals.bell.push({ m: wr, ph: w * 0.33 });
+  }
+  registerItem('bell', g);
+})();
+
+// 3. 精雕香烤法式割包面包 + 立体吐司片（彻底告别橙色汉堡胚！一眼看馋！）
+(function buildBread() {
+  var g = new THREE.Group();
+  // 雅致深木面包砧板
+  var board = mesh(new THREE.BoxGeometry(0.82, 0.055, 0.56), toon('#6e4427'));
+  board.position.y = 0.03; g.add(board);
+  var boardRim = mesh(new THREE.BoxGeometry(0.76, 0.06, 0.50), toon('#8f5d38'));
+  boardRim.position.y = 0.032; g.add(boardRim);
+
+  // 高清烘焙烤色法式长面包贴图（深焦糖烤色 + 奶白割包斜刀口 + 微洒烘焙面粉）
+  var breadTex = ctex(512, 256, function (c, w, h) {
+    var gr = c.createLinearGradient(0, 0, 0, h);
+    gr.addColorStop(0, '#9a4c14');
+    gr.addColorStop(0.28, '#c86e1c');
+    gr.addColorStop(0.60, '#df9030');
+    gr.addColorStop(1, '#a9581a');
+    c.fillStyle = gr; c.fillRect(0, 0, w, h);
+    // 微量烘焙面粉与焦香点
+    for (var i = 0; i < 160; i++) {
+      c.fillStyle = i % 3 === 0 ? 'rgba(255,245,220,0.22)' : 'rgba(110,48,12,0.12)';
+      c.beginPath(); c.arc(Math.random() * w, Math.random() * h, 2 + Math.random() * 6, 0, Math.PI * 2); c.fill();
+    }
+    // 4 道斜向法式割包刀口（外焦褐边 + 内部松软奶黄面包芯！）
+    for (var s = 0; s < 4; s++) {
+      var sx = 95 + s * 98;
+      c.save();
+      c.translate(sx, h * 0.50);
+      c.rotate(-0.48);
+      c.fillStyle = '#7c320a';
+      c.beginPath(); c.ellipse(0, 0, 44, 15, 0, 0, Math.PI * 2); c.fill();
+      c.fillStyle = '#fef3c7';
+      c.beginPath(); c.ellipse(0, 2, 36, 10, 0, 0, Math.PI * 2); c.fill();
+      c.restore();
+    }
+  });
+
+  // 法式橄榄形长面包本体（两头尖、中间饱满圆拱）
+  var loafPts = [
+    new THREE.Vector2(0.005, -0.38),
+    new THREE.Vector2(0.12, -0.32),
+    new THREE.Vector2(0.21, -0.18),
+    new THREE.Vector2(0.24, 0.0),
+    new THREE.Vector2(0.21, 0.18),
+    new THREE.Vector2(0.12, 0.32),
+    new THREE.Vector2(0.005, 0.38)
+  ];
+  var loafGeo = new THREE.LatheGeometry(loafPts, 28);
+  loafGeo.rotateZ(Math.PI / 2);
+  var loaf = mesh(loafGeo, new THREE.MeshToonMaterial({ map: breadTex, gradientMap: ramp }));
+  loaf.scale.set(1.0, 0.78, 0.92);
+  loaf.position.set(-0.04, 0.22, -0.04);
+  loaf.rotation.y = 0.12;
+  g.add(loaf);
+
+  // 3 道自然贴合面包曲面的斜向烘焙割包刀口（外焦褐裂边 + 内松软奶黄面包芯！）
+  [-0.17, 0.0, 0.17].forEach(function (sx) {
+    var cutG = new THREE.Group();
+    cutG.position.set(sx - 0.04, 0.362, -0.04);
+    cutG.rotation.set(0.08, 0.48, sx * 0.45);
+    var crustRim = mesh(new THREE.SphereGeometry(0.088, 12, 10), toon('#8c3d0c'));
+    crustRim.scale.set(0.38, 0.24, 1.32);
+    cutG.add(crustRim);
+    var crumbSlit = mesh(new THREE.SphereGeometry(0.078, 12, 10), toon('#fef3c7'), true);
+    crumbSlit.scale.set(0.28, 0.28, 1.15);
+    crumbSlit.position.y = 0.008;
+    cutG.add(crumbSlit);
+    g.add(cutG);
+  });
+
+  // 旁边斜靠一片立体金边吐司切片（奶油松软面包心 + 烤棕外壳！）
+  var sliceG = new THREE.Group();
+  sliceG.position.set(0.24, 0.20, 0.16);
+  sliceG.rotation.set(-0.22, -0.36, -0.14);
+  var crustBox = mesh(new THREE.BoxGeometry(0.28, 0.26, 0.065), toon('#b45309'));
+  sliceG.add(crustBox);
+  var crustTop = mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.065, 18), toon('#b45309'));
+  crustTop.rotation.x = Math.PI / 2; crustTop.scale.set(1.04, 1.0, 0.68); crustTop.position.y = 0.12;
+  sliceG.add(crustTop);
+  var crumbBox = mesh(new THREE.BoxGeometry(0.23, 0.22, 0.072), toon('#fef9e2'));
+  sliceG.add(crumbBox);
+  var crumbTop = mesh(new THREE.CylinderGeometry(0.115, 0.115, 0.072, 16), toon('#fef9e2'));
+  crumbTop.rotation.x = Math.PI / 2; crumbTop.scale.set(1.04, 1.0, 0.65); crumbTop.position.y = 0.11;
+  sliceG.add(crumbTop);
+  g.add(sliceG);
+
+  // 飘逸暖白香气丝带（弯曲波浪小管，取代笨重圆球！）
+  for (var a = 0; a < 3; a++) {
+    var wCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0.045, 0.14, 0),
+      new THREE.Vector3(-0.045, 0.28, 0),
+      new THREE.Vector3(0.025, 0.42, 0)
+    ]);
+    var wisp = new THREE.Mesh(
+      new THREE.TubeGeometry(wCurve, 14, 0.018, 8, false),
+      new THREE.MeshBasicMaterial({ color: 0xfff8dc, transparent: true, opacity: 0.72 })
+    );
+    wisp.position.set((a - 1) * 0.16, 0.42, 0);
+    g.add(wisp);
+    itemSignals.bread.push({ m: wisp, ph: a * 0.33, bx: (a - 1) * 0.16 });
+  }
+  registerItem('bread', g);
+})();
+
+// 4. 彩色螺旋棒棒糖（柔和糖果色螺旋 + 透明糖纸领结 + 洁白糖棒）
+(function buildCandy() {
+  var g = new THREE.Group();
+  var base = mesh(new THREE.CylinderGeometry(0.13, 0.16, 0.08, 18), toon('#f472b6'));
+  base.position.y = 0.04; g.add(base);
+  var stick = mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.56, 12), toon('#ffffff'));
+  stick.position.y = 0.34; g.add(stick);
+  // 粉色小领结
+  [-0.07, 0.07].forEach(function (bx) {
+    var b = mesh(new THREE.SphereGeometry(0.05, 10, 8), toon('#fb7185'));
+    b.scale.set(1.3, 0.75, 0.5); b.position.set(bx, 0.43, 0.03); b.rotation.z = bx > 0 ? -0.3 : 0.3;
+    g.add(b);
+  });
+  var swirlTex = ctex(256, 256, function (c, w, h) {
+    c.fillStyle = '#fff9fb'; c.fillRect(0, 0, w, h);
+    var cx = w / 2, cy = h / 2;
+    var cols = ['#fb7185', '#fcd34d', '#60a5fa', '#c084fc', '#f472b6', '#6ee7b7'];
+    for (var s = 0; s < 6; s++) {
+      c.strokeStyle = cols[s]; c.lineWidth = 17; c.lineCap = 'round';
+      c.beginPath();
+      for (var t = 0; t < 56; t++) {
+        var ang = s * Math.PI / 3 + t * 0.155;
+        var rad = t * 2.12;
+        var px = cx + Math.cos(ang) * rad, py = cy + Math.sin(ang) * rad;
+        if (t === 0) c.moveTo(px, py); else c.lineTo(px, py);
+      }
+      c.stroke();
+    }
+    // 柔亮糖釉高光弧
+    c.strokeStyle = 'rgba(255,255,255,0.52)'; c.lineWidth = 10;
+    c.beginPath(); c.arc(cx, cy, 86, -2.3, -1.3); c.stroke();
+  });
+  var disk = mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.10, 32), [
+    toon('#f472b6'),
+    new THREE.MeshToonMaterial({ map: swirlTex, gradientMap: ramp }),
+    new THREE.MeshToonMaterial({ map: swirlTex, gradientMap: ramp })
+  ]);
+  disk.rotation.x = Math.PI / 2; disk.position.y = 0.72;
+  g.add(disk);
+  var edgeRing = mesh(new THREE.TorusGeometry(0.275, 0.032, 10, 32), toon('#fda4af'));
+  edgeRing.position.y = 0.72; g.add(edgeRing);
+
+  for (var k = 0; k < 5; k++) {
+    var st = new THREE.Mesh(new THREE.OctahedronGeometry(0.038, 0), new THREE.MeshBasicMaterial({ color: k % 2 ? 0xfef08a : 0xf9a8d4, transparent: true, opacity: 0.9 }));
+    g.add(st);
+    itemSignals.candy.push({ m: st, ph: k * 1.25 });
+  }
+  registerItem('candy', g);
+})();
+
+// 5. 冰块凉水碗（剔透浅蓝陶瓷碗 + 水蓝冰水 + 晶莹半透明冰块 + 清凉水珠）
+(function buildIceBowl() {
+  var g = new THREE.Group();
+  var bowlPts = [
+    new THREE.Vector2(0.0, 0.01),
+    new THREE.Vector2(0.22, 0.01),
+    new THREE.Vector2(0.32, 0.14),
+    new THREE.Vector2(0.38, 0.30),
+    new THREE.Vector2(0.35, 0.31),
+    new THREE.Vector2(0.29, 0.15),
+    new THREE.Vector2(0.19, 0.05),
+    new THREE.Vector2(0.0, 0.05)
+  ];
+  var bowl = mesh(new THREE.LatheGeometry(bowlPts, 28), toon('#38bdf8', { transparent: true, opacity: 0.90 }));
+  g.add(bowl);
+  var rim = mesh(new THREE.TorusGeometry(0.365, 0.022, 10, 30), toon('#bae6fd'));
+  rim.rotation.x = Math.PI / 2; rim.position.y = 0.305; g.add(rim);
+  var water = mesh(new THREE.CylinderGeometry(0.33, 0.30, 0.04, 24), toon('#0ea5e9', { transparent: true, opacity: 0.78 }));
+  water.position.y = 0.255; g.add(water);
+
+  // 晶莹半透明冰块 + 细冰棱高光
+  var iceMat = toon('#e0f7ff', { transparent: true, opacity: 0.84 });
+  var iceEdgeMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 });
+  [[-0.12, 0.31, 0.08, 0.28], [0.13, 0.32, 0.04, -0.36], [0.0, 0.34, -0.10, 0.45], [-0.03, 0.30, 0.15, -0.22]].forEach(function (ic) {
+    var boxG = new THREE.BoxGeometry(0.14, 0.12, 0.14);
+    var cube = mesh(boxG, iceMat);
+    cube.position.set(ic[0], ic[1], ic[2]); cube.rotation.set(ic[3], ic[3] * 1.4, 0.22);
+    cube.add(new THREE.LineSegments(new THREE.EdgesGeometry(boxG), iceEdgeMat));
+    g.add(cube);
+  });
+  for (var d = 0; d < 6; d++) {
+    var mist = new THREE.Mesh(new THREE.SphereGeometry(0.036, 10, 8), new THREE.MeshBasicMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.8 }));
+    g.add(mist);
+    itemSignals.icebowl.push({ m: mist, ph: d * 1.0 });
+  }
+  registerItem('icebowl', g);
+})();
+
+/* ===== 左侧 2D 高清感官信号特写窗绘图 ===== */
+var lensCv = $('#lensCv'), lCtx = lensCv.getContext('2d');
+var activeLensOrgan = '';
+var lensTimer = 0;
+
+function drawSensoryDiagram(organId, phase) {
+  var g = lCtx, w = lensCv.width, h = lensCv.height, cx = w / 2, cy = h / 2;
+  g.clearRect(0, 0, w, h);
+
+  if (organId === 'eye') {
+    var bg = g.createRadialGradient(cx, cy, 12, cx, cy, w * 0.55);
+    bg.addColorStop(0, '#fffbeb'); bg.addColorStop(1, '#dbeafe');
+    g.fillStyle = bg; g.fillRect(0, 0, w, h);
+    var cols = ['#ef4444', '#facc15', '#38bdf8', '#a855f7', '#ec4899'];
+    cols.forEach(function (col, i) {
+      var a = i * Math.PI * 2 / 5 + phase * 0.6;
+      g.fillStyle = col;
+      g.beginPath(); g.arc(62 + Math.cos(a) * 16, 130 + Math.sin(a) * 16, 11, 0, Math.PI * 2); g.fill();
+    });
+    g.fillStyle = '#fef08a'; g.beginPath(); g.arc(62, 130, 8, 0, Math.PI * 2); g.fill();
+    cols.forEach(function (col, i) {
+      g.strokeStyle = col; g.lineWidth = 3.5; g.setLineDash([8, 6]); g.lineDashOffset = -phase * 24;
+      g.beginPath(); g.moveTo(86, 104 + i * 13); g.lineTo(170, 128 + (i - 2) * 5); g.stroke();
+    });
+    g.setLineDash([]);
+    g.fillStyle = '#fff'; g.strokeStyle = '#1e3a8a'; g.lineWidth = 5;
+    g.beginPath(); g.arc(204, 130, 46, 0, Math.PI * 2); g.fill(); g.stroke();
+    g.fillStyle = '#38bdf8'; g.beginPath(); g.ellipse(164, 130, 10, 22, 0, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = '#f59e0b'; g.lineWidth = 7;
+    g.beginPath(); g.arc(204, 130, 38, -0.95, 0.95); g.stroke();
+    g.fillStyle = '#ec4899'; g.beginPath(); g.arc(232, 130, 8, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#facc15'; g.beginPath(); g.arc(232, 130, 4, 0, Math.PI * 2); g.fill();
+  } else if (organId === 'ear') {
+    var bg2 = g.createRadialGradient(cx, cy, 10, cx, cy, w * 0.55);
+    bg2.addColorStop(0, '#fefce8'); bg2.addColorStop(1, '#fed7aa');
+    g.fillStyle = bg2; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#eab308'; g.strokeStyle = '#92400e'; g.lineWidth = 4;
+    g.beginPath(); g.arc(62, 118, 22, Math.PI, 0); g.lineTo(90, 152); g.lineTo(34, 152); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle = '#b45309'; g.beginPath(); g.arc(62, 158, 7, 0, Math.PI * 2); g.fill();
+    for (var r = 0; r < 4; r++) {
+      var rad = 28 + ((r * 22 + phase * 32) % 88);
+      g.strokeStyle = 'rgba(234,88,12,' + Math.max(0.15, 1 - rad / 116).toFixed(2) + ')';
+      g.lineWidth = 4.5;
+      g.beginPath(); g.arc(92, 132, rad, -0.65, 0.65); g.stroke();
+    }
+    g.fillStyle = '#fcd4b4'; g.strokeStyle = '#9a3412'; g.lineWidth = 5;
+    g.beginPath(); g.arc(214, 132, 42, -1.35, 1.35); g.quadraticCurveTo(188, 178, 198, 150);
+    g.quadraticCurveTo(186, 132, 198, 112); g.closePath(); g.fill(); g.stroke();
+    var vib = Math.sin(phase * 14) * 3.5;
+    g.strokeStyle = '#2563eb'; g.lineWidth = 6;
+    g.beginPath(); g.moveTo(212 + vib, 114); g.lineTo(212 - vib, 148); g.stroke();
+  } else if (organId === 'nose') {
+    var bg3 = g.createRadialGradient(cx, cy, 10, cx, cy, w * 0.55);
+    bg3.addColorStop(0, '#fff7ed'); bg3.addColorStop(1, '#fde68a');
+    g.fillStyle = bg3; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#c86e1c'; g.strokeStyle = '#78350f'; g.lineWidth = 4;
+    g.beginPath(); g.ellipse(82, 178, 48, 22, -0.1, 0, Math.PI * 2); g.fill(); g.stroke();
+    g.strokeStyle = '#fef3c7'; g.lineWidth = 4.5;
+    for (var s = -1; s <= 1; s++) { g.beginPath(); g.moveTo(76 + s * 20, 162); g.lineTo(88 + s * 20, 178); g.stroke(); }
+    for (var m = 0; m < 6; m++) {
+      var t = (phase * 0.6 + m * 0.17) % 1;
+      var mx = 75 + t * 96 + Math.sin(t * 9 + m) * 10;
+      var my = 152 - t * 62;
+      g.fillStyle = 'rgba(234,88,12,' + (1 - t * 0.55).toFixed(2) + ')';
+      g.beginPath(); g.arc(mx, my, 6.5 - t * 2, 0, Math.PI * 2); g.fill();
+    }
+    g.fillStyle = '#fcd4b4'; g.strokeStyle = '#9a3412'; g.lineWidth = 5;
+    g.beginPath(); g.moveTo(200, 62); g.quadraticCurveTo(162, 116, 178, 134); g.quadraticCurveTo(204, 144, 224, 128);
+    g.lineTo(224, 62); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle = '#f59e0b';
+    for (var k = 0; k < 4; k++) {
+      g.beginPath(); g.arc(196 + k * 7, 94 + Math.sin(phase * 4 + k) * 4, 4.5, 0, Math.PI * 2); g.fill();
+    }
+  } else if (organId === 'tongue') {
+    var bg4 = g.createRadialGradient(cx, cy, 10, cx, cy, w * 0.55);
+    bg4.addColorStop(0, '#fff1f2'); bg4.addColorStop(1, '#fbcfe8');
+    g.fillStyle = bg4; g.fillRect(0, 0, w, h);
+    g.strokeStyle = '#fff'; g.lineWidth = 7;
+    g.beginPath(); g.moveTo(140, 42); g.lineTo(140, 106); g.stroke();
+    g.fillStyle = '#fb7185'; g.beginPath(); g.arc(140, 72, 28, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = '#fef08a'; g.lineWidth = 5;
+    g.beginPath(); g.arc(140, 72, 16, 0, Math.PI * 1.6); g.stroke();
+    g.fillStyle = '#ff7890'; g.strokeStyle = '#be123c'; g.lineWidth = 5;
+    g.beginPath(); g.moveTo(70, 148); g.quadraticCurveTo(140, 232, 210, 148);
+    g.quadraticCurveTo(140, 130, 70, 148); g.fill(); g.stroke();
+    var buds = [[104, 164], [140, 178], [176, 164], [122, 152], [158, 152]];
+    buds.forEach(function (bd, i) {
+      var pulse = 1 + 0.25 * Math.sin(phase * 6 + i);
+      g.fillStyle = '#fef08a';
+      g.beginPath(); g.arc(bd[0], bd[1], 7 * pulse, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#f59e0b';
+      g.beginPath(); g.arc(bd[0], bd[1], 3.5, 0, Math.PI * 2); g.fill();
+    });
+  } else if (organId === 'skin') {
+    var bg5 = g.createRadialGradient(cx, cy, 10, cx, cy, w * 0.55);
+    bg5.addColorStop(0, '#f0f9ff'); bg5.addColorStop(1, '#bae6fd');
+    g.fillStyle = bg5; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#e0f2fe'; g.strokeStyle = '#0284c7'; g.lineWidth = 4;
+    g.fillRect(108, 48, 64, 48); g.strokeRect(108, 48, 64, 48);
+    for (var wv = 0; wv < 3; wv++) {
+      var wr = 24 + ((wv * 20 + phase * 26) % 62);
+      g.strokeStyle = 'rgba(2,132,199,' + Math.max(0.15, 1 - wr / 88).toFixed(2) + ')';
+      g.lineWidth = 3.5;
+      g.beginPath(); g.arc(140, 118, wr, 0.15, Math.PI - 0.15); g.stroke();
+    }
+    g.fillStyle = '#fcd4b4'; g.strokeStyle = '#b45309'; g.lineWidth = 4;
+    g.beginPath(); g.roundRect(42, 146, 196, 62, 18); g.fill(); g.stroke();
+    for (var n = 0; n < 4; n++) {
+      var nx = 76 + n * 42;
+      g.strokeStyle = '#0284c7'; g.lineWidth = 3;
+      g.beginPath(); g.moveTo(nx, 206); g.lineTo(nx, 168); g.stroke();
+      g.fillStyle = '#38bdf8';
+      g.beginPath(); g.arc(nx, 166, 6 + Math.sin(phase * 6 + n) * 2, 0, Math.PI * 2); g.fill();
+    }
+  }
+}
+
+function showSensoryLens(organId, holdSec) {
+  var o = ORGANS[organId]; if (!o) return;
+  activeLensOrgan = organId;
+  lensTimer = holdSec || 5.2;
+  $('#lensTag').textContent = o.lensTag;
+  $('#lensCap').textContent = o.lensCap;
+  $('#lensWrap').classList.add('show');
+  document.body.classList.add('lens-open');
+  drawSensoryDiagram(organId, 0);
+}
+function hideSensoryLens() {
+  activeLensOrgan = '';
+  lensTimer = 0;
+  $('#lensWrap').classList.remove('show');
+  document.body.classList.remove('lens-open');
+}
+
+/* ===== 游戏状态与严格通关（U1 + U9 + U10） ===== */
+var matched = { eye: false, ear: false, nose: false, tongue: false, skin: false };
+var celebrated = false, demo = false, resetGen = 0;
+var selectedItem = '';
+var draggingItem = '';
+var hoverOrgan = '';
+var hintOrgan = '';
+var hintOrganTimer = 0;
+var shakeT = 0, happyT = 0, happyOrgan = '';
+var flyAnims = [];
+var curGuideSpeech = '把桌上的 5 件物品拖到娃娃对应的感觉器官上，或先点物品再点器官配对吧！';
+
+function markInteracted() { document.body.classList.add('interacted'); }
+
+function projectToScreen(v3) {
+  var p = v3.clone().project(camera);
+  return {
+    x: (p.x * 0.5 + 0.5) * window.innerWidth,
+    y: (-p.y * 0.5 + 0.5) * window.innerHeight
+  };
+}
+
+function popLabelAt3D(worldPos, text, isErr) {
+  var sc = projectToScreen(worldPos);
+  var el = document.createElement('div');
+  el.className = 'popword' + (isErr ? ' err' : '');
+  el.textContent = text;
+  el.style.left = Math.max(110, Math.min(window.innerWidth - 110, sc.x)) + 'px';
+  el.style.top = Math.max(76, Math.min(window.innerHeight - 100, sc.y - 14)) + 'px';
+  $('#labels').appendChild(el);
+  setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1720);
+}
+
+function matchedCount() {
+  return Object.keys(matched).filter(function (k) { return matched[k]; }).length;
+}
+
+var GUIDE_SPEECH_MAP = {
+  flower: '把桌上的七彩小花束拖到娃娃对应的感觉器官上，看看哪个器官能辨认颜色和形状吧！',
+  bell: '把桌上的金色小铃铛拖到娃娃对应的感觉器官上，听听清脆的铃声吧！',
+  bread: '把热腾腾的香烤面包拖到娃娃对应的感觉器官上，闻闻香喷喷的气味吧！',
+  candy: '把彩色螺旋棒棒糖拖到娃娃对应的感觉器官上，尝尝甜甜的味道吧！',
+  icebowl: '把盛满冰块凉水的小蓝碗拖到娃娃对应的感觉器官上，感受凉丝丝的温度吧！',
+  done: '太棒啦！五个感觉器官全部认识啦，可以继续拖动任意物品自由体验！'
+};
+var SEL_SPEECH_MAP = {
+  flower: '已选七彩小花束，快点一点娃娃身上看颜色和形状的感觉器官吧！',
+  bell: '已选金色小铃铛，快点一点娃娃身上听声音的感觉器官吧！',
+  bread: '已选香烤面包，快点一点娃娃身上闻气味的感觉器官吧！',
+  candy: '已选螺旋棒棒糖，快点一点娃娃身上尝味道的感觉器官吧！',
+  icebowl: '已选冰块凉水碗，快点一点娃娃身上感受冷暖的感觉器官吧！'
+};
+
+function updateGuide(speakIt) {
+  var cnt = matchedCount();
+  var displayTxt = '';
+  if (cnt >= 5) {
+    curGuideSpeech = GUIDE_SPEECH_MAP.done;
+    displayTxt = '太棒啦！5 个感觉器官全部认识啦，可以继续自由体验！';
+  } else if (selectedItem) {
+    curGuideSpeech = SEL_SPEECH_MAP[selectedItem] || GUIDE_SPEECH_MAP.flower;
+    displayTxt = '已选「' + ITEMS[selectedItem].name + '」，点一点娃娃身上对应的感觉器官吧！';
+  } else {
+    var nextKey = ITEM_KEYS.find(function (k) { return !matched[ITEMS[k].target]; }) || 'flower';
+    curGuideSpeech = GUIDE_SPEECH_MAP[nextKey];
+    displayTxt = '已配对 ' + cnt + '/5：把「' + ITEMS[nextKey].name + '」拖给娃娃对应的感觉器官！';
+  }
+  $('#guideTxt').textContent = displayTxt;
+  $('#guideBar').classList.remove('flash');
+  void $('#guideBar').offsetWidth;
+  $('#guideBar').classList.add('flash');
+  if (speakIt) speak(curGuideSpeech, true);
+}
+
+function handlePairAttempt(itemId, organId) {
+  var item = ITEMS[itemId];
+  var organ = ORGANS[organId];
+  if (!item || !organ) return;
+
+  selectedItem = '';
+  if (item.target === organId) {
+    hintOrgan = ''; hintOrganTimer = 0;
+    happyT = 1.65; happyOrgan = organId;
+    if (itemId === 'bell') playBellSound();
+    else beep([523, 659, 784], 0.22);
+
+    var wasNew = !matched[organId];
+    matched[organId] = true;
+    itemTagEls[itemId].classList.add('done');
+    itemTagEls[itemId].textContent = '✓ ' + item.ico + ' ' + item.name;
+
+    var st = $('#st_' + organId);
+    if (st) { st.textContent = organ.ico; st.classList.add('lit'); st.title = organ.name; }
+
+    if (wasNew) {
+      var el = document.createElement('div');
+      el.className = 'stk';
+      el.innerHTML = organ.discoverHtml;
+      $('#ntList').prepend(el);
+      $('#ntCnt').textContent = matchedCount() + ' / 5';
+    }
+
+    showSensoryLens(organId, 5.4);
+    popLabelAt3D(organ.worldPos(), '✓ ' + organ.ico + ' ' + organ.name + '（' + organ.sense + '）', false);
+    updateGuide(false);
+
+    if (!demo && !celebrated && matchedCount() === 5) {
+      celebrated = true;
+      saveProgress(LESSON_ID, true);
+      fireConfetti();
+      beep([523, 659, 784, 1046], 0.28);
+      speak(organ.winSpeech, false);
+      var g = resetGen;
+      setTimeout(function () {
+        if (g !== resetGen) return;
+        $('#winToast').classList.add('show');
+        speak('太棒啦！眼睛、耳朵、鼻子、舌头和皮肤五个感觉器官全部认识啦，快来看看科学小结论并领小红花吧！', true);
+      }, 1550);
+    } else if (!demo) {
+      speak(organ.winSpeech, false);
+    }
+  } else {
+    shakeT = 1.15;
+    playBoingError();
+    hintOrgan = item.target;
+    hintOrganTimer = 4.5;
+    var errTxt = (item.wrongSpeech && item.wrongSpeech[organId]) || '这个器官感受不到它哦，再想想应该找哪个感觉器官呢？';
+    popLabelAt3D(organ.worldPos(), '✗ 再想想换个器官吧！', true);
+    if (!demo) speak(errTxt, false);
+    updateGuide(false);
+  }
+}
+
+function launchFlyToOrgan(itemId, organId) {
+  var targetPos = ORGANS[organId].worldPos().clone();
+  targetPos.y -= ITEMS[itemId].centerY * 0.6;
+  targetPos.z += 0.22;
+  flyAnims = flyAnims.filter(function (f) { return f.itemId !== itemId; });
+  flyAnims.push({
+    itemId: itemId,
+    organId: organId,
+    t: 0,
+    dur: 0.28,
+    from: itemGroups[itemId].position.clone(),
+    to: targetPos,
+    triggered: false
+  });
+}
+
+/* ===== 根治纵向拖拽视差：相机视角垂直贴合平面 + 屏幕坐标射线优先直命 5 大器官碰撞体 ===== */
+var ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+var camDragPlane = new THREE.Plane();
+var camDir = new THREE.Vector3();
+var dragAnchor = new THREE.Vector3(DOLL_X, 1.55, DOLL_Z + 0.62);
+var dragPt = new THREE.Vector3();
+var downX = 0, downY = 0, moved = false, downItem = '';
+
+function updateDragPlane() {
+  camera.getWorldDirection(camDir);
+  camDragPlane.setFromNormalAndCoplanarPoint(camDir.clone().negate(), dragAnchor);
+}
+
+function getNDC(e) {
+  var r = cv.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+}
+
+function detectOrganAtPointer(clientX, clientY) {
+  // 1. 优先用当前鼠标屏幕坐标直接射线命中 5 个超大透明 Mesh 碰撞体！
+  var oHits = ray.intersectObjects(organHitMeshes, false);
+  if (oHits.length) return oHits[0].object.userData.organId;
+  // 2. 宽松屏幕近邻兜底（包含左右双耳）
+  var bestId = '', bestD = 96;
+  Object.keys(ORGANS).forEach(function (k) {
+    var sc = projectToScreen(ORGANS[k].worldPos());
+    var d = Math.hypot(clientX - sc.x, clientY - sc.y);
+    if (d < bestD) { bestD = d; bestId = k; }
+  });
+  var rightEarSc = projectToScreen(new THREE.Vector3(DOLL_X + 0.80, 1.66, DOLL_Z + 0.06));
+  var dRE = Math.hypot(clientX - rightEarSc.x, clientY - rightEarSc.y);
+  if (dRE < bestD) { bestD = dRE; bestId = 'ear'; }
+  return bestId;
+}
+
+cv.addEventListener('pointerdown', function (e) {
+  markInteracted();
+  if (demo) return;
+  getNDC(e);
+  ray.setFromCamera(ptr, camera);
+  downX = e.clientX; downY = e.clientY; moved = false; downItem = '';
+
+  // 1. 优先拾取桌面 5 件 3D 物品
+  var iHits = ray.intersectObjects(itemHitMeshes, false);
+  if (iHits.length) {
+    downItem = iHits[0].object.userData.itemId;
+    draggingItem = downItem;
+    updateDragPlane();
+    cv.classList.add('grabbing');
+    if (downItem === 'bell') playBellSound(); else beep([480], 0.08);
+    return;
+  }
+
+  // 2. 点击娃娃器官
+  var oid = detectOrganAtPointer(e.clientX, e.clientY);
+  if (oid) {
+    if (selectedItem) {
+      launchFlyToOrgan(selectedItem, oid);
+      selectedItem = '';
+    } else {
+      beep([420], 0.08);
+      popLabelAt3D(ORGANS[oid].worldPos(), '先选桌上的物品送过来吧！', false);
+      speak('想测试这个感觉器官吗？先在桌上拖起或点选一件物品送过来吧！', false);
+    }
+  }
+});
+
+window.addEventListener('pointermove', function (e) {
+  if (!draggingItem) return;
+  if (Math.hypot(e.clientX - downX, e.clientY - downY) > 14) moved = true;
+  if (!moved) return;
+
+  getNDC(e);
+  ray.setFromCamera(ptr, camera);
+  if (ray.ray.intersectPlane(camDragPlane, dragPt)) {
+    var cy = ITEMS[draggingItem].centerY || 0.38;
+    itemGoals[draggingItem].set(
+      Math.max(-3.0, Math.min(2.6, dragPt.x)),
+      Math.max(0.06, Math.min(2.8, dragPt.y - cy)),
+      Math.max(DOLL_Z + 0.45, Math.min(1.6, dragPt.z))
+    );
+  }
+  hoverOrgan = detectOrganAtPointer(e.clientX, e.clientY);
+});
+
+window.addEventListener('pointerup', function (e) {
+  if (!draggingItem) return;
+  var id = draggingItem;
+  draggingItem = '';
+  cv.classList.remove('grabbing');
+
+  if (!moved) {
+    selectedItem = (selectedItem === id) ? '' : id;
+    itemGoals[id].copy(ITEM_HOMES[id]);
+    if (selectedItem) speak(ITEMS[id].pickSpeech, false);
+    updateGuide(false);
+    hoverOrgan = '';
+    return;
+  }
+
+  getNDC(e);
+  ray.setFromCamera(ptr, camera);
+  var hitOrgan = detectOrganAtPointer(e.clientX, e.clientY);
+  hoverOrgan = '';
+  itemGoals[id].copy(ITEM_HOMES[id]);
+
+  if (hitOrgan) {
+    handlePairAttempt(id, hitOrgan);
+  } else {
+    beep([340], 0.08);
+  }
+});
+
+/* ===== 重置与演示 ===== */
+function resetAll() {
+  resetGen++;
+  stopVoice();
+  demo = false;
+  $('#demoBtn').classList.remove('on');
+  matched = { eye: false, ear: false, nose: false, tongue: false, skin: false };
+  celebrated = false;
+  selectedItem = ''; draggingItem = ''; hoverOrgan = ''; hintOrgan = ''; hintOrganTimer = 0;
+  shakeT = 0; happyT = 0; happyOrgan = ''; flyAnims = [];
+  ITEM_KEYS.forEach(function (k) {
+    itemGoals[k].copy(ITEM_HOMES[k]);
+    itemGroups[k].position.copy(ITEM_HOMES[k]);
+    itemTagEls[k].classList.remove('done', 'sel');
+    itemTagEls[k].textContent = ITEMS[k].ico + ' ' + ITEMS[k].name;
+  });
+  Object.keys(ORGANS).forEach(function (k) {
+    var st = $('#st_' + k);
+    if (st) { st.textContent = '？'; st.classList.remove('lit'); st.title = '待发现'; }
+  });
+  $('#ntList').innerHTML = '';
+  $('#ntCnt').textContent = '0 / 5';
+  $('#winToast').classList.remove('show');
+  $('#qFb').textContent = '';
+  $$('.qopt').forEach(function (b) { b.classList.remove('ok', 'bad'); });
+  hideSensoryLens();
+  updateGuide(false);
+}
+
+function runDemo() {
+  if (demo) return;
+  markInteracted();
+  resetAll();
+  demo = true;
+  $('#demoBtn').classList.add('on');
+  var g = resetGen;
+  speak('看我演示！把桌上的物品拖到娃娃对应的感觉器官上，就能发现它的神奇本领哦！', true);
+  setTimeout(function () {
+    if (g !== resetGen || !demo) return;
+    launchFlyToOrgan('flower', 'eye');
+    speak('七彩小花束送给眼睛，眼睛能看清五彩缤纷的颜色和形状！', true);
+  }, 1100);
+  setTimeout(function () {
+    if (g !== resetGen || !demo) return;
+    launchFlyToOrgan('bell', 'ear');
+    speak('金色小铃铛送给耳朵，耳朵能听见叮当叮当的铃声！现在轮到你把 5 个感觉器官全部配对啦！', true);
+  }, 3300);
+  setTimeout(function () {
+    if (g !== resetGen) return;
+    resetAll();
+  }, 6200);
+}
+
+/* ===== 顶部控件与巩固题 ===== */
+$('#backBtn').addEventListener('click', function () { try { sessionStorage.setItem('xk_last_vol', 'k2a'); } catch (e) {} });
+$('#voiceBtn').addEventListener('click', function () {
+  markInteracted();
+  muted = !muted;
+  this.classList.toggle('on', !muted);
+  if (!muted) updateGuide(true); else stopVoice();
+});
+$('#guideBar').addEventListener('click', function () { markInteracted(); updateGuide(true); });
+$('#demoBtn').addEventListener('click', runDemo);
+$('#resetBtn').addEventListener('click', resetAll);
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+$('#winKeepBtn').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgainBtn').addEventListener('click', resetAll);
+$('#qOpts').addEventListener('click', function (e) {
+  var b = e.target.closest('.qopt'); if (!b) return;
+  if (b.dataset.ok === '1') {
+    b.classList.add('ok');
+    $('#qFb').textContent = '🌸 答对啦！皮肤能感受冷暖，获得本课小红花！';
+    saveProgress(LESSON_ID, true);
+    beep([523, 659, 784, 1046], 0.24);
+    speak('答对啦！皮肤能感受冰凉和温热，获得本课小红花！', true);
+  } else {
+    b.classList.add('bad');
+    beep([260, 200], 0.16);
+    var h = b.dataset.hint || '再想想刚才的实验现象哦！';
+    $('#qFb').textContent = '💡 ' + h;
+    speak(h, true);
+  }
+});
+
+/* ===== 帧循环与单焦点 #targetCue 更新 ===== */
+var introT0 = performance.now(), lastT = performance.now(), simT = 0;
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', fit);
+fit();
+
+function updateTargetCue() {
+  var cue = $('#targetCue');
+  if (demo || celebrated) { cue.classList.remove('show'); return; }
+  var worldPt = null, txt = '';
+  if (hintOrgan && hintOrganTimer > 0) {
+    worldPt = ORGANS[hintOrgan].worldPos().clone();
+    worldPt.y += 0.34;
+    txt = '✨ 试试送到这里！';
+  } else if (selectedItem) {
+    worldPt = new THREE.Vector3(DOLL_X, 2.52, DOLL_Z + 0.3);
+    txt = '👆 点娃娃对应的感觉器官！';
+  } else {
+    var nextKey = ITEM_KEYS.find(function (k) { return !matched[ITEMS[k].target]; });
+    if (nextKey) {
+      worldPt = itemGroups[nextKey].position.clone();
+      worldPt.y += 1.05;
+      txt = '👆 拖起或点「' + ITEMS[nextKey].name + '」';
+    }
+  }
+  if (!worldPt) { cue.classList.remove('show'); return; }
+  var sc = projectToScreen(worldPt);
+  var maxRight = window.innerWidth - 252;
+  cue.style.left = Math.max(120, Math.min(maxRight, sc.x)) + 'px';
+  cue.style.top = Math.max(82, Math.min(window.innerHeight - 54, sc.y)) + 'px';
+  cue.textContent = txt;
+  cue.classList.add('show');
+}
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (now - lastT) / 1000));
+  lastT = now;
+  simT += dt;
+
+  // 弹出入场
+  var pop = Math.min(1, (performance.now() - introT0) / 680);
+  var ease = 1 - Math.pow(1 - pop, 3);
+  live.scale.setScalar(0.01 + 0.99 * ease);
+
+  // 娃娃表情三态：平时温暖微笑 / 尝糖果或棒棒糖拖到嘴边时开心伸出粉红小舌头 / 错误可爱嘟嘴摇头
+  var showTongue = (happyT > 0 && happyOrgan === 'tongue') || (hoverOrgan === 'tongue' && draggingItem === 'candy');
+  if (shakeT > 0) {
+    shakeT = Math.max(0, shakeT - dt);
+    headG.rotation.y = Math.sin(shakeT * 24) * 0.28 * Math.min(1, shakeT * 2);
+    headG.rotation.x = 0.05;
+    browL.rotation.z = -0.20; browR.rotation.z = 0.20;
+    gentleSmilePart.visible = false; tongueSmilePart.visible = false; poutPart.visible = true;
+  } else if (happyT > 0) {
+    happyT = Math.max(0, happyT - dt);
+    headG.rotation.y *= 0.86;
+    headG.rotation.x = Math.sin(happyT * 14) * 0.13;
+    browL.rotation.z = 0.10; browR.rotation.z = -0.10;
+    poutPart.visible = false;
+    gentleSmilePart.visible = !showTongue;
+    tongueSmilePart.visible = showTongue;
+    if (happyOrgan === 'ear') {
+      earMeshes.forEach(function (em, idx) { em.rotation.z = (idx ? 1 : -1) * Math.sin(happyT * 22) * 0.22; });
+    } else if (happyOrgan === 'skin') {
+      handG.rotation.z = -0.14 + Math.sin(happyT * 18) * 0.18;
+    } else if (happyOrgan === 'nose') {
+      noseG.scale.setScalar(1 + Math.sin(happyT * 20) * 0.15);
+    } else if (happyOrgan === 'tongue') {
+      tongueMesh.position.z = 0.082 + Math.abs(Math.sin(happyT * 15)) * 0.045;
+      tongueMesh.position.y = -0.075 + Math.sin(happyT * 15) * 0.018;
+    }
+  } else {
+    headG.rotation.y = Math.sin(simT * 0.85) * 0.045;
+    headG.rotation.x = Math.sin(simT * 1.4) * 0.022;
+    browL.rotation.z = 0.03; browR.rotation.z = -0.03;
+    poutPart.visible = false;
+    gentleSmilePart.visible = !showTongue;
+    tongueSmilePart.visible = showTongue;
+    earMeshes.forEach(function (em) { em.rotation.z *= 0.85; });
+    noseG.scale.setScalar(1);
+    tongueMesh.position.set(0, -0.075, 0.082);
+    handG.rotation.z = -0.14 + Math.sin(simT * 1.6) * 0.04;
+  }
+
+  // 5 器官柔和光环（悬停橙黄高亮 / 失败柔和指向 / 已配对翠绿光环）
+  if (hintOrganTimer > 0) hintOrganTimer = Math.max(0, hintOrganTimer - dt);
+  Object.keys(ORGANS).forEach(function (k) {
+    var ring = organRings[k];
+    var isHover = (hoverOrgan === k);
+    var isHint = (hintOrgan === k && hintOrganTimer > 0);
+    var isDone = matched[k];
+    var op = isHover ? 0.94 : (isHint ? (0.45 + 0.45 * Math.sin(simT * 7)) : (isDone ? 0.55 : 0.0));
+    ring.material.opacity = op;
+    ring.material.color.setHex(isHover ? 0xf97316 : (isHint ? 0xfacc15 : 0x22c55e));
+    if (k === 'ear' && organRightEarRing) {
+      organRightEarRing.material.opacity = op;
+      organRightEarRing.material.color.copy(ring.material.color);
+    }
+  });
+
+  // 自动飞行配对动画
+  for (var fi = flyAnims.length - 1; fi >= 0; fi--) {
+    var fa = flyAnims[fi];
+    fa.t += dt;
+    var u = Math.min(1, fa.t / fa.dur);
+    var eU = 1 - Math.pow(1 - u, 3);
+    var gObj = itemGroups[fa.itemId];
+    if (u < 1) {
+      gObj.position.lerpVectors(fa.from, fa.to, eU);
+      gObj.position.y += Math.sin(u * Math.PI) * 0.40;
+    } else if (!fa.triggered) {
+      fa.triggered = true;
+      handlePairAttempt(fa.itemId, fa.organId);
+    } else if (fa.t > fa.dur + 0.52) {
+      itemGoals[fa.itemId].copy(ITEM_HOMES[fa.itemId]);
+      flyAnims.splice(fi, 1);
+    }
+  }
+
+  // 5 件桌面物品平滑插值 + 感官信号动画
+  ITEM_KEYS.forEach(function (k) {
+    var gObj = itemGroups[k];
+    var isFlying = flyAnims.some(function (f) { return f.itemId === k; });
+    if (!isFlying) {
+      var goal = itemGoals[k].clone();
+      if (selectedItem === k && draggingItem !== k) goal.y += 0.24 + Math.sin(simT * 6) * 0.05;
+      gObj.position.lerp(goal, Math.min(1, dt * (draggingItem === k ? 22 : 13)));
+    }
+    var sc = (draggingItem === k || selectedItem === k) ? 1.10 : 1.0;
+    gObj.scale.lerp(new THREE.Vector3(sc, sc, sc), Math.min(1, dt * 12));
+
+    itemTagEls[k].classList.toggle('sel', selectedItem === k || draggingItem === k);
+    var tp = projectToScreen(new THREE.Vector3(gObj.position.x, gObj.position.y - 0.04, gObj.position.z + 0.36));
+    itemTagEls[k].style.left = tp.x + 'px';
+    itemTagEls[k].style.top = Math.min(window.innerHeight - 28, tp.y) + 'px';
+  });
+
+  itemSignals.flower.forEach(function (sp) {
+    var p = (simT * 0.85 + sp.ph) % 1;
+    sp.m.position.set(Math.cos(simT * 2 + sp.ph) * 0.26, 0.72 + p * 0.38, Math.sin(simT * 2 + sp.ph) * 0.20);
+    sp.m.rotation.y = simT * 3;
+    sp.m.material.opacity = Math.sin(p * Math.PI);
+  });
+  bellSwingG.rotation.z = Math.sin(simT * 5.0) * 0.14;
+  itemSignals.bell.forEach(function (wr) {
+    var p = (simT * 0.72 + wr.ph) % 1;
+    wr.m.scale.setScalar(0.75 + p * 1.10);
+    wr.m.material.opacity = (1 - p) * 0.72;
+  });
+  itemSignals.bread.forEach(function (ws, i) {
+    var p = (simT * 0.45 + ws.ph) % 1;
+    ws.m.position.set(ws.bx + Math.sin(simT * 2.4 + i) * 0.03, 0.36 + p * 0.26, -0.02);
+    ws.m.material.opacity = Math.sin(p * Math.PI) * 0.68;
+  });
+  itemSignals.candy.forEach(function (st) {
+    var p = (simT * 1.0 + st.ph) % 1;
+    st.m.position.set(Math.cos(simT * 2.2 + st.ph) * 0.32, 0.68 + Math.sin(simT * 3 + st.ph) * 0.18, Math.sin(simT * 2.2 + st.ph) * 0.16);
+    st.m.rotation.z = simT * 4;
+    st.m.material.opacity = 0.42 + 0.55 * Math.sin(p * Math.PI);
+  });
+  itemSignals.icebowl.forEach(function (ms, i) {
+    var p = (simT * 0.58 + ms.ph * 0.16) % 1;
+    ms.m.position.set(Math.cos(i * 1.7 + simT) * 0.20, 0.36 + p * 0.42, Math.sin(i * 1.7 + simT) * 0.16);
+    ms.m.scale.setScalar(0.65 + p * 0.75);
+    ms.m.material.opacity = Math.sin(p * Math.PI) * 0.72;
+  });
+
+  if (activeLensOrgan) {
+    drawSensoryDiagram(activeLensOrgan, simT);
+    lensTimer -= dt;
+    if (lensTimer <= 0 && !draggingItem) hideSensoryLens();
+  }
+
+  if (cfOn) {
+    cfCtx.clearRect(0, 0, cfCanvas.width, cfCanvas.height);
+    var alive = 0;
+    cfParts.forEach(function (p) {
+      p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 220 * dt; p.a += p.va * dt;
+      if (p.y < cfCanvas.height + 24) alive++;
+      cfCtx.save(); cfCtx.translate(p.x, p.y); cfCtx.rotate(p.a);
+      cfCtx.fillStyle = p.c; cfCtx.fillRect(-p.r, -p.r * 0.5, p.r * 2, p.r);
+      cfCtx.restore();
+    });
+    if (!alive) { cfOn = false; cfCtx.clearRect(0, 0, cfCanvas.width, cfCanvas.height); }
+  }
+
+  updateTargetCue();
+  renderer.render(scene, camera);
+}
+
+/* ===== 自检接口 ===== */
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () {
+    return {
+      triangles: renderer.info.render.triangles,
+      celebrated: celebrated,
+      matchedCount: matchedCount(),
+      activeLens: activeLensOrgan
+    };
+  },
+  getState: function () {
+    var itemPts = {}, organPts = {};
+    ITEM_KEYS.forEach(function (k) {
+      var p = itemGroups[k].position.clone(); p.y += ITEMS[k].centerY;
+      itemPts[k] = projectToScreen(p);
+    });
+    Object.keys(ORGANS).forEach(function (k) {
+      organPts[k] = projectToScreen(ORGANS[k].worldPos());
+    });
+    return {
+      matched: Object.assign({}, matched),
+      matchedCount: matchedCount(),
+      celebrated: celebrated,
+      selectedItem: selectedItem,
+      hintOrgan: hintOrgan,
+      shakeT: shakeT,
+      activeLens: activeLensOrgan,
+      itemPts: itemPts,
+      organPts: organPts
+    };
+  }
+};
+
+updateGuide(false);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

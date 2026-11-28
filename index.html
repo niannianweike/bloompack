@@ -3,14 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>小学科学·3D互动书包与课本</title>
+<title>小学科学 · 3D 互动书包与科学手记</title>
 <style>
 :root{
   --bg:#f6efe0; --bg-hi:#fdfaf2; --card:#fffdf8; --ink:#241e16; --muted:#7b705e; --line:#e4d7be;
-  --accent:#e56d17; --accent-hi:#f2822e; --accent-lo:#bf5409; --accent-soft:#fde7cf;
-  --u1:#d97706; --u2:#16a34a; --u3:#2563eb; --u4:#e56d17;
+  --accent:#d9621a; --accent-hi:#ec7b2f; --accent-lo:#b24b0d; --accent-soft:#fde7cf;
+  --u1:#c86d14; --u2:#248248; --u3:#2b6cb0; --u4:#c95b22;
   --shadow:0 2px 10px rgba(68,48,18,.06), 0 16px 38px rgba(68,48,18,.11);
   --shadow-sm:0 1px 4px rgba(68,48,18,.06), 0 4px 14px rgba(68,48,18,.07);
+  --f-serif:"Noto Serif SC","Source Han Serif SC","Songti SC","STSong","FZFangSong-Z02","FangSong",Georgia,serif;
   --f-kai:"KaiTi","楷体","STKaiti","Kaiti SC","Noto Serif SC",serif;
   --f-ui:"Noto Sans SC","Source Han Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
 }
@@ -32,6 +33,9 @@ svg.ico{width:1.08em;height:1.08em;flex:none;vertical-align:-.14em}
 
 .shell{display:flex;flex-direction:column;min-height:100vh;padding:12px 18px 16px;gap:12px}
 body.stage-locked .shell{height:100vh}
+body.book-open .shell{padding:0;gap:0;height:100vh}
+body.book-open .topbar{display:none}
+body.book-open #stageWrap{border-radius:0;border:none;box-shadow:none}
 
 /* ===== 顶部统一工作台栏 ===== */
 .topbar{
@@ -89,8 +93,6 @@ body.stage-locked .shell{height:100vh}
   background:linear-gradient(180deg,#fff0f6,#ffd6e7);border:1.5px solid #f783ac;
   color:#c2255c;font-size:11px;font-weight:800;white-space:nowrap;
 }
-.portal-slot.is-done{border-color:#2b8a3e;background:linear-gradient(145deg,#f6fff8 0%,#e6f9eb 100%);box-shadow:0 8px 20px rgba(43,138,62,.16)}
-.portal-slot.is-done::after{border-color:rgba(43,138,62,.28)}
 .ccard.is-done{border-color:#74c69d;background:linear-gradient(180deg,#ffffff 0%,#f7fff9 100%)}
 .cflower{
   position:absolute;right:10px;bottom:8px;padding:2px 8px;border-radius:99px;
@@ -109,7 +111,7 @@ body.stage-locked .shell{height:100vh}
 .cat-prog-bar{width:220px;max-width:100%;height:12px;border-radius:99px;background:#f2dce4;overflow:hidden}
 .cat-prog-bar>i{display:block;height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#f59f00,#e64980);transition:width .4s ease}
 
-/* ===== 接着学 + 快速搜索 + 原书 PDF 导入 ===== */
+/* ===== 接着学 + 快速搜索 ===== */
 .resume-btn{
   display:inline-flex;align-items:center;gap:5px;min-height:38px;padding:0 12px;border-radius:12px;
   border:1.5px solid #e58325;background:linear-gradient(180deg,#ff9a3c,#e56d17);color:#fff;
@@ -138,67 +140,6 @@ body.stage-locked .shell{height:100vh}
 }
 .sdrop-item:hover{background:#fff3df;color:#bf5409}
 .sdrop-item small{font-size:11px;color:#8a7b62;font-weight:700;flex:none}
-
-.pdf-wrap{position:relative;display:inline-flex;align-items:center}
-.tool-btn.pdf-need{border-color:#e58325;background:#fff5e6;color:#c2560c;box-shadow:0 2px 0 #f0c28b;animation:pdfPulse 2s ease-in-out infinite}
-@keyframes pdfPulse{0%,100%{box-shadow:0 2px 0 #f0c28b,0 0 0 0 rgba(229,109,23,.35)}50%{box-shadow:0 2px 0 #f0c28b,0 0 0 7px rgba(229,109,23,0)}}
-.tool-btn.pdf-on{border-color:#2b8a3e;background:#ebfbee;color:#2b8a3e;box-shadow:0 2px 0 #b2f2bb;animation:none}
-.pdf-pop{
-  position:absolute;top:calc(100% + 8px);right:0;width:300px;z-index:50;
-  background:#fffdf8;border:1.5px solid #e4d2b4;border-radius:16px;padding:12px 14px;
-  box-shadow:0 16px 36px rgba(68,48,18,.22);display:none;flex-direction:column;gap:9px;
-}
-.pdf-pop.show{display:flex}
-.pdf-pop h5{margin:0;font-size:14.5px;color:#2c2216;display:flex;align-items:center;gap:6px}
-.pdf-pop p{margin:0;font-size:12.5px;color:#6d5f49;line-height:1.45}
-.pdf-stat{font-size:12px;font-weight:700;padding:6px 9px;border-radius:10px;background:#f8f1e2;color:#5c4b32}
-.pdf-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.pdf-mini{
-  padding:5px 10px;border-radius:10px;border:1.5px solid var(--line);background:#fff;
-  font-size:12.5px;font-weight:800;color:#4a3f2f;cursor:pointer;transition:all .12s;
-}
-.pdf-mini:hover{border-color:var(--accent);color:var(--accent)}
-.pdf-mini.pri{background:linear-gradient(180deg,var(--accent-hi),var(--accent));border-color:var(--accent-lo);color:#fff}
-.pdf-mini.danger{border-color:#ffc9c9;color:#c92a2a;background:#fff5f5}
-
-/* 原书 PDF 贴图页面与半透明发光活页入口 */
-.page.has-pdf{padding:0;background:#fff}
-.page.has-pdf .pdf-bg{
-  position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff;display:block;
-}
-.page.has-pdf .pdf-loading{
-  position:absolute;inset:0;display:grid;place-items:center;font-size:14px;font-weight:700;color:#8e7e64;background:#fbf7ee;
-}
-.page.has-pdf .pdf-pg-chip{
-  position:absolute;bottom:8px;z-index:4;padding:2px 9px;border-radius:99px;
-  background:rgba(255,253,248,.88);border:1px solid rgba(210,192,160,.8);
-  font-size:11.5px;font-weight:800;color:#6c5e49;pointer-events:none;
-}
-.page.left.has-pdf .pdf-pg-chip{left:12px}
-.page.right.has-pdf .pdf-pg-chip{right:12px}
-.portal-slot.on-pdf{
-  position:absolute;z-index:5;left:12px;right:12px;bottom:10px;width:auto;
-  padding:7px 12px;gap:10px;flex-direction:row;align-items:center;justify-content:space-between;
-  background:rgba(255,250,240,.94);backdrop-filter:blur(8px);
-  border:2px solid var(--accent);border-radius:14px;
-  box-shadow:0 8px 22px rgba(229,109,23,.26), 0 0 0 2px rgba(255,255,255,.8);
-}
-.portal-slot.on-pdf:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(229,109,23,.34)}
-.portal-slot.on-pdf .portal-top{display:none}
-.portal-slot.on-pdf .portal-mid{flex:1 1 auto;min-width:0;gap:8px}
-.portal-slot.on-pdf .portal-ico{width:38px;height:38px;border-radius:10px}
-.portal-slot.on-pdf .portal-ico svg{width:28px;height:28px}
-.portal-slot.on-pdf .portal-txt{min-width:0}
-.portal-slot.on-pdf .portal-txt h4{font-size:14.5px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.portal-slot.on-pdf .portal-txt p{font-size:11.5px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.portal-slot.on-pdf .portal-go{align-self:center;flex:none;padding:5px 11px;font-size:12.5px;background:linear-gradient(180deg,var(--accent-hi),var(--accent));border-color:var(--accent-lo);color:#fff}
-.page.has-pdf .pdf-pg-chip{top:8px;bottom:auto}
-#bookOverlay.drag-pdf::after{
-  content:"松手导入《科学》教材 PDF（仅存本机浏览器，不上传）";
-  position:absolute;inset:14px;z-index:80;border-radius:20px;
-  border:3px dashed var(--accent);background:rgba(255,250,240,.92);
-  display:grid;place-items:center;font-size:20px;font-weight:900;color:#bf5409;pointer-events:none;
-}
 
 /* ===== 主舞台：3D 书包 / 立体翻书 ===== */
 #stageWrap{
@@ -256,14 +197,14 @@ body.stage-locked .shell{height:100vh}
 .shelf-info em{font-style:normal;color:var(--accent)}
 .book-pills{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:5px}
 .bpill{
-  display:flex;align-items:center;justify-content:space-between;gap:3px;white-space:nowrap;
-  padding:5px 7px;border-radius:11px;border:1.5px solid #e5d8bf;background:#faf5ea;
-  font-size:13px;font-weight:700;color:#786c58;cursor:pointer;transition:all .14s;
+  display:flex;align-items:center;justify-content:space-between;gap:2px;white-space:nowrap;
+  padding:5px 6px;border-radius:11px;border:1.5px solid #e5d8bf;background:#faf5ea;
+  font-size:12px;font-weight:700;color:#786c58;cursor:pointer;transition:all .14s;min-width:0;
 }
 .bpill:hover{border-color:#d8b38f;background:#fff}
 .bpill.ready{background:linear-gradient(180deg,#fffaf0,#fdebd3);border-color:#ebb27d;color:#b8500a}
 .bpill.sel{background:linear-gradient(180deg,var(--accent-hi),var(--accent));border-color:var(--accent-lo);color:#fff;box-shadow:0 3px 10px rgba(217,114,30,.28)}
-.bpill .btag{font-size:11px;padding:1px 6px;border-radius:99px;background:rgba(0,0,0,.06)}
+.bpill .btag{font-size:10.5px;padding:1px 5px;border-radius:99px;background:rgba(0,0,0,.06);flex:none}
 .bpill.ready .btag{background:#fff;color:#c85a0e}
 .bpill.sel .btag{background:rgba(255,255,255,.24);color:#fff}
 
@@ -276,199 +217,420 @@ body.stage-locked .shell{height:100vh}
 }
 #bookHoverTag.show{display:block}
 
-/* ===== 状态 3：立体摊开翻书层 ===== */
+/* ===== 状态 3：极简精装科学手记翻书层 ===== */
 #bookOverlay{
   position:absolute;inset:0;z-index:12;
-  background:radial-gradient(ellipse at 50% 45%, rgba(250,242,226,.96) 0%, rgba(235,219,192,.98) 100%);
-  display:none;flex-direction:column;align-items:center;justify-content:space-between;
-  padding:12px 22px 14px;gap:8px;
+  background:radial-gradient(ellipse at 50% 42%, #f8f3e8 0%, #ede3d1 66%, #e3d6be 100%);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:20px 28px 78px;
 }
-#bookOverlay.show{display:flex;animation:bookFade .45s cubic-bezier(.2,.8,.3,1)}
-@keyframes bookFade{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+#bookOverlay.show{display:flex;animation:bookFade .38s cubic-bezier(.2,.8,.3,1)}
+@keyframes bookFade{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
 
-.book-bar{
-  width:min(1320px,100%);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
-}
-.book-bar-l,.book-bar-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.book-crumb{
-  padding:5px 14px;border-radius:99px;background:#fff;border:1.5px solid var(--line);
-  font-size:16px;font-weight:700;color:#4a3f2f;box-shadow:var(--shadow-sm);
-}
-.book-crumb b{color:var(--accent)}
-
-/* 单元书签 */
-.unit-tabs{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.utab{
-  padding:5px 12px;border-radius:11px;border:1.5px solid var(--line);background:#fff;
-  font-size:14px;font-weight:700;color:#5a4e3d;cursor:pointer;transition:all .14s;
-  display:inline-flex;align-items:center;gap:5px;
-}
-.utab .udot{width:8px;height:8px;border-radius:50%}
-.utab:hover{border-color:var(--accent);transform:translateY(-1px)}
-.utab.act{background:#fff8eb;border-color:var(--accent);color:#b8500a;box-shadow:0 2px 8px rgba(217,114,30,.15)}
-
-/* 书本本体（3D 透视对开双页） */
+/* 书本本体（高留白精装对开双页，占画面 ~90%） */
 .book-stage{
-  flex:1 1 auto;min-height:0;width:min(1260px,100%);
-  display:flex;align-items:center;justify-content:center;gap:14px;
-  perspective:2200px;position:relative;
+  flex:1 1 auto;min-height:0;width:min(1240px, 100%);height:100%;
+  display:flex;align-items:center;justify-content:center;
+  perspective:2400px;position:relative;
 }
-.flip-arrow{
-  width:52px;height:52px;border-radius:50%;flex:none;
-  border:2px solid #dfd0b4;background:rgba(255,253,248,.95);color:#4a3f2f;
-  display:grid;place-items:center;cursor:pointer;font-size:22px;font-weight:800;
-  box-shadow:0 4px 14px rgba(68,48,18,.12);transition:all .15s;z-index:6;
-}
-.flip-arrow:hover:not(:disabled){border-color:var(--accent);color:var(--accent);transform:scale(1.06)}
-.flip-arrow:disabled{opacity:.32;cursor:not-allowed}
-
 .book-shell{
-  position:relative;flex:1 1 auto;max-width:1100px;height:min(74vh, 720px);min-height:460px;
+  position:relative;width:100%;max-width:1200px;height:min(100%, 780px);min-height:480px;
   display:grid;grid-template-columns:1fr 1fr;
-  border-radius:16px;padding:10px;
-  background:linear-gradient(90deg, #b8601c 0%, #d97724 3%, #a65416 49.5%, #7c3c0d 50%, #a65416 50.5%, #d97724 97%, #b8601c 100%);
-  box-shadow:0 22px 48px rgba(62,40,12,.24), 0 4px 0 #8c4410;
+  border-radius:16px;padding:9px;
+  background:linear-gradient(90deg, #754b2a 0%, #8f5f38 3%, #6e4525 49.4%, #4f2f17 50%, #6e4525 50.6%, #8f5f38 97%, #754b2a 100%);
+  box-shadow:0 26px 64px rgba(48,32,14,.20), 0 4px 12px rgba(48,32,14,.10), 0 3px 0 #5b371b;
   transform-style:preserve-3d;
 }
 /* 纸张厚度叠边 */
 .book-shell::before,.book-shell::after{
-  content:"";position:absolute;top:14px;bottom:14px;width:9px;pointer-events:none;
-  background:repeating-linear-gradient(90deg,#f5ecda 0 1.5px,#d8cab0 1.5px 3px);
+  content:"";position:absolute;top:14px;bottom:14px;width:8px;pointer-events:none;
+  background:repeating-linear-gradient(90deg,#f7f1e3 0 1.5px,#dcd0ba 1.5px 3px);
 }
-.book-shell::before{left:3px;border-radius:4px 0 0 4px}
-.book-shell::after{right:3px;border-radius:0 4px 4px 0}
+.book-shell::before{left:2px;border-radius:4px 0 0 4px}
+.book-shell::after{right:2px;border-radius:0 4px 4px 0}
 
 .page{
   position:relative;overflow:hidden;
-  background:#fffdf7;
-  padding:22px 26px 38px;
-  display:flex;flex-direction:column;gap:10px;
+  background:#fdfbf6;
+  padding:28px 34px 44px;
+  display:flex;flex-direction:column;gap:16px;
 }
 .page.left{
   border-radius:8px 0 0 8px;
-  background:linear-gradient(90deg, #faf4e6 0%, #fffdf8 12%, #fffdf8 92%, #ede3cf 100%);
-  border-right:1px solid rgba(120,90,45,.16);
+  background:linear-gradient(90deg, #f8f3e8 0%, #fdfbf6 7%, #fdfbf6 93%, #ece2cf 100%);
+  border-right:1px solid rgba(112,86,52,.14);
 }
 .page.right{
   border-radius:0 8px 8px 0;
-  background:linear-gradient(90deg, #ede3cf 0%, #fffdf8 8%, #fffdf8 88%, #faf4e6 100%);
+  background:linear-gradient(90deg, #ece2cf 0%, #fdfbf6 7%, #fdfbf6 93%, #f8f3e8 100%);
 }
 .pg-head{
-  display:flex;align-items:center;justify-content:space-between;gap:8px;
-  padding-bottom:8px;border-bottom:2px solid rgba(210,192,160,.45);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding-bottom:10px;border-bottom:1px solid rgba(182,164,134,.36);flex:none;
 }
-.pg-unit-tag{
-  font-size:12px;font-weight:800;padding:2px 10px;border-radius:99px;color:#fff;letter-spacing:.03em;
+.pg-head-l{display:inline-flex;align-items:center;gap:8px;min-width:0}
+.pg-dot{width:7px;height:7px;border-radius:50%;flex:none}
+.pg-kicker{
+  font-size:12.5px;font-weight:700;color:#6c5d47;letter-spacing:.06em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.pg-lesson-tag{font-size:14px;font-weight:700;color:#6c5e49}
+.pg-meta{
+  font-size:12px;font-weight:700;color:#93846c;letter-spacing:.04em;white-space:nowrap;flex:none;
+}
+.pg-meta.is-done{
+  color:#237442;background:#edf9f0;border:1px solid #bce4c7;padding:2px 9px;border-radius:99px;
+}
 .pg-body{
   flex:1 1 auto;min-height:0;
-  display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:12px;
-  position:relative;
+  display:flex;flex-direction:column;justify-content:space-between;gap:14px;
+  position:relative;overflow-y:auto;padding-right:2px;
 }
+.pg-body::-webkit-scrollbar{width:5px}
+.pg-body::-webkit-scrollbar-thumb{background:rgba(166,148,118,.35);border-radius:99px}
 .pg-foot{
-  position:absolute;bottom:10px;left:24px;right:24px;
+  position:absolute;bottom:14px;left:34px;right:34px;
   display:flex;align-items:center;justify-content:space-between;
-  font-size:13px;font-weight:800;color:#9b8b72;
+  font-size:11.5px;font-weight:600;color:#a0917a;letter-spacing:.04em;pointer-events:none;
 }
 .page.left .pg-foot{flex-direction:row}
 .page.right .pg-foot{flex-direction:row-reverse}
 
-/* 抽象书页横线块（代替电子书文字） */
-.abs-block{
-  border-radius:12px;padding:12px 14px;
-  background:rgba(246,239,224,.46);border:1.5px dashed rgba(205,188,158,.55);
-  display:flex;flex-direction:column;justify-content:center;gap:9px;
+/* ===== Spread 0 左页：精装目录 ===== */
+.toc-header{display:flex;flex-direction:column;gap:4px;margin-bottom:2px}
+.toc-title{
+  margin:0;font-family:var(--f-serif);font-size:25px;font-weight:700;
+  letter-spacing:.12em;color:#241c13;line-height:1.3;
 }
-.abs-block.span2{grid-column:1 / span 2}
-.abs-block.row2{grid-row:1 / span 2}
-.abs-title{height:13px;width:54%;border-radius:99px;background:#dccbb0}
-.abs-line{height:8px;border-radius:99px;background:#e8decb}
-.abs-line.w90{width:92%}.abs-line.w80{width:80%}.abs-line.w68{width:68%}.abs-line.w50{width:50%}
-.abs-sketch{
-  margin-top:4px;height:44px;border-radius:10px;
-  border:1.5px dashed #d7c7aa;background:repeating-linear-gradient(-45deg,rgba(218,200,168,.15) 0 6px,transparent 6px 12px);
-  display:flex;align-items:center;justify-content:center;font-size:12px;color:#a5957a;font-weight:700;
-}
-
-/* 发光互动教具格子（对应教材互动位置） */
-.portal-slot{
-  position:relative;text-decoration:none;color:inherit;
-  border-radius:16px;padding:12px 14px;
-  background:linear-gradient(145deg,#fffaf0 0%,#fdecd2 100%);
-  border:2.5px solid var(--accent);
-  box-shadow:0 8px 22px rgba(229,109,23,.20), inset 0 1px 0 rgba(255,255,255,.95);
-  display:flex;flex-direction:column;justify-content:space-between;gap:6px;
-  cursor:pointer;transition:transform .16s, box-shadow .16s;overflow:hidden;
-}
-.portal-slot::after{
-  content:"";position:absolute;inset:-2px;border-radius:16px;pointer-events:none;
-  border:2px solid rgba(229,109,23,.35);animation:portalGlow 2.1s ease-in-out infinite;
-}
-@keyframes portalGlow{0%,100%{opacity:.25;transform:scale(1)}50%{opacity:.85;transform:scale(1.012)}}
-.portal-slot:hover{transform:translateY(-3px) scale(1.015);box-shadow:0 14px 30px rgba(229,109,23,.30)}
-.portal-slot.span2{grid-column:1 / span 2}
-.portal-slot.row2{grid-row:1 / span 2}
-.portal-top{display:flex;align-items:center;justify-content:space-between;gap:6px}
-.portal-pill{
-  display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:99px;
-  background:var(--accent);color:#fff;font-size:12px;font-weight:800;white-space:nowrap;
-}
-.portal-loc{font-size:11px;font-weight:700;color:#a46326;background:rgba(255,255,255,.78);padding:1px 7px;border-radius:99px}
-.portal-mid{display:flex;align-items:center;gap:10px;min-height:0}
-.portal-ico{
-  width:56px;height:56px;border-radius:14px;flex:none;
-  background:#fff;border:1.5px solid #f0c99a;display:grid;place-items:center;
-  box-shadow:0 3px 10px rgba(191,84,9,.12);
-}
-.portal-ico svg{width:44px;height:44px}
-.portal-txt h4{margin:0;font-size:18px;line-height:1.55;color:#2b2116}
-.portal-txt p{margin:2px 0 0;font-size:13px;color:#7a5c38;line-height:1.4}
-.portal-go{
-  align-self:flex-end;display:inline-flex;align-items:center;gap:5px;
-  padding:4px 12px;border-radius:10px;background:#fff;border:1.5px solid #e9b980;
-  color:#c2560c;font-size:13px;font-weight:800;
-}
-
-/* 书内目录页（Spread 0 左页） */
+.toc-sub{font-size:12.5px;color:#857761;letter-spacing:.03em}
 .toc-list{
-  grid-column:1 / span 2;grid-row:1 / span 2;
-  display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;align-content:start;
-  overflow-y:auto;padding-right:2px;
+  flex:1 1 auto;min-height:0;
+  display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;align-content:start;
+  overflow-y:auto;padding-right:4px;
 }
+.toc-list::-webkit-scrollbar{width:5px}
+.toc-list::-webkit-scrollbar-thumb{background:rgba(166,148,118,.35);border-radius:99px}
+.toc-u{
+  grid-column:1 / span 2;display:flex;align-items:center;gap:7px;
+  font-family:var(--f-serif);font-size:12.5px;font-weight:700;color:#665742;
+  margin-top:8px;padding:2px 0 4px;border-bottom:1px solid rgba(196,178,148,.32);
+}
+.toc-u:first-child{margin-top:0}
+.toc-u i{width:6px;height:6px;border-radius:50%;flex:none}
 .toc-item{
-  display:flex;align-items:center;justify-content:space-between;gap:6px;
-  padding:6px 10px;border-radius:10px;border:1px solid #e7dbc3;background:#faf5ea;
-  font-size:13px;font-weight:700;color:#3d3222;cursor:pointer;text-align:left;transition:all .13s;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:6px 9px;border-radius:9px;border:1px solid transparent;background:transparent;
+  font-size:13px;font-weight:600;color:#33291d;cursor:pointer;text-align:left;transition:all .14s;
 }
-.toc-item:hover{border-color:var(--accent);background:#fff8ec;color:#c2560c;transform:translateX(2px)}
-.toc-item .tp{font-size:11px;color:#8e7e64;font-weight:800;flex:none}
-.toc-u{grid-column:1 / span 2;font-size:12px;font-weight:800;color:#8e7e64;margin-top:4px;padding-left:2px}
+.toc-item:hover{background:rgba(241,231,211,.62);border-color:rgba(208,188,154,.65);color:#b24b0d}
+.toc-item-l{display:inline-flex;align-items:center;gap:6px;min-width:0}
+.toc-no{font-size:11px;font-weight:700;color:#9b8b72;font-variant-numeric:tabular-nums;flex:none}
+.toc-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.toc-fl{font-size:11px;flex:none}
+.toc-item .tp{font-size:11px;color:#a09077;font-weight:600;flex:none;font-variant-numeric:tabular-nums}
+
+/* ===== Spread 0 右页：卷首科学手记 + 推荐 3D 实验启动区 ===== */
+.intro-wrap{display:flex;flex-direction:column;justify-content:space-between;gap:14px;height:100%}
+.intro-top{display:flex;flex-direction:column;gap:10px}
+.intro-eyebrow{
+  font-size:11px;font-weight:700;letter-spacing:.14em;color:#9a7b52;text-transform:uppercase;
+}
+.intro-title{
+  margin:0;font-family:var(--f-serif);font-size:24px;font-weight:700;color:#221a12;
+  line-height:1.42;letter-spacing:.03em;
+}
+.intro-lead{
+  margin:0;font-family:var(--f-serif);font-size:14px;color:#625542;line-height:1.75;
+}
+.unit-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:2px}
+.unit-card{
+  display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:12px;
+  border:1px solid rgba(206,190,162,.62);background:rgba(255,254,250,.78);
+  cursor:pointer;text-align:left;transition:all .16s;
+}
+.unit-card:hover{
+  background:#fff;border-color:rgba(217,98,26,.55);transform:translateY(-1px);
+  box-shadow:0 6px 16px rgba(68,48,18,.07);
+}
+.unit-card-dot{width:8px;height:8px;border-radius:50%;flex:none}
+.unit-card-txt{min-width:0;display:flex;flex-direction:column;gap:1px}
+.unit-card-num{font-size:11px;font-weight:700;color:#8e7e64}
+.unit-card-name{
+  font-family:var(--f-serif);font-size:13.5px;font-weight:700;color:#2c2318;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+/* ===== 课次对开左页：本课科学手记卡片 ===== */
+.note-wrap{display:flex;flex-direction:column;justify-content:flex-start;gap:22px;height:100%}
+.note-hero{display:flex;flex-direction:column;gap:8px;padding-top:4px}
+.note-lesson-no{
+  font-size:11.5px;font-weight:700;letter-spacing:.12em;color:#9a8567;
+  display:inline-flex;align-items:center;gap:8px;
+}
+.note-title{
+  margin:0;font-family:var(--f-serif);font-size:30px;font-weight:700;color:#211a11;
+  line-height:1.5;letter-spacing:.04em;
+}
+.note-rule{width:34px;height:2.5px;border-radius:99px;opacity:.75}
+.note-sub{
+  margin:0;font-size:13.5px;color:#6c5d47;letter-spacing:.03em;line-height:1.55;
+}
+.note-card{
+  background:rgba(255,254,250,.86);border:1px solid rgba(206,190,162,.62);
+  border-radius:14px;padding:16px 18px;
+  box-shadow:0 4px 16px rgba(68,48,18,.04);
+  display:flex;flex-direction:column;gap:11px;
+}
+.note-card-hd{
+  font-size:11.5px;font-weight:800;letter-spacing:.12em;color:#8e7a5d;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.note-points{display:flex;flex-direction:column;gap:9px;margin:0;padding:0;list-style:none}
+.note-pt{
+  display:flex;align-items:flex-start;gap:10px;font-size:14px;color:#342a1e;line-height:1.55;
+}
+.note-pt-idx{
+  font-family:var(--f-serif);font-size:12px;font-weight:700;color:#a0855c;
+  min-width:20px;padding-top:2px;font-variant-numeric:tabular-nums;flex:none;
+}
+.note-pt-txt{font-family:var(--f-serif);font-size:15px;font-weight:600;color:#2b2217}
+.note-quote{
+  margin-top:auto;
+  border-left:2.5px solid var(--accent);padding:12px 15px;border-radius:0 12px 12px 0;
+  background:linear-gradient(90deg, rgba(247,237,219,.62) 0%, rgba(253,251,246,.3) 100%);
+  display:flex;flex-direction:column;gap:4px;
+}
+.note-quote-lbl{font-size:11px;font-weight:800;letter-spacing:.1em;color:#9c6533}
+.note-quote p{
+  margin:0;font-family:var(--f-serif);font-size:14px;color:#4a3d2d;line-height:1.68;
+}
+
+/* ===== 右页：3D 互动实验直接启动预览区 ===== */
+.lab-wrap{display:flex;flex-direction:column;justify-content:center;gap:14px;height:100%}
+.lab-stage-card{
+  position:relative;flex:1 1 auto;min-height:0;
+  display:flex;flex-direction:column;justify-content:space-between;gap:14px;
+  text-decoration:none;color:inherit;
+  border-radius:18px;padding:22px 22px 20px;
+  background:linear-gradient(160deg, #fffefb 0%, #fbf4e6 100%);
+  border:1px solid rgba(206,184,148,.78);
+  box-shadow:0 10px 28px rgba(68,48,18,.07), inset 0 1px 0 rgba(255,255,255,.95);
+  transition:transform .2s cubic-bezier(.2,.8,.3,1), border-color .2s, box-shadow .2s;
+  overflow:hidden;
+}
+.lab-stage-card:hover{
+  transform:translateY(-2px);border-color:rgba(217,98,26,.65);
+  box-shadow:0 16px 36px rgba(178,75,13,.14), inset 0 1px 0 #fff;
+}
+.lab-stage-card.is-done{
+  border-color:rgba(64,145,108,.55);
+  background:linear-gradient(160deg, #fcfffd 0%, #f0faf3 100%);
+}
+.lab-visual{
+  position:relative;flex:1 1 auto;min-height:150px;
+  border-radius:14px;overflow:hidden;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(255,255,255,.92) 0%, rgba(246,236,216,.65) 58%, rgba(238,225,200,.45) 100%);
+  border:1px solid rgba(214,197,168,.5);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  padding:16px;
+}
+.lab-visual::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:
+    radial-gradient(circle at 50% 50%, transparent 62px, rgba(186,164,128,.16) 63px, transparent 64px),
+    radial-gradient(circle at 50% 50%, transparent 106px, rgba(186,164,128,.11) 107px, transparent 108px);
+}
+.lab-badge{
+  position:absolute;top:12px;left:12px;z-index:2;
+  display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;
+  background:rgba(255,253,248,.92);border:1px solid rgba(208,190,158,.75);
+  font-size:11px;font-weight:700;color:#7a6345;letter-spacing:.04em;
+}
+.lab-badge.is-done{color:#217141;border-color:#b2dfbe;background:#eefaf2}
+.lab-medallion{
+  position:relative;z-index:1;width:96px;height:96px;border-radius:26px;
+  background:#fff;border:1px solid rgba(226,208,178,.85);
+  box-shadow:0 12px 26px rgba(100,72,32,.10), 0 2px 6px rgba(100,72,32,.05);
+  display:grid;place-items:center;transition:transform .24s ease;
+}
+.lab-stage-card:hover .lab-medallion{transform:scale(1.05)}
+.lab-medallion svg{width:68px;height:68px}
+.lab-info{display:flex;flex-direction:column;gap:7px}
+.lab-title{
+  margin:0;font-family:var(--f-serif);font-size:21px;font-weight:700;color:#231b12;line-height:1.5;
+}
+.lab-desc{
+  margin:0;font-size:13.5px;color:#625543;line-height:1.65;
+}
+.lab-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.lab-chip{
+  font-size:11.5px;font-weight:600;color:#78654a;
+  padding:2px 9px;border-radius:99px;background:rgba(241,231,212,.72);
+  border:1px solid rgba(214,198,170,.55);
+}
+.lab-foot{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:4px;
+}
+.lab-hint{font-size:12px;color:#8f7f67;font-weight:600}
+.lab-cta{
+  display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:999px;
+  background:#2c2319;color:#fdfbf6;font-size:13.5px;font-weight:700;letter-spacing:.03em;
+  box-shadow:0 6px 16px rgba(44,35,25,.18);transition:all .16s;white-space:nowrap;
+}
+.lab-stage-card:hover .lab-cta{background:var(--accent);box-shadow:0 8px 20px rgba(217,98,26,.28)}
+.lab-stage-card.is-done .lab-cta{background:#247345}
+
+/* 双实验课（k1a-02 / k1a-03 / k1b-08）精巧上下双卡 */
+.lab-dual-wrap{display:flex;flex-direction:column;gap:12px;height:100%}
+.lab-stage-card.is-dual{padding:16px 18px;gap:10px}
+.lab-stage-card.is-dual .lab-dual-row{display:flex;align-items:center;gap:14px;min-height:0}
+.lab-stage-card.is-dual .lab-medallion{width:68px;height:68px;border-radius:18px;flex:none}
+.lab-stage-card.is-dual .lab-medallion svg{width:48px;height:48px}
+.lab-stage-card.is-dual .lab-title{font-size:18px;line-height:1.45}
+.lab-stage-card.is-dual .lab-desc{font-size:13px;line-height:1.55}
+.lab-stage-card.is-dual .lab-cta{padding:7px 14px;font-size:12.5px}
+
+/* Spread 0 底部精简推荐启动卡 */
+.intro-lab-card{
+  display:flex;flex-direction:column;gap:10px;padding:15px 17px;border-radius:16px;
+  text-decoration:none;color:inherit;
+  background:linear-gradient(155deg, #fffefb 0%, #faf0de 100%);
+  border:1px solid rgba(212,184,142,.82);
+  box-shadow:0 8px 22px rgba(68,48,18,.07);transition:all .18s;
+}
+.intro-lab-card:hover{
+  transform:translateY(-2px);border-color:rgba(217,98,26,.65);
+  box-shadow:0 12px 28px rgba(178,75,13,.13);
+}
+.intro-lab-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.intro-lab-tag{
+  font-size:11px;font-weight:800;letter-spacing:.08em;color:#b24b0d;
+  padding:2px 9px;border-radius:99px;background:rgba(253,231,207,.85);
+}
+.intro-lab-mid{display:flex;align-items:center;gap:12px}
+.intro-lab-ico{
+  width:56px;height:56px;border-radius:15px;flex:none;background:#fff;
+  border:1px solid rgba(226,208,178,.85);display:grid;place-items:center;
+  box-shadow:0 4px 12px rgba(68,48,18,.07);
+}
+.intro-lab-ico svg{width:40px;height:40px}
+.intro-lab-txt{min-width:0;flex:1}
+.intro-lab-txt h4{margin:0;font-family:var(--f-serif);font-size:17px;font-weight:700;color:#241c13;line-height:1.45}
+.intro-lab-txt p{margin:2px 0 0;font-size:12.5px;color:#6b5c47;line-height:1.5}
+.intro-lab-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:2px}
+.intro-lab-card .lab-cta{padding:7px 15px;font-size:12.5px}
+
+/* 线下展演指引卡（k1b-14） */
+.offline-card{
+  flex:1 1 auto;border-radius:18px;padding:24px 22px;
+  background:linear-gradient(160deg,#fffefb 0%,#f7f1e4 100%);
+  border:1px solid rgba(206,190,162,.72);
+  display:flex;flex-direction:column;justify-content:space-between;gap:14px;
+}
+.offline-steps{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.offline-step{
+  padding:11px 12px;border-radius:12px;background:rgba(255,255,255,.8);
+  border:1px solid rgba(214,198,170,.55);font-size:13px;color:#3d3224;line-height:1.5;
+}
+.offline-step b{display:block;font-family:var(--f-serif);font-size:14px;color:#241c13;margin-bottom:2px}
 
 /* 翻页 3D 动效叶片 */
 #flipLeaf{
-  position:absolute;top:10px;bottom:10px;width:calc(50% - 10px);
+  position:absolute;top:9px;bottom:9px;width:calc(50% - 9px);
   pointer-events:none;display:none;transform-style:preserve-3d;z-index:10;
 }
-#flipLeaf.fwd{left:50%;transform-origin:left center;display:block;animation:leafFwd .42s cubic-bezier(.45,.05,.55,.95) forwards}
-#flipLeaf.bwd{left:10px;transform-origin:right center;display:block;animation:leafBwd .42s cubic-bezier(.45,.05,.55,.95) forwards}
+#flipLeaf.fwd{left:50%;transform-origin:left center;display:block;animation:leafFwd .38s cubic-bezier(.45,.05,.55,.95) forwards}
+#flipLeaf.bwd{left:9px;transform-origin:right center;display:block;animation:leafBwd .38s cubic-bezier(.45,.05,.55,.95) forwards}
 .leaf-face{
   position:absolute;inset:0;border-radius:0 8px 8px 0;
-  background:linear-gradient(90deg,#e9dec7 0%,#fffdf7 16%,#fbf5e7 100%);
-  box-shadow:-6px 0 22px rgba(68,48,18,.18);backface-visibility:hidden;
+  background:linear-gradient(90deg,#e9dec7 0%,#fdfbf6 16%,#f8f2e4 100%);
+  box-shadow:-6px 0 22px rgba(68,48,18,.16);backface-visibility:hidden;
 }
-#flipLeaf.bwd .leaf-face{border-radius:8px 0 0 8px;background:linear-gradient(270deg,#e9dec7 0%,#fffdf7 16%,#fbf5e7 100%)}
+#flipLeaf.bwd .leaf-face{border-radius:8px 0 0 8px;background:linear-gradient(270deg,#e9dec7 0%,#fdfbf6 16%,#f8f2e4 100%)}
 @keyframes leafFwd{0%{transform:rotateY(0deg)}100%{transform:rotateY(-180deg)}}
 @keyframes leafBwd{0%{transform:rotateY(0deg)}100%{transform:rotateY(180deg)}}
 
-/* 书本底部页码滑动条 */
-.book-foot{
-  width:min(1100px,100%);display:flex;align-items:center;gap:12px;
-  padding:8px 16px;border-radius:16px;background:rgba(255,253,248,.92);
-  border:1.5px solid var(--line);box-shadow:var(--shadow-sm);
+/* ===== 极简悬浮胶囊导航 + 目录切课浮层 ===== */
+.dock-anchor{
+  position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+  z-index:30;display:flex;flex-direction:column;align-items:center;
 }
-.book-foot input[type="range"]{flex:1 1 auto;accent-color:var(--accent);height:8px;cursor:pointer}
-.pg-counter{font-size:15px;font-weight:800;color:#4a3f2f;min-width:128px;text-align:right;white-space:nowrap}
+.book-dock{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:5px 7px;border-radius:999px;
+  background:rgba(255,253,248,.90);backdrop-filter:blur(14px);
+  border:1px solid rgba(196,178,148,.62);
+  box-shadow:0 10px 28px rgba(48,34,16,.13), 0 1px 3px rgba(48,34,16,.06);
+  white-space:nowrap;
+}
+.dock-btn{
+  display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 13px;border-radius:999px;
+  border:none;background:transparent;font-size:13.5px;font-weight:700;color:#45392a;
+  cursor:pointer;transition:background .14s, color .14s;white-space:nowrap;
+}
+.dock-btn:hover:not(:disabled){background:rgba(232,218,194,.55);color:#1f1810}
+.dock-btn[aria-expanded="true"]{background:#2c2319;color:#fdfbf6}
+.dock-btn:disabled{opacity:.32;cursor:not-allowed}
+.dock-sep{width:1px;height:18px;background:rgba(186,168,138,.45);flex:none;margin:0 2px}
+.dock-pager{display:inline-flex;align-items:center;gap:2px}
+.dock-icon-btn{
+  width:34px;height:34px;border-radius:999px;border:none;background:transparent;
+  color:#45392a;display:grid;place-items:center;cursor:pointer;font-size:18px;font-weight:700;
+  transition:background .14s, color .14s;
+}
+.dock-icon-btn:hover:not(:disabled){background:rgba(232,218,194,.58);color:#1f1810}
+.dock-icon-btn:disabled{opacity:.3;cursor:not-allowed}
+.dock-icon-btn.is-muted{color:#a89b86}
+.pg-counter{
+  font-size:12.5px;font-weight:700;color:#6e604b;padding:0 8px;
+  min-width:68px;text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+
+/* 目录/切课弹出卡片 */
+.toc-drawer{
+  position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);
+  width:min(400px, calc(100vw - 24px));max-height:min(64vh, 480px);
+  background:rgba(255,253,249,.97);backdrop-filter:blur(16px);
+  border:1px solid rgba(196,178,148,.75);border-radius:18px;
+  box-shadow:0 20px 48px rgba(48,32,14,.20);
+  display:none;flex-direction:column;overflow:hidden;
+}
+.toc-drawer.show{display:flex;animation:drawerUp .18s ease-out}
+@keyframes drawerUp{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+.drawer-top{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:11px 14px;border-bottom:1px solid rgba(206,190,162,.45);
+  background:rgba(248,242,230,.72);
+}
+.drawer-vols{display:inline-flex;gap:4px;background:rgba(228,215,190,.55);padding:3px;border-radius:999px}
+.dvol-btn{
+  border:none;background:transparent;padding:4px 10px;border-radius:999px;
+  font-size:12px;font-weight:700;color:#625440;cursor:pointer;transition:all .13s;
+}
+.dvol-btn.act{background:#fff;color:#b24b0d;box-shadow:0 1px 4px rgba(48,32,14,.10)}
+.drawer-py{
+  border:1px solid rgba(196,178,148,.65);background:#fff;border-radius:999px;
+  padding:4px 10px;font-size:11.5px;font-weight:700;color:#5c4e3b;cursor:pointer;
+}
+.drawer-py:hover{border-color:var(--accent);color:var(--accent)}
+.drawer-list{
+  overflow-y:auto;padding:8px 10px 12px;display:flex;flex-direction:column;gap:3px;
+}
+.drawer-list::-webkit-scrollbar{width:5px}
+.drawer-list::-webkit-scrollbar-thumb{background:rgba(166,148,118,.35);border-radius:99px}
+.drawer-u{
+  font-size:11.5px;font-weight:800;color:#8b7b63;letter-spacing:.05em;
+  padding:8px 8px 3px;display:flex;align-items:center;gap:6px;
+}
+.drawer-u i{width:6px;height:6px;border-radius:50%}
+.drawer-item{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:7px 10px;border-radius:10px;border:none;background:transparent;
+  font-size:13px;font-weight:600;color:#33291d;cursor:pointer;text-align:left;transition:background .12s;
+}
+.drawer-item:hover{background:#f5ecdc;color:#b24b0d}
+.drawer-item.act{background:#fdebd5;color:#a8440a;font-weight:700}
+.drawer-item small{font-size:11px;color:#93846c;font-weight:600;flex:none}
 
 /* ===== 备用目录总览模式 ===== */
 #catalogView{
@@ -493,7 +655,7 @@ body.stage-locked .shell{height:100vh}
 .unit-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:10px;margin-bottom:14px;border-bottom:2px dashed rgba(190,170,136,.38);flex-wrap:wrap}
 .unit-title-wrap{display:flex;align-items:center;gap:10px}
 .unit-num{padding:3px 11px;border-radius:10px;color:#fff;font-size:14px;font-weight:800}
-.unit-head h2{margin:0;font-size:26px;font-family:var(--f-kai)}
+.unit-head h2{margin:0;font-size:26px;font-family:var(--f-serif)}
 .cat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
 .unit-sec.cols3 .cat-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .ccard{
@@ -520,9 +682,12 @@ body.stage-locked .shell{height:100vh}
 @media (max-width:1180px){
   .book-pills{grid-template-columns:repeat(6,minmax(0,1fr))}
   .cat-grid,.unit-sec.cols3 .cat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .page{padding:22px 24px 38px}
+  .pg-foot{left:24px;right:24px}
 }
 @media (max-width:860px){
   body.stage-locked .shell{height:auto;min-height:100vh}
+  body.book-open .shell{height:auto;min-height:100vh}
   .shell{padding:8px 10px 16px;gap:8px}
   .topbar{padding:7px 10px;border-radius:16px;gap:8px}
   .brand-mark{width:34px;height:34px;border-radius:10px}
@@ -537,6 +702,7 @@ body.stage-locked .shell{height:100vh}
   .mtab{min-height:36px;padding:0 10px;font-size:14px}
   .tool-btn{min-height:36px;padding:0 10px;font-size:13px}
   #stageWrap{min-height:78vh;border-radius:18px}
+  body.book-open #stageWrap{min-height:100vh;overflow:visible}
   .bag-hud{padding:10px 10px}
   .stage-badge{font-size:14px;padding:5px 12px}
   .big-cta{font-size:17px;min-height:44px;padding:2px 16px}
@@ -545,27 +711,35 @@ body.stage-locked .shell{height:100vh}
   .shelf-info{font-size:13px;line-height:1.4}
   .book-pills{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;max-height:112px;overflow-y:auto;padding-right:2px}
   .bpill{font-size:12px;padding:5px 8px;white-space:nowrap}
-  #bookOverlay{position:relative;inset:auto;min-height:78vh;padding:10px 10px 12px}
-  .book-stage{flex-direction:column;gap:8px}
-  .flip-arrow{display:none}
-  .book-shell{grid-template-columns:1fr;height:auto;min-height:0;gap:10px;padding:8px;width:100%}
+  #bookOverlay{position:relative;inset:auto;min-height:100vh;padding:12px 12px 84px;justify-content:flex-start}
+  .book-stage{height:auto;align-items:flex-start}
+  .book-shell{grid-template-columns:1fr;height:auto;min-height:0;gap:12px;padding:7px;width:100%;border-radius:14px}
   .book-shell::before,.book-shell::after{display:none}
-  .page.left,.page.right{border-radius:10px;border-right:none;padding:14px 14px 32px;min-height:290px}
-  .pg-body{grid-template-columns:1fr;grid-template-rows:auto;gap:8px}
-  .abs-block.span2,.portal-slot.span2{grid-column:auto}
-  .abs-block.row2,.portal-slot.row2{grid-row:auto}
-  .toc-list{grid-template-columns:1fr}
+  .page.left,.page.right{border-radius:10px;border-right:none;padding:18px 16px 38px;min-height:0;gap:12px}
+  .pg-body{overflow-y:visible;padding-right:0}
+  .pg-foot{left:16px;right:16px;bottom:11px}
+  .toc-list{grid-template-columns:1fr;max-height:none;overflow-y:visible}
   .toc-u{grid-column:auto}
-  .book-foot{padding:6px 10px;gap:8px;flex-wrap:wrap;justify-content:center}
-  .pg-counter{min-width:0;text-align:center;font-size:13px}
-  .mob-flip-row{display:flex!important;gap:8px;width:100%}
-  .mob-flip-row button{flex:1}
+  .note-title{font-size:23px}
+  .intro-title{font-size:20px}
+  .unit-grid{grid-template-columns:1fr 1fr;gap:6px}
+  .lab-stage-card{padding:16px 15px}
+  .lab-visual{min-height:124px;padding:12px}
+  .lab-medallion{width:76px;height:76px;border-radius:20px}
+  .lab-medallion svg{width:54px;height:54px}
+  .lab-title{font-size:18px}
+  .lab-foot{flex-wrap:wrap}
+  .offline-steps{grid-template-columns:1fr}
+  .dock-anchor{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:45;max-width:calc(100vw - 20px)}
+  .book-dock{padding:4px 6px;gap:2px;max-width:100%}
+  .dock-btn{height:34px;padding:0 8px;font-size:12px;gap:4px}
+  #dockTocLabel{max-width:96px;overflow:hidden;text-overflow:ellipsis;display:inline-block;vertical-align:bottom}
+  .dock-sep{margin:0 1px;height:15px}
+  .dock-icon-btn{width:30px;height:30px;font-size:16px}
+  .pg-counter{min-width:42px;padding:0 3px;font-size:11.5px}
   .cat-grid,.unit-sec.cols3 .cat-grid{grid-template-columns:1fr}
 }
-.mob-flip-row{display:none}
 </style>
-  <link rel="stylesheet" href="contact/project-qr.css">
-  <script src="contact/project-qr.js" defer></script>
 </head>
 <body class="stage-locked">
 <div class="shell">
@@ -581,7 +755,7 @@ body.stage-locked .shell{height:100vh}
       </span>
       <div class="brand-t">
         <h1 data-py="xiǎo xué kē xué hù dòng shū bāo">小学科学·互动书包</h1>
-        <div class="brand-sub"><span class="b-pill">粤教科技版</span><span>点击书包 → 侧看抽书 → 翻页进 3D 实验</span></div>
+        <div class="brand-sub"><span class="b-pill">3D 科学手记</span><span>打开书包 → 翻阅科学手记 → 亲手玩 3D 实验</span></div>
       </div>
     </div>
 
@@ -597,7 +771,7 @@ body.stage-locked .shell{height:100vh}
     <div class="top-nav">
       <div class="search-wrap" id="searchWrap">
         <svg class="search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input class="search-in" id="hubSearch" type="search" placeholder="搜课题 / 页码 / 磁铁…" autocomplete="off" aria-label="搜索课程与活页">
+        <input class="search-in" id="hubSearch" type="search" placeholder="搜课题 / 磁铁 / 纸桥…" autocomplete="off" aria-label="搜索课程与活页">
         <div class="search-drop" id="searchDrop" role="listbox"></div>
       </div>
       <div class="mode-tabs" role="tablist">
@@ -605,7 +779,6 @@ body.stage-locked .shell{height:100vh}
         <button class="mtab" id="tabCatalog" type="button" aria-pressed="false"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>目录总览</span></button>
       </div>
       <button class="tool-btn" id="pyBtn" type="button" aria-pressed="true">拼音：开</button>
-      <button type="button" class="project-qr-trigger" data-project-qr aria-controls="project-qr-panel" aria-expanded="false">联系我</button>
     </div>
   </header>
 
@@ -623,12 +796,12 @@ body.stage-locked .shell{height:100vh}
 
       <div class="bag-bottom">
         <div class="bag-cta-row" id="frontCta">
-          <button class="big-cta" id="openBagBtn" type="button"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><polyline points="12 5 19 12 12 19"/></svg><span data-py="dǎ kāi shū bāo kàn kè běn">打开书包看课本</span></button>
+          <button class="big-cta" id="openBagBtn" type="button"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><polyline points="12 5 19 12 12 19"/></svg><span data-py="dǎ kāi shū bāo kàn shǒu jì">打开书包看手记</span></button>
         </div>
 
         <div class="shelf-dock" id="shelfDock" hidden>
           <div class="shelf-head">
-            <div class="shelf-info" id="shelfInfo">书包里装着 <em>1–6 年级 12 册</em>《科学》课本 · 点亮课本可直接抽出翻开</div>
+            <div class="shelf-info" id="shelfInfo">书包里装着 <em>1–6 年级 12 册</em> 科学手记 · 点亮分册可直接抽出翻开</div>
             <div style="display:flex;gap:8px;align-items:center">
               <button class="tool-btn primary" id="pullBookBtn" type="button"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span id="pullBookTxt">抽出并翻开《一年级上册》</span></button>
             </div>
@@ -638,58 +811,51 @@ body.stage-locked .shell{height:100vh}
       </div>
     </div>
 
-    <!-- 摊开课本逐页翻阅层 -->
+    <!-- 摊开科学手记翻阅层（90% 画面留给书页，底部极简悬浮胶囊导航） -->
     <div id="bookOverlay">
-    <div class="book-bar">
-        <div class="book-bar-l">
-          <button class="tool-btn" id="closeBookBtn" type="button"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg><span>放回书包</span></button>
-          <span class="book-crumb">《科学》<b id="crumbBook">一年级上册</b> · <span id="crumbLesson">目录 / P1</span></span>
-        </div>
-        <div class="book-bar-r unit-tabs" id="unitTabs">
-          <div id="unitTabBtns" style="display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap"></div>
-          <div class="pdf-wrap" id="pdfWrap">
-            <button class="tool-btn" id="pdfImportBtn" type="button" title="导入本册教材 PDF，在本机显示真实原书页">📄 导入原书 PDF</button>
-            <input type="file" id="pdfFileInput" accept="application/pdf,.pdf" hidden>
-            <div class="pdf-pop" id="pdfPop">
-              <h5>📄 教材原书页（仅存本机）</h5>
-              <p id="pdfPopDesc">为尊重教材版权，站点默认展示抽象占位页。导入粤教科技版《科学》PDF 后，将直接在本机浏览器（IndexedDB）渲染高清原书页，<b>绝不上传服务器</b>。</p>
-              <div class="pdf-stat" id="pdfStat">当前状态：未导入（显示占位页）</div>
-              <div class="pdf-row">
-                <button class="pdf-mini pri" id="pdfPickBtn" type="button">选择 PDF 文件</button>
-                <button class="pdf-mini" id="pdfAutoLocalBtn" type="button" hidden>⚡ 一键载入本地原书</button>
-                <button class="pdf-mini" id="pdfQuietBtn" type="button">先看占位页</button>
-                <button class="pdf-mini" id="pdfToggleBtn" type="button" hidden>切回占位页</button>
-                <button class="pdf-mini danger" id="pdfRemoveBtn" type="button" hidden>移除</button>
-              </div>
-              <div class="pdf-row" id="pdfOffsetRow" hidden>
-                <span style="font-size:12px;font-weight:700;color:#6d5f49">页码对齐微调：</span>
-                <button class="pdf-mini" id="pdfOffMinus" type="button">−1</button>
-                <b id="pdfOffVal" style="font-size:12.5px;min-width:28px;text-align:center">+7</b>
-                <button class="pdf-mini" id="pdfOffPlus" type="button">+1</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div class="book-stage">
-        <button class="flip-arrow" id="prevPageBtn" type="button" aria-label="上一页">‹</button>
         <div class="book-shell" id="bookShell">
           <article class="page left" id="pageLeft"></article>
           <article class="page right" id="pageRight"></article>
           <div id="flipLeaf"><div class="leaf-face"></div></div>
         </div>
-        <button class="flip-arrow" id="nextPageBtn" type="button" aria-label="下一页">›</button>
       </div>
 
-      <div class="book-foot">
-        <div class="mob-flip-row">
-          <button class="tool-btn" id="mobPrevBtn" type="button">‹ 上一页</button>
-          <button class="tool-btn primary" id="mobNextBtn" type="button">下一页 ›</button>
+      <div class="dock-anchor" id="dockAnchor">
+        <div class="toc-drawer" id="tocDrawer" role="dialog" aria-label="目录与切课">
+          <div class="drawer-top">
+            <div class="drawer-vols" id="drawerVols">
+              <button class="dvol-btn act" type="button" data-dvol="k1a">一上</button>
+              <button class="dvol-btn" type="button" data-dvol="k1b">一下</button>
+              <button class="dvol-btn" type="button" data-dvol="k2a">二上</button>
+            </div>
+            <button class="drawer-py" id="drawerPyBtn" type="button">拼音：开</button>
+          </div>
+          <div class="drawer-list" id="drawerList"></div>
         </div>
-        <span style="font-size:13px;font-weight:700;color:#7b705e;white-space:nowrap">快速翻页</span>
-        <input type="range" id="pageRange" min="0" max="30" value="0" aria-label="翻页滑块">
-        <span class="pg-counter" id="pgCounter">目录 / P1</span>
+
+        <nav class="book-dock" aria-label="科学手记导航">
+          <button class="dock-btn" id="closeBookBtn" type="button" title="返回 3D 书包">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            <span>返回书包</span>
+          </button>
+          <span class="dock-sep" aria-hidden="true"></span>
+          <button class="dock-btn" id="tocPopBtn" type="button" aria-expanded="false" aria-controls="tocDrawer" title="目录与切课">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="14" y2="17"/></svg>
+            <span id="dockTocLabel">目录 · 一上</span>
+          </button>
+          <span class="dock-sep" aria-hidden="true"></span>
+          <div class="dock-pager">
+            <button class="dock-icon-btn" id="prevPageBtn" type="button" aria-label="上一页" title="上一页">‹</button>
+            <span class="pg-counter" id="pgCounter">目录 · 1/15</span>
+            <button class="dock-icon-btn" id="nextPageBtn" type="button" aria-label="下一页" title="下一页">›</button>
+          </div>
+          <span class="dock-sep" aria-hidden="true"></span>
+          <button class="dock-icon-btn" id="soundBtn" type="button" aria-pressed="true" aria-label="声音开关" title="声音：开">
+            <svg class="ico" id="soundIcoOn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+            <svg class="ico" id="soundIcoOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" hidden><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+          </button>
+        </nav>
       </div>
     </div>
   </section>
@@ -701,6 +867,7 @@ body.stage-locked .shell{height:100vh}
         <div class="mode-tabs" id="catVolTabs" role="tablist" aria-label="切换年级分册">
           <button class="mtab" type="button" data-vol="k1a" aria-pressed="true">📘 一年级上册</button>
           <button class="mtab" type="button" data-vol="k1b" aria-pressed="false">📗 一年级下册</button>
+          <button class="mtab" type="button" data-vol="k2a" aria-pressed="false">📙 二年级上册</button>
         </div>
         <span class="cat-prog-title" id="catProgTitle">🌸 小红花收集进度：0 / 16 课</span>
         <div class="cat-prog-bar"><i id="catProgFill"></i></div>
@@ -713,7 +880,6 @@ body.stage-locked .shell{height:100vh}
 </div>
 
 <script src="vendor/three.min.js"></script>
-<script src="vendor/pdf-book.js"></script>
 <script>
 (function () {
 'use strict';
@@ -747,6 +913,7 @@ hydrate(document);
 /* ========= WebAudio 轻量拟物音效 ========= */
 var actx = null;
 function playTone(f0, f1, dur, gain) {
+  if (typeof S !== 'undefined' && !S.soundOn) return;
   try {
     var AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
@@ -770,7 +937,7 @@ function sfxFlip() { playTone(520, 260, 0.11, 0.045); }
 var BOOKS = [
   { id: 'k1a', label: '一年级上册', short: '一上', ready: true,  tag: '16活页', color: '#e56d17', spine: '#cf580c', accent: '#fff4df' },
   { id: 'k1b', label: '一年级下册', short: '一下', ready: true,  tag: '14活页', color: '#e86850', spine: '#cc4d36', accent: '#fff2ee' },
-  { id: 'k2a', label: '二年级上册', short: '二上', ready: false, tag: '待做',   color: '#58b37c', spine: '#429563', accent: '#eefaf2' },
+  { id: 'k2a', label: '二年级上册', short: '二上', ready: true,  tag: '14活页', color: '#45a86d', spine: '#318a55', accent: '#eefaf2' },
   { id: 'k2b', label: '二年级下册', short: '二下', ready: false, tag: '待做',   color: '#7cc498', spine: '#5ea87b', accent: '#eefaf2' },
   { id: 'k3a', label: '三年级上册', short: '三上', ready: false, tag: '待做',   color: '#4f93d8', spine: '#3979ba', accent: '#edf5fd' },
   { id: 'k3b', label: '三年级下册', short: '三下', ready: false, tag: '待做',   color: '#79b0e4', spine: '#5a94cc', accent: '#edf5fd' },
@@ -811,14 +978,29 @@ var ICONS = {
   moon:    '<svg viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="22" fill="#1e293b"/><path d="M38 16 A16 16 0 1 0 38 48 A12 12 0 1 1 38 16 Z" fill="#fde047"/></svg>',
   design:  '<svg viewBox="0 0 64 64" fill="none"><rect x="10" y="14" width="44" height="36" rx="4" fill="#eff6ff" stroke="#2563eb" stroke-width="2.4"/><line x1="16" y1="30" x2="48" y2="30" stroke="#2563eb" stroke-width="3.5"/><line x1="22" y1="30" x2="22" y2="44" stroke="#2563eb" stroke-width="3.5"/><line x1="42" y1="30" x2="42" y2="44" stroke="#2563eb" stroke-width="3.5"/></svg>',
   pbridge: '<svg viewBox="0 0 64 64" fill="none"><rect x="10" y="26" width="44" height="8" rx="2" fill="#fffaf0" stroke="#d97706" stroke-width="2.5"/><rect x="18" y="34" width="6" height="16" rx="1" fill="#fde68a" stroke="#d97706" stroke-width="2"/><rect x="40" y="34" width="6" height="16" rx="1" fill="#fde68a" stroke="#d97706" stroke-width="2"/><circle cx="26" cy="21" r="4.5" fill="#cbd5e1" stroke="#64748b" stroke-width="2"/><circle cx="38" cy="21" r="4.5" fill="#cbd5e1" stroke="#64748b" stroke-width="2"/></svg>',
-  bridge:  '<svg viewBox="0 0 64 64" fill="none"><rect x="6" y="42" width="52" height="10" rx="3" fill="#60a5fa"/><path d="M8 42 Q32 16 56 42" fill="none" stroke="#ea580c" stroke-width="4.5" stroke-linecap="round"/><line x1="8" y1="32" x2="56" y2="32" stroke="#475569" stroke-width="3.5"/><line x1="22" y1="16" x2="22" y2="42" stroke="#dc2626" stroke-width="3"/><line x1="42" y1="16" x2="42" y2="42" stroke="#dc2626" stroke-width="3"/></svg>'
+  bridge:  '<svg viewBox="0 0 64 64" fill="none"><rect x="6" y="42" width="52" height="10" rx="3" fill="#60a5fa"/><path d="M8 42 Q32 16 56 42" fill="none" stroke="#ea580c" stroke-width="4.5" stroke-linecap="round"/><line x1="8" y1="32" x2="56" y2="32" stroke="#475569" stroke-width="3.5"/><line x1="22" y1="16" x2="22" y2="42" stroke="#dc2626" stroke-width="3"/><line x1="42" y1="16" x2="42" y2="42" stroke="#dc2626" stroke-width="3"/></svg>',
+  /* ---- k2a 专属图标 ---- */
+  air:     '<svg viewBox="0 0 64 64" fill="none"><path d="M14 26 Q32 10 50 26 Q52 44 32 48 Q12 44 14 26 Z" fill="#e0f2fe" stroke="#0284c7" stroke-width="2.6"/><path d="M20 30 Q30 24 40 30" stroke="#38bdf8" stroke-width="2.8" stroke-linecap="round"/><path d="M22 38 Q32 34 42 38" stroke="#0284c7" stroke-width="2.4" stroke-linecap="round"/></svg>',
+  water:   '<svg viewBox="0 0 64 64" fill="none"><path d="M16 14 L20 50 H44 L48 14 Z" fill="#eff6ff" stroke="#2563eb" stroke-width="2.6"/><path d="M18 30 Q32 27 46 30 L44 48 H20 Z" fill="#60a5fa"/><line x1="17" y1="30" x2="47" y2="30" stroke="#1d4ed8" stroke-width="2.2"/></svg>',
+  salt:    '<svg viewBox="0 0 64 64" fill="none"><path d="M14 16 L18 50 H46 L50 16 Z" fill="#e0f2fe" stroke="#0284c7" stroke-width="2.5"/><path d="M17 30 H47 L45 48 H19 Z" fill="#93c5fd"/><line x1="38" y1="8" x2="26" y2="42" stroke="#64748b" stroke-width="3.2" stroke-linecap="round"/><circle cx="24" cy="40" r="2.5" fill="#fff"/><circle cx="32" cy="43" r="2.2" fill="#fff"/><circle cx="38" cy="38" r="2" fill="#fff"/></svg>',
+  oil:     '<svg viewBox="0 0 64 64" fill="none"><path d="M14 16 L18 50 H46 L50 16 Z" fill="#f8fafc" stroke="#475569" stroke-width="2.5"/><rect x="17" y="24" width="30" height="9" fill="#facc15"/><path d="M18 33 H46 L44 48 H20 Z" fill="#60a5fa"/><circle cx="26" cy="45" r="2.5" fill="#b45309"/><circle cx="34" cy="46" r="2.5" fill="#92400e"/><circle cx="39" cy="44" r="2" fill="#b45309"/></svg>',
+  senses:  '<svg viewBox="0 0 64 64" fill="none"><ellipse cx="22" cy="24" rx="11" ry="7" fill="#fff" stroke="#2563eb" stroke-width="2.5"/><circle cx="22" cy="24" r="3.5" fill="#1e293b"/><path d="M44 16 C52 16 54 28 48 34 C44 38 40 34 42 28" stroke="#ea580c" stroke-width="3" stroke-linecap="round"/><path d="M22 44 Q32 54 42 44" stroke="#ec4899" stroke-width="3.2" stroke-linecap="round"/></svg>',
+  banana:  '<svg viewBox="0 0 64 64" fill="none"><path d="M14 44 C26 48 44 38 48 16 C42 28 30 36 14 44 Z" fill="#fde047" stroke="#ca8a04" stroke-width="2.6" stroke-linejoin="round"/><rect x="45" y="12" width="5" height="6" rx="1" fill="#78350f"/><circle cx="22" cy="22" r="7" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/></svg>',
+  shield:  '<svg viewBox="0 0 64 64" fill="none"><path d="M32 10 L50 18 V32 C50 44 42 52 32 56 C22 52 14 44 14 32 V18 Z" fill="#dcfce7" stroke="#16a34a" stroke-width="2.8"/><path d="M24 32 L30 38 L42 26" stroke="#15803d" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  seasons: '<svg viewBox="0 0 64 64" fill="none"><rect x="10" y="10" width="21" height="21" rx="4" fill="#fbcfe8" stroke="#db2777" stroke-width="2"/><rect x="33" y="10" width="21" height="21" rx="4" fill="#fef08a" stroke="#ca8a04" stroke-width="2"/><rect x="10" y="33" width="21" height="21" rx="4" fill="#fed7aa" stroke="#ea580c" stroke-width="2"/><rect x="33" y="33" width="21" height="21" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/></svg>',
+  apple:   '<svg viewBox="0 0 64 64" fill="none"><rect x="29" y="36" width="6" height="18" rx="2" fill="#92400e"/><circle cx="32" cy="26" r="16" fill="#4ade80" stroke="#15803d" stroke-width="2.4"/><circle cx="25" cy="24" r="4" fill="#ef4444"/><circle cx="38" cy="28" r="4" fill="#ef4444"/><circle cx="33" cy="18" r="3.5" fill="#f9a8d4"/></svg>',
+  anim:    '<svg viewBox="0 0 64 64" fill="none"><ellipse cx="32" cy="38" rx="14" ry="11" fill="#f8fafc" stroke="#64748b" stroke-width="2.4"/><ellipse cx="26" cy="20" rx="4" ry="10" fill="#f8fafc" stroke="#64748b" stroke-width="2.2"/><ellipse cx="38" cy="20" rx="4" ry="10" fill="#f8fafc" stroke="#64748b" stroke-width="2.2"/><circle cx="27" cy="36" r="2.2" fill="#1e293b"/><circle cx="37" cy="36" r="2.2" fill="#1e293b"/></svg>',
+  farm:    '<svg viewBox="0 0 64 64" fill="none"><path d="M10 44 Q32 34 54 44 V54 H10 Z" fill="#facc15" stroke="#ca8a04" stroke-width="2.2"/><circle cx="46" cy="18" r="7" fill="#fbbf24" stroke="#d97706" stroke-width="2"/><path d="M22 40 V24 M16 30 L22 24 L28 30" stroke="#16a34a" stroke-width="3" stroke-linecap="round"/></svg>',
+  rccar:   '<svg viewBox="0 0 64 64" fill="none"><rect x="14" y="20" width="32" height="24" rx="5" fill="#ef4444" stroke="#991b1b" stroke-width="2.4"/><line x1="22" y1="20" x2="22" y2="44" stroke="#fde047" stroke-width="3.5"/><line x1="38" y1="20" x2="38" y2="44" stroke="#fde047" stroke-width="3.5"/><line x1="46" y1="32" x2="58" y2="48" stroke="#b45309" stroke-width="3.5" stroke-linecap="round"/></svg>',
+  race:    '<svg viewBox="0 0 64 64" fill="none"><rect x="10" y="16" width="24" height="14" rx="4" fill="#3b82f6" stroke="#1d4ed8" stroke-width="2"/><rect x="26" y="34" width="28" height="14" rx="4" fill="#ef4444" stroke="#b91c1c" stroke-width="2"/><line x1="8" y1="54" x2="56" y2="54" stroke="#64748b" stroke-width="3" stroke-dasharray="5 4"/></svg>',
+  poster:  '<svg viewBox="0 0 64 64" fill="none"><rect x="12" y="10" width="40" height="44" rx="4" fill="#fffbeb" stroke="#d97706" stroke-width="2.6"/><rect x="18" y="16" width="28" height="7" rx="2" fill="#f97316"/><circle cx="26" cy="34" r="6" fill="#60a5fa"/><rect x="35" y="29" width="11" height="10" rx="2" fill="#4ade80"/></svg>'
 };
 
 /* ========= 双册完整元数据注册表（k1a 一年级上册 + k1b 一年级下册） ========= */
 var VOLUMES = {
   k1a: {
     id: 'k1a', bookIdx: 0, label: '一年级上册', short: '一上',
-    maxPage: 61, maxSpread: 30, pdfOffset: 7, pdfFile: '科学一年级上册.pdf',
+    maxPage: 61,
     progressKey: 'xk_k1a_progress',
     units: {
       u1: { num: '第 1 单元', name: '认识常见的物体', py: 'rèn shi cháng jiàn de wù tǐ', color: '#d97706', cols: 4 },
@@ -922,7 +1104,7 @@ var VOLUMES = {
   },
   k1b: {
     id: 'k1b', bookIdx: 1, label: '一年级下册', short: '一下',
-    maxPage: 64, maxSpread: 32, pdfOffset: 5, pdfFile: '科学一年级下册.pdf',
+    maxPage: 64,
     progressKey: 'xk_k1b_progress',
     units: {
       u1: { num: '第 1 单元', name: '位置和方向',       py: 'wèi zhì hé fāng xiàng',             color: '#d97706', cols: 3 },
@@ -1026,28 +1208,211 @@ var VOLUMES = {
       63: { u:'u4', lid:'k1b-14', pos:'none', sketch:'展演收获与改进反思' },
       64: { u:'u4', label:'第 4 单元小结', pos:'none', sketch:'桥梁与生活单元总结' }
     }
+  },
+  k2a: {
+    id: 'k2a', bookIdx: 2, label: '二年级上册', short: '二上',
+    maxPage: 64,
+    progressKey: 'xk_k2a_progress',
+    units: {
+      u1: { num: '第 1 单元', name: '空气和水',       py: 'kōng qì hé shuǐ',                 color: '#0284c7', cols: 4 },
+      u2: { num: '第 2 单元', name: '感觉器官',       py: 'gǎn jué qì guān',                 color: '#ec4899', cols: 3 },
+      u3: { num: '第 3 单元', name: '不同的季节',     py: 'bù tóng de jì jié',               color: '#16a34a', cols: 4 },
+      u4: { num: '第 4 单元', name: '橡皮筋动力小车', py: 'xiàng pí jīn dòng lì xiǎo chē',   color: '#e56d17', cols: 3 }
+    },
+    unitTabs: [
+      { sp: 0,  label: '目录',        color: '#786c58' },
+      { sp: 1,  label: '1单元 P1–16', color: '#0284c7', min: 1,  max: 8  },
+      { sp: 9,  label: '2单元 P17–30',color: '#ec4899', min: 9,  max: 15 },
+      { sp: 16, label: '3单元 P31–48',color: '#16a34a', min: 16, max: 24 },
+      { sp: 25, label: '4单元 P49–64',color: '#e56d17', min: 25, max: 32 }
+    ],
+    catFilters: [
+      { key: 'all', label: '全部 14 张活页',        color: '#45a86d' },
+      { key: 'u1',  label: '第1单元 · 空气和水',    color: '#0284c7' },
+      { key: 'u2',  label: '第2单元 · 感觉器官',    color: '#ec4899' },
+      { key: 'u3',  label: '第3单元 · 不同的季节',  color: '#16a34a' },
+      { key: 'u4',  label: '第4单元 · 橡皮筋小车',  color: '#e56d17' }
+    ],
+    lessons: [
+      { id:'k2a-01', no:1,  u:'u1', p:'P2–5',   sp:1,  name:'认识空气',               py:'rèn shi kōng qì',                               ico:'air',     tags:['保鲜袋抓空气','扎孔气流吹风车','透杯验透明'], foot:'抓空气 · 吹风车 · 透杯检验' },
+      { id:'k2a-02', no:2,  u:'u1', p:'P6–9',   sp:3,  name:'观察水',                 py:'guān chá shuǐ',                                 ico:'water',   tags:['三异形杯斜看水','俯视平视双视图','安全扇闻法'], foot:'倒水倾斜 · 看水平 · 安全扇闻' },
+      { id:'k2a-03', no:3,  u:'u1', p:'P10–12', sp:5,  name:'往水里加盐',             py:'wǎng shuǐ lǐ jiā yán',                          ico:'salt',    tags:['食盐白糖溶解对比','280px微观放大镜'],           foot:'加盐糖 · 搅拌静置 · 看微粒' },
+      { id:'k2a-04', no:4,  u:'u1', p:'P13–15', sp:7,  name:'往水里加油',             py:'wǎng shuǐ lǐ jiā yóu',                          ico:'oil',     tags:['油浮沙沉实测','汤勺撇浮油','先测后分类'],       foot:'静置分层 · 撇浮油 · 凭据分类' },
+      { id:'k2a-05', no:5,  u:'u2', p:'P18–20', sp:9,  name:'认识感觉器官',           py:'rèn shi gǎn jué qì guān',                       ico:'senses',  tags:['无标签五官推理','色声香味触信号窗'],           foot:'看听闻尝摸 · 五官信号配对' },
+      { id:'k2a-06', no:6,  u:'u2', p:'P21–24', sp:11, name:'运用感觉器官',           py:'yùn yòng gǎn jué qì guān',                      ico:'banana',  tags:['多感官观察香蕉','雪中寻梅','闭眼钢琴找错音'],   foot:'多感官协同 · 单感官破案' },
+      { id:'k2a-07', no:7,  u:'u2', p:'P25–29', sp:13, name:'保护感觉器官',           py:'bǎo hù gǎn jué qì guān',                        ico:'shield',  tags:['五官健康体检诊所','护具替换看恢复'],           foot:'查危害 · 换护具 · 守护五官' },
+      { id:'k2a-08', no:8,  u:'u3', p:'P32–35', sp:16, name:'变化的四季',             py:'biàn huà de sì jì',                             ico:'seasons', tags:['3D公园四季盲猜','查树温衣推季节'],             foot:'采证据 · 猜四季 · 转时光盘' },
+      { id:'k2a-09', no:9,  u:'u3', p:'P36–39', sp:18, name:'季节变化对植物的影响',   py:'jì jié biàn huà duì zhí wù de yǐng xiǎng',      ico:'apple',   tags:['苹果树四季年轮','叶花果特写镜','盲序排卡'],     foot:'转太阳 · 查叶花果 · 排顺序' },
+      { id:'k2a-10', no:10, u:'u3', p:'P40–43', sp:20, name:'季节变化对动物的影响',   py:'jì jié biàn huà duì dòng wù de yǐng xiǎng',     ico:'anim',    tags:['北极兔换冬毛伪装','水牛泡水大雁南飞冬眠'],     foot:'帮动物适应四季 · 保护色与冬眠' },
+      { id:'k2a-11', no:11, u:'u3', p:'P44–47', sp:22, name:'季节变化对人的影响',     py:'jì jié biàn huà duì rén de yǐng xiǎng',         ico:'farm',    tags:['3D农庄四季蜕变','春植夏瓜秋收冬滑冰'],         foot:'顺应农时 · 选对衣食与活动' },
+      { id:'k2a-12', no:12, u:'u4', p:'P50–54', sp:26, name:'制作橡皮筋动力小车',     py:'zhì zuò xiàng pí jīn dòng lì xiǎo chē',         ico:'rccar',   tags:['易拉罐真结构拼装','X光透视拧麻花储能'],        foot:'穿皮筋 · 拧竹棒 · X光看储能' },
+      { id:'k2a-13', no:13, u:'u4', p:'P55–59', sp:28, name:'橡皮筋小车改进与比赛',   py:'xiàng pí jīn xiǎo chē gǎi jìn yǔ bǐ sài',       ico:'race',    tags:['1.0故障诊断改装','5米标尺双车同场竞速'],       foot:'调轮胎 · 增动力 · 2.0赛道竞速' },
+      { id:'k2a-14', no:14, u:'u4', p:'P60–63', sp:30, name:'生活中的科技产品',       py:'shēng huó zhōng de kē jì chǎn pǐn',             ico:'poster',  tags:['科技馆vs自然柜分拣','3D灯箱海报工坊'],         foot:'通电验便利 · 辨人工 · 做海报' }
+    ],
+    pages: {
+      1:  { u:'u1', label:'第 1 单元导语', pos:'none', sketch:'空气和水单元导图' },
+      2:  { u:'u1', lid:'k2a-01', pos:'none', sketch:'雨后公园与空气在哪里导入' },
+      3:  { u:'u1', lid:'k2a-01', file:'k2a-01', pos:'bot', loc:'下半页', act:'保鲜袋抓空气与透视验空气', actPy:'bǎo xiān dài zhuā kōng qì yǔ tòu shì yàn kōng qì', desc:'空中抖袋抓空气、扎孔吹动风车取证，透过玻璃杯验证空气无色透明' },
+      4:  { u:'u1', lid:'k2a-01', pos:'none', sketch:'透明玻璃杯观察空气特征' },
+      5:  { u:'u1', lid:'k2a-01', pos:'none', sketch:'生活中空气存在现象思考' },
+      6:  { u:'u1', lid:'k2a-02', pos:'none', sketch:'观察水导入与异形杯活动' },
+      7:  { u:'u1', lid:'k2a-02', file:'k2a-02', pos:'top', loc:'上半页', act:'异形杯斜看水与安全扇闻', actPy:'yì xíng bēi xié kàn shuǐ yǔ ān quán shān wén', desc:'向三只异形杯倒水并亲手倾斜看水平面，对照牛奶练习安全扇闻法' },
+      8:  { u:'u1', lid:'k2a-02', pos:'none', sketch:'纯净水与牛奶对比及扇闻安全' },
+      9:  { u:'u1', lid:'k2a-02', pos:'none', sketch:'空气和水的共同特征讨论' },
+      10: { u:'u1', lid:'k2a-03', pos:'none', sketch:'汤淡了加盐情境导入' },
+      11: { u:'u1', lid:'k2a-03', file:'k2a-03', pos:'top', loc:'上半页', act:'食盐白糖溶解与微观镜', actPy:'shí yán bái táng róng jiě yǔ wēi guān jìng', desc:'亲手舀盐与白糖搅拌静置，用 280px 微观放大镜看晶体拆成微粒分散' },
+      12: { u:'u1', lid:'k2a-03', pos:'none', sketch:'白糖溶解记录与生活延伸' },
+      13: { u:'u1', lid:'k2a-04', pos:'none', sketch:'煲汤撇油情境与倒油导入' },
+      14: { u:'u1', lid:'k2a-04', file:'k2a-04', pos:'top', loc:'上半页', act:'油沙分层撇油与溶解分类', actPy:'yóu shā fēn céng piē yóu yǔ róng jiě fēn lèi', desc:'实测油浮水面、沙沉杯底，用汤勺撇去浮油并凭实验证据给材料分类' },
+      15: { u:'u1', lid:'k2a-04', pos:'none', sketch:'沙子记录与物质溶解判别' },
+      16: { u:'u1', label:'第 1 单元小结', pos:'none', sketch:'空气和水单元知识回顾' },
+      17: { u:'u2', label:'第 2 单元导语', pos:'none', sketch:'感觉器官单元导图' },
+      18: { u:'u2', lid:'k2a-05', file:'k2a-05', pos:'bot', loc:'下半页', act:'五官感官信号推理连配', actPy:'wǔ guān gǎn guān xìn hào tuī lǐ lián pèi', desc:'把彩花、铃铛、面包、棒棒糖和冰水送到对应感觉器官，触发感官信号窗' },
+      19: { u:'u2', lid:'k2a-05', pos:'none', sketch:'吃糖与洗手感觉器官观察' },
+      20: { u:'u2', lid:'k2a-05', pos:'none', sketch:'五官名称与色香味复习' },
+      21: { u:'u2', lid:'k2a-06', pos:'none', sketch:'古诗《梅花》与多感官导入' },
+      22: { u:'u2', lid:'k2a-06', file:'k2a-06', pos:'top', loc:'上半页', act:'香蕉多感官与寻梅听琴破案', actPy:'xiāng jiāo duō gǎn guān yǔ xún méi tīng qín pò àn', desc:'多感官全面拆解香蕉，再用鼻子雪中寻梅、用耳朵闭眼钢琴听出错音' },
+      23: { u:'u2', lid:'k2a-06', pos:'none', sketch:'钢琴课靠听觉发现错音' },
+      24: { u:'u2', lid:'k2a-06', pos:'none', sketch:'多感官与单感官生活应用' },
+      25: { u:'u2', lid:'k2a-07', pos:'none', sketch:'如何保护感觉器官导入' },
+      26: { u:'u2', lid:'k2a-07', file:'k2a-07', pos:'top', loc:'上半页', act:'五官健康小医生护具诊所', actPy:'wǔ guān jiàn kāng xiǎo yī shēng hù jù zhěn suǒ', desc:'直击五大伤官危险行为的健康透视，亲手换上护具让五官恢复健康' },
+      27: { u:'u2', lid:'k2a-07', pos:'none', sketch:'护鼻行为辨析与讨论' },
+      28: { u:'u2', lid:'k2a-07', pos:'none', sketch:'护舌与护皮肤行为辨析' },
+      29: { u:'u2', lid:'k2a-07', pos:'none', sketch:'保护感觉器官习惯反思' },
+      30: { u:'u2', label:'第 2 单元小结', pos:'none', sketch:'感觉器官单元总结' },
+      31: { u:'u3', label:'第 3 单元导语', pos:'none', sketch:'不同的季节单元导图' },
+      32: { u:'u3', lid:'k2a-08', pos:'none', sketch:'秋高气爽与冬雪情境导入' },
+      33: { u:'u3', lid:'k2a-08', file:'k2a-08', pos:'top', loc:'上半页', act:'公园四季线索盲猜侦探', actPy:'gōng yuán sì jì xiàn suǒ máng cāi zhēn tàn', desc:'在 3D 公园里查树木、看温度计、辨穿着，推理挂上正确的四季木牌' },
+      34: { u:'u3', lid:'k2a-08', pos:'none', sketch:'盲猜春夏图片特征观察' },
+      35: { u:'u3', lid:'k2a-08', pos:'none', sketch:'四季特征观察记录与交流' },
+      36: { u:'u3', lid:'k2a-09', pos:'none', sketch:'春景古诗与植物四季导入' },
+      37: { u:'u3', lid:'k2a-09', file:'k2a-09', pos:'top', loc:'上半页', act:'苹果树四季年轮与盲序卡', actPy:'píng guǒ shù sì jì nián lún yǔ máng xù kǎ', desc:'转动太阳转盘用放大镜观察苹果树叶花果变化，给无字四季标本排序' },
+      38: { u:'u3', lid:'k2a-09', pos:'none', sketch:'秋冬苹果树形态对比' },
+      39: { u:'u3', lid:'k2a-09', pos:'none', sketch:'同一棵树四季排序练习' },
+      40: { u:'u3', lid:'k2a-10', pos:'none', sketch:'北极兔换毛与动物四季导入' },
+      41: { u:'u3', lid:'k2a-10', file:'k2a-10', pos:'top', loc:'上半页', act:'生态山谷动物四季生存帮手', actPy:'shēng tài shān gǔ dòng wù sì jì shēng cún bāng shǒu', desc:'帮水牛泡水、松鼠囤果、大雁南飞、刺猬冬眠与北极兔换白毛躲老鹰' },
+      42: { u:'u3', lid:'k2a-10', pos:'none', sketch:'秋冬动物迁徙囤粮与冬眠' },
+      43: { u:'u3', lid:'k2a-10', pos:'none', sketch:'动物四季行为记录与交流' },
+      44: { u:'u3', lid:'k2a-11', pos:'none', sketch:'二八月乱穿衣与人类活动导入' },
+      45: { u:'u3', lid:'k2a-11', file:'k2a-11', pos:'top', loc:'上半页', act:'四季农庄农事与衣食管家', actPy:'sì jì nóng zhuāng nóng shì yǔ yī shí guǎn jiā', desc:'按四季温度与农田状态挑选农具衣食：春植树、夏吃瓜、秋收稻、冬滑冰' },
+      46: { u:'u3', lid:'k2a-11', pos:'none', sketch:'秋冬收割赏枫与滑冰剪枝' },
+      47: { u:'u3', lid:'k2a-11', pos:'none', sketch:'春种秋收谚语思考区' },
+      48: { u:'u3', label:'第 3 单元小结', pos:'none', sketch:'不同的季节单元回顾' },
+      49: { u:'u4', label:'第 4 单元导语', pos:'none', sketch:'橡皮筋动力小车单元导图' },
+      50: { u:'u4', lid:'k2a-12', pos:'none', sketch:'车辆发展与造车挑战导入' },
+      51: { u:'u4', lid:'k2a-12', pos:'none', sketch:'造车前准备与任务说明' },
+      52: { u:'u4', lid:'k2a-12', pos:'none', sketch:'准备材料与三联橡皮筋步骤' },
+      53: { u:'u4', lid:'k2a-12', file:'k2a-12', pos:'bot', loc:'下半页', act:'易拉罐橡皮筋小车拼装与透视', actPy:'yì lā guàn xiàng pí jīn xiǎo chē pīn zhuāng yǔ tòu shì', desc:'亲手穿皮筋、装纸板竹棒与外圈轮胎，拧竹棒上发条并 X 光看麻花储能' },
+      54: { u:'u4', lid:'k2a-12', pos:'none', sketch:'小车试跑测试与自检表' },
+      55: { u:'u4', lid:'k2a-13', pos:'none', sketch:'发现 1.0 小车问题导入' },
+      56: { u:'u4', lid:'k2a-13', pos:'none', sketch:'确定问题与改进方案记录' },
+      57: { u:'u4', lid:'k2a-13', file:'k2a-13', pos:'bot', loc:'下半页', act:'小车故障诊断改装与双车竞速', actPy:'xiǎo chē gù zhàng zhěn duàn gǎi zhuāng yǔ shuāng chē jìng sù', desc:'诊断 1.0 跑歪打滑与跑不远，改装轮胎动力和纸板后在 5 米赛道双车竞速' },
+      58: { u:'u4', lid:'k2a-13', pos:'none', sketch:'两次比赛成绩记录与发现' },
+      59: { u:'u4', lid:'k2a-13', pos:'none', sketch:'2.0 改进总结与换材思考' },
+      60: { u:'u4', lid:'k2a-14', pos:'none', sketch:'生活中的科技产品导入' },
+      61: { u:'u4', lid:'k2a-14', file:'k2a-14', pos:'bot', loc:'下半页', act:'科技产品分拣与桌面海报工坊', actPy:'kē jì chǎn pǐn fēn jiǎn yǔ zhuō miàn hǎi bào gōng fáng', desc:'通电实测科技产品辨别人工与自然物，在桌面灯箱画板拼制专属科技海报' },
+      62: { u:'u4', lid:'k2a-14', pos:'none', sketch:'科技海报设计提示与示例' },
+      63: { u:'u4', lid:'k2a-14', pos:'none', sketch:'海报交流与科技产品收获' },
+      64: { u:'u4', label:'第 4 单元小结', pos:'none', sketch:'橡皮筋小车与科技产品总结' }
+    }
   }
 };
+/* ========= 卷首手记与每课亲子共探一问 ========= */
+var VOL_INTRO = {
+  k1a: {
+    title: '从身边的物体、生命与天气出发',
+    lead: '用双手去掂轻重、测材料、看花开、观天气、折一架会旋转的纸蜻蜓——每一页手记背后，都有一座可以直接动手玩的 3D 实验台。'
+  },
+  k1b: {
+    title: '辨方向、认生灵、观日月、造纸桥',
+    lead: '从教室方位与校园模型起步，细察花草昆虫，抬头追踪太阳轨迹与月相盈亏，再亲手折出一座能托起硬币的纸桥。'
+  },
+  k2a: {
+    title: '抓空气、调感官、看四季、造动力小车',
+    lead: '用保鲜袋抓一袋看不见的空气，调动五官去破案，看懂四季里的动植物与农时，再亲手拼装并改装一辆橡皮筋动力小车。'
+  }
+};
+var LESSON_NOTES = {
+  'k1a-01': '找两样书桌上的文具：不用尺子，怎样用眼睛看、用手掂，把它们的不同说清楚？',
+  'k1a-02': '同样的几样小物品，先按颜色分、再按大小分，分出来的结果会一样吗？',
+  'k1a-03': '敲一敲、滴一滴水、轻轻弯一弯——如果把课本换成木板或铁板，还能翻页吗？',
+  'k1a-04': '厨房和教室里哪些东西是金属做的？用磁铁靠近，所有金属都会被吸住吗？',
+  'k1a-05': '翻出小时候的照片比一比：人每年都在长高，玩具机器人也会自己长大吗？',
+  'k1a-06': '真正的小狗和电动玩具狗都会跑会叫，怎样判断谁才是真正的“生物”？',
+  'k1a-07': '阳台上的真花和塑料假花长得几乎一样，坚持浇水晒太阳一周后会有什么不同？',
+  'k1a-08': '推开窗户看一看今天的天空：云多不多、风大不大、需要带伞还是戴太阳帽？',
+  'k1a-09': '风看不见也摸不着，红旗飘向哪边、树枝怎么摆动，都在悄悄告诉我们风有多大。',
+  'k1a-10': '突然降温或者下起大雨时，怎样根据天气帮自己挑出最合适的外套与雨具？',
+  'k1a-11': '快下雨前，蚯蚓为什么常会钻出泥土、燕子为什么飞得很低？动植物也有“气象台”。',
+  'k1a-12': '同样是一张长纸条，为什么直接松手会乱飘，剪折成纸蜻蜓就能稳稳旋转下落？',
+  'k1a-13': '如果把纸蜻蜓的翅膀剪长一点、加宽一点，或者把尾巴多折一折，哪一架飞得更久？',
+  'k1a-14': '手撕、小刀和剪刀都能把纸分开，拿放大镜靠近切口看一看，哪一种最整齐省力？',
+  'k1b-01': '站在教室不同位置时，同一个同学一会儿在“前面”、一会儿在“后面”，这是为什么？',
+  'k1b-02': '早晨面向太阳升起的方向伸平双臂，你的背后、左手边和右手边分别是什么方向？',
+  'k1b-03': '从天空俯视自己的校园，教学楼、操场和大门之间怎样摆放，别人一看就懂？',
+  'k1b-04': '小区和校园里的植物各有各的模样：摸摸叶子边缘、用扇闻法闻闻花香，能认出几种？',
+  'k1b-05': '凑近放大镜慢慢前后移动调焦，月季花的花蕊和叶脉里藏着哪些肉眼没看清的细节？',
+  'k1b-06': '蹲下来静静看一只小蚂蚁：它的身体分成几段、长着几条腿，遇到食物会怎么做？',
+  'k1b-07': '海马、猪笼草和铜奔马，哪些需要喝水进食、会生长繁殖？用证据把它们分进三只盘子。',
+  'k1b-08': '太阳落山、星星亮起之后，含羞草的叶子、麻雀和蝙蝠各自在忙些什么？',
+  'k1b-09': '从早晨到傍晚，太阳在天空划过一道弧线，地上大树的影子朝向和太阳正好相反吗？',
+  'k1b-10': '从农历初一到三十，月亮有时像弯钩、有时像玉盘，它的圆缺变化藏着什么规律？',
+  'k1b-11': '只用 5 张普通 A4 纸搭一座能托住硬币的桥，桥墩和桥面该怎么设计才不会塌？',
+  'k1b-12': '一张平纸放上硬币就会弯折，把纸折成波浪或凹槽后再试试，承重能力会变强多少？',
+  'k1b-13': '平桥、石拱桥、斜拉桥和悬索桥各有绝招，遇到宽阔大江时工程师会优先选哪一种？',
+  'k1b-14': '和小伙伴们分工扮演桥梁设计师与小解说员，把你们发现的桥梁秘密演成一场科普剧吧！',
+  'k2a-01': '空气看不见也抓不住，怎样用一只透明保鲜袋和一只小风车，证明它真的就在我们身边？',
+  'k2a-02': '把水倒进高杯、宽杯和异形杯里，慢慢倾斜杯子观察：水面始终保持着怎样的姿势？',
+  'k2a-03': '把一勺食盐倒进清水里搅拌，盐粒好像“不见了”——它们是真的消失，还是变小散开了？',
+  'k2a-04': '同样倒进水里，为什么食用油会浮在水面、沙子沉到杯底，而食盐却均匀融进水里？',
+  'k2a-05': '眼睛看颜色、耳朵听声音、鼻子闻气味、舌头尝味道、皮肤感冷暖，五官各有各的专长。',
+  'k2a-06': '闭上眼睛闻花香、听琴声，只靠一种感官也能破案；多种感官联手，观察会更全面。',
+  'k2a-07': '躺着看书、戴耳机开大音量或凑近刺鼻气味会怎样伤害五官？选对护具给五官做次体检。',
+  'k2a-08': '不用看日历，只看公园里的树叶颜色、温度计读数和行人穿着，你能推理出是哪一季吗？',
+  'k2a-09': '同一棵苹果树在春夏秋冬四副模样截然不同，按发芽、开花、结果、落叶排好它的年轮。',
+  'k2a-10': '天热时水牛爱泡水，入冬前北极兔换白毛、大雁南飞、刺猬冬眠——动物怎样顺应四季？',
+  'k2a-11': '春种、夏耘、秋收、冬藏，农田里的庄稼和我们的衣食活动，都在跟着四季节奏悄悄变换。',
+  'k2a-12': '把橡皮筋穿进易拉罐里拧成麻花，松手后小车就会向前冲——动力究竟藏在哪里？',
+  'k2a-13': '小车跑偏、打滑或者跑不远时别着急，像工程师一样逐项诊断并改装，再去赛道比一比！',
+  'k2a-14': '身边的台灯、电扇、智能手表和石头、树叶有什么不同？辨别科技产品，做张科普海报。'
+};
+
 Object.keys(VOLUMES).forEach(function (vk) {
   var v = VOLUMES[vk];
   v.lmap = {};
-  v.lessons.forEach(function (l) { v.lmap[l.id] = l; });
+  v.lessonSpreadMap = {};
+  v.lessons.forEach(function (l, idx) {
+    v.lmap[l.id] = l;
+    v.lessonSpreadMap[l.id] = idx + 1;
+  });
   v.liveIds = [];
+  v.lessonLabs = {};
+  v.lessonSketches = {};
   Object.keys(v.pages).sort(function (a, b) { return (+a) - (+b); }).forEach(function (ps) {
     var pd = v.pages[ps];
-    if (pd && pd.pos !== 'none' && pd.lid) v.liveIds.push(pd.file || pd.lid);
+    if (!pd) return;
+    if (pd.pos !== 'none' && pd.lid) {
+      v.liveIds.push(pd.file || pd.lid);
+      if (!v.lessonLabs[pd.lid]) v.lessonLabs[pd.lid] = [];
+      v.lessonLabs[pd.lid].push({ p: +ps, pd: pd });
+    } else if (pd.lid && pd.sketch) {
+      if (!v.lessonSketches[pd.lid]) v.lessonSketches[pd.lid] = [];
+      v.lessonSketches[pd.lid].push(pd.sketch);
+    }
   });
+  v.spreadCount = v.lessons.length; // 0 = 目录与卷首手记，1..N = 第 1..N 课对开手记
 });
 
 /* ========= 全局状态 ========= */
 var S = {
-  vol: 'k1a',           // 当前选中分册：'k1a' | 'k1b'
+  vol: 'k1a',           // 当前选中分册：'k1a' | 'k1b' | 'k2a'
   view: 'bag',          // 'bag' | 'catalog'
   bagMode: 'front',     // 'front' | 'side' | 'pulling' | 'book'
   selBook: 0,           // 选中的书索引 0..11
   hoverBook: -1,
-  spread: 0,            // 0..curVol().maxSpread
+  spread: 0,            // 0..curVol().spreadCount
   pyOn: true,
+  soundOn: (function () { try { return localStorage.getItem('xk_sound_on') !== '0'; } catch (e) { return true; } })(),
   filter: 'all'
 };
 function curVol() { return VOLUMES[S.vol] || VOLUMES.k1a; }
@@ -1624,12 +1989,20 @@ function resetShelf() {
 }
 
 /* ========= 书包状态切换（正面 → 纯侧面看书脊 → 书飞起展开） ========= */
+function closeTocDrawer() {
+  var d = $('#tocDrawer'), b = $('#tocPopBtn');
+  if (d) d.classList.remove('show');
+  if (b) b.setAttribute('aria-expanded', 'false');
+}
+
 function setBagMode(mode) {
   if (mode !== 'book') resetShelf();
   S.bagMode = mode;
   var isFront = mode === 'front';
   var isSide = mode === 'side';
   var isBook = mode === 'book';
+  closeTocDrawer();
+  document.body.classList.toggle('book-open', isBook && S.view === 'bag');
   $('#bagHud').hidden = isBook;
   $('#frontCta').hidden = !isFront;
   $('#shelfDock').hidden = !isSide;
@@ -1650,7 +2023,7 @@ function setBagMode(mode) {
   } else if (isBook) {
     bagFadeGoal = 0;
   }
-  if (!isBook) kick3D();
+  if (!isBook) { resize3D(); kick3D(); }
   if (isBook) renderSpread(S.spread, null);
   saveState();
 }
@@ -1667,12 +2040,12 @@ function updateBookSelection(idx) {
     btn.disabled = false;
     btn.classList.add('primary');
     txt.textContent = '抽出并翻开《' + bk.label + '》';
-    $('#shelfInfo').innerHTML = '当前选中：<em>《科学》' + bk.label + '</em>（' + cnt + ' 张 3D 活页已就绪，点书脊就能飞出翻开）';
+    $('#shelfInfo').innerHTML = '当前选中：<em>《科学》' + bk.label + '</em>（' + cnt + ' 个 3D 互动实验已就绪，点书脊就能飞出翻开）';
   } else {
     btn.disabled = true;
     btn.classList.remove('primary');
     txt.textContent = '《' + bk.label + '》待制作';
-    $('#shelfInfo').innerHTML = '当前查看：<em>《科学》' + bk.label + '</em>（敬请期待 · 可点 <em>一年级上册</em> 或 <em>一年级下册</em>）';
+    $('#shelfInfo').innerHTML = '当前查看：<em>《科学》' + bk.label + '</em>（敬请期待 · 可点 <em>一年级上册</em>、<em>一年级下册</em> 或 <em>二年级上册</em>）';
   }
   kick3D();
 }
@@ -1820,23 +2193,7 @@ bookPillsEl.addEventListener('click', function (e) {
   else updateBookSelection(idx);
 });
 
-/* ========= 立体翻书渲染（抽象排版横线 + 真实页码 + 互动格子） ========= */
-function absLinesHtml(cls, sketchLabel) {
-  return '<div class="abs-block ' + (cls || '') + '">' +
-    '<div class="abs-title"></div>' +
-    '<div class="abs-line w90"></div>' +
-    '<div class="abs-line w80"></div>' +
-    '<div class="abs-line w68"></div>' +
-    (sketchLabel ? '<div class="abs-sketch">' + esc(sketchLabel) + '</div>' : '<div class="abs-line w50"></div>') +
-  '</div>';
-}
-
-/* ========= 分册切换 + 独立学习进度与小红花读写（xk_k1a_progress / xk_k1b_progress） ========= */
-var pdfMetaByVol = { k1a: null, k1b: null };
-var builtinPagesByVol = { k1a: true, k1b: true };
-var showRealPdf = true;
-var pdfRenderSeq = 0;
-
+/* ========= 分册切换 + 独立学习进度与小红花读写（xk_k1a_progress / xk_k1b_progress / xk_k2a_progress） ========= */
 function readProgress(volId) {
   var v = VOLUMES[volId || S.vol] || curVol();
   try {
@@ -1856,18 +2213,30 @@ function lessonFlowersFor(lid, volId) {
   });
   return cnt;
 }
+function countVolDone(volId) {
+  var v = VOLUMES[volId || S.vol] || curVol();
+  var p = readProgress(v.id), done = 0;
+  v.liveIds.forEach(function (id) { if (p[id] && p[id].done) done++; });
+  return { done: done, total: v.liveIds.length };
+}
+function nextLiveEntry(v) {
+  var p = readProgress(v.id);
+  var firstEntry = null;
+  for (var i = 0; i < v.lessons.length; i++) {
+    var l = v.lessons[i];
+    var labs = v.lessonLabs[l.id] || [];
+    for (var j = 0; j < labs.length; j++) {
+      var file = labs[j].pd.file || l.id;
+      var item = { lesson: l, lab: labs[j], file: file, sp: i + 1 };
+      if (!firstEntry) firstEntry = item;
+      if (!(p[file] && p[file].done)) return item;
+    }
+  }
+  return firstEntry;
+}
+
 function renderVolChrome() {
   var v = curVol();
-  var cb = $('#crumbBook');
-  if (cb) cb.textContent = v.label;
-  var utb = $('#unitTabBtns');
-  if (utb) {
-    utb.innerHTML = v.unitTabs.map(function (t, i) {
-      return '<button class="utab' + (i === 0 ? ' act' : '') + '" type="button" data-sp="' + t.sp + '"><span class="udot" style="background:' + t.color + '"></span>' + esc(t.label) + '</button>';
-    }).join('');
-  }
-  var pr = $('#pageRange');
-  if (pr) { pr.max = String(v.maxSpread); pr.value = String(Math.min(S.spread, v.maxSpread)); }
   var cf = $('#catFilters');
   if (cf) {
     cf.innerHTML = v.catFilters.map(function (f) {
@@ -1877,7 +2246,12 @@ function renderVolChrome() {
   $$('#catVolTabs .mtab').forEach(function (b) {
     b.setAttribute('aria-pressed', String(b.dataset.vol === v.id));
   });
+  $$('#drawerVols .dvol-btn').forEach(function (b) {
+    b.classList.toggle('act', b.dataset.dvol === v.id);
+  });
+  renderTocDrawer();
 }
+
 function selectVolume(volId, opts) {
   if (!VOLUMES[volId]) return;
   opts = opts || {};
@@ -1889,7 +2263,6 @@ function selectVolume(volId, opts) {
   try { sessionStorage.setItem('xk_last_vol', volId); } catch (e) {}
   renderVolChrome();
   updateProgressUI();
-  syncPdfUi();
   if (!opts.silentRender) {
     if (S.view === 'catalog') renderCatalog();
     if (S.view === 'bag' && S.bagMode === 'book') renderSpread(S.spread, null);
@@ -1939,191 +2312,239 @@ function updateProgressUI() {
   }
 }
 
-function portalHtml(pd, cls) {
-  var v = curVol();
-  var l = v.lmap[pd.lid];
-  var targetFile = pd.file || l.id;
-  var done = isLiveDone(targetFile, v.id);
-  return '<a class="portal-slot ' + (cls || '') + (done ? ' is-done' : '') + '" href="lessons/' + targetFile + '.html" data-open-lesson="' + targetFile + '">' +
-    '<div class="portal-top"><span class="portal-pill">' + (done ? '🌸 已获小红花' : '✦ 3D 活页实验') + '</span><span class="portal-loc">本页' + pd.loc + '</span></div>' +
-    '<div class="portal-mid">' +
-      '<div class="portal-ico" aria-hidden="true">' + ICONS[l.ico] + '</div>' +
-      '<div class="portal-txt">' +
-        '<h4>' + ruby(pd.act, pd.actPy) + '</h4>' +
-        '<p>' + esc(pd.desc) + '</p>' +
+/* ========= 精装科学手记双页渲染（Spread 0 目录+卷首手记；Spread 1..N 本课科学手记+3D实验直接启动） ========= */
+function pad2(n) { return n < 10 ? '0' + n : String(n); }
+
+function renderTocPage(v) {
+  var byUnit = { u1: [], u2: [], u3: [], u4: [] };
+  v.lessons.forEach(function (l, idx) { byUnit[l.u].push({ l: l, sp: idx + 1 }); });
+  var html = '<div class="pg-head">' +
+      '<span class="pg-head-l"><span class="pg-dot" style="background:var(--accent)"></span><span class="pg-kicker">全册目录 · CONTENTS</span></span>' +
+      '<span class="pg-meta">' + v.lessons.length + ' 课 · ' + v.liveIds.length + ' 个 3D 实验</span>' +
+    '</div>' +
+    '<div class="pg-body">' +
+      '<div class="toc-header">' +
+        '<h2 class="toc-title">《科学 · ' + esc(v.label) + '》</h2>' +
+        '<div class="toc-sub">轻点任意课题，翻开科学手记与 3D 互动实验台</div>' +
+      '</div>' +
+      '<div class="toc-list">';
+  ['u1', 'u2', 'u3', 'u4'].forEach(function (uk) {
+    var u = v.units[uk];
+    html += '<div class="toc-u"><i style="background:' + u.color + '"></i><span>' + esc(u.num) + ' · ' + esc(u.name) + '</span></div>';
+    byUnit[uk].forEach(function (item) {
+      var l = item.l;
+      var fc = lessonFlowersFor(l.id, v.id);
+      html += '<button class="toc-item" type="button" data-jump-sp="' + item.sp + '">' +
+        '<span class="toc-item-l"><span class="toc-no">' + pad2(l.no) + '</span><span class="toc-name">' + esc(l.name) + '</span>' +
+        (fc > 0 ? '<span class="toc-fl">' + '🌸'.repeat(fc) + '</span>' : '') + '</span>' +
+        '<span class="tp">' + esc(l.p) + '</span></button>';
+    });
+  });
+  html += '</div></div><div class="pg-foot"><span>' + esc(v.label) + '</span><span>目录</span></div>';
+  return html;
+}
+
+function renderIntroPage(v) {
+  var intro = VOL_INTRO[v.id] || { title: '把科学课本变成可触摸的立体实验台', lead: '每一页科学手记，都配有一座可直接动手操作的 3D 互动实验台。' };
+  var stat = countVolDone(v.id);
+  var firstUnitSp = {};
+  v.lessons.forEach(function (l, idx) { if (!firstUnitSp[l.u]) firstUnitSp[l.u] = idx + 1; });
+  var rec = nextLiveEntry(v);
+  var recDone = rec ? isLiveDone(rec.file, v.id) : false;
+
+  var unitCards = ['u1', 'u2', 'u3', 'u4'].map(function (uk) {
+    var u = v.units[uk];
+    return '<button class="unit-card" type="button" data-jump-sp="' + (firstUnitSp[uk] || 1) + '">' +
+      '<span class="unit-card-dot" style="background:' + u.color + '"></span>' +
+      '<span class="unit-card-txt"><span class="unit-card-num">' + esc(u.num) + '</span><span class="unit-card-name">' + esc(u.name) + '</span></span>' +
+    '</button>';
+  }).join('');
+
+  var launchHtml = '';
+  if (rec) {
+    var rl = rec.lesson, rpd = rec.lab.pd;
+    launchHtml = '<a class="intro-lab-card" href="lessons/' + rec.file + '.html" data-open-lesson="' + rec.file + '">' +
+      '<div class="intro-lab-top">' +
+        '<span class="intro-lab-tag">' + (stat.done === 0 ? '✦ 推荐首个 3D 实验' : (recDone ? '🌸 重温 3D 实验' : '✦ 接着上次继续探索')) + '</span>' +
+        '<span class="pg-meta">第 ' + rl.no + ' 课 · ' + esc(rl.name) + '</span>' +
+      '</div>' +
+      '<div class="intro-lab-mid">' +
+        '<div class="intro-lab-ico" aria-hidden="true">' + ICONS[rl.ico] + '</div>' +
+        '<div class="intro-lab-txt">' +
+          '<h4>' + ruby(rpd.act, rpd.actPy) + '</h4>' +
+          '<p>' + esc(rpd.desc) + '</p>' +
+        '</div>' +
+      '</div>' +
+      '<div class="intro-lab-foot">' +
+        '<span class="lab-hint">' + esc(rl.foot) + '</span>' +
+        '<span class="lab-cta">立即进入 3D 实验 →</span>' +
+      '</div>' +
+    '</a>';
+  }
+
+  return '<div class="pg-head">' +
+      '<span class="pg-head-l"><span class="pg-dot" style="background:var(--accent)"></span><span class="pg-kicker">卷首科学手记</span></span>' +
+      '<span class="pg-meta' + (stat.done > 0 ? ' is-done' : '') + '">🌸 已完成 ' + stat.done + ' / ' + stat.total + '</span>' +
+    '</div>' +
+    '<div class="pg-body">' +
+      '<div class="intro-wrap">' +
+        '<div class="intro-top">' +
+          '<div class="intro-eyebrow">SCIENCE FIELD NOTES · ' + esc(v.label) + '</div>' +
+          '<h2 class="intro-title">' + esc(intro.title) + '</h2>' +
+          '<p class="intro-lead">' + esc(intro.lead) + '</p>' +
+          '<div class="unit-grid">' + unitCards + '</div>' +
+        '</div>' +
+        launchHtml +
       '</div>' +
     '</div>' +
-    '<span class="portal-go">' + (done ? '再去玩一次 →' : '直接动手玩 →') + '</span>' +
-  '</a>';
+    '<div class="pg-foot"><span>离线即玩 · 免登录</span><span>卷首</span></div>';
 }
 
-/* ========= 本地教材 PDF 与内置高清原书页状态（按分册独立管理：k1a / k1b） ========= */
-function curPdfMeta() { return pdfMetaByVol[S.vol] || null; }
-function curHasBuiltin() { return !!builtinPagesByVol[S.vol]; }
-
-function pad3(n) { return String(n).padStart(3, '0'); }
-
-function syncPdfUi(msg) {
-  var v = curVol(), meta = curPdfMeta(), hasBuiltin = curHasBuiltin();
-  var btn = $('#pdfImportBtn'), stat = $('#pdfStat'), tog = $('#pdfToggleBtn'), rem = $('#pdfRemoveBtn'), offRow = $('#pdfOffsetRow'), offVal = $('#pdfOffVal'), qBtn = $('#pdfQuietBtn');
-  if (!btn) return;
-  if (meta) {
-    btn.classList.remove('pdf-need');
-    btn.classList.toggle('pdf-on', showRealPdf);
-    btn.textContent = showRealPdf ? '📄 原书页 ✓' : '📄 占位页';
-    stat.textContent = msg || ('当前使用自定义导入 PDF：' + meta.name + '（' + meta.pages + ' 页，仅存本机）');
-    tog.hidden = false;
-    tog.textContent = showRealPdf ? '切回占位页' : '显示原书页';
-    rem.hidden = false;
-    offRow.hidden = false;
-    if (qBtn) qBtn.hidden = true;
-    var off = meta.offset || 0;
-    offVal.textContent = (off >= 0 ? '+' : '') + off;
-  } else if (hasBuiltin) {
-    btn.classList.remove('pdf-need');
-    btn.classList.toggle('pdf-on', showRealPdf);
-    btn.textContent = showRealPdf ? '📄 原书页 ✓' : '📄 占位页';
-    stat.textContent = msg || ('已内置《科学 ' + v.label + '》高清原书内页（P1–P' + v.maxPage + '，开箱即看）。');
-    tog.hidden = false;
-    tog.textContent = showRealPdf ? '切回占位页' : '显示原书页';
-    rem.hidden = true;
-    offRow.hidden = true;
-    if (qBtn) qBtn.hidden = true;
-  } else {
-    btn.classList.remove('pdf-on');
-    btn.classList.add('pdf-need');
-    btn.textContent = '📄 导入原书 PDF';
-    stat.textContent = msg || ('想看高清原书页？点下方选《' + v.pdfFile + '》（或直接把 PDF 拖到书页上），导入一次永久记住！');
-    tog.hidden = true;
-    rem.hidden = true;
-    offRow.hidden = true;
-    if (qBtn) qBtn.hidden = false;
+function renderLessonNotePage(v, lesson, sp) {
+  var u = v.units[lesson.u];
+  var points = lesson.tags ? lesson.tags.slice() : [];
+  var sketches = v.lessonSketches[lesson.id] || [];
+  for (var i = 0; i < sketches.length && points.length < 3; i++) {
+    var sk = sketches[i].replace(/(导入图|记录区|思考区|交流区|分享区|讨论区)$/g, '').trim();
+    if (sk && points.indexOf(sk) < 0) points.push(sk);
   }
-}
-var pdfPrompted = false;
-function maybeOfferPdf() {
-  if (curPdfMeta() || curHasBuiltin() || pdfPrompted) return;
-  try { if (localStorage.getItem('xk_pdf_quiet') === '1') return; } catch (e) {}
-  pdfPrompted = true;
-  syncPdfUi();
-  setTimeout(function () {
-    if (!curPdfMeta() && !curHasBuiltin() && S.view === 'bag' && S.bagMode === 'book') {
-      $('#pdfPop').classList.add('show');
-    }
-  }, 550);
+  var ptsHtml = points.map(function (pt, idx) {
+    return '<li class="note-pt"><span class="note-pt-idx">' + pad2(idx + 1) + '</span><span class="note-pt-txt">' + esc(pt) + '</span></li>';
+  }).join('');
+  var qText = LESSON_NOTES[lesson.id] || ('结合生活中的常见现象，试着和孩子一起动手验证《' + lesson.name + '》里的科学规律。');
+
+  return '<div class="pg-head">' +
+      '<span class="pg-head-l"><span class="pg-dot" style="background:' + u.color + '"></span><span class="pg-kicker">' + esc(u.num) + ' · ' + esc(u.name) + '</span></span>' +
+      '<span class="pg-meta">第 ' + pad2(lesson.no) + ' 课 · ' + esc(lesson.p) + '</span>' +
+    '</div>' +
+    '<div class="pg-body">' +
+      '<div class="note-wrap">' +
+        '<div class="note-hero">' +
+          '<div class="note-lesson-no">LESSON ' + pad2(lesson.no) + ' · 科学观察手记</div>' +
+          '<h2 class="note-title">' + ruby(lesson.name, lesson.py) + '</h2>' +
+          '<div class="note-rule" style="background:' + u.color + '"></div>' +
+          '<p class="note-sub">' + esc(lesson.foot) + '</p>' +
+        '</div>' +
+        '<div class="note-card">' +
+          '<div class="note-card-hd"><span>本课探究手记</span><span>' + points.length + ' 项核心发现</span></div>' +
+          '<ol class="note-points">' + ptsHtml + '</ol>' +
+        '</div>' +
+        '<div class="note-quote" style="border-left-color:' + u.color + '">' +
+          '<span class="note-quote-lbl">手记一问 · 亲子共探</span>' +
+          '<p>' + esc(qText) + '</p>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="pg-foot"><span>' + esc(v.label) + '</span><span>第 ' + sp + ' 课</span></div>';
 }
 
-function renderSinglePage(pNum, side) {
+function renderLessonLabPage(v, lesson, sp) {
+  var u = v.units[lesson.u];
+  var labs = v.lessonLabs[lesson.id] || [];
+  var allDone = labs.length > 0 && labs.every(function (x) { return isLiveDone(x.pd.file || lesson.id, v.id); });
+  var chips = (lesson.foot || '').split('·').map(function (s) { return s.trim(); }).filter(Boolean);
+  var bodyHtml = '';
+
+  if (labs.length === 1) {
+    var pd = labs[0].pd;
+    var file = pd.file || lesson.id;
+    var done = isLiveDone(file, v.id);
+    bodyHtml = '<div class="lab-wrap">' +
+      '<a class="lab-stage-card' + (done ? ' is-done' : '') + '" href="lessons/' + file + '.html" data-open-lesson="' + file + '">' +
+        '<div class="lab-visual">' +
+          '<span class="lab-badge' + (done ? ' is-done' : '') + '">' + (done ? '🌸 已获小红花' : '✦ 3D 实时交互') + '</span>' +
+          '<div class="lab-medallion" aria-hidden="true">' + ICONS[lesson.ico] + '</div>' +
+        '</div>' +
+        '<div class="lab-info">' +
+          '<h3 class="lab-title">' + ruby(pd.act, pd.actPy) + '</h3>' +
+          '<p class="lab-desc">' + esc(pd.desc) + '</p>' +
+          '<div class="lab-chips">' + chips.map(function (c) { return '<span class="lab-chip">' + esc(c) + '</span>'; }).join('') + '</div>' +
+        '</div>' +
+        '<div class="lab-foot">' +
+          '<span class="lab-hint">点击即可动手操作</span>' +
+          '<span class="lab-cta">' + (done ? '再去玩一次 →' : '启动 3D 互动实验 →') + '</span>' +
+        '</div>' +
+      '</a>' +
+    '</div>';
+  } else if (labs.length >= 2) {
+    bodyHtml = '<div class="lab-dual-wrap">' + labs.map(function (item, idx) {
+      var pd = item.pd;
+      var file = pd.file || lesson.id;
+      var done = isLiveDone(file, v.id);
+      return '<a class="lab-stage-card is-dual' + (done ? ' is-done' : '') + '" href="lessons/' + file + '.html" data-open-lesson="' + file + '">' +
+        '<div class="intro-lab-top">' +
+          '<span class="intro-lab-tag">' + (done ? '🌸 已获小红花' : ('✦ 3D 互动实验 0' + (idx + 1))) + '</span>' +
+          '<span class="pg-meta">P' + item.p + '</span>' +
+        '</div>' +
+        '<div class="lab-dual-row">' +
+          '<div class="lab-medallion" aria-hidden="true">' + ICONS[lesson.ico] + '</div>' +
+          '<div class="lab-info" style="min-width:0;flex:1">' +
+            '<h3 class="lab-title">' + ruby(pd.act, pd.actPy) + '</h3>' +
+            '<p class="lab-desc">' + esc(pd.desc) + '</p>' +
+          '</div>' +
+        '</div>' +
+        '<div class="lab-foot">' +
+          '<span class="lab-hint">3D 实时交互实验台</span>' +
+          '<span class="lab-cta">' + (done ? '再去玩一次 →' : '进入实验 →') + '</span>' +
+        '</div>' +
+      '</a>';
+    }).join('') + '</div>';
+  } else {
+    var fallbackFile = v.liveIds[v.liveIds.length - 1];
+    bodyHtml = '<div class="lab-wrap">' +
+      '<div class="offline-card">' +
+        '<div class="lab-info">' +
+          '<span class="intro-lab-tag" style="align-self:flex-start">✦ 课堂与家庭线下展演</span>' +
+          '<h3 class="lab-title">' + ruby(lesson.name, lesson.py) + '</h3>' +
+          '<p class="lab-desc">本课为小组合作展示活动，适合把前面亲手搭建的纸桥和学到的桥梁结构讲给家人和同学听。</p>' +
+        '</div>' +
+        '<div class="offline-steps">' +
+          '<div class="offline-step"><b>01 角色分工</b>设计师、工程师与小解说员各司其职</div>' +
+          '<div class="offline-step"><b>02 道具登台</b>带上纸桥作品或模型演示承重原理</div>' +
+          '<div class="offline-step"><b>03 互评点赞</b>认真聆听同伴亮点，交流改进办法</div>' +
+          '<div class="offline-step"><b>04 全册回顾</b>翻回目录或换一册继续 3D 科学之旅</div>' +
+        '</div>' +
+        '<div class="lab-foot">' +
+          '<span class="lab-hint">也可以重温上一课 3D 桥梁博物馆</span>' +
+          '<a class="lab-cta" style="text-decoration:none" href="lessons/' + fallbackFile + '.html" data-open-lesson="' + fallbackFile + '">重温 3D 桥梁台 →</a>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  return '<div class="pg-head">' +
+      '<span class="pg-head-l"><span class="pg-dot" style="background:' + u.color + '"></span><span class="pg-kicker">3D 互动实验台</span></span>' +
+      '<span class="pg-meta' + (allDone ? ' is-done' : '') + '">' + (allDone ? '🌸 已获小红花' : (labs.length > 0 ? '可立即动手玩' : '线下互动课')) + '</span>' +
+    '</div>' +
+    '<div class="pg-body">' + bodyHtml + '</div>' +
+    '<div class="pg-foot"><span>离线即玩 · 免登录</span><span>' + sp + ' / ' + v.lessons.length + ' 课</span></div>';
+}
+
+function renderTocDrawer() {
+  var listEl = $('#drawerList');
+  if (!listEl) return;
   var v = curVol();
-  if (pNum === 0) {
-    var byUnit = { u1: [], u2: [], u3: [], u4: [] };
-    v.lessons.forEach(function (l) { byUnit[l.u].push(l); });
-    var html = '<div class="pg-head"><span class="pg-unit-tag" style="background:#e56d17">目 录</span><span class="pg-lesson-tag">点任意一课直接翻页</span></div>' +
-      '<div class="pg-body"><div class="toc-list">';
-    ['u1', 'u2', 'u3', 'u4'].forEach(function (uk) {
-      var u = v.units[uk];
-      html += '<div class="toc-u" style="color:' + u.color + '">' + u.num + ' · ' + u.name + '</div>';
-      byUnit[uk].forEach(function (l) {
-        var fc = lessonFlowersFor(l.id, v.id);
-        html += '<button class="toc-item" type="button" data-jump-sp="' + l.sp + '"><span>' + l.no + '. ' + l.name + (fc > 0 ? ' ' + '🌸'.repeat(fc) : '') + '</span><span class="tp">' + l.p + '</span></button>';
-      });
-    });
-    html += '</div></div><div class="pg-foot"><span>' + v.label + '</span><span>目录</span></div>';
-    return { html: html, isPdf: false };
-  }
-
-  if (pNum > v.maxPage) {
-    var endHtml = '<div class="pg-head"><span class="pg-unit-tag" style="background:#16a34a">全册完</span><span class="pg-lesson-tag">' + v.label + '</span></div>' +
-      '<div class="pg-body"><div class="abs-block span2 row2" style="align-items:center;text-align:center">' +
-        '<div style="font-size:44px">🌸</div>' +
-        '<div style="font-size:18px;font-weight:900;color:#4a3f2f">《科学·' + v.label + '》翻完啦！</div>' +
-        '<div style="font-size:13.5px;color:#7b705e">点左上角“放回书包”可以换另一册继续探索哦</div>' +
-      '</div></div><div class="pg-foot"><span>封底</span><span>粤教科技版</span></div>';
-    return { html: endHtml, isPdf: false };
-  }
-
-  var pd = v.pages[pNum] || { u: 'u1', label: '课本页', pos: 'none' };
-  var u = v.units[pd.u];
-  var l = pd.lid ? v.lmap[pd.lid] : null;
-  var headTitle = l ? ('第 ' + l.no + ' 课 · ' + l.name) : pd.label;
-  var meta = curPdfMeta(), hasBuiltin = curHasBuiltin();
-
-  if (showRealPdf && ((meta && window.__xkPdfBook) || hasBuiltin)) {
-    var posCls = 'on-pdf pos-' + (pd.pos || 'bottom');
-    var overlay = (pd.pos && pd.pos !== 'none' && pd.lid) ? portalHtml(pd, posCls) : '';
-    if (meta && window.__xkPdfBook) {
-      var pdfHtml = '<div class="pdf-loading" data-pdf-loading="' + pNum + '">正在渲染原书第 ' + pNum + ' 页…</div>' +
-        '<img class="pdf-bg" data-pdf-img="' + pNum + '" alt="课本第' + pNum + '页" hidden>' +
-        overlay +
-        '<span class="pdf-pg-chip">原书 P' + pNum + '</span>';
-      return { html: pdfHtml, isPdf: true, pNum: pNum };
-    } else {
-      var imgSrc = 'pages/' + v.id + '/' + pad3(pNum) + '.jpg';
-      var builtinHtml = '<img class="pdf-bg" src="' + imgSrc + '" alt="课本第' + pNum + '页">' +
-        overlay +
-        '<span class="pdf-pg-chip">原书 P' + pNum + '</span>';
-      return { html: builtinHtml, isPdf: true, pNum: pNum };
-    }
-  }
-
-  var body = '';
-  if (pd.pos === 'none') {
-    body = absLinesHtml('span2', pd.sketch || '图文导读区') + absLinesHtml('span2', '阅读与思考横线区');
-  } else if (pd.pos === 'tl') {
-    body = portalHtml(pd) + absLinesHtml('', '插图区') + absLinesHtml('span2', '');
-  } else if (pd.pos === 'tr') {
-    body = absLinesHtml('', '导语区') + portalHtml(pd) + absLinesHtml('span2', '');
-  } else if (pd.pos === 'bl') {
-    body = absLinesHtml('span2', '思考与记录区') + portalHtml(pd) + absLinesHtml('', '');
-  } else if (pd.pos === 'br') {
-    body = absLinesHtml('span2', '思考与记录区') + absLinesHtml('', '') + portalHtml(pd);
-  } else if (pd.pos === 'top') {
-    body = portalHtml(pd, 'span2') + absLinesHtml('span2', '记录与交流横线区');
-  } else {
-    body = absLinesHtml('span2', '问题与观察横线区') + portalHtml(pd, 'span2');
-  }
-
-  return {
-    html: '<div class="pg-head"><span class="pg-unit-tag" style="background:' + u.color + '">' + u.num + '</span><span class="pg-lesson-tag">' + esc(headTitle) + '</span></div>' +
-      '<div class="pg-body">' + body + '</div>' +
-      '<div class="pg-foot"><span>P' + pNum + '</span><span>' + u.name + '</span></div>',
-    isPdf: false
-  };
-}
-
-function hydratePdfSpread(pair, seq) {
-  var v = curVol(), meta = curPdfMeta();
-  if (!meta || !showRealPdf || !window.__xkPdfBook) return;
-  pair.forEach(function (pNum) {
-    if (pNum <= 0 || pNum > v.maxPage) return;
-    window.__xkPdfBook.renderPrintedPage(v.id, pNum, 1080).then(function (url) {
-      if (seq !== pdfRenderSeq) return;
-      var img = document.querySelector('img[data-pdf-img="' + pNum + '"]');
-      var ld = document.querySelector('[data-pdf-loading="' + pNum + '"]');
-      if (url && img) {
-        img.src = url;
-        img.hidden = false;
-        if (ld) ld.hidden = true;
-      } else if (ld) {
-        ld.textContent = 'PDF 超出页码范围（可在右上角微调页码对齐）';
-      }
+  var byUnit = { u1: [], u2: [], u3: [], u4: [] };
+  v.lessons.forEach(function (l, idx) { byUnit[l.u].push({ l: l, sp: idx + 1 }); });
+  var html = '<button class="drawer-item' + (S.spread === 0 ? ' act' : '') + '" type="button" data-drawer-sp="0">' +
+    '<span>📖 全册目录与卷首手记</span><small>' + esc(v.short) + '</small></button>';
+  ['u1', 'u2', 'u3', 'u4'].forEach(function (uk) {
+    var u = v.units[uk];
+    html += '<div class="drawer-u"><i style="background:' + u.color + '"></i><span>' + esc(u.num) + ' · ' + esc(u.name) + '</span></div>';
+    byUnit[uk].forEach(function (item) {
+      var l = item.l;
+      var fc = lessonFlowersFor(l.id, v.id);
+      html += '<button class="drawer-item' + (S.spread === item.sp ? ' act' : '') + '" type="button" data-drawer-sp="' + item.sp + '">' +
+        '<span>' + pad2(l.no) + '. ' + esc(l.name) + (fc > 0 ? ' ' + '🌸'.repeat(fc) : '') + '</span><small>' + esc(l.p) + '</small></button>';
     });
   });
-  [pair[1] + 1, pair[1] + 2].forEach(function (np) {
-    if (np >= 1 && np <= v.maxPage) window.__xkPdfBook.renderPrintedPage(v.id, np, 1080);
-  });
-}
-
-function spreadPages(sp) {
-  if (sp === 0) return [0, 1];
-  return [sp * 2, sp * 2 + 1];
+  listEl.innerHTML = html;
 }
 
 function renderSpread(sp, dir) {
   var v = curVol();
-  sp = Math.max(0, Math.min(v.maxSpread, sp));
+  sp = Math.max(0, Math.min(v.spreadCount, sp));
   S.spread = sp;
-  var pair = spreadPages(sp);
 
   if (dir) {
     var leaf = $('#flipLeaf');
@@ -2131,39 +2552,36 @@ function renderSpread(sp, dir) {
     void leaf.offsetWidth;
     leaf.className = dir;
     sfxFlip();
-    setTimeout(function () { leaf.className = ''; }, 440);
+    setTimeout(function () { leaf.className = ''; }, 400);
   }
 
-  var rL = renderSinglePage(pair[0], 'left');
-  var rR = renderSinglePage(pair[1], 'right');
   var elL = $('#pageLeft'), elR = $('#pageRight');
-  elL.classList.toggle('has-pdf', !!rL.isPdf);
-  elR.classList.toggle('has-pdf', !!rR.isPdf);
-  elL.innerHTML = rL.html;
-  elR.innerHTML = rR.html;
-  pdfRenderSeq++;
-  if (rL.isPdf || rR.isPdf) hydratePdfSpread(pair, pdfRenderSeq);
+  if (sp === 0) {
+    elL.innerHTML = renderTocPage(v);
+    elR.innerHTML = renderIntroPage(v);
+  } else {
+    var lesson = v.lessons[sp - 1];
+    elL.innerHTML = renderLessonNotePage(v, lesson, sp);
+    elR.innerHTML = renderLessonLabPage(v, lesson, sp);
+  }
 
-  var label = pair[0] === 0 ? '目录 / P1' : (pair[1] > v.maxPage ? ('P' + pair[0] + ' / 封底') : ('P' + pair[0] + ' – P' + pair[1]));
-  $('#pgCounter').textContent = label + '（' + (sp + 1) + '/' + (v.maxSpread + 1) + '）';
-  $('#pageRange').max = String(v.maxSpread);
-  $('#pageRange').value = sp;
-
-  var pdL = v.pages[pair[0]], pdR = v.pages[pair[1]];
-  var activeL = (pdL && pdL.lid && v.lmap[pdL.lid]) || (pdR && pdR.lid && v.lmap[pdR.lid]);
-  $('#crumbLesson').textContent = activeL ? ('第 ' + activeL.no + ' 课《' + activeL.name + '》· ' + label) : label;
+  var totalSp = v.spreadCount + 1;
+  var tocLbl = $('#dockTocLabel');
+  if (sp === 0) {
+    $('#pgCounter').textContent = '目录 · 1/' + totalSp;
+    if (tocLbl) tocLbl.textContent = '目录 · ' + v.short;
+  } else {
+    var cl = v.lessons[sp - 1];
+    $('#pgCounter').textContent = (sp + 1) + ' / ' + totalSp;
+    if (tocLbl) tocLbl.textContent = '第 ' + cl.no + ' 课 · ' + (cl.name.length > 6 ? cl.name.slice(0, 6) + '…' : cl.name);
+  }
 
   $('#prevPageBtn').disabled = sp <= 0;
-  $('#nextPageBtn').disabled = sp >= v.maxSpread;
-  $('#mobPrevBtn').disabled = sp <= 0;
-  $('#mobNextBtn').disabled = sp >= v.maxSpread;
-
-  var activeTab = 0;
-  v.unitTabs.forEach(function (t) {
-    if (t.min !== undefined && sp >= t.min && sp <= t.max) activeTab = t.sp;
-  });
-  $$('#unitTabs .utab').forEach(function (t) { t.classList.toggle('act', +t.dataset.sp === activeTab); });
-  maybeOfferPdf();
+  $('#nextPageBtn').disabled = sp >= v.spreadCount;
+  renderTocDrawer();
+  if (dir && window.innerWidth <= 860) {
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
+  }
   saveState();
 }
 
@@ -2199,13 +2617,33 @@ function renderCatalog() {
   wrap.innerHTML = html;
 }
 
-/* ========= 视图模式切换 & 状态记忆 ========= */
+/* ========= 视图模式切换 & 声音/拼音/状态记忆 ========= */
+function syncSoundUI() {
+  var btn = $('#soundBtn'), onI = $('#soundIcoOn'), offI = $('#soundIcoOff');
+  if (!btn) return;
+  btn.setAttribute('aria-pressed', String(S.soundOn));
+  btn.classList.toggle('is-muted', !S.soundOn);
+  btn.title = S.soundOn ? '声音：开（点击静音）' : '声音：关（点击开启）';
+  if (onI) onI.hidden = !S.soundOn;
+  if (offI) offI.hidden = S.soundOn;
+}
+function togglePinyin() {
+  S.pyOn = !S.pyOn;
+  document.body.classList.toggle('no-py', !S.pyOn);
+  var lbl = S.pyOn ? '拼音：开' : '拼音：关';
+  var pb = $('#pyBtn'), dpb = $('#drawerPyBtn');
+  if (pb) { pb.setAttribute('aria-pressed', String(S.pyOn)); pb.textContent = lbl; }
+  if (dpb) dpb.textContent = lbl;
+}
+
 function setViewMode(mode) {
   S.view = mode;
   var isBag = mode === 'bag';
+  closeTocDrawer();
   $('#stageWrap').hidden = !isBag;
   $('#catalogView').hidden = isBag;
   document.body.classList.toggle('stage-locked', isBag);
+  document.body.classList.toggle('book-open', isBag && S.bagMode === 'book');
   $('#tabBag').setAttribute('aria-pressed', String(isBag));
   $('#tabCatalog').setAttribute('aria-pressed', String(!isBag));
   if (isBag) { resize3D(); if (S.bagMode === 'book') renderSpread(S.spread, null); }
@@ -2235,7 +2673,7 @@ function restoreState() {
     if (!qVol && st && st.vol && VOLUMES[st.vol]) {
       selectVolume(st.vol, { resetSpread: false, silentRender: true });
     }
-    if (st && typeof st.spread === 'number') S.spread = Math.max(0, Math.min(curVol().maxSpread, st.spread));
+    if (st && typeof st.spread === 'number') S.spread = Math.max(0, Math.min(curVol().spreadCount, st.spread));
     if (st && st.view === 'catalog') { setViewMode('catalog'); return; }
     if (st && (st.bagMode === 'book' || st.bagMode === 'side')) setBagMode(st.bagMode);
   } catch (e) {}
@@ -2248,29 +2686,43 @@ $('#pullBookBtn').addEventListener('click', function () { pullAndOpenBook(S.selB
 $('#closeBookBtn').addEventListener('click', function () { sfxSlide(); setBagMode('side'); });
 $('#tabBag').addEventListener('click', function () { setViewMode('bag'); });
 $('#tabCatalog').addEventListener('click', function () { setViewMode('catalog'); });
-$('#pyBtn').addEventListener('click', function () {
-  S.pyOn = !S.pyOn;
-  document.body.classList.toggle('no-py', !S.pyOn);
-  this.setAttribute('aria-pressed', String(S.pyOn));
-  this.textContent = S.pyOn ? '拼音：开' : '拼音：关';
+$('#pyBtn').addEventListener('click', togglePinyin);
+$('#drawerPyBtn').addEventListener('click', togglePinyin);
+$('#soundBtn').addEventListener('click', function () {
+  S.soundOn = !S.soundOn;
+  try { localStorage.setItem('xk_sound_on', S.soundOn ? '1' : '0'); } catch (e) {}
+  syncSoundUI();
+  if (S.soundOn) playTone(520, 680, 0.08, 0.04);
 });
-$('#prevPageBtn').addEventListener('click', function () { if (S.spread > 0) renderSpread(S.spread - 1, 'bwd'); });
-$('#nextPageBtn').addEventListener('click', function () { if (S.spread < curVol().maxSpread) renderSpread(S.spread + 1, 'fwd'); });
-$('#mobPrevBtn').addEventListener('click', function () { if (S.spread > 0) renderSpread(S.spread - 1, 'bwd'); });
-$('#mobNextBtn').addEventListener('click', function () { if (S.spread < curVol().maxSpread) renderSpread(S.spread + 1, 'fwd'); });
-$('#pageRange').addEventListener('input', function () {
-  var v = +this.value;
-  renderSpread(v, v > S.spread ? 'fwd' : v < S.spread ? 'bwd' : null);
+$('#tocPopBtn').addEventListener('click', function (e) {
+  e.stopPropagation();
+  var dr = $('#tocDrawer');
+  var open = !dr.classList.contains('show');
+  if (open) renderTocDrawer();
+  dr.classList.toggle('show', open);
+  this.setAttribute('aria-expanded', String(open));
 });
-$('#unitTabs').addEventListener('click', function (e) {
-  var b = e.target.closest('.utab');
+$('#drawerVols').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-dvol]');
   if (!b) return;
-  var sp = +b.dataset.sp;
+  selectVolume(b.dataset.dvol, { resetSpread: true });
+});
+$('#drawerList').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-drawer-sp]');
+  if (!b) return;
+  var sp = +b.dataset.drawerSp;
+  closeTocDrawer();
   renderSpread(sp, sp > S.spread ? 'fwd' : sp < S.spread ? 'bwd' : null);
 });
+$('#prevPageBtn').addEventListener('click', function () { if (S.spread > 0) renderSpread(S.spread - 1, 'bwd'); });
+$('#nextPageBtn').addEventListener('click', function () { if (S.spread < curVol().spreadCount) renderSpread(S.spread + 1, 'fwd'); });
 $('#bookShell').addEventListener('click', function (e) {
   var jump = e.target.closest('[data-jump-sp]');
-  if (jump) { renderSpread(+jump.dataset.jumpSp, 'fwd'); return; }
+  if (jump) {
+    var sp = +jump.dataset.jumpSp;
+    renderSpread(sp, sp > S.spread ? 'fwd' : sp < S.spread ? 'bwd' : null);
+    return;
+  }
   var openL = e.target.closest('[data-open-lesson]');
   if (openL) { saveState(); return; }
 });
@@ -2287,94 +2739,9 @@ $('#catFilters').addEventListener('click', function (e) {
   renderCatalog();
 });
 
-/* ========= 本地导入 PDF 事件（按当前分册独立导入 / 切换 / 微调 / 移除） ========= */
-function handlePdfFile(file) {
-  var v = curVol();
-  if (!file || !/\.pdf$/i.test(file.name || '') && file.type !== 'application/pdf') {
-    syncPdfUi('请选择有效的 PDF 教材文件！');
-    return;
-  }
-  if (!window.__xkPdfBook) {
-    syncPdfUi('PDF 引擎未加载，请刷新页面重试');
-    return;
-  }
-  syncPdfUi('正在本地解析并存入浏览器，请稍候…');
-  window.__xkPdfBook.importFile(v.id, file, { defaultOffset: v.pdfOffset, printedTotal: v.maxPage }).then(function (meta) {
-    pdfMetaByVol[v.id] = meta;
-    showRealPdf = true;
-    syncPdfUi();
-    $('#pdfPop').classList.remove('show');
-    if (S.view === 'bag' && S.bagMode === 'book') renderSpread(S.spread, null);
-  }).catch(function (err) {
-    syncPdfUi('解析失败：' + (err && err.message ? err.message : '请确认文件未加密'));
-  });
-}
-$('#pdfImportBtn').addEventListener('click', function (e) {
-  e.stopPropagation();
-  $('#pdfPop').classList.toggle('show');
-});
-$('#pdfPickBtn').addEventListener('click', function () { $('#pdfFileInput').click(); });
-$('#pdfQuietBtn').addEventListener('click', function () {
-  try { localStorage.setItem('xk_pdf_quiet', '1'); } catch (e) {}
-  $('#pdfPop').classList.remove('show');
-});
-$('#pdfFileInput').addEventListener('change', function () {
-  var f = this.files && this.files[0];
-  this.value = '';
-  if (f) handlePdfFile(f);
-});
-$('#pdfToggleBtn').addEventListener('click', function () {
-  showRealPdf = !showRealPdf;
-  syncPdfUi();
-  if (S.view === 'bag' && S.bagMode === 'book') renderSpread(S.spread, null);
-});
-$('#pdfOffMinus').addEventListener('click', function () {
-  var v = curVol(), meta = curPdfMeta();
-  if (!meta || !window.__xkPdfBook) return;
-  window.__xkPdfBook.setOffset(v.id, (meta.offset || 0) - 1).then(function (m) {
-    if (m) pdfMetaByVol[v.id] = m;
-    syncPdfUi();
-    if (S.view === 'bag' && S.bagMode === 'book') renderSpread(S.spread, null);
-  });
-});
-$('#pdfOffPlus').addEventListener('click', function () {
-  var v = curVol(), meta = curPdfMeta();
-  if (!meta || !window.__xkPdfBook) return;
-  window.__xkPdfBook.setOffset(v.id, (meta.offset || 0) + 1).then(function (m) {
-    if (m) pdfMetaByVol[v.id] = m;
-    syncPdfUi();
-    if (S.view === 'bag' && S.bagMode === 'book') renderSpread(S.spread, null);
-  });
-});
-$('#pdfRemoveBtn').addEventListener('click', function () {
-  var v = curVol();
-  if (!window.__xkPdfBook) return;
-  window.__xkPdfBook.remove(v.id).then(function () {
-    pdfMetaByVol[v.id] = null;
-    syncPdfUi();
-    $('#pdfPop').classList.remove('show');
-    if (S.view === 'bag' && S.bagMode === 'book') renderSpread(S.spread, null);
-  });
-});
-var bookOverlayEl = $('#bookOverlay');
-bookOverlayEl.addEventListener('dragover', function (e) {
-  if (e.dataTransfer && e.dataTransfer.types && Array.from(e.dataTransfer.types).indexOf('Files') !== -1) {
-    e.preventDefault();
-    bookOverlayEl.classList.add('drag-pdf');
-  }
-});
-bookOverlayEl.addEventListener('dragleave', function (e) {
-  if (e.target === bookOverlayEl) bookOverlayEl.classList.remove('drag-pdf');
-});
-bookOverlayEl.addEventListener('drop', function (e) {
-  bookOverlayEl.classList.remove('drag-pdf');
-  var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-  if (f) { e.preventDefault(); handlePdfFile(f); }
-});
-
-/* ========= 顶栏快速搜索（双册全课题 / 页码 / 活页玩法直达） ========= */
+/* ========= 顶栏快速搜索（多册全课题 / 页码 / 活页玩法直达） ========= */
 var SEARCH_INDEX = [];
-['k1a', 'k1b'].forEach(function (vk) {
+Object.keys(VOLUMES).forEach(function (vk) {
   var v = VOLUMES[vk];
   Object.keys(v.pages).sort(function (a, b) { return (+a) - (+b); }).forEach(function (pStr) {
     var pd = v.pages[pStr];
@@ -2385,7 +2752,7 @@ var SEARCH_INDEX = [];
         vol: vk,
         short: v.short,
         p: +pStr,
-        sp: Math.floor((+pStr) / 2),
+        sp: v.lessonSpreadMap[l.id] || 0,
         file: file,
         title: '[' + v.short + '] 第' + l.no + '课 · ' + pd.act,
         sub: 'P' + pStr + ' · ' + l.name,
@@ -2404,12 +2771,15 @@ function updateSearchDrop() {
   if (pm) {
     var v = curVol();
     var pn = Math.max(1, Math.min(v.maxPage, +pm[1]));
-    html += '<button class="sdrop-item" type="button" data-search-sp="' + Math.floor(pn / 2) + '"><span>📖 翻到《' + v.short + '》第 ' + pn + ' 页</span><small>P' + pn + '</small></button>';
+    var pInfo = v.pages[pn];
+    var targetSp = (pInfo && pInfo.lid && v.lessonSpreadMap[pInfo.lid]) ? v.lessonSpreadMap[pInfo.lid] : 0;
+    var targetTitle = targetSp > 0 ? ('第 ' + v.lessons[targetSp - 1].no + ' 课《' + v.lessons[targetSp - 1].name + '》') : '全册目录';
+    html += '<button class="sdrop-item" type="button" data-search-sp="' + targetSp + '"><span>📖 翻到《' + v.short + '》' + esc(targetTitle) + '</span><small>P' + pn + '</small></button>';
   }
   hits.forEach(function (h) {
     html += '<a class="sdrop-item" href="lessons/' + h.file + '.html"><span>' + esc(h.title) + (isLiveDone(h.file, h.vol) ? ' 🌸' : '') + '</span><small>' + esc(h.sub) + '</small></a>';
   });
-  if (!html) html = '<div style="padding:8px 10px;font-size:12.5px;color:#8a7b62">没有找到匹配课目，试试输入“磁铁”“纸桥”“月亮”“P40”</div>';
+  if (!html) html = '<div style="padding:8px 10px;font-size:12.5px;color:#8a7b62">没有找到匹配课目，试试输入“磁铁”“纸桥”“月亮”“空气”</div>';
   searchDrop.innerHTML = html;
   searchDrop.classList.add('show');
 }
@@ -2426,14 +2796,15 @@ searchDrop.addEventListener('click', function (e) {
   }
 });
 document.addEventListener('click', function (e) {
-  if (!e.target.closest('#pdfWrap')) $('#pdfPop').classList.remove('show');
+  if (!e.target.closest('#dockAnchor')) closeTocDrawer();
   if (!e.target.closest('#searchWrap')) searchDrop.classList.remove('show');
 });
 
 window.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape') { closeTocDrawer(); return; }
   if (document.activeElement === searchIn) return;
   if (S.view !== 'bag' || S.bagMode !== 'book') return;
-  if (e.key === 'ArrowRight' && S.spread < curVol().maxSpread) renderSpread(S.spread + 1, 'fwd');
+  if (e.key === 'ArrowRight' && S.spread < curVol().spreadCount) renderSpread(S.spread + 1, 'fwd');
   if (e.key === 'ArrowLeft' && S.spread > 0) renderSpread(S.spread - 1, 'bwd');
 });
 window.addEventListener('resize', resize3D);
@@ -2449,7 +2820,6 @@ window.__hub = {
   renderSpread: renderSpread,
   pullAndOpenBook: pullAndOpenBook,
   updateProgressUI: updateProgressUI,
-  handlePdfFile: handlePdfFile,
   pyErrors: pyErrors,
   info: function () {
     return renderer ? { triangles: renderer.info.render.triangles, looping: looping, pixelRatio: renderer.getPixelRatio(), vol: S.vol } : { webgl: false, vol: S.vol };
@@ -2457,6 +2827,7 @@ window.__hub = {
 };
 
 /* ========= 启动 ========= */
+syncSoundUI();
 renderVolChrome();
 updateProgressUI();
 window.addEventListener('pageshow', function () {
@@ -2468,42 +2839,16 @@ window.addEventListener('focus', function () {
   updateProgressUI();
 });
 window.addEventListener('storage', function (e) {
-  if (e.key === 'xk_k1a_progress' || e.key === 'xk_k1b_progress') {
+  if (e.key === 'xk_k1a_progress' || e.key === 'xk_k1b_progress' || e.key === 'xk_k2a_progress') {
     updateProgressUI();
     renderCatalog();
     if (S.view === 'bag' && S.bagMode === 'book') renderSpread(S.spread, null);
   }
 });
-syncPdfUi();
-// 静默探测各册内置原书页是否存在；若删掉 pages/<vol>/ 则自动优雅回退到占位页
-['k1a', 'k1b'].forEach(function (vk) {
-  var testImg = new Image();
-  testImg.onerror = function () {
-    builtinPagesByVol[vk] = false;
-    if (S.vol === vk) {
-      syncPdfUi();
-      if (!curPdfMeta() && S.view === 'bag' && S.bagMode === 'book') renderSpread(S.spread, null);
-    }
-  };
-  testImg.src = 'pages/' + vk + '/001.jpg';
-});
 init3D();
 resize3D();
 renderCatalog();
 restoreState();
-if (window.__xkPdfBook) {
-  ['k1a', 'k1b'].forEach(function (vk) {
-    window.__xkPdfBook.restore(vk).then(function (meta) {
-      if (meta) {
-        pdfMetaByVol[vk] = meta;
-        if (S.vol === vk) {
-          syncPdfUi();
-          if (S.view === 'bag' && S.bagMode === 'book') renderSpread(S.spread, null);
-        }
-      }
-    });
-  });
-}
 })();
 </script>
 </body>

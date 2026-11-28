@@ -227,8 +227,8 @@ body.interacted .entry-cue{opacity:0;animation:none}
 </div>
 
 <script src="../vendor/three.min.js"></script>
-<script src="../audio/manifest.js"></script>
-<script src="../vendor/voice.js"></script>
+<script src="../audio/manifest.js?v=doubao-2"></script>
+<script src="../vendor/voice.js?v=doubao-2"></script>
 <script>
 (function () {
 'use strict';
@@ -268,9 +268,7 @@ function stopVoice() {
 }
 function speak(text, force) {
   if (!text || (!voiceOn && !force)) return;
-  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
-  if (!('speechSynthesis' in window)) return;
-  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+  if (window.__xkVoice) { window.__xkVoice.speak(text, '../audio/', true); return; }
 }
 var audioCtx = null;
 function playChime(freqs) {

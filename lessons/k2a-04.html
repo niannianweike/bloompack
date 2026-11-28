@@ -1,0 +1,2338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第4课 往水里加油 · 溶解对比与撇油分类实验台</title>
+<style>
+:root{--accent:#d97706;--accent-dark:#b45309;--ink:#231b12;--line:#e4d5ba;--card:rgba(255,253,248,.95)}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#4a311d;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas#cv.grabbing{cursor:grabbing}
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.46em;color:#6e5e48;font-weight:600}
+body.no-py rt{display:none}
+
+/* 左上标题 */
+#hudTL{position:fixed;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:10px;
+  padding:7px 14px 7px 9px;border-radius:16px;background:var(--card);border:1.5px solid var(--line);
+  box-shadow:0 4px 16px rgba(15,23,42,.24)}
+#backBtn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:#5c4b34;font-size:19px;font-weight:900}
+#backBtn:hover{border-color:var(--accent);color:var(--accent)}
+.hd-t{font-size:16px;font-weight:900;line-height:1.5}
+.hd-sub{font-size:11.5px;color:#6b5c48;font-weight:700}
+
+/* 顶部中央动态引导 */
+#guideBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:6;
+  max-width:min(460px,calc(100vw - 630px));display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:15px;background:rgba(255,252,244,.97);
+  border:2px solid var(--accent);box-shadow:0 6px 18px rgba(217,119,6,.24);
+  font-size:13.5px;font-weight:800;color:#78350f;cursor:pointer;line-height:1.38;transition:all .2s}
+#guideBar.flash{transform:translateX(-50%) scale(1.04)}
+#guideBar.unlocked{border-color:#16a34a;background:#f0fdf4;color:#166534}
+
+/* 右上工具条 */
+#hudTR{position:fixed;top:12px;right:12px;z-index:7;display:flex;align-items:center;gap:6px}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:38px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);
+  background:var(--card);font-size:13.5px;font-weight:800;color:#4a3c28;cursor:pointer;
+  box-shadow:0 3px 0 #c8b698;transition:all .14s;white-space:nowrap}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:var(--accent-dark);color:#fff;box-shadow:0 3px 0 var(--accent-dark)}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#fef3c7;border:1.5px solid var(--accent);color:#92400e;font-size:10.5px;font-weight:900;
+  white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(217,119,6,.26);
+  animation:cuePop 1.6s ease-in-out infinite;transition:opacity .25s}
+body.interacted .entry-cue{opacity:0;animation:none}
+@keyframes cuePop{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+
+/* 右上可收起窄版发现栏（D3） */
+#notes{position:fixed;top:60px;right:12px;z-index:6;width:224px;padding:9px 11px;border-radius:15px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 6px 18px rgba(15,23,42,.22)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+.nt-title{font-size:13.5px;font-weight:900}
+.nt-cnt{font-size:12.5px;font-weight:900;color:var(--accent)}
+.nt-tog{padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:11px;font-weight:800;color:#6c5c45;cursor:pointer}
+.stamps{display:flex;gap:4px;margin-bottom:6px}
+.st{flex:1;text-align:center;padding:3px 2px;border-radius:8px;font-size:11px;font-weight:800;
+  border:1.5px dashed #d7c5a4;color:#9b8a70;background:#faf4e8;transition:all .2s;line-height:1.4}
+.st.lit{border-style:solid;border-color:var(--accent);background:#fef3c7;color:#92400e}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList,#notes.collapsed .stamps{display:none}
+#notes.collapsed .nt-head{margin-bottom:0}
+.stk{padding:5px 8px;border-radius:10px;background:#fff;border:1px solid #ece0c9;font-size:12px;font-weight:700;line-height:1.4}
+.stk b{color:#b45309}
+
+/* 左上进度徽章 */
+#scoreBadge{position:fixed;left:14px;top:74px;z-index:5;display:flex;align-items:center;gap:8px;
+  padding:6px 12px;border-radius:99px;background:rgba(255,253,248,.95);border:1.5px solid var(--line);
+  font-size:12.5px;font-weight:900;color:#33271a;box-shadow:0 4px 12px rgba(15,23,42,.18)}
+#scoreBadge span.num{color:#d97706;font-size:13.5px}
+
+/* 左下 2D 三列对比图卡（U11：食盐溶解 / 油浮上层 / 沙石沉底） */
+#compareCard{position:fixed;left:14px;bottom:14px;z-index:5;padding:7px 10px 8px;border-radius:14px;
+  background:rgba(15,23,42,.90);border:1.5px solid rgba(148,163,184,.55);
+  box-shadow:0 8px 24px rgba(0,0,0,.35);color:#f8fafc;width:264px;pointer-events:none}
+.cmp-hd{font-size:11.5px;font-weight:900;color:#fde68a;margin-bottom:5px;display:flex;justify-content:space-between}
+.cmp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.cmp-col{display:flex;flex-direction:column;align-items:center;padding:5px 4px;border-radius:10px;
+  background:rgba(30,41,59,.88);border:1.5px dashed rgba(148,163,184,.45);opacity:.48;transition:all .3s}
+.cmp-col.lit{opacity:1;border-style:solid;border-color:#38bdf8;background:rgba(12,74,110,.65);box-shadow:0 0 12px rgba(56,189,248,.28)}
+.cmp-col.lit.oil{border-color:#fbbf24;background:rgba(120,53,15,.65);box-shadow:0 0 12px rgba(251,191,36,.28)}
+.cmp-col.lit.sink{border-color:#fb923c;background:rgba(67,20,7,.65);box-shadow:0 0 12px rgba(251,146,60,.28)}
+.cmp-col canvas{width:60px;height:56px;display:block}
+.cmp-lbl{margin-top:3px;font-size:10.5px;font-weight:900;text-align:center;line-height:1.25}
+
+/* 3D 名称签、实验徽章与角落小锁徽章（绝不遮挡盘面标题！） */
+#nameTags{position:fixed;inset:0;pointer-events:none;z-index:3}
+.nwrap{position:absolute;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none}
+.ebadge{padding:1px 6px;border-radius:99px;font-size:10.5px;font-weight:900;white-space:nowrap;
+  box-shadow:0 2px 6px rgba(0,0,0,.22);border:1.5px solid #fff;animation:badgePop .35s cubic-bezier(.2,1.5,.4,1)}
+.eb-sol{background:#0284c7;color:#fff}
+.eb-float{background:#d97706;color:#fff}
+.eb-sink{background:#475569;color:#fde68a}
+@keyframes badgePop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+
+.ntag{padding:2px 9px;border-radius:99px;background:rgba(15,23,42,.88);color:#fff;
+  font-size:11.5px;font-weight:800;white-space:nowrap;border:1.5px solid rgba(148,163,184,.55)}
+.ntag.ok{background:rgba(21,128,61,.94);border-color:#86efac}
+.ntag.tool{position:absolute;transform:translate(-50%,-100%);padding:3px 10px;font-size:12px;font-weight:900;
+  background:rgba(12,74,110,.92);color:#fff;border:1.5px solid #7dd3fc;box-shadow:0 3px 10px rgba(0,0,0,.28);transition:opacity .18s}
+.ntag.tool.amber{background:rgba(146,64,14,.94);border-color:#fde68a}
+.ntag.tool.steel{background:rgba(51,65,85,.94);border-color:#cbd5e1}
+.ntag.tool.pulse{box-shadow:0 0 0 2px rgba(251,191,36,.78),0 4px 14px rgba(0,0,0,.32)}
+
+/* 每个托盘右上角迷你锁徽章 + 托盘下方细长提示条（零遮挡盘面「能溶解 / 难溶解」！） */
+.corner-lock{position:absolute;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;
+  display:grid;place-items:center;background:rgba(30,41,59,.92);border:2px solid #e2e8f0;
+  font-size:13px;box-shadow:0 3px 10px rgba(0,0,0,.35);transition:opacity .3s,transform .3s}
+.corner-lock.hide{opacity:0;transform:translate(-50%,-50%) scale(.4)}
+#trayLockHint{position:absolute;transform:translate(-50%,0);padding:3px 11px;border-radius:99px;
+  background:rgba(15,23,42,.86);border:1.5px solid #94a3b8;color:#e2e8f0;font-size:11.5px;font-weight:800;
+  white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.28);transition:opacity .3s,transform .3s}
+#trayLockHint.hide{opacity:0;transform:translate(-50%,8px) scale(.9)}
+
+#labels{position:fixed;inset:0;pointer-events:none;z-index:5}
+.cue3d{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:5px 13px;border-radius:99px;
+  background:#fef3c7;border:2px solid #f59e0b;color:#78350f;font-size:13px;font-weight:900;white-space:nowrap;
+  box-shadow:0 4px 16px rgba(245,158,11,.38);animation:cueBob 1.25s ease-in-out infinite;display:none;pointer-events:none}
+.cue3d.show{display:block}
+@keyframes cueBob{0%,100%{transform:translate(-50%,-100%) translateY(0)}50%{transform:translate(-50%,-100%) translateY(-5px)}}
+
+.popword{position:absolute;transform:translate(-50%,-100%);padding:6px 14px;border-radius:99px;
+  background:rgba(12,74,110,.95);color:#fff;font-size:13.5px;font-weight:800;white-space:nowrap;
+  box-shadow:0 4px 14px rgba(0,0,0,.28);animation:popFloat 2.0s ease-out forwards;pointer-events:none}
+.popword.warn{background:rgba(194,65,12,.96)}
+.popword.good{background:rgba(21,128,61,.96)}
+.popword.gold{background:linear-gradient(135deg,#f59e0b,#d97706);border:2px solid #fef08a;font-size:14.5px;padding:7px 16px}
+@keyframes popFloat{0%{opacity:0;transform:translate(-50%,-70%) scale(.75)}16%{opacity:1;transform:translate(-50%,-110%) scale(1.05)}82%{opacity:1;transform:translate(-50%,-145%) scale(1)}100%{opacity:0;transform:translate(-50%,-185%) scale(.95)}}
+
+/* 温和锁定提醒条 */
+#lockToast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(16px);z-index:8;
+  max-width:min(520px,calc(100vw - 32px));padding:9px 16px;border-radius:16px;
+  background:rgba(255,251,235,.97);border:2px solid #f59e0b;color:#92400e;
+  font-size:13.5px;font-weight:900;box-shadow:0 8px 24px rgba(180,83,9,.28);
+  opacity:0;pointer-events:none;transition:all .24s;text-align:center}
+#lockToast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* 通关弹窗 */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+#winToast{position:fixed;inset:0;z-index:35;display:none;place-items:center;background:rgba(15,23,42,.42);padding:16px}
+#winToast.show{display:grid}
+.win-card{width:min(460px,100%);max-height:86vh;overflow-y:auto;background:#fffdf8;
+  border:2.5px solid var(--accent);border-radius:22px;padding:18px 20px;text-align:center;
+  box-shadow:0 20px 50px rgba(15,23,42,.38)}
+.win-concl{margin:10px 0;padding:10px 12px;border-radius:13px;background:#fef3c7;border:1.5px solid #fcd34d;
+  text-align:left;font-size:13.5px;line-height:1.6;color:#78350f}
+.win-quiz{margin:10px 0;padding:10px 12px;border-radius:13px;background:#f8fafc;border:1.5px solid #cbd5e1;text-align:left}
+.win-quiz h4{margin:0 0 8px;font-size:13.5px;color:#b45309}
+.qopts{display:flex;flex-direction:column;gap:7px}
+.qopt{padding:8px 11px;border-radius:11px;border:1.5px solid #cbd5e1;background:#fff;
+  font-size:13.5px;font-weight:800;text-align:left;cursor:pointer;transition:all .14s;color:#1e293b}
+.qopt:hover{border-color:var(--accent);background:#fffbeb}
+.qopt.ok{border-color:#16a34a;background:#dcfce7;color:#14532d}
+.qopt.bad{border-color:#e03131;background:#fff5f5;color:#c92a2a}
+.qfb{margin-top:7px;font-size:12.5px;font-weight:800;min-height:18px;color:#166534}
+.win-acts{display:flex;justify-content:center;gap:10px;margin-top:12px}
+
+@media (max-width:960px){
+  #guideBar{top:58px;max-width:min(420px,calc(100vw - 260px));font-size:12.5px}
+}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="nameTags">
+  <div class="corner-lock" id="lockSol">🔒</div>
+  <div class="corner-lock" id="lockInsol">🔒</div>
+  <div id="trayLockHint">🔒 先测完 4 种材料，分类盘即刻解锁</div>
+</div>
+<div id="labels">
+  <div class="cue3d" id="targetCue">👆 拖/点「食用油」倒入烧杯</div>
+</div>
+<div id="lockToast">🔒 先把 4 种材料都在烧杯里搅拌、静置实测完，分类盘就会解锁哦！</div>
+
+<!-- 左下 2D 三列对比图卡 -->
+<div id="compareCard">
+  <div class="cmp-hd"><span>🔬 静置现象三列对比</span><span id="cmpCnt">0/3 点亮</span></div>
+  <div class="cmp-grid">
+    <div class="cmp-col" id="cmpSol">
+      <canvas id="cvSol" width="60" height="56"></canvas>
+      <div class="cmp-lbl">食盐<br>均匀溶解</div>
+    </div>
+    <div class="cmp-col oil" id="cmpOil">
+      <canvas id="cvOil" width="60" height="56"></canvas>
+      <div class="cmp-lbl">食用油<br>浮在水面</div>
+    </div>
+    <div class="cmp-col sink" id="cmpSink">
+      <canvas id="cvSink" width="60" height="56"></canvas>
+      <div class="cmp-lbl">沙石<br>沉在杯底</div>
+    </div>
+  </div>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<div id="hudTL">
+  <a id="backBtn" href="../index.html" title="返回书包">‹</a>
+  <div>
+    <div class="hd-t" data-py="dì kè wǎng shuǐ lǐ jiā yóu">第4课 往水里加油</div>
+    <div class="hd-sub">活页 · 课本第 14 页「先实验观察撇油 → 再解锁分类盘」</div>
+  </div>
+</div>
+
+<div id="guideBar" title="点我重听当前步骤">
+  <span id="guideIco">🔬</span>
+  <span id="guideTxt">阶段1：先拖或点左侧的琥珀食用油倒入烧杯，看看油浮在哪儿！</span>
+</div>
+
+<div id="hudTR">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<div id="scoreBadge"><span id="phaseLabel">🔬 实测解锁：</span><span class="num" id="sortNum">0 / 4</span></div>
+
+<aside id="notes">
+  <div class="nt-head">
+    <span class="nt-title" data-py="wǒ de fā xiàn">我的发现</span>
+    <span class="nt-cnt" id="ntCnt">0</span>
+    <button class="nt-tog" id="ntTog" type="button">收起</button>
+  </div>
+  <div class="stamps">
+    <span class="st" id="st1" data-py="piē yóu shí cè">撇油实测</span>
+    <span class="st" id="st2" data-py="sì wù shí cè">四物实测</span>
+    <span class="st" id="st3" data-py="guī pán fēn lèi">归盘分类</span>
+  </div>
+  <div id="ntList"></div>
+</aside>
+
+<div id="winToast">
+  <div class="win-card">
+    <div style="font-size:38px">🏆</div>
+    <h3 style="margin:4px 0;color:#78350f">太棒啦！4 种实测、煲汤撇油与分类全通关！</h3>
+    <div class="win-concl">
+      <b>✨ 科学小结论：</b>不是所有物质都能溶解在水里！<b>食盐</b>能均匀溶解；<b>食用油</b>难溶于水且静置后会浮在水面，所以煲汤时可以用汤勺撇去浮油；<b>细沙和小石子</b>也难溶于水，静置后会沉在杯底。
+    </div>
+    <div class="win-quiz">
+      <h4>💡 考考你 · 答对领小红花 🌸</h4>
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:8px">妈妈煲鸡汤时，汤面漂着一层金黄的浮油，为什么能用汤勺轻松撇掉？</div>
+      <div class="qopts" id="qOpts">
+        <button class="qopt" type="button" data-ok="1">🥄 因为油难溶于水，静置后会浮在汤面</button>
+        <button class="qopt" type="button" data-hint="不对哦！刚才实验里食用油静置后聚成金黄油层浮在水面，并没有溶解在水中！">💧 因为油已经完全溶解在水里了</button>
+        <button class="qopt" type="button" data-hint="再回忆一下刚才的烧杯对比图！沉在杯底的是细沙和小石子，油浮在水面哦！">⛰ 因为油会像小石子一样沉到锅底</button>
+      </div>
+      <div class="qfb" id="qFb"></div>
+    </div>
+    <div class="win-acts">
+      <button class="tbtn" id="winKeepBtn" type="button">继续玩</button>
+      <button class="tbtn on" id="winAgainBtn" type="button">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js?v=doubao-2"></script>
+<script src="../vendor/voice.js?v=doubao-2"></script>
+<script>
+(function () {
+'use strict';
+
+try { sessionStorage.setItem('xk_last_vol', 'k2a'); } catch (e) {}
+
+var LESSON_ID = 'k2a-04';
+var BOOK_PROGRESS_KEY = 'xk_k2a_progress';
+var $ = function (s) { return document.querySelector(s); };
+var $$ = function (s) { return document.querySelectorAll(s); };
+
+/* ===== 精确拼音 ===== */
+var HAN = /[\u3400-\u9fff]/;
+var pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function ruby(text, py) {
+  if (!py) return esc(text);
+  var syl = py.trim().split(/\s+/), i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) {
+      var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; }
+      out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>';
+    } else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+$$('[data-py]').forEach(function (el) { el.innerHTML = ruby(el.textContent, el.dataset.py); });
+
+/* ===== 音效 + 豆包离线语音 ===== */
+var actx = null;
+function beep(freqs, dur) {
+  try {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    var t = actx.currentTime;
+    freqs.forEach(function (f, idx) {
+      var o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'triangle'; o.frequency.setValueAtTime(f, t + idx * 0.08);
+      g.gain.setValueAtTime(0.001, t + idx * 0.08);
+      g.gain.exponentialRampToValueAtTime(0.11, t + idx * 0.08 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.08 + (dur || 0.2));
+      o.connect(g); g.connect(actx.destination);
+      o.start(t + idx * 0.08); o.stop(t + idx * 0.08 + (dur || 0.22));
+    });
+  } catch (e) {}
+}
+
+var voiceOn = true;
+function stopVoice() {
+  if (window.__xkVoice) window.__xkVoice.stop();
+  else if (window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
+}
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text, '../audio/', true); return; }
+}
+
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem(BOOK_PROGRESS_KEY) || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem(BOOK_PROGRESS_KEY, JSON.stringify(d));
+  } catch (e) {}
+}
+
+/* ===== 左下 2D 三列对比图卡 ===== */
+function drawMiniBeaker(cvId, kind) {
+  var c = $(cvId), g = c.getContext('2d');
+  g.clearRect(0, 0, 60, 56);
+  g.fillStyle = 'rgba(56,189,248,0.34)';
+  g.fillRect(13, 17, 34, 33);
+  if (kind === 'sol') {
+    g.fillStyle = '#ffffff';
+    [[19,25],[27,31],[37,23],[41,39],[22,43],[32,44],[30,21],[39,31]].forEach(function (p) {
+      g.beginPath(); g.arc(p[0], p[1], 1.8, 0, Math.PI * 2); g.fill();
+    });
+  } else if (kind === 'oil') {
+    g.fillStyle = '#f59e0b';
+    g.fillRect(13, 14, 34, 9);
+    g.fillStyle = '#fef08a';
+    g.fillRect(15, 16, 28, 2.5);
+  } else {
+    g.fillStyle = '#b45309';
+    g.fillRect(13, 41, 34, 9);
+    g.fillStyle = '#64748b';
+    [[19,44,4],[30,45,4.5],[40,44,3.8]].forEach(function (s) {
+      g.beginPath(); g.arc(s[0], s[1], s[2], 0, Math.PI * 2); g.fill();
+    });
+  }
+  g.strokeStyle = '#bae6fd'; g.lineWidth = 2;
+  g.beginPath();
+  g.moveTo(12, 8); g.lineTo(12, 50); g.lineTo(48, 50); g.lineTo(48, 8);
+  g.stroke();
+}
+drawMiniBeaker('#cvSol', 'sol');
+drawMiniBeaker('#cvOil', 'oil');
+drawMiniBeaker('#cvSink', 'sink');
+
+/* ===== 彩带 ===== */
+var cfCanvas = $('#confetti'), cfCtx = cfCanvas.getContext('2d'), cfParts = [], cfOn = false;
+function fireConfetti() {
+  cfCanvas.width = window.innerWidth; cfCanvas.height = window.innerHeight;
+  cfParts = [];
+  var cols = ['#f59e0b', '#38bdf8', '#22c55e', '#ec4899', '#a855f7', '#fde047'];
+  for (var i = 0; i < 96; i++) {
+    cfParts.push({
+      x: cfCanvas.width * (0.12 + Math.random() * 0.76), y: -15 - Math.random() * 120,
+      vx: (Math.random() - 0.5) * 210, vy: 120 + Math.random() * 200,
+      r: 5 + Math.random() * 5, a: Math.random() * 6.28, va: (Math.random() - 0.5) * 9,
+      c: cols[i % cols.length]
+    });
+  }
+  cfOn = true;
+}
+
+/* ===== Three.js 去塑料感三光 + 深胡桃木桌 + 蓝灰高对比实验垫（U11） ===== */
+var cv = $('#cv');
+var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color('#4a311d');
+var camera = new THREE.PerspectiveCamera(36, 16 / 9, 0.1, 80);
+camera.position.set(0.05, 6.22, 9.18);
+camera.lookAt(-0.04, 0.30, 0.25);
+
+scene.add(new THREE.HemisphereLight('#fff6e9', '#2e1f14', 0.74));
+var keyL = new THREE.DirectionalLight('#fff4e2', 0.88);
+keyL.position.set(-4.6, 11, 6.4);
+keyL.castShadow = true;
+keyL.shadow.mapSize.set(512, 512);
+keyL.shadow.camera.left = -8; keyL.shadow.camera.right = 8;
+keyL.shadow.camera.top = 8; keyL.shadow.camera.bottom = -8;
+keyL.shadow.bias = -0.001;
+scene.add(keyL);
+
+var sideRimL = new THREE.DirectionalLight('#fde68a', 0.36);
+sideRimL.position.set(6, 5.2, -3);
+scene.add(sideRimL);
+
+var ramp = new THREE.DataTexture(new Uint8Array([118,118,118,255, 188,188,188,255, 236,236,236,255, 255,255,255,255]), 4, 1, THREE.RGBAFormat);
+ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+
+function toon(hex, extra) {
+  var o = { color: new THREE.Color(hex), gradientMap: ramp };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshToonMaterial(o);
+}
+function mesh(geo, mat) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+function ctex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c);
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+
+// 细腻黄褐色沙砾质感纹理（彻底告别橙色乐高方块！）
+var fineSandTex = ctex(256, 256, function (g, w, h) {
+  var grd = g.createLinearGradient(0, 0, 0, h);
+  grd.addColorStop(0, '#d8b077');
+  grd.addColorStop(0.55, '#b88547');
+  grd.addColorStop(1, '#8c5d2c');
+  g.fillStyle = grd; g.fillRect(0, 0, w, h);
+  var cols = ['#e6c794', '#c9975a', '#9e6c34', '#7a4f22', '#f0d8aa'];
+  for (var i = 0; i < 4200; i++) {
+    g.fillStyle = cols[i % cols.length];
+    var s = 1 + Math.random() * 2.2;
+    g.fillRect(Math.random() * w, Math.random() * h, s, s);
+  }
+});
+
+// 柔和米白细盐颗粒纹理（加自然明暗阴影与微晶高光，绝不惨白过曝！）
+var fineSaltTex = ctex(256, 256, function (g, w, h) {
+  var grd = g.createLinearGradient(0, 0, 0, h);
+  grd.addColorStop(0, '#f5f6f2');
+  grd.addColorStop(0.55, '#dfe4ea');
+  grd.addColorStop(1, '#b8c4d0');
+  g.fillStyle = grd; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 2600; i++) {
+    g.fillStyle = Math.random() < 0.35 ? 'rgba(130,145,165,0.28)' : 'rgba(255,255,255,0.85)';
+    var s = 1 + Math.random() * 2.1;
+    g.fillRect(Math.random() * w, Math.random() * h, s, s);
+  }
+});
+
+var walnutTex = ctex(512, 512, function (g, w, h) {
+  g.fillStyle = '#5a3a22'; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 95; i++) {
+    g.fillStyle = i % 2 === 0 ? 'rgba(30,15,6,0.13)' : 'rgba(138,94,56,0.08)';
+    g.fillRect(0, Math.random() * h, w, 2 + Math.random() * 5);
+  }
+});
+walnutTex.wrapS = walnutTex.wrapT = THREE.RepeatWrapping; walnutTex.repeat.set(3, 3);
+var deskFloor = new THREE.Mesh(new THREE.PlaneGeometry(55, 55), new THREE.MeshLambertMaterial({ map: walnutTex }));
+deskFloor.rotation.x = -Math.PI / 2; deskFloor.position.y = -0.13; deskFloor.receiveShadow = true;
+scene.add(deskFloor);
+
+var live = new THREE.Group();
+scene.add(live);
+
+// 蓝灰高对比实验垫
+var matTex = ctex(640, 400, function (g, w, h) {
+  g.fillStyle = '#243548'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(148,163,184,0.12)'; g.lineWidth = 1.5;
+  for (var x = 28; x < w; x += 32) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); }
+  for (var y = 28; y < h; y += 32) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+  g.strokeStyle = 'rgba(148,163,184,0.62)'; g.lineWidth = 5; g.strokeRect(10, 10, w - 20, h - 20);
+});
+var labMat = new THREE.Mesh(
+  new THREE.BoxGeometry(9.6, 0.10, 5.8),
+  [toon('#1a2736'), toon('#1a2736'), new THREE.MeshLambertMaterial({ map: matTex }), toon('#1a2736'), toon('#1a2736'), toon('#1a2736')]
+);
+labMat.position.set(0.02, -0.05, 0.35); labMat.receiveShadow = true;
+live.add(labMat);
+
+var HIT_MAT = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false });
+var specVisMeshes = [], specHitMeshes = [], toolVisMeshes = [], toolHitMeshes = [], trayHitMeshes = [];
+var beakerHitMeshes = [], skimHitMeshes = [];
+
+function createCeramicBowl(outerHex, innerHex, lipHex, radius, heightScale) {
+  var r = radius || 0.42;
+  var hs = heightScale || 1.0;
+  var pts = [
+    new THREE.Vector2(0.01, 0.0),
+    new THREE.Vector2(r * 0.56, 0.0),
+    new THREE.Vector2(r * 0.60, 0.035 * hs),
+    new THREE.Vector2(r * 0.85, 0.12 * hs),
+    new THREE.Vector2(r * 0.99, 0.25 * hs),
+    new THREE.Vector2(r * 1.00, 0.33 * hs),
+    new THREE.Vector2(r * 0.92, 0.34 * hs),
+    new THREE.Vector2(r * 0.84, 0.23 * hs),
+    new THREE.Vector2(r * 0.66, 0.11 * hs),
+    new THREE.Vector2(0.01, 0.08 * hs)
+  ];
+  var bowl = mesh(new THREE.LatheGeometry(pts, 30), new THREE.MeshPhongMaterial({
+    color: outerHex, shininess: 78, specular: '#ffffff'
+  }));
+  if (lipHex) {
+    var lip = new THREE.Mesh(
+      new THREE.TorusGeometry(r * 0.96, 0.018, 10, 30),
+      new THREE.MeshPhongMaterial({ color: lipHex, shininess: 95, specular: '#ffffff' })
+    );
+    lip.rotation.x = Math.PI / 2; lip.position.y = 0.335 * hs; bowl.add(lip);
+  }
+  var innerDisk = new THREE.Mesh(
+    new THREE.CircleGeometry(r * 0.82, 24),
+    new THREE.MeshLambertMaterial({ color: innerHex })
+  );
+  innerDisk.rotation.x = -Math.PI / 2; innerDisk.position.y = 0.21 * hs;
+  bowl.add(innerDisk);
+  return bowl;
+}
+
+/* ===== 中央 3D 大清水实验烧杯（带侧光分层线 & 拖拽金色光环）+ 右侧撇油小碗 ===== */
+var BEAKER_POS = new THREE.Vector3(-0.08, 0, -0.78);
+var beakerG = new THREE.Group();
+beakerG.position.copy(BEAKER_POS);
+live.add(beakerG);
+
+var beakerBaseLine = new THREE.Mesh(
+  new THREE.RingGeometry(0.88, 0.94, 36),
+  new THREE.MeshBasicMaterial({ color: '#7dd3fc', transparent: true, opacity: 0.32, side: THREE.DoubleSide, depthWrite: false })
+);
+beakerBaseLine.rotation.x = -Math.PI / 2; beakerBaseLine.position.y = 0.008; beakerG.add(beakerBaseLine);
+
+var beakerRing = new THREE.Mesh(
+  new THREE.RingGeometry(0.96, 1.12, 36),
+  new THREE.MeshBasicMaterial({ color: '#fbbf24', transparent: true, opacity: 0.0, side: THREE.DoubleSide, depthWrite: false })
+);
+beakerRing.rotation.x = -Math.PI / 2; beakerRing.position.y = 0.012; beakerG.add(beakerRing);
+
+var glassMat = new THREE.MeshPhongMaterial({
+  color: '#e0f2fe', transparent: true, opacity: 0.25, shininess: 135,
+  specular: '#ffffff', side: THREE.DoubleSide, depthWrite: false
+});
+var bWall = new THREE.Mesh(new THREE.CylinderGeometry(0.86, 0.82, 1.76, 32, 1, true), glassMat);
+bWall.position.y = 0.91; bWall.renderOrder = 5; beakerG.add(bWall);
+
+var bBottom = new THREE.Mesh(new THREE.CylinderGeometry(0.81, 0.81, 0.06, 28),
+  new THREE.MeshPhongMaterial({ color: '#bae6fd', transparent: true, opacity: 0.40, depthWrite: false }));
+bBottom.position.y = 0.04; beakerG.add(bBottom);
+
+var bRim = new THREE.Mesh(new THREE.TorusGeometry(0.86, 0.032, 12, 32),
+  new THREE.MeshPhongMaterial({ color: '#f0f9ff', transparent: true, opacity: 0.80, shininess: 140, specular: '#ffffff' }));
+bRim.rotation.x = Math.PI / 2; bRim.position.y = 1.79; beakerG.add(bRim);
+
+// 拖拽经过烧杯口时亮起的金色光环
+var beakerRimGlow = new THREE.Mesh(
+  new THREE.TorusGeometry(0.92, 0.048, 12, 36),
+  new THREE.MeshBasicMaterial({ color: '#fbbf24', transparent: true, opacity: 0.0, depthWrite: false })
+);
+beakerRimGlow.rotation.x = Math.PI / 2; beakerRimGlow.position.y = 1.80; beakerRimGlow.renderOrder = 8; beakerG.add(beakerRimGlow);
+
+// 玻璃反光条 + 刻度线
+var bHi = new THREE.Mesh(new THREE.PlaneGeometry(0.11, 1.42),
+  new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.26, depthWrite: false }));
+bHi.position.set(-0.54, 0.94, 0.64); bHi.rotation.y = -0.58; beakerG.add(bHi);
+
+for (var tk = 0; tk < 4; tk++) {
+  var tick = new THREE.Mesh(new THREE.BoxGeometry(tk % 2 === 0 ? 0.26 : 0.16, 0.015, 0.015),
+    new THREE.MeshBasicMaterial({ color: '#e0f2fe', transparent: true, opacity: 0.65 }));
+  tick.position.set(0.38, 0.40 + tk * 0.30, 0.74); tick.rotation.y = 0.44; beakerG.add(tick);
+}
+
+var stratLine = new THREE.Mesh(new THREE.TorusGeometry(0.84, 0.016, 8, 30),
+  new THREE.MeshBasicMaterial({ color: '#fef08a', transparent: true, opacity: 0, depthWrite: false }));
+stratLine.rotation.x = Math.PI / 2; stratLine.position.y = 1.24; beakerG.add(stratLine);
+
+var waterMat = new THREE.MeshPhongMaterial({
+  color: '#38bdf8', transparent: true, opacity: 0.26, shininess: 100,
+  specular: '#e0f2fe', depthWrite: false
+});
+var waterCyl = new THREE.Mesh(new THREE.CylinderGeometry(0.79, 0.75, 1.16, 28), waterMat);
+waterCyl.position.y = 0.66; waterCyl.renderOrder = 2; beakerG.add(waterCyl);
+
+var waterTop = new THREE.Mesh(new THREE.CircleGeometry(0.79, 28),
+  new THREE.MeshPhongMaterial({ color: '#7dd3fc', transparent: true, opacity: 0.40, side: THREE.DoubleSide, depthWrite: false }));
+waterTop.rotation.x = -Math.PI / 2; waterTop.position.y = 1.24; waterTop.renderOrder = 3; beakerG.add(waterTop);
+
+var swirlGroup = new THREE.Group();
+swirlGroup.position.y = 1.255;
+swirlGroup.visible = false;
+[0.22, 0.42, 0.62].forEach(function (rad, idx) {
+  var arc = new THREE.Mesh(
+    new THREE.RingGeometry(rad, rad + 0.04, 24, 1, idx * 1.4, Math.PI * 1.3),
+    new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.78, side: THREE.DoubleSide, depthWrite: false })
+  );
+  arc.rotation.x = -Math.PI / 2;
+  swirlGroup.add(arc);
+});
+beakerG.add(swirlGroup);
+
+// (A) 琥珀金黄浮油层 + 36 颗悬浮油珠
+var oilLayerMat = new THREE.MeshPhongMaterial({
+  color: '#f59e0b', emissive: '#92400e', emissiveIntensity: 0.18,
+  transparent: true, opacity: 0.86, shininess: 140, specular: '#fef9c3'
+});
+var oilLayer = new THREE.Mesh(new THREE.CylinderGeometry(0.78, 0.78, 0.22, 28), oilLayerMat);
+oilLayer.position.y = 1.34; oilLayer.visible = false; oilLayer.renderOrder = 4; beakerG.add(oilLayer);
+
+var oilDrops = [];
+var oilDropGeo = new THREE.SphereGeometry(0.056, 10, 8);
+var oilDropMat = new THREE.MeshPhongMaterial({ color: '#f59e0b', shininess: 120, specular: '#fef08a' });
+for (var oi = 0; oi < 36; oi++) {
+  var od = new THREE.Mesh(oilDropGeo, oilDropMat);
+  od.visible = false; beakerG.add(od);
+  oilDrops.push({
+    m: od, ang: Math.random() * 6.28, r: 0.1 + Math.random() * 0.58,
+    y0: 0.24 + Math.random() * 0.90, spd: 4.0 + Math.random() * 4.0
+  });
+}
+
+// (B) 细腻黄褐细沙底堆 + 36 颗细小沙粒
+var sandLayerMat = new THREE.MeshLambertMaterial({ map: fineSandTex });
+var sandLayer = new THREE.Mesh(new THREE.CylinderGeometry(0.73, 0.74, 0.17, 26), sandLayerMat);
+sandLayer.position.y = 0.16; sandLayer.visible = false; beakerG.add(sandLayer);
+
+var sandGrains = [];
+var sandGeo = new THREE.DodecahedronGeometry(0.032, 0);
+var sandGrainMat = new THREE.MeshLambertMaterial({ color: '#b88547' });
+for (var si = 0; si < 36; si++) {
+  var sg = new THREE.Mesh(sandGeo, sandGrainMat);
+  sg.visible = false; beakerG.add(sg);
+  sandGrains.push({
+    m: sg, ang: Math.random() * 6.28, r: Math.sqrt(Math.random()) * 0.60,
+    yLow: 0.11 + Math.random() * 0.15, yHigh: 0.34 + Math.random() * 0.76, spd: 4.5 + Math.random() * 4.0
+  });
+}
+
+// (C) 柔和米白食盐底堆 + 30 颗细盐粒
+var saltMoundMat = new THREE.MeshLambertMaterial({ map: fineSaltTex, transparent: true, opacity: 0.94 });
+var saltMound = new THREE.Mesh(new THREE.ConeGeometry(0.45, 0.25, 22), saltMoundMat);
+saltMound.position.y = 0.20; saltMound.visible = false; beakerG.add(saltMound);
+
+var saltGrains = [];
+var saltGeo = new THREE.BoxGeometry(0.068, 0.068, 0.068);
+var saltGrainMat = new THREE.MeshPhongMaterial({ color: '#f1f5f9', shininess: 90, specular: '#ffffff' });
+for (var sli = 0; sli < 30; sli++) {
+  var slg = new THREE.Mesh(saltGeo, saltGrainMat);
+  slg.visible = false; beakerG.add(slg);
+  saltGrains.push({
+    m: slg, ang: Math.random() * 6.28, r: Math.sqrt(Math.random()) * 0.50,
+    y0: 0.12 + Math.random() * 0.14, spd: 5.0 + Math.random() * 3.0
+  });
+}
+
+// (D) 自然深灰/褐鹅卵石（10 颗立体重沉杯底）
+var pebbleGroup = new THREE.Group();
+pebbleGroup.visible = false;
+beakerG.add(pebbleGroup);
+var pebCols = ['#475569', '#64748b', '#57534e', '#78716c', '#334155'];
+for (var pi = 0; pi < 10; pi++) {
+  var pa = pi * 0.64;
+  var pr = pi < 3 ? 0.14 : 0.42;
+  var pm = mesh(new THREE.DodecahedronGeometry(0.11 + (pi % 3) * 0.018, 1),
+    new THREE.MeshPhongMaterial({ color: pebCols[pi % pebCols.length], shininess: 35, specular: '#cbd5e1' }));
+  pm.scale.set(1.20, 0.65, 0.92);
+  pm.position.set(Math.cos(pa) * pr, 0.14 + (pi < 3 ? 0.09 : 0), Math.sin(pa) * pr);
+  pm.rotation.set(pi * 0.4, pi * 0.9, pi * 0.2);
+  pebbleGroup.add(pm);
+}
+
+var beakerHit = new THREE.Mesh(new THREE.CylinderGeometry(1.08, 1.04, 2.15, 16), HIT_MAT);
+beakerHit.position.y = 1.05;
+beakerHit.userData.isBeaker = true;
+beakerG.add(beakerHit);
+beakerHitMeshes.push(beakerHit);
+
+var beakerTag = document.createElement('div');
+beakerTag.className = 'ntag tool';
+beakerTag.textContent = '💧 清水实验烧杯';
+$('#nameTags').appendChild(beakerTag);
+
+/* ===== 撇油小碗（釉面陶碗，远离右上 #notes） ===== */
+var SKIM_POS = new THREE.Vector3(1.50, 0.01, -0.42);
+var skimG = new THREE.Group();
+skimG.position.copy(SKIM_POS);
+live.add(skimG);
+
+var skimBowl = createCeramicBowl('#dfd6c5', '#9e8e78', '#d97706', 0.44, 0.95);
+skimG.add(skimBowl);
+
+var skimmedOilDisc = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.36, 0.30, 0.12, 24),
+  new THREE.MeshPhongMaterial({ color: '#f59e0b', emissive: '#92400e', emissiveIntensity: 0.16, shininess: 145, specular: '#fef08a' })
+);
+skimmedOilDisc.position.y = 0.24; skimmedOilDisc.visible = false; skimG.add(skimmedOilDisc);
+
+var skimHit = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.68, 0.78, 12), HIT_MAT);
+skimHit.position.y = 0.35; skimHit.userData.isSkimBowl = true;
+skimG.add(skimHit);
+skimHitMeshes.push(skimHit);
+
+var skimTag = document.createElement('div');
+skimTag.className = 'ntag tool amber';
+skimTag.textContent = '🍲 撇油小碗（空）';
+$('#nameTags').appendChild(skimTag);
+
+/* ===== 右下 2 个分类托盘（锁徽章放右上角，盘面「能溶解 / 难溶解」100% 清晰无遮挡！） ===== */
+var TRAYS = {
+  soluble:   { id: 'soluble',   x: 1.72, z: 1.52, label: '💧 能溶解', rim: '#0ea5e9', fill: '#e0f2fe', slots: [[0, 0.14], [-0.40, 0.16], [0.40, 0.16]], lockEl: '#lockSol' },
+  insoluble: { id: 'insoluble', x: 3.48, z: 1.52, label: '🧱 难溶解', rim: '#f97316', fill: '#ffedd5', slots: [[-0.44, 0.22], [0.02, -0.02], [0.44, 0.22]], lockEl: '#lockInsol' }
+};
+
+Object.keys(TRAYS).forEach(function (k) {
+  var tr = TRAYS[k];
+  var g = new THREE.Group(); g.position.set(tr.x, 0, tr.z); live.add(g);
+  tr.g = g;
+
+  var trayTex = ctex(256, 190, function (c, w, h) {
+    c.fillStyle = tr.fill; c.fillRect(0, 0, w, h);
+    c.strokeStyle = tr.rim; c.lineWidth = 10; c.strokeRect(5, 5, w - 10, h - 10);
+    // 顶部清爽留白标题区（远离右上小锁角标）
+    c.fillStyle = '#0f172a'; c.font = 'bold 34px "Microsoft YaHei",sans-serif'; c.textAlign = 'center';
+    c.fillText(tr.label, w / 2 - 6, 48);
+  });
+  var rimMat = toon(tr.rim, { transparent: true, opacity: 0.62 });
+  var topMat = new THREE.MeshToonMaterial({ map: trayTex, gradientMap: ramp, transparent: true, opacity: 0.62 });
+  tr.mats = [rimMat, topMat];
+
+  var base = mesh(new THREE.BoxGeometry(1.64, 0.11, 1.48), [rimMat, rimMat, topMat, rimMat, rimMat, rimMat]);
+  base.position.y = 0.055; g.add(base);
+  var bN = mesh(new THREE.BoxGeometry(1.64, 0.14, 0.07), rimMat); bN.position.set(0, 0.13, -0.70); g.add(bN);
+  var bW = mesh(new THREE.BoxGeometry(0.07, 0.14, 1.48), rimMat); bW.position.set(-0.78, 0.13, 0); g.add(bW);
+  var bE = mesh(new THREE.BoxGeometry(0.07, 0.14, 1.48), rimMat); bE.position.set(0.78, 0.13, 0); g.add(bE);
+
+  var veilMat = new THREE.MeshBasicMaterial({ color: '#64748b', transparent: true, opacity: 0.14, side: THREE.DoubleSide, depthWrite: false });
+  var veil = new THREE.Mesh(new THREE.PlaneGeometry(1.56, 1.40), veilMat);
+  veil.rotation.x = -Math.PI / 2; veil.position.y = 0.125; g.add(veil);
+  tr.veilMat = veilMat;
+
+  var glow = new THREE.Mesh(new THREE.PlaneGeometry(1.82, 1.64),
+    new THREE.MeshBasicMaterial({ color: tr.rim, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
+  glow.rotation.x = -Math.PI / 2; glow.position.y = 0.138; g.add(glow);
+  tr.glow = glow;
+
+  var hitBox = new THREE.Mesh(new THREE.BoxGeometry(1.84, 0.88, 1.68), HIT_MAT);
+  hitBox.position.y = 0.42;
+  hitBox.userData.trayId = k;
+  g.add(hitBox);
+  trayHitMeshes.push(hitBox);
+});
+
+/* ===== 左侧 4 种精雕写实 3D 实测样品（无厚重圆盘底座！） ===== */
+var SPECIMENS = [];
+
+function createSpecimen(def, buildFn) {
+  var g = new THREE.Group();
+  g.position.set(def.homeX, 0.01, def.homeZ);
+  live.add(g);
+
+  // 极简实验垫细线圆圈（去掉笨重彩色圆盘）
+  var markLine = new THREE.Mesh(
+    new THREE.RingGeometry(0.45, 0.48, 32),
+    new THREE.MeshBasicMaterial({ color: def.ringCol, transparent: true, opacity: 0.38, side: THREE.DoubleSide, depthWrite: false })
+  );
+  markLine.rotation.x = -Math.PI / 2; markLine.position.set(def.homeX, 0.008, def.homeZ); live.add(markLine);
+
+  var ring = new THREE.Mesh(
+    new THREE.RingGeometry(0.49, 0.59, 32),
+    new THREE.MeshBasicMaterial({ color: '#fbbf24', transparent: true, opacity: 0.0, side: THREE.DoubleSide, depthWrite: false })
+  );
+  ring.rotation.x = -Math.PI / 2; ring.position.y = 0.012; g.add(ring);
+
+  var modelG = new THREE.Group(); g.add(modelG);
+  buildFn(modelG);
+
+  var hitSph = new THREE.Mesh(new THREE.SphereGeometry(0.60, 12, 10), HIT_MAT);
+  hitSph.position.y = 0.36; hitSph.userData.isHitHelper = true;
+  modelG.add(hitSph);
+
+  var wrap = document.createElement('div');
+  wrap.className = 'nwrap';
+  var badgeRow = document.createElement('div');
+  var tag = document.createElement('div');
+  tag.className = 'ntag';
+  tag.textContent = def.name;
+  wrap.appendChild(badgeRow);
+  wrap.appendChild(tag);
+  $('#nameTags').appendChild(wrap);
+
+  var sp = {
+    id: def.id, name: def.name, cat: def.cat,
+    homeX: def.homeX, homeZ: def.homeZ,
+    goalX: def.homeX, goalZ: def.homeZ, goalY: 0.01,
+    tray: null, tested: false,
+    g: g, model: modelG, ring: ring,
+    badgeRowEl: badgeRow, tagEl: tag, wrapEl: wrap,
+    badgeText: def.badgeText, badgeCls: def.badgeCls,
+    wrongVoice: def.wrongVoice, okVoice: def.okVoice,
+    wobbleT: 0, tiltT: 0
+  };
+  modelG.traverse(function (ch) {
+    if (ch.isMesh) {
+      ch.userData.specRef = sp;
+      if (ch.userData.isHitHelper) specHitMeshes.push(ch);
+      else specVisMeshes.push(ch);
+    }
+  });
+  SPECIMENS.push(sp);
+  return sp;
+}
+
+// ① 食用油：精致透明玻璃小量杯 + 半杯琥珀金黄透亮液面 + 清晰高光与刻度线！
+createSpecimen({
+  id: 'oil', name: '食用油', cat: 'insoluble', homeX: -3.55, homeZ: -0.95, ringCol: '#f59e0b',
+  badgeText: '浮在水面·难溶', badgeCls: 'eb-float',
+  wrongVoice: '再想想刚才烧杯里的现象！食用油静置后全浮在水面，还能用汤勺撇出来，它难溶于水哦！',
+  okVoice: '分对啦！食用油浮在水面很难溶解，放进难溶解盘！'
+}, function (m) {
+  var cupGlass = new THREE.MeshPhongMaterial({
+    color: '#f0f9ff', transparent: true, opacity: 0.34, shininess: 150,
+    specular: '#ffffff', side: THREE.DoubleSide, depthWrite: false
+  });
+  var cupWall = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.28, 0.62, 28, 1, true), cupGlass);
+  cupWall.position.y = 0.33; cupWall.renderOrder = 4; m.add(cupWall);
+  var cupBot = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.04, 24),
+    new THREE.MeshPhongMaterial({ color: '#e0f2fe', transparent: true, opacity: 0.52, shininess: 130 }));
+  cupBot.position.y = 0.03; m.add(cupBot);
+  var cupRim = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.020, 10, 28),
+    new THREE.MeshPhongMaterial({ color: '#ffffff', transparent: true, opacity: 0.80, shininess: 160 }));
+  cupRim.rotation.x = Math.PI / 2; cupRim.position.y = 0.64; m.add(cupRim);
+  // 精致玻璃倒油嘴 + 玻璃小耳柄
+  var handle = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.024, 10, 18, Math.PI * 1.1),
+    new THREE.MeshPhongMaterial({ color: '#e0f2fe', transparent: true, opacity: 0.70, shininess: 150, specular: '#ffffff' }));
+  handle.position.set(0.33, 0.36, 0); handle.rotation.z = -Math.PI * 0.55; m.add(handle);
+  // 琥珀金黄透亮食用油液柱 + 高光液面
+  var oilMat = new THREE.MeshPhongMaterial({
+    color: '#f59e0b', emissive: '#78350f', emissiveIntensity: 0.14,
+    transparent: true, opacity: 0.80, shininess: 150, specular: '#fef9c3'
+  });
+  var oilBody = mesh(new THREE.CylinderGeometry(0.305, 0.26, 0.33, 24), oilMat);
+  oilBody.position.y = 0.21; oilBody.renderOrder = 2; m.add(oilBody);
+  var oilTop = new THREE.Mesh(new THREE.CircleGeometry(0.305, 24),
+    new THREE.MeshPhongMaterial({ color: '#fbbf24', transparent: true, opacity: 0.92, shininess: 180, specular: '#ffffff' }));
+  oilTop.rotation.x = -Math.PI / 2; oilTop.position.y = 0.376; oilTop.renderOrder = 3; m.add(oilTop);
+  // 玻璃量杯刻度线与高光
+  for (var i = 0; i < 3; i++) {
+    var tick = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.012, 0.012),
+      new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.72 }));
+    tick.position.set(0.12, 0.20 + i * 0.14, 0.31); tick.rotation.y = 0.32; m.add(tick);
+  }
+  var hi = new THREE.Mesh(new THREE.PlaneGeometry(0.06, 0.46),
+    new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.38, depthWrite: false }));
+  hi.position.set(-0.20, 0.34, 0.24); hi.rotation.y = -0.6; m.add(hi);
+});
+
+// ② 细沙：深褐陶碗 + 细腻黄褐色圆锥沙堆（带砂砾质感 CanvasTexture + 微细沙粒，绝无大橙方块！）
+createSpecimen({
+  id: 'sand', name: '细沙', cat: 'insoluble', homeX: -2.05, homeZ: -0.95, ringCol: '#d97706',
+  badgeText: '沉在杯底·难溶', badgeCls: 'eb-sink',
+  wrongVoice: '回忆一下刚才的沙漏静置实验！细沙静置后全部沉在杯底，并没有溶解在水里哦！',
+  okVoice: '正确！细沙静置后沉在杯底，属于难溶解盘！'
+}, function (m) {
+  var bowl = createCeramicBowl('#6e3f24', '#4d2b17', '#8c5534', 0.43, 0.96);
+  m.add(bowl);
+  var heap = mesh(new THREE.ConeGeometry(0.37, 0.25, 28), new THREE.MeshLambertMaterial({ map: fineSandTex }));
+  heap.position.y = 0.34; m.add(heap);
+  var specCols = ['#d8b077', '#a9763c', '#e6c794', '#845728'];
+  for (var i = 0; i < 18; i++) {
+    var a = i * 2.399;
+    var r = 0.05 + (i / 18) * 0.28;
+    var gr = new THREE.Mesh(new THREE.DodecahedronGeometry(0.022 + (i % 3) * 0.004, 0),
+      new THREE.MeshLambertMaterial({ color: specCols[i % specCols.length] }));
+    gr.position.set(Math.cos(a) * r, 0.45 - r * 0.54, Math.sin(a) * r);
+    gr.rotation.set(i, i * 0.7, 0);
+    m.add(gr);
+  }
+});
+
+// ③ 食盐：深海蓝瓷碗衬托柔和米白圆锥盐堆（加明暗阴影与微晶高光，绝不惨白过曝！）
+createSpecimen({
+  id: 'salt', name: '食盐', cat: 'soluble', homeX: -3.55, homeZ: 0.38, ringCol: '#38bdf8',
+  badgeText: '均匀分散·能溶', badgeCls: 'eb-sol',
+  wrongVoice: '再想想刚才食盐的实验！搅拌静置后食盐完全看不见、水清澈无沉淀，它是能溶解的哦！',
+  okVoice: '太棒了！食盐均匀分散在水里，放进能溶解盘完全正确！'
+}, function (m) {
+  var bowl = createCeramicBowl('#1e3a5f', '#132742', '#93c5fd', 0.43, 0.96);
+  m.add(bowl);
+  var heap = mesh(new THREE.ConeGeometry(0.37, 0.25, 28), new THREE.MeshLambertMaterial({ map: fineSaltTex }));
+  heap.position.y = 0.34; m.add(heap);
+  var crMat = new THREE.MeshPhongMaterial({ color: '#f8fafc', shininess: 130, specular: '#ffffff' });
+  for (var i = 0; i < 14; i++) {
+    var a = i * 2.399 + 0.3;
+    var r = 0.06 + (i / 14) * 0.25;
+    var cr = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.028, 0.028), crMat);
+    cr.position.set(Math.cos(a) * r, 0.45 - r * 0.54, Math.sin(a) * r);
+    cr.rotation.set(i * 0.8, i * 1.1, 0);
+    m.add(cr);
+  }
+});
+
+// ④ 小石子：浅灰陶盘盛 6 颗不规则多面体深灰/浅褐鹅卵石！
+createSpecimen({
+  id: 'pebble', name: '小石子', cat: 'insoluble', homeX: -2.05, homeZ: 0.38, ringCol: '#94a3b8',
+  badgeText: '沉在杯底·难溶', badgeCls: 'eb-sink',
+  wrongVoice: '小石子放进水里搅拌都不动，静置后稳稳沉在杯底，它很难溶解在水里哦！',
+  okVoice: '放对啦！小石子稳沉杯底，放进难溶解盘！'
+}, function (m) {
+  var dish = createCeramicBowl('#94a3b8', '#64748b', '#cbd5e1', 0.45, 0.72);
+  m.add(dish);
+  var stones = [
+    [-0.17, 0.23,  0.10, 0.11, [1.22, 0.62, 0.92], '#475569'],
+    [ 0.15, 0.22,  0.09, 0.10, [1.10, 0.68, 0.95], '#78716c'],
+    [-0.02, 0.23, -0.15, 0.11, [1.28, 0.60, 0.88], '#334155'],
+    [ 0.16, 0.24, -0.12, 0.09, [1.05, 0.72, 1.12], '#64748b'],
+    [-0.18, 0.24, -0.11, 0.09, [1.15, 0.65, 0.90], '#57534e'],
+    [ 0.01, 0.32,  0.02, 0.10, [1.18, 0.62, 0.94], '#8b8178']
+  ];
+  stones.forEach(function (s, idx) {
+    var st = mesh(new THREE.DodecahedronGeometry(s[3], 1),
+      new THREE.MeshPhongMaterial({ color: s[5], shininess: 32, specular: '#cbd5e1' }));
+    st.scale.set(s[4][0], s[4][1], s[4][2]);
+    st.position.set(s[0], s[1], s[2]);
+    st.rotation.set(idx * 0.5, idx * 1.1, idx * 0.3);
+    m.add(st);
+  });
+});
+
+function setSpecBadge(sp) {
+  if (sp.badgeRowEl.children.length > 0) return;
+  var b = document.createElement('span');
+  b.className = 'ebadge ' + sp.badgeCls;
+  b.textContent = sp.badgeText;
+  sp.badgeRowEl.appendChild(b);
+}
+
+/* ===== 前排 3 件精雕 3D 实验工具（零臃肿彩色圆盘底座！） ===== */
+var TOOLS = {};
+function registerTool(id, grp, homePos, ringCol, tagText, tagY, extraCls, stationR) {
+  var sr = stationR || 0.44;
+  var markLine = new THREE.Mesh(
+    new THREE.RingGeometry(sr, sr + 0.030, 32),
+    new THREE.MeshBasicMaterial({ color: ringCol, transparent: true, opacity: 0.36, side: THREE.DoubleSide, depthWrite: false })
+  );
+  markLine.rotation.x = -Math.PI / 2; markLine.position.set(homePos.x, 0.008, homePos.z); live.add(markLine);
+
+  var padRing = new THREE.Mesh(
+    new THREE.RingGeometry(sr + 0.04, sr + 0.13, 32),
+    new THREE.MeshBasicMaterial({ color: '#fbbf24', transparent: true, opacity: 0.0, side: THREE.DoubleSide, depthWrite: false })
+  );
+  padRing.rotation.x = -Math.PI / 2; padRing.position.set(homePos.x, 0.012, homePos.z); live.add(padRing);
+
+  var hitSph = new THREE.Mesh(new THREE.SphereGeometry(0.64, 12, 10), HIT_MAT);
+  hitSph.position.y = 0.42; hitSph.userData.isHitHelper = true;
+  grp.add(hitSph);
+
+  grp.position.copy(homePos);
+  live.add(grp);
+
+  var tag = document.createElement('div');
+  tag.className = 'ntag tool' + (extraCls ? ' ' + extraCls : '');
+  tag.textContent = tagText;
+  $('#nameTags').appendChild(tag);
+
+  var rec = {
+    id: id, g: grp, home: homePos.clone(), goal: homePos.clone(),
+    padRing: padRing, tagEl: tag, tagY: tagY || 1.10, flipT: 0, skimAnimT: 0
+  };
+  grp.traverse(function (ch) {
+    if (ch.isMesh) {
+      ch.userData.toolRef = rec;
+      if (ch.userData.isHitHelper) toolHitMeshes.push(ch);
+      else toolVisMeshes.push(ch);
+    }
+  });
+  TOOLS[id] = rec;
+  return rec;
+}
+
+// 1. 🔄 玻璃搅拌棒（高硼硅细长玻璃棒 + 圆形端头 + 蓝色硅胶环，避让小石子盘）
+(function buildRod() {
+  var g = new THREE.Group();
+  var rodGlass = new THREE.MeshPhongMaterial({
+    color: '#d6f0ff', transparent: true, opacity: 0.72, shininess: 160, specular: '#ffffff'
+  });
+  var coreMat = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.42 });
+  var rodAssembly = new THREE.Group();
+  rodAssembly.rotation.z = -0.18;
+  g.add(rodAssembly);
+
+  var shaft = mesh(new THREE.CylinderGeometry(0.035, 0.035, 1.16, 16), rodGlass);
+  shaft.position.y = 0.61; rodAssembly.add(shaft);
+  var innerCore = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, 1.12, 10), coreMat);
+  innerCore.position.y = 0.61; rodAssembly.add(innerCore);
+  var topCap = mesh(new THREE.SphereGeometry(0.037, 12, 10), rodGlass);
+  topCap.position.y = 1.19; rodAssembly.add(topCap);
+  var botCap = mesh(new THREE.SphereGeometry(0.037, 12, 10), rodGlass);
+  botCap.position.y = 0.03; rodAssembly.add(botCap);
+  var band = mesh(new THREE.TorusGeometry(0.043, 0.013, 8, 16), toon('#0ea5e9'));
+  band.rotation.x = Math.PI / 2; band.position.y = 1.00; rodAssembly.add(band);
+
+  registerTool('rod', g, new THREE.Vector3(-2.46, 0.02, 2.04), '#38bdf8', '🔄 搅拌棒', 1.28, '', 0.38);
+})();
+
+// 2. ⏳ 3D 沙漏（合比例胡桃木 + 黄铜支柱 + 束腰双泡玻璃 + 细金沙，中心枢轴翻转绝不穿地！）
+var sandTopCone = null, sandBotCone = null, sandStream = null, hgPivot = null;
+(function buildHourglass() {
+  var g = new THREE.Group();
+  hgPivot = new THREE.Group();
+  hgPivot.position.y = 0.405;
+  g.add(hgPivot);
+
+  var woodMat = new THREE.MeshPhongMaterial({ color: '#784826', shininess: 42, specular: '#d4a259' });
+  var brassMat = new THREE.MeshPhongMaterial({ color: '#d4a259', shininess: 120, specular: '#fef08a' });
+
+  var botCap = mesh(new THREE.CylinderGeometry(0.26, 0.29, 0.055, 22), woodMat); botCap.position.y = 0.03 - 0.405; hgPivot.add(botCap);
+  var topCap = mesh(new THREE.CylinderGeometry(0.29, 0.26, 0.055, 22), woodMat); topCap.position.y = 0.78 - 0.405; hgPivot.add(topCap);
+  for (var i = 0; i < 3; i++) {
+    var a = i * Math.PI * 2 / 3 + 0.4;
+    var p = mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.72, 10), brassMat);
+    p.position.set(Math.cos(a) * 0.22, 0, Math.sin(a) * 0.22); hgPivot.add(p);
+  }
+  var bulbPts = [
+    new THREE.Vector2(0.01, 0.058 - 0.405), new THREE.Vector2(0.18, 0.062 - 0.405), new THREE.Vector2(0.19, 0.16 - 0.405),
+    new THREE.Vector2(0.13, 0.29 - 0.405), new THREE.Vector2(0.026, 0), new THREE.Vector2(0.13, 0.52 - 0.405),
+    new THREE.Vector2(0.19, 0.65 - 0.405), new THREE.Vector2(0.18, 0.75 - 0.405), new THREE.Vector2(0.01, 0.752 - 0.405)
+  ];
+  var glMat = new THREE.MeshPhongMaterial({
+    color: '#e0f2fe', transparent: true, opacity: 0.36, shininess: 140,
+    specular: '#ffffff', side: THREE.DoubleSide, depthWrite: false
+  });
+  var bulb = new THREE.Mesh(new THREE.LatheGeometry(bulbPts, 24), glMat);
+  bulb.renderOrder = 4; hgPivot.add(bulb);
+
+  var sandMat = new THREE.MeshLambertMaterial({ color: '#eab308' });
+  sandTopCone = mesh(new THREE.ConeGeometry(0.135, 0.20, 16), sandMat); sandTopCone.rotation.x = Math.PI; sandTopCone.position.y = 0.54 - 0.405; hgPivot.add(sandTopCone);
+  sandBotCone = mesh(new THREE.ConeGeometry(0.145, 0.17, 16), sandMat); sandBotCone.position.y = 0.15 - 0.405; hgPivot.add(sandBotCone);
+  sandStream = mesh(new THREE.CylinderGeometry(0.010, 0.010, 0.28, 8), sandMat); sandStream.position.y = 0.31 - 0.405; sandStream.visible = false; hgPivot.add(sandStream);
+
+  registerTool('hourglass', g, new THREE.Vector3(-1.22, 0.02, 2.04), '#f59e0b', '⏳ 3D沙漏', 0.96, 'amber', 0.40);
+})();
+
+// 3. 🥄 不锈钢撇油汤勺（真正深凹银灰金属圆勺斗 + 优雅微弯长柄 + 防烫木握套 + 挂钩，一眼厨房大汤勺！）
+var ladleOilMesh = null;
+(function buildLadle() {
+  var g = new THREE.Group();
+
+  var steelOuter = new THREE.MeshPhongMaterial({
+    color: '#b8c4d0', shininess: 165, specular: '#ffffff', side: THREE.DoubleSide
+  });
+  var steelInner = new THREE.MeshPhongMaterial({
+    color: '#8f9fae', shininess: 130, specular: '#e2e8f0'
+  });
+  var steelGripAccent = new THREE.MeshPhongMaterial({ color: '#9a4716', shininess: 55, specular: '#f6c88a' });
+
+  var ladleBody = new THREE.Group();
+  ladleBody.rotation.y = -0.30;
+  g.add(ladleBody);
+
+  // (a) 深凹半球金属勺斗（带内外明暗对比，立体感十足绝不发白！）
+  var cupPts = [
+    new THREE.Vector2(0.006, 0.0),
+    new THREE.Vector2(0.12, 0.018),
+    new THREE.Vector2(0.22, 0.075),
+    new THREE.Vector2(0.27, 0.175),
+    new THREE.Vector2(0.28, 0.245),
+    new THREE.Vector2(0.258, 0.255),
+    new THREE.Vector2(0.242, 0.18),
+    new THREE.Vector2(0.185, 0.09),
+    new THREE.Vector2(0.09, 0.035),
+    new THREE.Vector2(0.006, 0.022)
+  ];
+  var bowl = mesh(new THREE.LatheGeometry(cupPts, 24), steelOuter);
+  bowl.position.set(-0.20, 0.04, -0.10);
+  ladleBody.add(bowl);
+
+  // 勺底内壁微阴影圆面，强化深凹金属质感
+  var innerShade = new THREE.Mesh(new THREE.CircleGeometry(0.18, 20), steelInner);
+  innerShade.rotation.x = -Math.PI / 2; innerShade.position.set(-0.20, 0.11, -0.10);
+  ladleBody.add(innerShade);
+
+  var bowlLip = new THREE.Mesh(new THREE.TorusGeometry(0.270, 0.015, 8, 24), steelOuter);
+  bowlLip.rotation.x = Math.PI / 2;
+  bowlLip.position.set(-0.20, 0.285, -0.10);
+  ladleBody.add(bowlLip);
+
+  ladleOilMesh = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.23, 0.17, 0.08, 20),
+    new THREE.MeshPhongMaterial({ color: '#f59e0b', emissive: '#92400e', emissiveIntensity: 0.18, shininess: 150, specular: '#fef08a' })
+  );
+  ladleOilMesh.position.set(-0.20, 0.22, -0.10);
+  ladleOilMesh.visible = false;
+  ladleBody.add(ladleOilMesh);
+
+  // (b) 优雅微弯银色长柄（从勺斗边缘平滑弯起斜伸向右上，自带经典厨房汤勺顶钩）
+  var stemCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-0.04, 0.26, -0.02),
+    new THREE.Vector3( 0.05, 0.34,  0.04),
+    new THREE.Vector3( 0.18, 0.58,  0.09),
+    new THREE.Vector3( 0.32, 0.85,  0.14),
+    new THREE.Vector3( 0.42, 1.04,  0.17),
+    new THREE.Vector3( 0.49, 1.09,  0.19),
+    new THREE.Vector3( 0.54, 1.02,  0.20)
+  ]);
+  var stem = mesh(new THREE.TubeGeometry(stemCurve, 24, 0.025, 10, false), steelOuter);
+  ladleBody.add(stem);
+
+  var gripCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0.25, 0.72, 0.12),
+    new THREE.Vector3(0.40, 0.99, 0.16)
+  ]);
+  var gripSleeve = mesh(new THREE.TubeGeometry(gripCurve, 10, 0.042, 10, false), steelGripAccent);
+  ladleBody.add(gripSleeve);
+
+  var hangRing = mesh(new THREE.TorusGeometry(0.046, 0.013, 8, 16), steelOuter);
+  hangRing.position.set(0.49, 1.08, 0.19);
+  hangRing.rotation.y = 0.35;
+  ladleBody.add(hangRing);
+
+  registerTool('ladle', g, new THREE.Vector3(0.02, 0.02, 2.04), '#fbbf24', '🥄 撇油汤勺', 1.24, 'steel', 0.48);
+})();
+
+/* ===== 粒子特效（D4） ===== */
+var fxParts = [];
+function spawnFX(x, y, z, colHex, count, durSec, mode) {
+  var maxL = durSec || 1.4;
+  for (var i = 0; i < count; i++) {
+    var geo = mode === 'star' ? new THREE.OctahedronGeometry(0.070, 0) : new THREE.SphereGeometry(0.050, 8, 6);
+    var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: colHex, transparent: true, opacity: 0.95 }));
+    m.position.set(x + (Math.random() - 0.5) * 0.30, y + Math.random() * 0.24, z + (Math.random() - 0.5) * 0.30);
+    live.add(m);
+    fxParts.push({
+      m: m,
+      vx: (Math.random() - 0.5) * (mode === 'pour' ? 0.34 : 0.88),
+      vy: mode === 'pour' ? (-1.2 - Math.random() * 0.55) : (0.82 + Math.random() * 0.68),
+      vz: (Math.random() - 0.5) * (mode === 'pour' ? 0.34 : 0.88),
+      grav: mode === 'pour' ? -1.8 : -0.35,
+      life: maxL, maxLife: maxL
+    });
+  }
+}
+
+/* ===== 实验状态机（先测后分 + 煲汤撇油 + 失败分支 U9 & U10） ===== */
+var beakerContent = null;
+var beakerStage = 'empty';
+var stirProg = 0, settleProg = 0;
+var oilSkimmed = false;
+var traysUnlocked = false, trayUnlockBlend = 0, trayUnlockBurstT = 0;
+var found = {}, stamps = { s1: false, s2: false, s3: false };
+var celebrated = false, demo = false, resetGen = 0;
+var forceCueTool = null, forceCueTimer = null, lockToastTimer = null;
+var curGuideSpeech = '阶段1：先拖或点左侧的琥珀食用油倒入烧杯，看看油浮在哪儿！';
+
+function markInteracted() { document.body.classList.add('interacted'); }
+
+function setForceCue(toolId, ms) {
+  forceCueTool = toolId;
+  if (forceCueTimer) clearTimeout(forceCueTimer);
+  var g = resetGen;
+  forceCueTimer = setTimeout(function () { if (g === resetGen) forceCueTool = null; }, ms || 4400);
+}
+
+function showLockReminder(msg) {
+  var el = $('#lockToast');
+  el.textContent = msg || '🔒 分类盘还没解锁！先把 4 种材料都在烧杯里搅拌、静置实测完（别忘了撇油哦）！';
+  el.classList.add('show');
+  if (lockToastTimer) clearTimeout(lockToastTimer);
+  var g = resetGen;
+  lockToastTimer = setTimeout(function () { if (g === resetGen) el.classList.remove('show'); }, 2900);
+  beep([320, 260], 0.16);
+  speak(msg ? msg.replace(/[🔒⏳🥄]/g, '') : '分类盘还没解锁，先把四种材料都在烧杯里搅拌、静置实测完，别忘了用汤勺撇油哦！', true);
+}
+
+function popLabelAt3D(worldPos, text, cls) {
+  var v = worldPos.clone().project(camera);
+  var x = (v.x * 0.5 + 0.5) * window.innerWidth;
+  var y = (-v.y * 0.5 + 0.5) * window.innerHeight;
+  var el = document.createElement('div');
+  el.className = 'popword' + (cls ? ' ' + cls : '');
+  el.textContent = text;
+  el.style.left = Math.max(125, Math.min(window.innerWidth - 125, x)) + 'px';
+  el.style.top = Math.max(82, Math.min(window.innerHeight - 100, y - 16)) + 'px';
+  $('#labels').appendChild(el);
+  setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 2050);
+}
+
+function lightStamp(id, key) {
+  if (!stamps[key]) {
+    stamps[key] = true;
+    var el = $('#' + id);
+    if (el) el.classList.add('lit');
+    beep([523, 659, 784], 0.2);
+  }
+}
+
+function updateCompareCard() {
+  var spOil = SPECIMENS.find(function (s) { return s.id === 'oil'; });
+  var spSalt = SPECIMENS.find(function (s) { return s.id === 'salt'; });
+  var spSand = SPECIMENS.find(function (s) { return s.id === 'sand'; });
+  var spPeb = SPECIMENS.find(function (s) { return s.id === 'pebble'; });
+  var c1 = spSalt.tested, c2 = spOil.tested, c3 = (spSand.tested || spPeb.tested);
+  $('#cmpSol').classList.toggle('lit', c1);
+  $('#cmpOil').classList.toggle('lit', c2);
+  $('#cmpSink').classList.toggle('lit', c3);
+  $('#cmpCnt').textContent = ((c1 ? 1 : 0) + (c2 ? 1 : 0) + (c3 ? 1 : 0)) + '/3 点亮';
+}
+
+function countTested() {
+  var n = 0; SPECIMENS.forEach(function (s) { if (s.tested) n++; }); return n;
+}
+function countSorted() {
+  var n = 0; SPECIMENS.forEach(function (s) { if (s.tray === s.cat) n++; }); return n;
+}
+
+function checkProgress() {
+  var tCnt = countTested();
+  var sCnt = countSorted();
+  var justUnlocked = false;
+  updateCompareCard();
+
+  if (oilSkimmed) lightStamp('st1', 's1');
+  if (tCnt === 4 && oilSkimmed) {
+    lightStamp('st2', 's2');
+    if (!traysUnlocked) {
+      traysUnlocked = true;
+      trayUnlockBurstT = 1.6;
+      justUnlocked = true;
+      $('#lockSol').classList.add('hide');
+      $('#lockInsol').classList.add('hide');
+      $('#trayLockHint').classList.add('hide');
+      Object.keys(TRAYS).forEach(function (k) {
+        spawnFX(TRAYS[k].x, 0.25, TRAYS[k].z, 0xfde047, 10, 1.5, 'star');
+      });
+      beep([523, 659, 784, 1046], 0.26);
+      popLabelAt3D(new THREE.Vector3(2.60, 0.85, 1.48), '🔓 4 种实测完成！分类盘解锁啦！', 'gold');
+      if (!demo) {
+        speak('太棒啦！四种材料都实测完了，右下方的能溶解盘和难溶解盘解锁啦！快按贴上的实验徽章把它们分进对应的盘子吧！', true);
+      }
+    }
+  }
+
+  if (!traysUnlocked) {
+    $('#phaseLabel').textContent = '🔬 实测解锁：';
+    $('#sortNum').textContent = tCnt + ' / 4';
+  } else {
+    $('#phaseLabel').textContent = '📦 归盘分类：';
+    $('#sortNum').textContent = sCnt + ' / 4';
+  }
+
+  if (traysUnlocked && sCnt === 4) lightStamp('st3', 's3');
+  updateGuide(false);
+
+  if (!demo && !celebrated && traysUnlocked && sCnt === 4) {
+    celebrated = true;
+    saveProgress(LESSON_ID, true);
+    fireConfetti();
+    beep([523, 659, 784, 1046], 0.28);
+    var g = resetGen;
+    setTimeout(function () {
+      if (g !== resetGen) return;
+      $('#winToast').classList.add('show');
+      speak('太棒啦！四种材料实测、煲汤撇油和分类归盘全部通关！快来看看科学小结论并领小红花吧！', true);
+    }, 750);
+  }
+  return justUnlocked;
+}
+
+function addDiscovery(key, html, spoken) {
+  if (!found[key]) {
+    found[key] = true;
+    var el = document.createElement('div');
+    el.className = 'stk';
+    el.innerHTML = html;
+    $('#ntList').prepend(el);
+    $('#ntCnt').textContent = Object.keys(found).length;
+  }
+  var unlockedNow = checkProgress();
+  if (spoken && !demo && !unlockedNow) speak(spoken);
+}
+
+function clearBeakerVisuals() {
+  oilLayer.visible = false;
+  oilDrops.forEach(function (d) { d.m.visible = false; });
+  sandLayer.visible = false;
+  sandGrains.forEach(function (g) { g.m.visible = false; });
+  saltMound.visible = false;
+  saltGrains.forEach(function (g) { g.m.visible = false; });
+  pebbleGroup.visible = false;
+  swirlGroup.visible = false;
+  stratLine.material.opacity = 0;
+  waterMat.color.set('#38bdf8');
+  waterMat.opacity = 0.26;
+  beakerContent = null;
+  beakerStage = 'empty';
+  beakerTag.textContent = '💧 清水实验烧杯';
+}
+
+function updateGuide(speakIt) {
+  Object.keys(TOOLS).forEach(function (k) { TOOLS[k].tagEl.classList.remove('pulse'); });
+  $('#guideBar').classList.remove('unlocked');
+
+  if (!traysUnlocked) {
+    $('#guideIco').textContent = '🔬';
+    if (beakerStage === 'added') {
+      curGuideSpeech = '拿起前排的玻璃搅拌棒，搅一搅烧杯看看有什么变化！';
+      TOOLS.rod.tagEl.classList.add('pulse');
+    } else if (beakerStage === 'cloudy') {
+      curGuideSpeech = '先别急着下结论！点一下桌上的 3D 沙漏静置观察！';
+      TOOLS.hourglass.tagEl.classList.add('pulse');
+    } else if (beakerContent === 'oil' && beakerStage === 'settled') {
+      curGuideSpeech = '油全浮在水面了！拖或点不锈钢撇油汤勺把浮油撇进小碗里！';
+      TOOLS.ladle.tagEl.classList.add('pulse');
+    } else {
+      var nextSp = SPECIMENS.find(function (s) { return !s.tested; });
+      if (nextSp) {
+        curGuideSpeech = '阶段1：拖或点左侧的「' + nextSp.name + '」倒入清水烧杯进行实测！';
+      }
+    }
+  } else if (countSorted() < 4) {
+    $('#guideBar').classList.add('unlocked');
+    $('#guideIco').textContent = '🔓';
+    curGuideSpeech = '阶段2（已解锁）：根据实验徽章，把 4 种样品拖进「能溶解」或「难溶解」盘！';
+  } else {
+    $('#guideBar').classList.add('unlocked');
+    $('#guideIco').textContent = '🏆';
+    curGuideSpeech = '全通关！你还可以继续倒油撇油或重新测试任意材料！';
+  }
+  $('#guideTxt').textContent = curGuideSpeech;
+  $('#guideBar').classList.remove('flash');
+  void $('#guideBar').offsetWidth;
+  $('#guideBar').classList.add('flash');
+  if (speakIt) speak(curGuideSpeech, true);
+}
+
+/* ===== 倒料 → 搅拌 → 沙漏静置 → 汤勺撇油 ===== */
+function pourSpecimenIntoBeaker(sp) {
+  markInteracted();
+  if (beakerStage === 'stirring' || beakerStage === 'settling') return;
+  forceCueTool = null;
+  clearBeakerVisuals();
+  beakerContent = sp.id;
+  beakerStage = 'added';
+
+  if (sp.id === 'oil') {
+    oilLayer.visible = true; oilLayer.scale.set(1, 1, 1); oilLayerMat.opacity = 0.86;
+    stratLine.material.opacity = 0.78;
+    beakerTag.textContent = '🍯 烧杯：油浮在水面';
+    spawnFX(BEAKER_POS.x, 1.82, BEAKER_POS.z, 0xf59e0b, 14, 0.9, 'pour');
+    beep([480, 560], 0.14);
+    popLabelAt3D(new THREE.Vector3(BEAKER_POS.x, 1.92, BEAKER_POS.z), '🍯 金黄食用油浮在水面！', '');
+    if (!demo) speak('金黄的食用油倒进水里，直接浮在水面上！拿起玻璃搅拌棒搅一搅看看会发生什么！');
+  } else if (sp.id === 'sand') {
+    sandLayer.visible = true; sandLayer.scale.set(1, 1, 1);
+    beakerTag.textContent = '🥣 烧杯：细沙沉在杯底';
+    spawnFX(BEAKER_POS.x, 1.82, BEAKER_POS.z, 0xb88547, 14, 0.9, 'pour');
+    beep([420, 480], 0.14);
+    popLabelAt3D(new THREE.Vector3(BEAKER_POS.x, 1.92, BEAKER_POS.z), '🥣 黄褐细沙沉到杯底！', '');
+    if (!demo) speak('细沙倒进烧杯沉到杯底了，拿玻璃搅拌棒搅一搅看看！');
+  } else if (sp.id === 'salt') {
+    saltMound.visible = true; saltMound.scale.set(1, 1, 1); saltMoundMat.opacity = 0.94;
+    saltGrains.forEach(function (g) {
+      g.m.visible = true; g.m.scale.setScalar(1);
+      g.m.position.set(Math.cos(g.ang) * g.r, g.y0, Math.sin(g.ang) * g.r);
+    });
+    beakerTag.textContent = '🧂 烧杯：食盐在杯底';
+    spawnFX(BEAKER_POS.x, 1.82, BEAKER_POS.z, 0xf1f5f9, 14, 0.9, 'pour');
+    beep([520, 620], 0.14);
+    popLabelAt3D(new THREE.Vector3(BEAKER_POS.x, 1.92, BEAKER_POS.z), '🧂 食盐沉在杯底！', '');
+    if (!demo) speak('白色食盐倒进烧杯啦，拿玻璃搅拌棒搅一搅看看！');
+  } else {
+    pebbleGroup.visible = true;
+    beakerTag.textContent = '⛰ 烧杯：小石子沉杯底';
+    spawnFX(BEAKER_POS.x, 1.82, BEAKER_POS.z, 0x64748b, 10, 0.85, 'pour');
+    beep([260, 220], 0.16);
+    popLabelAt3D(new THREE.Vector3(BEAKER_POS.x, 1.92, BEAKER_POS.z), '⛰ 咚咚！小石子稳沉杯底！', '');
+    if (!demo) speak('小石子咚咚沉到了杯底，拿玻璃搅拌棒搅一搅试试看！');
+  }
+  updateGuide(false);
+}
+
+function stirBeaker() {
+  markInteracted();
+  if (!beakerContent) {
+    TOOLS.rod.goal.copy(TOOLS.rod.home);
+    beep([300, 250], 0.15);
+    popLabelAt3D(new THREE.Vector3(BEAKER_POS.x, 1.92, BEAKER_POS.z), '💧 烧杯里还是清水，先倒一种材料吧！', 'warn');
+    if (!demo) speak('烧杯里现在还是清水呢，先从左侧选一种材料倒进来再搅拌吧！', true);
+    return;
+  }
+  if (beakerStage === 'stirring' || beakerStage === 'settling') return;
+  forceCueTool = null;
+  beakerStage = 'stirring';
+  stirProg = 0;
+  swirlGroup.visible = true;
+  beep([523, 587, 659, 784], 0.15);
+
+  if (beakerContent === 'oil') {
+    oilLayer.visible = false; stratLine.material.opacity = 0;
+    oilDrops.forEach(function (d) { d.m.visible = true; });
+    waterMat.color.set('#fcd34d'); waterMat.opacity = 0.38;
+    beakerTag.textContent = '🔄 油散成无数小油珠...';
+  } else if (beakerContent === 'sand') {
+    sandLayer.visible = false;
+    sandGrains.forEach(function (g) { g.m.visible = true; });
+    waterMat.color.set('#c9975a'); waterMat.opacity = 0.40;
+    beakerTag.textContent = '🔄 搅拌扬起细腻细沙...';
+  } else if (beakerContent === 'salt') {
+    beakerTag.textContent = '🔄 食盐随漩涡慢慢溶解...';
+  } else {
+    beakerTag.textContent = '🔄 搅拌小石子...';
+  }
+
+  var g = resetGen;
+  setTimeout(function () {
+    if (g !== resetGen) return;
+    swirlGroup.visible = false;
+    TOOLS.rod.goal.copy(TOOLS.rod.home);
+    beakerStage = 'cloudy';
+    if (beakerContent === 'oil') {
+      popLabelAt3D(new THREE.Vector3(BEAKER_POS.x, 1.92, BEAKER_POS.z), '⏳ 油散成油珠变浑了！点沙漏静置看看', '');
+      if (!demo) speak('哇！食用油被打散成无数小油珠，水暂时变浑浊了！快点一下桌上的沙漏静置几秒，看看油珠最后跑哪去了！');
+    } else if (beakerContent === 'sand') {
+      popLabelAt3D(new THREE.Vector3(BEAKER_POS.x, 1.92, BEAKER_POS.z), '⏳ 细沙满杯飘扬！点沙漏静置看看', '');
+      if (!demo) speak('细沙被搅起来让水变浑了！点一下桌上的沙漏静置几秒，看看沙子最后跑哪去了！');
+    } else if (beakerContent === 'salt') {
+      saltMound.visible = false;
+      saltGrains.forEach(function (gr) { gr.m.visible = false; });
+      popLabelAt3D(new THREE.Vector3(BEAKER_POS.x, 1.92, BEAKER_POS.z), '✨ 盐粒看不见了！点沙漏静置确认', 'good');
+      if (!demo) speak('食盐粒越转越小看不见啦！点一下桌上的沙漏静置观察杯底有没有沉淀！');
+    } else {
+      popLabelAt3D(new THREE.Vector3(BEAKER_POS.x, 1.92, BEAKER_POS.z), '⏳ 小石子纹丝不动！点沙漏静置确认', '');
+      if (!demo) speak('小石子重重的，怎么搅都待在杯底！点一下沙漏静置确认一下吧！');
+    }
+    updateGuide(false);
+  }, 1550);
+}
+
+function settleWithHourglass() {
+  markInteracted();
+  if (!beakerContent) {
+    beep([300, 250], 0.15);
+    popLabelAt3D(new THREE.Vector3(BEAKER_POS.x, 1.92, BEAKER_POS.z), '💧 先倒一种材料进烧杯再静置哦！', 'warn');
+    if (!demo) speak('烧杯里还是清水呢，先从左侧倒一种材料进来实验吧！', true);
+    return;
+  }
+  if (beakerStage === 'added') {
+    beep([290, 230], 0.16);
+    setForceCue('rod', 4200);
+    popLabelAt3D(new THREE.Vector3(BEAKER_POS.x, 1.92, BEAKER_POS.z), '🔄 先用玻璃搅拌棒搅一搅再静置！', 'warn');
+    if (!demo) speak('先拿起玻璃搅拌棒搅一搅，再用沙漏静置观察现象更清楚哦！', true);
+    return;
+  }
+  if (beakerStage !== 'cloudy') return;
+
+  forceCueTool = null;
+  beakerStage = 'settling';
+  settleProg = 0;
+  TOOLS.hourglass.flipT = 1.45;
+  beep([523, 659], 0.16);
+  popLabelAt3D(new THREE.Vector3(BEAKER_POS.x, 1.95, BEAKER_POS.z), '⏳ 沙漏静置观察中...', '');
+
+  var g = resetGen;
+  setTimeout(function () {
+    if (g !== resetGen) return;
+    beakerStage = 'settled';
+    waterMat.color.set('#38bdf8'); waterMat.opacity = 0.26;
+    var curSp = SPECIMENS.find(function (s) { return s.id === beakerContent; });
+
+    if (beakerContent === 'oil') {
+      oilDrops.forEach(function (d) { d.m.visible = false; });
+      oilLayer.visible = true; oilLayer.scale.set(1, 1, 1); oilLayerMat.opacity = 0.88;
+      stratLine.material.opacity = 0.90;
+      beakerTag.textContent = '🍯 静置分层：金黄浮油在上层！';
+      spawnFX(BEAKER_POS.x, 1.45, BEAKER_POS.z, 0xfbbf24, 10, 1.4, 'star');
+      beep([587, 740, 880], 0.2);
+      popLabelAt3D(new THREE.Vector3(BEAKER_POS.x, 1.95, BEAKER_POS.z), '🍯 油珠全上浮聚成油层！用汤勺撇出来', 'good');
+      addDiscovery('oil_settle', '🍯 <b>食用油静置</b>：油珠全部上浮聚成清晰金黄油层！', '快看！静置后油珠全部缓缓上浮，重新聚成一层金黄的浮油！就像煲汤一样，快拿不锈钢汤勺把浮油撇进旁边小碗里吧！');
+    } else if (beakerContent === 'sand') {
+      sandGrains.forEach(function (gr) { gr.m.visible = false; });
+      sandLayer.visible = true;
+      beakerTag.textContent = '🥣 静置：细沙全沉杯底';
+      curSp.tested = true;
+      setSpecBadge(curSp);
+      spawnFX(BEAKER_POS.x, 0.35, BEAKER_POS.z, 0xfb923c, 10, 1.4, 'star');
+      beep([523, 659, 784], 0.2);
+      popLabelAt3D(new THREE.Vector3(BEAKER_POS.x, 1.95, BEAKER_POS.z), '✓ 细沙全沉杯底 · 贴上难溶徽章！', 'good');
+      addDiscovery('sand_test', '🥣 <b>细沙实测</b>：静置后全沉杯底，难溶于水', '静置后，细沙全部沉回杯底，贴上沉在杯底难溶徽章！');
+    } else if (beakerContent === 'salt') {
+      beakerTag.textContent = '🧂 静置：清澈无沉淀';
+      curSp.tested = true;
+      setSpecBadge(curSp);
+      spawnFX(BEAKER_POS.x, 1.25, BEAKER_POS.z, 0x38bdf8, 10, 1.4, 'star');
+      beep([523, 659, 784], 0.2);
+      popLabelAt3D(new THREE.Vector3(BEAKER_POS.x, 1.95, BEAKER_POS.z), '✓ 食盐清澈无沉淀 · 贴上能溶徽章！', 'good');
+      addDiscovery('salt_test', '🧂 <b>食盐实测</b>：静置后清澈无沉淀，均匀溶解', '静置后杯子依然清澈透明没有沉淀，食盐均匀溶解在水里，贴上能溶徽章！');
+    } else if (beakerContent === 'pebble') {
+      beakerTag.textContent = '⛰ 静置：小石子稳沉杯底';
+      curSp.tested = true;
+      setSpecBadge(curSp);
+      spawnFX(BEAKER_POS.x, 0.35, BEAKER_POS.z, 0x94a3b8, 10, 1.4, 'star');
+      beep([523, 659, 784], 0.2);
+      popLabelAt3D(new THREE.Vector3(BEAKER_POS.x, 1.95, BEAKER_POS.z), '✓ 小石子稳沉杯底 · 贴上难溶徽章！', 'good');
+      addDiscovery('pebble_test', '⛰ <b>小石子实测</b>：稳沉杯底不变化，难溶于水', '小石子静置后依然稳稳沉在杯底，贴上沉在杯底难溶徽章！');
+    }
+    updateGuide(false);
+  }, 1300);
+}
+
+function skimOilWithLadle() {
+  markInteracted();
+  if (beakerContent === 'oil' && beakerStage === 'cloudy') {
+    TOOLS.ladle.goal.copy(TOOLS.ladle.home);
+    beep([290, 230], 0.18);
+    setForceCue('hourglass', 4600);
+    popLabelAt3D(new THREE.Vector3(BEAKER_POS.x, 1.95, BEAKER_POS.z), '⏳ 油珠还在水中！先点3D沙漏静置分层', 'warn');
+    if (!demo) speak('别急！点一下桌上的 3D 沙漏静置几秒，看看油珠最后跑哪去了！', true);
+    return;
+  }
+  if (beakerContent !== 'oil' || (beakerStage !== 'settled' && beakerStage !== 'added')) {
+    TOOLS.ladle.goal.copy(TOOLS.ladle.home);
+    beep([300, 250], 0.16);
+    popLabelAt3D(new THREE.Vector3(BEAKER_POS.x, 1.92, BEAKER_POS.z), '🥄 现在水面没有浮油可以撇哦！', 'warn');
+    if (!demo) speak('现在水面没有浮油层哦！先倒食用油、搅拌并静置分层后，再用汤勺撇油吧！', true);
+    return;
+  }
+  if (beakerContent === 'oil' && beakerStage === 'added') {
+    TOOLS.ladle.goal.copy(TOOLS.ladle.home);
+    beep([290, 230], 0.18);
+    setForceCue('rod', 4200);
+    popLabelAt3D(new THREE.Vector3(BEAKER_POS.x, 1.95, BEAKER_POS.z), '🔄 先搅拌再静置，看清油为什么难溶！', 'warn');
+    if (!demo) speak('先拿玻璃搅拌棒搅一搅，再用沙漏静置看看油珠会不会重新浮上来吧！', true);
+    return;
+  }
+
+  forceCueTool = null;
+  var g = resetGen;
+  TOOLS.ladle.goal.set(BEAKER_POS.x + 0.14, 1.38, BEAKER_POS.z + 0.18);
+  TOOLS.ladle.skimAnimT = 1.6;
+  beep([523, 659, 784], 0.18);
+
+  setTimeout(function () {
+    if (g !== resetGen) return;
+    oilLayer.visible = false; stratLine.material.opacity = 0;
+    if (ladleOilMesh) ladleOilMesh.visible = true;
+    TOOLS.ladle.goal.set(SKIM_POS.x + 0.12, 0.72, SKIM_POS.z + 0.14);
+  }, 580);
+
+  setTimeout(function () {
+    if (g !== resetGen) return;
+    if (ladleOilMesh) ladleOilMesh.visible = false;
+    skimmedOilDisc.visible = true;
+    skimTag.textContent = '🍲 撇油小碗（金黄浮油 ✓）';
+    spawnFX(SKIM_POS.x, 0.50, SKIM_POS.z, 0xfbbf24, 12, 1.4, 'star');
+    beep([587, 740, 880, 1046], 0.22);
+    TOOLS.ladle.goal.copy(TOOLS.ladle.home);
+
+    clearBeakerVisuals();
+    oilSkimmed = true;
+    var spOil = SPECIMENS.find(function (s) { return s.id === 'oil'; });
+    spOil.tested = true;
+    setSpecBadge(spOil);
+    popLabelAt3D(new THREE.Vector3(SKIM_POS.x, 0.92, SKIM_POS.z), '🥄 煲汤撇油成功！浮油舀进小碗啦', 'good');
+    addDiscovery('oil_skim', '🥄 <b>汤勺撇油</b>：浮油轻松撇入小碗，烧杯恢复清澈！', '哇！浮在水面的金黄食用油被汤勺一勺撇进小碗里啦！这就是煲汤撇油的科学原理，食用油贴上浮在水面难溶徽章！');
+  }, 1220);
+}
+
+/* ===== 精准 3D 分类放盘 ===== */
+function relayoutTray(trayId) {
+  var tr = TRAYS[trayId];
+  var inside = SPECIMENS.filter(function (s) { return s.tray === trayId; });
+  inside.forEach(function (sp, idx) {
+    var sl = tr.slots[idx % tr.slots.length];
+    sp.goalX = tr.x + sl[0];
+    sp.goalZ = tr.z + sl[1];
+    sp.goalY = 0.13;
+  });
+}
+
+function returnSpecHome(sp) {
+  var oldTray = sp.tray;
+  sp.tray = null;
+  sp.goalX = sp.homeX; sp.goalZ = sp.homeZ; sp.goalY = 0.01;
+  sp.tagEl.classList.remove('ok');
+  if (oldTray) relayoutTray(oldTray);
+  checkProgress();
+}
+
+function tryPlaceInTray(sp, trayId) {
+  markInteracted();
+  if (beakerStage === 'cloudy') {
+    sp.wobbleT = 0.65;
+    sp.goalX = sp.homeX; sp.goalZ = sp.homeZ; sp.goalY = 0.01;
+    setForceCue('hourglass', 4600);
+    showLockReminder('⏳ 别急！点一下桌上的 3D 沙漏静置几秒，看看最后跑哪去了！');
+    return;
+  }
+  if (!traysUnlocked) {
+    sp.wobbleT = 0.65;
+    sp.goalX = sp.homeX; sp.goalZ = sp.homeZ; sp.goalY = 0.01;
+    showLockReminder();
+    return;
+  }
+
+  var oldTray = sp.tray;
+  if (sp.cat === trayId) {
+    sp.tray = trayId;
+    if (oldTray && oldTray !== trayId) relayoutTray(oldTray);
+    relayoutTray(trayId);
+    sp.tagEl.classList.add('ok');
+    beep([523, 659, 784], 0.2);
+    popLabelAt3D(new THREE.Vector3(TRAYS[trayId].x, 0.78, TRAYS[trayId].z), '✅ ' + sp.name + ' 分类正确！', 'good');
+    addDiscovery('sort_' + sp.id, '✅ <b>' + sp.name + '</b> → ' + TRAYS[trayId].label + '盘', sp.okVoice);
+  } else {
+    sp.wobbleT = 0.85;
+    if (oldTray) { sp.tray = null; relayoutTray(oldTray); }
+    sp.goalX = sp.homeX; sp.goalZ = sp.homeZ; sp.goalY = 0.01;
+    sp.tagEl.classList.remove('ok');
+    beep([280, 210], 0.22);
+    popLabelAt3D(new THREE.Vector3(TRAYS[trayId].x, 0.82, TRAYS[trayId].z), '💡 想想刚才杯里的现象再试试！', 'warn');
+    if (!demo) speak(sp.wrongVoice, true);
+    checkProgress();
+  }
+}
+
+/* ===== 指哪落哪 100% 命中拖放引擎（屏幕射线直测目标碰撞体优先！） ===== */
+var ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+var dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.85);
+var dragPt = new THREE.Vector3();
+var draggingSpec = null, draggingTool = null, selectedSpec = null;
+var hoveredTrayId = null, hoveredBeaker = false;
+var downX = 0, downY = 0, didDrag = false;
+var tmpProj = new THREE.Vector3();
+
+function getNDCFromXY(clientX, clientY) {
+  var r = cv.getBoundingClientRect();
+  ptr.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
+}
+
+function projectToScreen(x, y, z) {
+  tmpProj.set(x, y, z).project(camera);
+  return { x: (tmpProj.x * 0.5 + 0.5) * window.innerWidth, y: (-tmpProj.y * 0.5 + 0.5) * window.innerHeight };
+}
+
+function detectSpecDrop(clientX, clientY) {
+  getNDCFromXY(clientX, clientY);
+  ray.setFromCamera(ptr, camera);
+
+  // 1. 屏幕射线直测托盘碰撞体
+  var trHits = ray.intersectObjects(trayHitMeshes, false);
+  if (trHits.length) return { type: 'tray', trayId: trHits[0].object.userData.trayId };
+
+  // 2. 屏幕射线直测烧杯碰撞体
+  var bHits = ray.intersectObjects(beakerHitMeshes, false);
+  if (bHits.length) return { type: 'beaker' };
+
+  // 3. 宽松屏幕距离 + 3D 距离兜底
+  var hasPlane = !!ray.ray.intersectPlane(dragPlane, dragPt);
+  var bestTr = null, bestPx = 1e9;
+  Object.keys(TRAYS).forEach(function (k) {
+    var tr = TRAYS[k];
+    var sp = projectToScreen(tr.x, 0.22, tr.z);
+    var pxD = Math.hypot(sp.x - clientX, sp.y - clientY);
+    var d3 = hasPlane ? Math.hypot(tr.x - dragPt.x, tr.z - dragPt.z) : 99;
+    if ((pxD < 115 || d3 < 1.15) && pxD < bestPx) { bestPx = pxD; bestTr = k; }
+  });
+  if (bestTr) return { type: 'tray', trayId: bestTr };
+
+  var bSp = projectToScreen(BEAKER_POS.x, 1.0, BEAKER_POS.z);
+  var bPx = Math.hypot(bSp.x - clientX, bSp.y - clientY);
+  var bD3 = hasPlane ? Math.hypot(BEAKER_POS.x - dragPt.x, BEAKER_POS.z - dragPt.z) : 99;
+  if (bPx < 130 || bD3 < 1.65) return { type: 'beaker' };
+  return null;
+}
+
+function detectToolDrop(clientX, clientY, toolId) {
+  getNDCFromXY(clientX, clientY);
+  ray.setFromCamera(ptr, camera);
+
+  if (ray.intersectObjects(beakerHitMeshes, false).length) return 'beaker';
+  if (toolId === 'ladle' && ray.intersectObjects(skimHitMeshes, false).length) return 'beaker';
+
+  var hasPlane = !!ray.ray.intersectPlane(dragPlane, dragPt);
+  var bSp = projectToScreen(BEAKER_POS.x, 1.0, BEAKER_POS.z);
+  var bPx = Math.hypot(bSp.x - clientX, bSp.y - clientY);
+  var bD3 = hasPlane ? Math.hypot(BEAKER_POS.x - dragPt.x, BEAKER_POS.z - dragPt.z) : 99;
+  if (bPx < 135 || bD3 < 1.75) return 'beaker';
+  return null;
+}
+
+function clearDragHighlights() {
+  hoveredTrayId = null;
+  hoveredBeaker = false;
+  beakerRing.material.opacity = 0;
+  beakerRimGlow.material.opacity = 0;
+}
+
+cv.addEventListener('pointerdown', function (e) {
+  markInteracted();
+  getNDCFromXY(e.clientX, e.clientY);
+  ray.setFromCamera(ptr, camera);
+  downX = e.clientX; downY = e.clientY; didDrag = false;
+
+  // 1. 优先拾取 3 件实验工具
+  var tHits = ray.intersectObjects(toolVisMeshes, false);
+  if (!tHits.length) tHits = ray.intersectObjects(toolHitMeshes, false);
+  if (tHits.length) {
+    selectedSpec = null;
+    draggingTool = tHits[0].object.userData.toolRef;
+    cv.classList.add('grabbing');
+    beep([494], 0.08);
+    return;
+  }
+
+  // 2. 拾取 4 种样品杯/碗
+  var sHits = ray.intersectObjects(specVisMeshes, false);
+  if (!sHits.length) sHits = ray.intersectObjects(specHitMeshes, false);
+  if (sHits.length) {
+    draggingSpec = sHits[0].object.userData.specRef;
+    draggingSpec.ring.material.opacity = 0.90;
+    cv.classList.add('grabbing');
+    beep([440], 0.08);
+    return;
+  }
+
+  // 3. 点击分类托盘
+  var trHits = ray.intersectObjects(trayHitMeshes, false);
+  if (trHits.length) {
+    var tid = trHits[0].object.userData.trayId;
+    if (beakerStage === 'cloudy') {
+      setForceCue('hourglass', 4600);
+      showLockReminder('⏳ 别急！点一下桌上的 3D 沙漏静置几秒，看看最后跑哪去了！');
+      return;
+    }
+    if (!traysUnlocked) { showLockReminder(); return; }
+    if (selectedSpec) {
+      var sp = selectedSpec; selectedSpec = null; sp.ring.material.opacity = 0;
+      tryPlaceInTray(sp, tid);
+    }
+    return;
+  }
+
+  // 4. 点击烧杯
+  var bHits = ray.intersectObjects(beakerHitMeshes, false);
+  if (bHits.length) {
+    if (selectedSpec) {
+      var sp2 = selectedSpec; selectedSpec = null; sp2.ring.material.opacity = 0;
+      pourSpecimenIntoBeaker(sp2);
+    } else {
+      updateGuide(true);
+    }
+  }
+});
+
+window.addEventListener('pointermove', function (e) {
+  if (!draggingSpec && !draggingTool) return;
+  if (!didDrag && Math.hypot(e.clientX - downX, e.clientY - downY) >= 14) didDrag = true;
+  if (!didDrag) return;
+
+  clearDragHighlights();
+
+  if (draggingTool) {
+    var tHit = detectToolDrop(e.clientX, e.clientY, draggingTool.id);
+    if (tHit === 'beaker') {
+      hoveredBeaker = true;
+      beakerRing.material.opacity = 0.88;
+      beakerRimGlow.material.opacity = 0.92;
+      draggingTool.goal.set(BEAKER_POS.x + 0.10, 1.48, BEAKER_POS.z + 0.16);
+      return;
+    }
+    getNDCFromXY(e.clientX, e.clientY);
+    ray.setFromCamera(ptr, camera);
+    if (ray.ray.intersectPlane(dragPlane, dragPt)) {
+      var gx = Math.max(-4.2, Math.min(4.2, dragPt.x));
+      var gz = Math.max(-1.8, Math.min(2.6, dragPt.z));
+      draggingTool.goal.set(gx, 0.85, gz);
+    }
+  } else if (draggingSpec) {
+    selectedSpec = null;
+    var sHit = detectSpecDrop(e.clientX, e.clientY);
+    if (sHit && sHit.type === 'beaker') {
+      hoveredBeaker = true;
+      beakerRing.material.opacity = 0.88;
+      beakerRimGlow.material.opacity = 0.92;
+      draggingSpec.goalX = BEAKER_POS.x - 0.56;
+      draggingSpec.goalZ = BEAKER_POS.z + 0.12;
+      draggingSpec.goalY = 1.65;
+      return;
+    }
+    if (sHit && sHit.type === 'tray') {
+      hoveredTrayId = sHit.trayId;
+      var tr = TRAYS[sHit.trayId];
+      draggingSpec.goalX = tr.x;
+      draggingSpec.goalZ = tr.z + 0.08;
+      draggingSpec.goalY = 0.56;
+      return;
+    }
+    getNDCFromXY(e.clientX, e.clientY);
+    ray.setFromCamera(ptr, camera);
+    if (ray.ray.intersectPlane(dragPlane, dragPt)) {
+      var sx = Math.max(-4.2, Math.min(4.2, dragPt.x));
+      var sz = Math.max(-1.8, Math.min(2.6, dragPt.z));
+      draggingSpec.goalX = sx; draggingSpec.goalZ = sz; draggingSpec.goalY = 0.85;
+    }
+  }
+});
+
+window.addEventListener('pointerup', function (e) {
+  cv.classList.remove('grabbing');
+  clearDragHighlights();
+
+  if (draggingTool) {
+    var tl = draggingTool; draggingTool = null;
+    if (!didDrag) {
+      if (tl.id === 'rod') stirBeaker();
+      else if (tl.id === 'hourglass') settleWithHourglass();
+      else if (tl.id === 'ladle') skimOilWithLadle();
+    } else {
+      var hit = detectToolDrop(e.clientX, e.clientY, tl.id);
+      if (hit === 'beaker') {
+        if (tl.id === 'rod') stirBeaker();
+        else if (tl.id === 'hourglass') { tl.goal.copy(tl.home); settleWithHourglass(); }
+        else if (tl.id === 'ladle') skimOilWithLadle();
+      } else {
+        tl.goal.copy(tl.home);
+      }
+    }
+    return;
+  }
+
+  if (draggingSpec) {
+    var sp = draggingSpec; draggingSpec = null;
+    if (!didDrag) {
+      if (!traysUnlocked || !sp.tested) {
+        sp.ring.material.opacity = 0;
+        var g = resetGen;
+        sp.goalX = BEAKER_POS.x - 0.60; sp.goalZ = BEAKER_POS.z + 0.14; sp.goalY = 1.68;
+        sp.tiltT = 0.8;
+        pourSpecimenIntoBeaker(sp);
+        setTimeout(function () {
+          if (g === resetGen && draggingSpec !== sp && !sp.tray) {
+            sp.goalX = sp.homeX; sp.goalZ = sp.homeZ; sp.goalY = 0.01;
+          }
+        }, 780);
+      } else {
+        if (selectedSpec && selectedSpec !== sp) selectedSpec.ring.material.opacity = 0;
+        selectedSpec = sp;
+        sp.ring.material.opacity = 0.90;
+        popLabelAt3D(sp.g.position.clone().add(new THREE.Vector3(0, 1.0, 0)), '👆 点或拖进右下分类盘（或拖回烧杯复测）', '');
+        speak('选中了' + sp.name + '！看看它的实验徽章，拖或点右下方的能溶解盘或难溶解盘吧！');
+      }
+      return;
+    }
+
+    sp.ring.material.opacity = 0;
+    var sHit = detectSpecDrop(e.clientX, e.clientY);
+    if (sHit && sHit.type === 'tray') {
+      tryPlaceInTray(sp, sHit.trayId);
+    } else if (sHit && sHit.type === 'beaker') {
+      var g2 = resetGen;
+      sp.goalX = BEAKER_POS.x - 0.58; sp.goalZ = BEAKER_POS.z + 0.14; sp.goalY = 1.68;
+      sp.tiltT = 0.8;
+      pourSpecimenIntoBeaker(sp);
+      setTimeout(function () {
+        if (g2 === resetGen && draggingSpec !== sp && !sp.tray) {
+          sp.goalX = sp.homeX; sp.goalZ = sp.homeZ; sp.goalY = 0.01;
+        }
+      }, 750);
+    } else {
+      returnSpecHome(sp);
+    }
+  }
+});
+
+/* ===== HUD 与弹窗绑定 ===== */
+$('#backBtn').addEventListener('click', function () { try { sessionStorage.setItem('xk_last_vol', 'k2a'); } catch (e) {} });
+$('#voiceBtn').addEventListener('click', function () {
+  markInteracted();
+  voiceOn = !voiceOn;
+  this.classList.toggle('on', voiceOn);
+  if (voiceOn) updateGuide(true); else stopVoice();
+});
+$('#guideBar').addEventListener('click', function () { markInteracted(); updateGuide(true); });
+$('#resetBtn').addEventListener('click', resetAll);
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+$('#winKeepBtn').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgainBtn').addEventListener('click', resetAll);
+$('#qOpts').addEventListener('click', function (e) {
+  var b = e.target.closest('.qopt'); if (!b) return;
+  if (b.dataset.ok === '1') {
+    b.classList.add('ok');
+    $('#qFb').textContent = '🌸 答对啦！获得本课小红花！';
+    saveProgress(LESSON_ID, true);
+    beep([523, 659, 784, 1046], 0.24);
+    speak('答对啦！因为油难溶于水而且静置后会浮在汤面，所以能用汤勺轻松撇掉，获得本课小红花！', true);
+  } else {
+    b.classList.add('bad');
+    beep([260, 220], 0.16);
+    var h = b.dataset.hint || '再想想哦！';
+    $('#qFb').textContent = '💡 ' + h;
+    speak(h, true);
+  }
+});
+
+/* ===== 演示模式（全程不触发通关） ===== */
+function startDemo() {
+  markInteracted();
+  resetAll();
+  demo = true;
+  $('#demoBtn').classList.add('on');
+  var g = resetGen;
+  var spOil = SPECIMENS.find(function (s) { return s.id === 'oil'; });
+  var steps = [
+    function () { pourSpecimenIntoBeaker(spOil); speak('第1步，倒入金黄食用油，油直接浮在水面上！', true); },
+    function () { stirBeaker(); speak('第2步，用玻璃搅拌棒搅拌，油散成无数小油珠让水变浑浊！', true); },
+    function () { settleWithHourglass(); speak('第3步，点3D沙漏静置观察，油珠缓缓上浮聚成清晰金黄油层！', true); },
+    function () { skimOilWithLadle(); speak('第4步，拿不锈钢汤勺把浮油撇进小碗里！测完四种材料后分类盘解锁，轮到你来试试吧！', true); },
+    function () { demo = false; $('#demoBtn').classList.remove('on'); resetAll(); }
+  ];
+  steps.forEach(function (fn, idx) { setTimeout(function () { if (g === resetGen) fn(); }, idx * 3200); });
+}
+$('#demoBtn').addEventListener('click', startDemo);
+
+function resetAll() {
+  resetGen++;
+  stopVoice();
+  demo = false;
+  $('#demoBtn').classList.remove('on');
+  clearBeakerVisuals();
+  clearDragHighlights();
+  oilSkimmed = false;
+  skimmedOilDisc.visible = false;
+  skimTag.textContent = '🍲 撇油小碗（空）';
+  if (ladleOilMesh) ladleOilMesh.visible = false;
+  traysUnlocked = false; trayUnlockBlend = 0; trayUnlockBurstT = 0;
+  $('#lockSol').classList.remove('hide');
+  $('#lockInsol').classList.remove('hide');
+  $('#trayLockHint').classList.remove('hide');
+  $('#lockToast').classList.remove('show');
+  found = {}; stamps = { s1: false, s2: false, s3: false }; celebrated = false;
+  draggingSpec = null; draggingTool = null; selectedSpec = null;
+  forceCueTool = null;
+  if (forceCueTimer) { clearTimeout(forceCueTimer); forceCueTimer = null; }
+  if (lockToastTimer) { clearTimeout(lockToastTimer); lockToastTimer = null; }
+  cv.classList.remove('grabbing');
+
+  SPECIMENS.forEach(function (sp) {
+    sp.tray = null; sp.tested = false;
+    sp.goalX = sp.homeX; sp.goalZ = sp.homeZ; sp.goalY = 0.01;
+    sp.g.position.set(sp.homeX, 0.01, sp.homeZ);
+    sp.g.rotation.set(0, 0, 0);
+    sp.wobbleT = 0; sp.tiltT = 0;
+    sp.ring.material.opacity = 0;
+    sp.tagEl.classList.remove('ok');
+    sp.badgeRowEl.innerHTML = '';
+  });
+  Object.keys(TOOLS).forEach(function (k) {
+    var tl = TOOLS[k];
+    tl.goal.copy(tl.home); tl.g.position.copy(tl.home);
+    tl.g.rotation.set(0, 0, 0);
+    tl.flipT = 0; tl.skimAnimT = 0;
+  });
+  if (hgPivot) hgPivot.rotation.set(0, 0, 0);
+  fxParts.forEach(function (p) { live.remove(p.m); });
+  fxParts = [];
+  $('#ntList').innerHTML = ''; $('#ntCnt').textContent = '0';
+  $('#phaseLabel').textContent = '🔬 实测解锁：';
+  $('#sortNum').textContent = '0 / 4';
+  $$('.st').forEach(function (s) { s.classList.remove('lit'); });
+  $('#winToast').classList.remove('show');
+  $('#qFb').textContent = '';
+  $$('.qopt').forEach(function (b) { b.classList.remove('ok', 'bad'); });
+  updateCompareCard();
+  updateGuide(false);
+}
+
+/* ===== 帧循环（wall-clock 弹出 + dt 钳位 [0.001, 0.05]） ===== */
+var introT0 = performance.now(), lastT = performance.now();
+var projV = new THREE.Vector3();
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', fit);
+fit();
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (now - lastT) / 1000));
+  lastT = now;
+  var t = now * 0.001;
+
+  var pop = Math.min(1, (performance.now() - introT0) / 680);
+  live.scale.setScalar(0.01 + 0.99 * (1 - Math.pow(1 - pop, 3)));
+
+  // 烧杯内动态物理模拟
+  if (beakerStage === 'stirring') {
+    stirProg = Math.min(1, stirProg + dt / 1.55);
+    swirlGroup.rotation.y += dt * 7.8;
+    var ang = t * 9.5;
+    TOOLS.rod.goal.set(BEAKER_POS.x + Math.cos(ang) * 0.32, 0.56, BEAKER_POS.z + Math.sin(ang) * 0.32);
+    TOOLS.rod.g.rotation.z = Math.cos(ang) * 0.16;
+    TOOLS.rod.g.rotation.x = Math.sin(ang) * 0.16;
+
+    if (beakerContent === 'oil') {
+      oilDrops.forEach(function (d) {
+        var a = d.ang + t * d.spd;
+        d.m.position.set(Math.cos(a) * d.r, d.y0 + Math.sin(t * 6 + d.ang) * 0.14, Math.sin(a) * d.r);
+      });
+    } else if (beakerContent === 'sand') {
+      sandGrains.forEach(function (g) {
+        var a = g.ang + t * g.spd;
+        var y = g.yLow + (g.yHigh - g.yLow) * Math.min(1, stirProg * 1.3);
+        g.m.position.set(Math.cos(a) * g.r, y, Math.sin(a) * g.r);
+      });
+    } else if (beakerContent === 'salt') {
+      var rem = Math.max(0.02, 1 - stirProg);
+      saltMound.scale.set(rem, rem, rem); saltMoundMat.opacity = 0.94 * rem;
+      saltGrains.forEach(function (g) {
+        var a = g.ang + stirProg * g.spd * 2.8;
+        g.m.position.set(Math.cos(a) * g.r * (0.4 + 0.6 * rem), g.y0 + Math.sin(stirProg * Math.PI) * 0.65, Math.sin(a) * g.r * (0.4 + 0.6 * rem));
+        g.m.scale.setScalar(rem);
+      });
+    } else if (beakerContent === 'pebble') {
+      pebbleGroup.rotation.y = Math.sin(t * 14) * 0.04;
+    }
+  } else if (beakerStage === 'cloudy') {
+    if (beakerContent === 'oil') {
+      oilDrops.forEach(function (d) {
+        var a = d.ang + t * 0.9;
+        d.m.position.set(Math.cos(a) * d.r, d.y0 + Math.sin(t * 2 + d.ang) * 0.05, Math.sin(a) * d.r);
+      });
+    } else if (beakerContent === 'sand') {
+      sandGrains.forEach(function (g) {
+        var a = g.ang + t * 0.7;
+        g.m.position.set(Math.cos(a) * g.r, g.yHigh * 0.82 + Math.sin(t * 2 + g.ang) * 0.04, Math.sin(a) * g.r);
+      });
+    }
+  } else if (beakerStage === 'settling') {
+    settleProg = Math.min(1, settleProg + dt / 1.3);
+    if (beakerContent === 'oil') {
+      oilDrops.forEach(function (d) {
+        var curY = d.y0 + (1.30 - d.y0) * settleProg;
+        d.m.position.set(Math.cos(d.ang) * d.r, curY, Math.sin(d.ang) * d.r);
+      });
+      if (settleProg > 0.55) {
+        oilLayer.visible = true;
+        oilLayerMat.opacity = (settleProg - 0.55) / 0.45 * 0.88;
+        stratLine.material.opacity = (settleProg - 0.55) / 0.45 * 0.85;
+      }
+    } else if (beakerContent === 'sand') {
+      sandGrains.forEach(function (g) {
+        var curY = g.yHigh * 0.82 + (g.yLow - g.yHigh * 0.82) * settleProg;
+        g.m.position.set(Math.cos(g.ang) * g.r, curY, Math.sin(g.ang) * g.r);
+      });
+      if (settleProg > 0.6) sandLayer.visible = true;
+    }
+  }
+
+  // 托盘锁定/解锁过渡 + 右上角小锁定位（零遮挡盘面「能溶解 / 难溶解」！）
+  var targetBlend = traysUnlocked ? 1 : 0;
+  trayUnlockBlend += (targetBlend - trayUnlockBlend) * Math.min(1, dt * 6);
+  if (trayUnlockBurstT > 0) trayUnlockBurstT = Math.max(0, trayUnlockBurstT - dt);
+  var trayInvite = traysUnlocked && !!(draggingSpec || selectedSpec);
+  Object.keys(TRAYS).forEach(function (k) {
+    var tr = TRAYS[k];
+    var op = 0.62 + 0.38 * trayUnlockBlend;
+    tr.mats.forEach(function (m) { m.opacity = op; });
+    tr.veilMat.opacity = 0.14 * (1 - trayUnlockBlend);
+    var burstSc = trayUnlockBurstT > 0 ? (1 + Math.sin(trayUnlockBurstT * Math.PI * 2.5) * 0.06) : (0.96 + 0.04 * trayUnlockBlend);
+    tr.g.scale.setScalar(burstSc);
+    var isHov = (hoveredTrayId === k);
+    var burstGlow = trayUnlockBurstT > 0 ? Math.min(0.55, trayUnlockBurstT * 0.45) : 0;
+    tr.glow.material.opacity = Math.max(burstGlow, isHov ? 0.56 : (trayInvite ? (0.20 + 0.14 * Math.sin(t * 5.2)) : 0));
+
+    if (!traysUnlocked) {
+      var lk = $(tr.lockEl);
+      projV.set(tr.x + 0.72, 0.18, tr.z - 0.62).project(camera);
+      lk.style.left = ((projV.x * 0.5 + 0.5) * window.innerWidth) + 'px';
+      lk.style.top = ((-projV.y * 0.5 + 0.5) * window.innerHeight) + 'px';
+    }
+  });
+  if (!traysUnlocked) {
+    var hintEl = $('#trayLockHint');
+    projV.set(2.60, 0.04, 2.38).project(camera);
+    hintEl.style.left = ((projV.x * 0.5 + 0.5) * window.innerWidth) + 'px';
+    hintEl.style.top = ((-projV.y * 0.5 + 0.5) * window.innerHeight + 4) + 'px';
+  }
+
+  // 烧杯与撇油小碗标签投影
+  projV.set(BEAKER_POS.x, 1.96, BEAKER_POS.z).project(camera);
+  beakerTag.style.left = ((projV.x * 0.5 + 0.5) * window.innerWidth) + 'px';
+  beakerTag.style.top = ((-projV.y * 0.5 + 0.5) * window.innerHeight) + 'px';
+
+  projV.set(SKIM_POS.x, 0.66, SKIM_POS.z).project(camera);
+  skimTag.style.left = ((projV.x * 0.5 + 0.5) * window.innerWidth) + 'px';
+  skimTag.style.top = ((-projV.y * 0.5 + 0.5) * window.innerHeight) + 'px';
+
+  // 单焦点 #targetCue（始终浮在目标标签正上方，绝不遮挡自身名称！）
+  var cueEl = $('#targetCue'), cueTool = null, cueSpec = null, cueWorld = null, cueTxt = '';
+  if (!demo && !celebrated && !draggingSpec && !draggingTool) {
+    if (forceCueTool && TOOLS[forceCueTool]) {
+      cueTool = TOOLS[forceCueTool];
+      cueTxt = forceCueTool === 'hourglass' ? '👆 先点 3D 沙漏静置观察！' : '👆 先用玻璃搅拌棒搅一搅！';
+    } else if (!traysUnlocked) {
+      if (beakerStage === 'added') {
+        cueTool = TOOLS.rod;
+        cueTxt = '👆 点/拖玻璃搅拌棒搅拌';
+      } else if (beakerStage === 'cloudy') {
+        cueTool = TOOLS.hourglass;
+        cueTxt = '👆 点 3D 沙漏静置观察';
+      } else if (beakerContent === 'oil' && beakerStage === 'settled') {
+        cueTool = TOOLS.ladle;
+        cueTxt = '👆 点/拖汤勺把浮油撇进小碗';
+      } else if (beakerStage !== 'stirring' && beakerStage !== 'settling') {
+        var nextSp = SPECIMENS.find(function (s) { return !s.tested; });
+        if (nextSp) {
+          cueSpec = nextSp;
+          cueTxt = '👆 拖/点「' + nextSp.name + '」倒入烧杯';
+        }
+      }
+    } else if (countSorted() < 4) {
+      if (selectedSpec && selectedSpec.tray !== selectedSpec.cat) {
+        var trGoal = TRAYS[selectedSpec.cat];
+        cueWorld = new THREE.Vector3(trGoal.x, 0.72, trGoal.z);
+        cueTxt = '👆 放入「' + trGoal.label.replace(/^[^\u4e00-\u9fff]+/, '') + '盘」';
+      } else {
+        var unsort = SPECIMENS.find(function (s) { return s.tray !== s.cat; });
+        if (unsort) {
+          cueSpec = unsort;
+          cueTxt = '👆 把「' + unsort.name + '」拖进分类盘';
+        }
+      }
+    }
+  }
+
+  var cuePositioned = false;
+
+  // 更新 3 件 3D 实验工具
+  Object.keys(TOOLS).forEach(function (k) {
+    var tl = TOOLS[k];
+    var isCue = (cueTool === tl);
+    if (k === 'hourglass' && tl.flipT > 0) {
+      tl.flipT = Math.max(0, tl.flipT - dt);
+      var p = 1 - tl.flipT / 1.45;
+      if (hgPivot) hgPivot.rotation.z = p < 0.25 ? (p / 0.25) * Math.PI : Math.PI;
+      var flow = Math.max(0, Math.min(1, (p - 0.25) / 0.75));
+      if (sandTopCone) sandTopCone.scale.set(1 - flow * 0.65, Math.max(0.15, 1 - flow * 0.75), 1 - flow * 0.65);
+      if (sandBotCone) sandBotCone.scale.set(0.45 + flow * 0.55, 0.35 + flow * 0.75, 0.45 + flow * 0.55);
+      if (sandStream) sandStream.visible = (p >= 0.22 && p < 0.96);
+    } else if (k === 'hourglass') {
+      if (hgPivot) hgPivot.rotation.z *= 0.82;
+      if (sandStream) sandStream.visible = false;
+      if (sandTopCone) sandTopCone.scale.set(1, 1, 1);
+      if (sandBotCone) sandBotCone.scale.set(1, 1, 1);
+    }
+    if (k === 'rod' && beakerStage !== 'stirring') {
+      tl.g.rotation.z *= 0.84; tl.g.rotation.x *= 0.84;
+    }
+    if (k === 'ladle' && tl.skimAnimT > 0) {
+      tl.skimAnimT = Math.max(0, tl.skimAnimT - dt);
+      tl.g.rotation.z = tl.skimAnimT < 0.45 ? -0.58 : 0.14;
+    } else if (k === 'ladle') {
+      tl.g.rotation.z *= 0.84;
+    }
+
+    var bob = (draggingTool !== tl && !(k === 'rod' && beakerStage === 'stirring') && tl.flipT <= 0 && tl.skimAnimT <= 0)
+      ? Math.sin(t * (isCue ? 4.8 : 2.3) + tl.home.x) * (isCue ? 0.042 : 0.015) : 0;
+
+    tl.g.position.x += (tl.goal.x - tl.g.position.x) * Math.min(1, dt * 14);
+    tl.g.position.y += ((tl.goal.y + bob) - tl.g.position.y) * Math.min(1, dt * 14);
+    tl.g.position.z += (tl.goal.z - tl.g.position.z) * Math.min(1, dt * 14);
+    tl.padRing.material.opacity = isCue ? (0.48 + 0.36 * Math.sin(t * 5.6)) : 0.0;
+    tl.padRing.scale.setScalar(isCue ? (1.0 + 0.08 * Math.sin(t * 5.6)) : 1);
+
+    if (draggingTool === tl || (k === 'rod' && beakerStage === 'stirring') || tl.g.position.distanceTo(tl.home) > 0.45) {
+      tl.tagEl.style.opacity = '0';
+    } else {
+      tl.tagEl.style.opacity = '1';
+      projV.set(tl.home.x, 0.10, tl.home.z + 0.62).project(camera);
+      var tx = (projV.x * 0.5 + 0.5) * window.innerWidth;
+      var ty = (-projV.y * 0.5 + 0.5) * window.innerHeight;
+      tl.tagEl.style.left = tx + 'px';
+      tl.tagEl.style.top = ty + 'px';
+      if (isCue && cueTxt) {
+        projV.set(tl.home.x, tl.home.y + tl.tagY, tl.home.z).project(camera);
+        var cx = (projV.x * 0.5 + 0.5) * window.innerWidth;
+        var cy = (-projV.y * 0.5 + 0.5) * window.innerHeight;
+        cueEl.textContent = cueTxt;
+        cueEl.style.left = Math.max(125, Math.min(window.innerWidth - 125, cx)) + 'px';
+        cueEl.style.top = Math.max(92, Math.min(window.innerHeight - 62, cy)) + 'px';
+        cueEl.classList.add('show');
+        cuePositioned = true;
+      }
+    }
+  });
+
+  // 更新 4 种样品杯/碗及头顶特征徽章
+  SPECIMENS.forEach(function (sp) {
+    sp.g.position.x += (sp.goalX - sp.g.position.x) * Math.min(1, dt * 14);
+    sp.g.position.y += (sp.goalY - sp.g.position.y) * Math.min(1, dt * 14);
+    sp.g.position.z += (sp.goalZ - sp.g.position.z) * Math.min(1, dt * 14);
+    if (sp.wobbleT > 0) {
+      sp.wobbleT = Math.max(0, sp.wobbleT - dt);
+      sp.model.rotation.z = Math.sin(sp.wobbleT * 28) * 0.24;
+    } else if (sp.tiltT > 0) {
+      sp.tiltT = Math.max(0, sp.tiltT - dt);
+      sp.model.rotation.z = -0.68;
+    } else {
+      sp.model.rotation.z *= 0.84;
+    }
+    var isCue = (cueSpec === sp);
+    if (draggingSpec !== sp && selectedSpec !== sp) {
+      sp.ring.material.opacity = isCue ? (0.48 + 0.36 * Math.sin(t * 5.6)) : 0;
+    }
+    projV.set(sp.g.position.x, sp.g.position.y + 0.72, sp.g.position.z).project(camera);
+    var sx = (projV.x * 0.5 + 0.5) * window.innerWidth;
+    var sy = (-projV.y * 0.5 + 0.5) * window.innerHeight;
+    sp.wrapEl.style.left = sx + 'px';
+    sp.wrapEl.style.top = sy + 'px';
+    if (isCue && cueTxt && draggingSpec !== sp) {
+      cueEl.textContent = cueTxt;
+      cueEl.style.left = Math.max(125, Math.min(window.innerWidth - 125, sx)) + 'px';
+      cueEl.style.top = Math.max(92, Math.min(window.innerHeight - 62, sy - (sp.tested ? 54 : 34))) + 'px';
+      cueEl.classList.add('show');
+      cuePositioned = true;
+    }
+  });
+
+  if (!cuePositioned && cueWorld && cueTxt) {
+    projV.copy(cueWorld).project(camera);
+    var wx = (projV.x * 0.5 + 0.5) * window.innerWidth;
+    var wy = (-projV.y * 0.5 + 0.5) * window.innerHeight;
+    if (wy < 280) wx = Math.min(window.innerWidth - 268, wx);
+    cueEl.textContent = cueTxt;
+    cueEl.style.left = Math.max(125, Math.min(window.innerWidth - 125, wx)) + 'px';
+    cueEl.style.top = Math.max(92, Math.min(window.innerHeight - 62, wy)) + 'px';
+    cueEl.classList.add('show');
+    cuePositioned = true;
+  }
+  if (!cuePositioned) cueEl.classList.remove('show');
+
+  // 粒子自动消退（D4）
+  for (var i = fxParts.length - 1; i >= 0; i--) {
+    var d = fxParts[i];
+    d.life -= dt;
+    d.vy += d.grav * dt;
+    d.m.position.x += d.vx * dt; d.m.position.y += d.vy * dt; d.m.position.z += d.vz * dt;
+    if (d.m.position.y < 0.06) d.m.position.y = 0.06;
+    d.m.material.opacity = Math.max(0, d.life / d.maxLife);
+    if (d.life <= 0) { live.remove(d.m); fxParts.splice(i, 1); }
+  }
+
+  // 彩带
+  if (cfOn) {
+    cfCtx.clearRect(0, 0, cfCanvas.width, cfCanvas.height);
+    var alive = 0;
+    cfParts.forEach(function (p) {
+      p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 240 * dt; p.a += p.va * dt;
+      if (p.y < cfCanvas.height + 24) {
+        alive++;
+        cfCtx.save(); cfCtx.translate(p.x, p.y); cfCtx.rotate(p.a);
+        cfCtx.fillStyle = p.c; cfCtx.fillRect(-p.r, -p.r * 0.5, p.r * 2, p.r);
+        cfCtx.restore();
+      }
+    });
+    if (!alive) { cfOn = false; cfCtx.clearRect(0, 0, cfCanvas.width, cfCanvas.height); }
+  }
+
+  renderer.render(scene, camera);
+}
+
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () {
+    return {
+      triangles: renderer.info.render.triangles,
+      celebrated: celebrated,
+      traysUnlocked: traysUnlocked,
+      oilSkimmed: oilSkimmed,
+      testedCount: countTested(),
+      sortedCount: countSorted()
+    };
+  },
+  getState: function () {
+    var sp = {};
+    SPECIMENS.forEach(function (s) { sp[s.id] = { tested: s.tested, tray: s.tray, cat: s.cat }; });
+    return {
+      celebrated: celebrated,
+      beakerContent: beakerContent,
+      beakerStage: beakerStage,
+      oilSkimmed: oilSkimmed,
+      traysUnlocked: traysUnlocked,
+      forceCueTool: forceCueTool,
+      testedCount: countTested(),
+      sortedCount: countSorted(),
+      specimens: sp
+    };
+  },
+  project3D: function (x, y, z) {
+    var v = new THREE.Vector3(x, y, z).project(camera);
+    return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight };
+  },
+  getTargets: function () {
+    var self = this;
+    var tools = {}, specs = {}, trays = {};
+    Object.keys(TOOLS).forEach(function (k) {
+      var tl = TOOLS[k];
+      tools[k] = self.project3D(tl.g.position.x, tl.g.position.y + 0.40, tl.g.position.z);
+    });
+    SPECIMENS.forEach(function (s) {
+      specs[s.id] = self.project3D(s.g.position.x, s.g.position.y + 0.34, s.g.position.z);
+    });
+    Object.keys(TRAYS).forEach(function (k) {
+      trays[k] = self.project3D(TRAYS[k].x, 0.22, TRAYS[k].z);
+    });
+    return {
+      tools: tools,
+      specs: specs,
+      trays: trays,
+      beaker: self.project3D(BEAKER_POS.x, 0.95, BEAKER_POS.z)
+    };
+  },
+  startDemo: startDemo,
+  resetAll: resetAll
+};
+
+updateCompareCard();
+updateGuide(false);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

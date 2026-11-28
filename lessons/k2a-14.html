@@ -1,0 +1,2250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第14课 生活中的科技产品 · 科技展馆与灯箱海报工坊</title>
+<style>
+:root{--accent:#e56d17;--ink:#2a2218;--line:#e4d5ba;--card:rgba(255,253,248,.95);--ok:#16a34a}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#4e3523;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.46em;color:#7a6a52;font-weight:500}
+body.no-py rt{display:none}
+
+/* 左上标题卡片 */
+#hudTL{position:fixed;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:9px;
+  padding:6px 13px 6px 8px;border-radius:15px;background:var(--card);border:1.5px solid var(--line);
+  box-shadow:0 4px 16px rgba(45,25,10,.2)}
+#backBtn{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:#5c4b34;font-size:18px;font-weight:900}
+#backBtn:hover{border-color:var(--accent);color:var(--accent)}
+.hd-t{font-size:15.5px;font-weight:900;line-height:1.45}
+.hd-sub{font-size:11px;color:#7b6c56;font-weight:700}
+
+/* 顶部中央动态分步小助手（U2） */
+#guideBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:6;
+  max-width:min(450px,calc(100vw - 660px));display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:15px;background:rgba(255,250,240,.97);
+  border:2px solid #f08a24;box-shadow:0 6px 18px rgba(130,68,12,.18);
+  font-size:13px;font-weight:800;color:#753a07;cursor:pointer;line-height:1.36}
+#guideBar:active{transform:translateX(-50%) scale(.98)}
+#guideBar.pulse{animation:guidePop .45s ease}
+@keyframes guidePop{0%{transform:translateX(-50%) scale(.94)}50%{transform:translateX(-50%) scale(1.03)}100%{transform:translateX(-50%) scale(1)}}
+
+/* 右上工具条 */
+#hudTR{position:fixed;top:12px;right:12px;z-index:7;display:flex;align-items:center;gap:6px}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:36px;padding:0 11px;border-radius:11px;border:1.5px solid var(--line);
+  background:var(--card);font:inherit;font-size:13px;font-weight:800;color:#4a3c28;cursor:pointer;
+  box-shadow:0 3px 0 #d9c8ab;transition:all .14s}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:#b8500a;color:#fff;box-shadow:0 3px 0 #b8500a}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#ffedd5;border:1.5px solid var(--accent);color:#b44908;font-size:10.5px;font-weight:900;
+  white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(229,109,23,.24);
+  animation:cuePop 1.6s ease-in-out infinite;transition:opacity .25s}
+body.interacted .entry-cue{opacity:0;animation:none}
+@keyframes cuePop{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+
+/* 右上窄版发现栏（D3 防遮挡铁律） */
+#notes{position:fixed;top:56px;right:12px;z-index:6;width:220px;padding:8px 10px;border-radius:14px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 6px 18px rgba(45,25,10,.16)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:5px}
+.nt-title{font-size:13px;font-weight:900}
+.nt-cnt{font-size:12px;font-weight:900;color:var(--accent)}
+.nt-tog{padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:11px;font-weight:800;color:#6c5c45;cursor:pointer}
+.stamps{display:flex;gap:4px;margin-bottom:5px}
+.st{flex:1;text-align:center;padding:3px 2px;border-radius:8px;font-size:10.5px;font-weight:800;
+  border:1.5px dashed #d7c5a4;color:#9b8a70;background:#faf4e8;transition:all .2s;line-height:1.35}
+.st.lit{border-style:solid;border-color:var(--accent);background:#fff2df;color:#b8500a;animation:stPop .4s ease}
+@keyframes stPop{0%{transform:scale(.75)}60%{transform:scale(1.1)}100%{transform:scale(1)}}
+#ntList{display:flex;flex-direction:column;gap:4px;max-height:146px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList{display:none}
+.stk{padding:5px 7px;border-radius:9px;background:#fff;border:1px solid #ece0c9;font-size:11.5px;font-weight:700;line-height:1.36}
+
+/* 左侧轻量化进度仪 */
+#stageCard{position:fixed;left:12px;top:74px;z-index:5;width:186px;padding:8px 10px;border-radius:14px;
+  background:rgba(255,252,244,.94);border:1.5px solid var(--line);box-shadow:0 6px 16px rgba(45,25,10,.16)}
+.sg-h{font-size:12px;font-weight:900;color:#9a3412;display:flex;justify-content:space-between;margin-bottom:5px}
+.sg-row{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;font-weight:800;padding:3px 6px;
+  border-radius:8px;background:#faf4e8;margin-bottom:3px;border:1px solid #ece0c9}
+.sg-row.ok{background:#ecfdf5;border-color:#86efac;color:#15803d}
+.sg-sub{font-size:10.5px;color:#6c5c45;font-weight:700;line-height:1.38}
+
+/* 3D 浮标层 */
+#labels{position:fixed;inset:0;pointer-events:none;z-index:8}
+.cue3d{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:6px 13px;border-radius:99px;
+  background:#fff7ed;border:2.5px solid #ea580c;color:#9a3412;font-size:13.5px;font-weight:900;white-space:nowrap;
+  box-shadow:0 6px 18px rgba(234,88,12,.34);animation:cueBob 1.15s ease-in-out infinite;display:none;pointer-events:none}
+.cue3d.show{display:block}
+.cue3d.urgent{background:#fef2f2;border-color:#dc2626;color:#991b1b;box-shadow:0 6px 20px rgba(220,38,38,.36)}
+@keyframes cueBob{0%,100%{transform:translate(-50%,-100%) translateY(0)}50%{transform:translate(-50%,-100%) translateY(-6px)}}
+.float-msg{position:absolute;left:0;top:0;transform:translate(-50%,-100%);font-size:18px;font-weight:900;
+  color:#c2560c;text-shadow:0 2px 0 #fff,0 0 8px #fff;white-space:nowrap;animation:fUp 1.55s ease-out forwards}
+.float-msg.ok{color:#15803d}
+.float-msg.bad{color:#dc2626}
+@keyframes fUp{0%{opacity:0;transform:translate(-50%,-40%) scale(.7)}18%{opacity:1;transform:translate(-50%,-100%) scale(1.05)}100%{opacity:0;transform:translate(-50%,-190%) scale(1)}}
+
+/* 通关彩带与巩固弹窗 */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+#winToast{position:fixed;inset:0;z-index:35;display:none;place-items:center;background:rgba(36,24,10,.36);padding:16px}
+#winToast.show{display:grid}
+.win-card{width:min(460px,100%);max-height:86vh;overflow-y:auto;background:#fffdf8;
+  border:2.5px solid var(--accent);border-radius:22px;padding:18px 20px;text-align:center;
+  box-shadow:0 20px 50px rgba(40,22,4,.28)}
+.win-concl{margin:10px 0;padding:10px 12px;border-radius:13px;background:#fff8eb;border:1.5px solid #f2cf9b;
+  text-align:left;font-size:13.5px;line-height:1.6;color:#5a3309;font-weight:700}
+.win-quiz{margin:10px 0;padding:10px 12px;border-radius:13px;background:#f8fafc;border:1.5px solid #d9e2ec;text-align:left}
+.win-quiz h4{margin:0 0 8px;font-size:13.5px;color:#2b3a4a}
+.qopts{display:flex;flex-direction:column;gap:7px}
+.qopt{padding:8px 11px;border-radius:11px;border:1.5px solid #d9d0be;background:#fff;
+  font:inherit;font-size:13px;font-weight:800;text-align:left;cursor:pointer;transition:all .14s;color:#2a2218}
+.qopt:hover{border-color:var(--accent);background:#fff9f0}
+.qopt.ok{border-color:#2b8a3e;background:#ebfbee;color:#2b8a3e}
+.qopt.bad{border-color:#e03131;background:#fff5f5;color:#c92a2a}
+.qfb{margin-top:7px;font-size:12.5px;font-weight:800;min-height:18px}
+.win-acts{display:flex;justify-content:center;gap:10px;margin-top:12px}
+
+@media (max-width:1120px){
+  #guideBar{top:58px;left:12px;transform:none;max-width:calc(100vw - 260px)}
+  #stageCard{top:110px;width:176px}
+}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="labels">
+  <div class="cue3d" id="targetCue">💡 先点桌上实物体验功能</div>
+</div>
+<canvas id="confetti"></canvas>
+
+<div id="hudTL">
+  <a id="backBtn" href="../index.html" title="返回书包">‹</a>
+  <div>
+    <div class="hd-t" data-py="dì kè shēng huó zhōng de kē jì chǎn pǐn">第14课 生活中的科技产品</div>
+    <div class="hd-sub">活页 · 课本第 61 页「科技展馆与灯箱海报工坊」</div>
+  </div>
+</div>
+
+<div id="guideBar" title="点我重听当前步骤">
+  <span id="guideIco">💡</span>
+  <span id="guideTxt">第1步：点击桌上每件3D物品，先通电体验科技便利或观察自然物！</span>
+</div>
+
+<div id="hudTR">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<aside id="stageCard">
+  <div class="sg-h"><span id="sgTitle">🔬 阶段1 · 体验分拣</span><span id="sgStep">1 / 2</span></div>
+  <div class="sg-row" id="sgRow1"><span>体验实物</span><span id="sgVal1">0 / 6</span></div>
+  <div class="sg-row" id="sgRow2"><span>正确入馆</span><span id="sgVal2">0 / 6</span></div>
+  <div class="sg-row" id="sgRow3"><span>科技海报</span><span id="sgVal3">待创作</span></div>
+  <div class="sg-sub" id="sgSub">支持直拖进柜或轻点体验</div>
+</aside>
+
+<aside id="notes">
+  <div class="nt-head">
+    <span class="nt-title" data-py="wǒ de fā xiàn">我的发现</span>
+    <span class="nt-cnt" id="ntCnt">0</span>
+    <button class="nt-tog" id="ntTog" type="button">收起</button>
+  </div>
+  <div class="stamps">
+    <span class="st" id="st1" data-py="tǐ yàn fā xiàn">体验发现</span>
+    <span class="st" id="st2" data-py="fēn lèi rù guǎn">分类入馆</span>
+    <span class="st" id="st3" data-py="kē jì hǎi bào">科技海报</span>
+  </div>
+  <div id="ntList"></div>
+</aside>
+
+<div id="winToast">
+  <div class="win-card">
+    <div style="font-size:38px">🏆</div>
+    <h3 style="margin:4px 0" data-py="tài bàng la xiǎo xiǎo kē jì cè zhǎn shī">太棒啦！小小科技策展师！</h3>
+    <div class="win-concl">
+      <b>✨ 科学小结论：</b>台灯、电风扇、冰箱、自行车和电话手表都是人类设计制造的<b>人工科技产品</b>，它们为我们的生活带来照明、降温、保鲜、代步和定位等各种便利；而石头和树叶属于<b>大自然产物</b>，不是人工制造的。
+    </div>
+    <div class="win-quiz">
+      <h4>💡 考考你 · 答对领小红花 🌸</h4>
+      <div style="font-size:13px;font-weight:800;margin-bottom:8px">下面哪一样属于人类设计制造、给生活带来便利的「科技产品」？</div>
+      <div class="qopts" id="qOpts">
+        <button class="qopt" type="button" data-ok="1">💡 晚上能照亮书桌的护眼台灯</button>
+        <button class="qopt" type="button" data-hint="小溪边的石头是大自然天然形成的，不是人类制造的科技产品哦！">⛰ 小溪边天然形成的花岗岩石头</button>
+        <button class="qopt" type="button" data-hint="树叶是植物在大自然中自己长出来的，属于自然产物哦！">🌿 大树上自然长出的绿色树叶</button>
+      </div>
+      <div class="qfb" id="qFb"></div>
+    </div>
+    <div class="win-acts">
+      <button class="tbtn" id="winKeepBtn" type="button">继续玩</button>
+      <button class="tbtn on" id="winAgainBtn" type="button">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js?v=doubao-2"></script>
+<script src="../vendor/voice.js?v=doubao-2"></script>
+<script>
+(function () {
+'use strict';
+
+try { sessionStorage.setItem('xk_last_vol', 'k2a'); } catch (e) {}
+
+var LESSON_ID = 'k2a-14';
+var BOOK_PROGRESS_KEY = 'xk_k2a_progress';
+
+var $ = function (s) { return document.querySelector(s); };
+var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
+var HAN = /[\u3400-\u9fff]/;
+var pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function ruby(text, py) {
+  if (!py) return esc(text);
+  var syl = py.trim().split(/\s+/), i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) {
+      var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; }
+      out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>';
+    } else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+$$('[data-py]').forEach(function (el) { el.innerHTML = ruby(el.textContent, el.dataset.py); });
+
+$('#backBtn').addEventListener('click', function () {
+  try { sessionStorage.setItem('xk_last_vol', 'k2a'); } catch (e) {}
+});
+
+/* ===== 语音与音效 ===== */
+var voiceOn = true;
+function stopVoice() {
+  if (window.__xkVoice) window.__xkVoice.stop();
+  else if (window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
+}
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text, '../audio/', true); return; }
+}
+
+var audioCtx = null;
+function playTone(freq, dur, type, vol, delay) {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    var t0 = audioCtx.currentTime + (delay || 0);
+    var osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0.001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.11, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + (dur || 0.18));
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(t0); osc.stop(t0 + (dur || 0.18) + 0.02);
+  } catch (e) {}
+}
+function sfxClick() { playTone(660, 0.09, 'sine', 0.1); playTone(920, 0.11, 'triangle', 0.09, 0.05); }
+function sfxBell() { playTone(1560, 0.14, 'sine', 0.12); playTone(2080, 0.18, 'sine', 0.1, 0.09); }
+function sfxOk() { playTone(587, 0.11, 'triangle', 0.11); playTone(880, 0.16, 'triangle', 0.11, 0.07); }
+function sfxStamp() { playTone(220, 0.1, 'square', 0.09); playTone(660, 0.14, 'triangle', 0.1, 0.08); playTone(990, 0.2, 'triangle', 0.1, 0.16); }
+function sfxErr() { playTone(280, 0.14, 'sawtooth', 0.09); playTone(200, 0.2, 'sawtooth', 0.08, 0.09); }
+function sfxWin() { [523, 659, 784, 1046].forEach(function (f, i) { playTone(f, 0.24, 'triangle', 0.13, i * 0.09); }); }
+
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem(BOOK_PROGRESS_KEY) || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem(BOOK_PROGRESS_KEY, JSON.stringify(d));
+  } catch (e) {}
+}
+
+/* ===== 彩带 ===== */
+var cfCv = $('#confetti'), cfCtx = cfCv.getContext('2d'), cfList = [];
+function launchConfetti() {
+  cfCv.width = window.innerWidth; cfCv.height = window.innerHeight;
+  var cols = ['#f97316', '#facc15', '#22c55e', '#38bdf8', '#ec4899', '#a855f7'];
+  cfList = [];
+  for (var i = 0; i < 95; i++) {
+    cfList.push({
+      x: Math.random() * cfCv.width,
+      y: -20 - Math.random() * 140,
+      vx: (Math.random() - 0.5) * 200,
+      vy: 150 + Math.random() * 210,
+      r: 5 + Math.random() * 6,
+      rot: Math.random() * 6.28,
+      vr: (Math.random() - 0.5) * 9,
+      c: cols[i % cols.length],
+      life: 3.4
+    });
+  }
+}
+function tickConfetti(dt) {
+  if (!cfList.length) return;
+  cfCtx.clearRect(0, 0, cfCv.width, cfCv.height);
+  for (var i = cfList.length - 1; i >= 0; i--) {
+    var p = cfList[i];
+    p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 170 * dt; p.rot += p.vr * dt; p.life -= dt;
+    if (p.life <= 0 || p.y > cfCv.height + 30) { cfList.splice(i, 1); continue; }
+    cfCtx.save(); cfCtx.translate(p.x, p.y); cfCtx.rotate(p.rot);
+    cfCtx.fillStyle = p.c; cfCtx.fillRect(-p.r / 2, -p.r * 0.35, p.r, p.r * 0.7);
+    cfCtx.restore();
+  }
+  if (!cfList.length) cfCtx.clearRect(0, 0, cfCv.width, cfCv.height);
+}
+
+/* ===== Three.js 场景（温润去塑料感三光 + 深胡桃木桌，零 sRGBEncoding + Toon） ===== */
+var cv = $('#cv');
+var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color('#64452e');
+var camera = new THREE.PerspectiveCamera(35, 16 / 9, 0.1, 70);
+
+scene.add(new THREE.HemisphereLight('#eef5ff', '#4b321d', 0.72));
+var sunL = new THREE.DirectionalLight('#fff5e2', 0.78);
+sunL.position.set(4.5, 11.5, 7.5);
+sunL.castShadow = true;
+sunL.shadow.mapSize.set(1024, 1024);
+sunL.shadow.bias = -0.001;
+sunL.shadow.camera.left = -8; sunL.shadow.camera.right = 8;
+sunL.shadow.camera.top = 7; sunL.shadow.camera.bottom = -7;
+scene.add(sunL);
+
+var fillL = new THREE.DirectionalLight('#d0e4ff', 0.28);
+fillL.position.set(-6, 5, -5);
+scene.add(fillL);
+
+var toon = function (col, extra) {
+  var o = { color: col };
+  if (extra) { for (var k in extra) o[k] = extra[k]; }
+  return new THREE.MeshToonMaterial(o);
+};
+var live = new THREE.Group();
+scene.add(live);
+
+/* ===== 深胡桃木实验大桌（温润高对比度木纹） ===== */
+function makeWalnutTex() {
+  var c = document.createElement('canvas');
+  c.width = 1024; c.height = 512;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#4e311d';
+  ctx.fillRect(0, 0, 1024, 512);
+  for (var y = 0; y < 512; y += 6) {
+    ctx.fillStyle = y % 12 === 0 ? 'rgba(26,14,5,0.22)' : 'rgba(128,84,48,0.13)';
+    ctx.fillRect(0, y, 1024, 3);
+  }
+  ctx.strokeStyle = 'rgba(255,226,184,0.16)';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(18, 18, 988, 476);
+  return new THREE.CanvasTexture(c);
+}
+var deskMesh = new THREE.Mesh(new THREE.BoxGeometry(12.2, 0.45, 6.4), new THREE.MeshToonMaterial({ map: makeWalnutTex() }));
+deskMesh.position.set(0, -0.23, 0.35);
+deskMesh.receiveShadow = true;
+live.add(deskMesh);
+
+var stage1Group = new THREE.Group();
+var stage2Group = new THREE.Group();
+stage2Group.visible = false;
+live.add(stage1Group);
+live.add(stage2Group);
+
+var hitMat = new THREE.MeshBasicMaterial({ visible: false });
+
+/* ======================================================================
+   阶段 1：柔和科技靛蓝「人工科技馆」+ 温润森林绿「大自然展柜」+ 6 件手办级精雕实物
+   ====================================================================== */
+function makeSignTex(bg, border, title, sub) {
+  var c = document.createElement('canvas');
+  c.width = 512; c.height = 152;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, 512, 152);
+  ctx.strokeStyle = border; ctx.lineWidth = 10; ctx.strokeRect(8, 8, 496, 136);
+  ctx.fillStyle = '#ffffff'; ctx.font = '900 46px "Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'center'; ctx.fillText(title, 256, 74);
+  ctx.fillStyle = '#fef3c7'; ctx.font = '700 26px "Microsoft YaHei",sans-serif';
+  ctx.fillText(sub, 256, 120);
+  return new THREE.CanvasTexture(c);
+}
+
+// 克制协调的双展柜（彻底告别刺眼荧光绿！）
+function buildCabinet(id, x, z, baseHex, wallHex, trimHex, title, sub, slotsLocal) {
+  var g = new THREE.Group();
+  g.position.set(x, 0, z);
+  stage1Group.add(g);
+
+  var W = 2.38, D = 1.34, H = 1.08;
+  // 底座台面
+  var base = new THREE.Mesh(new THREE.BoxGeometry(W, 0.16, D), toon(baseHex));
+  base.position.y = 0.08; base.castShadow = true; base.receiveShadow = true;
+  g.add(base);
+
+  // 内部微浅色展示台面
+  var floorDeck = new THREE.Mesh(new THREE.BoxGeometry(W - 0.16, 0.03, D - 0.18), toon(trimHex));
+  floorDeck.position.set(0, 0.17, 0.02); floorDeck.receiveShadow = true;
+  g.add(floorDeck);
+
+  // 背板
+  var backWall = new THREE.Mesh(new THREE.BoxGeometry(W - 0.04, H, 0.10), toon(wallHex));
+  backWall.position.set(0, 0.16 + H / 2, -D / 2 + 0.05); backWall.castShadow = true;
+  g.add(backWall);
+
+  // 四角细支柱 + 柔和半透明玻璃罩
+  var pillarGeo = new THREE.BoxGeometry(0.06, H, 0.06);
+  [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function (sg) {
+    var p = new THREE.Mesh(pillarGeo, toon(baseHex));
+    p.position.set(sg[0] * (W / 2 - 0.04), 0.16 + H / 2, sg[1] * (D / 2 - 0.04));
+    g.add(p);
+  });
+
+  var glassMat = new THREE.MeshBasicMaterial({ color: trimHex, transparent: true, opacity: 0.14 });
+  var glass = new THREE.Mesh(new THREE.BoxGeometry(W - 0.10, H - 0.06, D - 0.10), glassMat);
+  glass.position.set(0, 0.16 + H / 2, 0);
+  g.add(glass);
+
+  // 顶部标牌
+  var sign = new THREE.Mesh(new THREE.BoxGeometry(W - 0.06, 0.38, 0.12), [
+    toon(baseHex), toon(baseHex), toon(baseHex), toon(baseHex),
+    new THREE.MeshBasicMaterial({ map: makeSignTex(baseHex, trimHex, title, sub) }),
+    toon(baseHex)
+  ]);
+  sign.position.set(0, 0.16 + H + 0.19, -D / 2 + 0.08);
+  sign.castShadow = true;
+  g.add(sign);
+
+  // 拖近时整圈发光门框提示（前门框 + 底环同步点亮！）
+  var frameGlowMat = new THREE.MeshBasicMaterial({ color: '#fde047', transparent: true, opacity: 0.0 });
+  var glowGroup = new THREE.Group();
+  var gBot = new THREE.Mesh(new THREE.BoxGeometry(W + 0.14, 0.07, D + 0.14), frameGlowMat);
+  gBot.position.y = 0.04;
+  var gTop = new THREE.Mesh(new THREE.BoxGeometry(W + 0.08, 0.06, 0.08), frameGlowMat);
+  gTop.position.set(0, 0.16 + H, D / 2);
+  var gL = new THREE.Mesh(new THREE.BoxGeometry(0.07, H + 0.04, 0.08), frameGlowMat);
+  gL.position.set(-W / 2, 0.16 + H / 2, D / 2);
+  var gR = new THREE.Mesh(new THREE.BoxGeometry(0.07, H + 0.04, 0.08), frameGlowMat);
+  gR.position.set(W / 2, 0.16 + H / 2, D / 2);
+  glowGroup.add(gBot, gTop, gL, gR);
+  g.add(glowGroup);
+
+  // 超大隐形纯 Mesh 碰撞体（拖放屏幕射线 100% 必中！）
+  var hit = new THREE.Mesh(new THREE.BoxGeometry(W + 0.42, H + 0.65, D + 0.42), hitMat);
+  hit.position.set(0, 0.72, 0.05);
+  hit.userData.cabId = id;
+  g.add(hit);
+
+  return { id: id, group: g, hit: hit, frameGlowMat: frameGlowMat, slots: slotsLocal, filled: 0 };
+}
+
+var cabTech = buildCabinet('tech', 2.48, -1.02, '#2a4a8a', '#3b62ab', '#93b4f0', '人工科技馆', '人类发明制造', [
+  new THREE.Vector3(-0.82, 0.19, 0.08),
+  new THREE.Vector3(-0.28, 0.19, 0.08),
+  new THREE.Vector3(0.28, 0.19, 0.08),
+  new THREE.Vector3(0.82, 0.19, 0.08)
+]);
+var cabNature = buildCabinet('nature', 2.48, 1.44, '#27593d', '#3a7554', '#86bf9c', '大自然展柜', '天然形成生长', [
+  new THREE.Vector3(-0.52, 0.19, 0.08),
+  new THREE.Vector3(0.52, 0.19, 0.08)
+]);
+
+/* ===== 6 件手办级精雕 3D 实物模型 ===== */
+var items = [];
+var coldMist = [];
+
+function addItemBaseRing(g) {
+  var m = new THREE.MeshBasicMaterial({ color: '#facc15', transparent: true, opacity: 0.0 });
+  var r = new THREE.Mesh(new THREE.RingGeometry(0.46, 0.60, 28), m);
+  r.rotation.x = -Math.PI / 2;
+  r.position.y = 0.025;
+  g.add(r);
+  return m;
+}
+
+// 1) 护眼台灯（暖白圆底座带红按钮 + 银灰双节可调灯臂 + 经典钟形灯罩 + 温暖灯泡光锥！）
+var lampLight = new THREE.PointLight('#fde047', 0, 5.2);
+var lampConeMat = new THREE.MeshBasicMaterial({ color: '#fef08a', transparent: true, opacity: 0, side: THREE.DoubleSide });
+function buildLamp() {
+  var g = new THREE.Group();
+  // 暖白圆底座 + 银边装饰环 + 红色开关按钮
+  var base = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.38, 0.11, 28), toon('#efe6d5'));
+  base.position.y = 0.055; base.castShadow = true; base.receiveShadow = true; g.add(base);
+  var baseRim = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.018, 8, 28), toon('#cbd5e1'));
+  baseRim.rotation.x = Math.PI / 2; baseRim.position.y = 0.105; g.add(baseRim);
+  var swBase = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.095, 0.03, 16), toon('#cbd5e1'));
+  swBase.position.set(0.14, 0.115, 0.14); g.add(swBase);
+  var btn = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.065, 0.055, 16), toon('#ef4444'));
+  btn.position.set(0.14, 0.14, 0.14); g.add(btn);
+
+  // 底座接头 + 银灰双节可调灯臂 + 黑色关节钮
+  var armMat = toon('#b0bec5');
+  var jointMat = toon('#475569');
+  var j0 = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.065, 0.08, 14), jointMat);
+  j0.position.set(-0.14, 0.13, -0.06); g.add(j0);
+  var arm1 = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.036, 0.56, 14), armMat);
+  arm1.position.set(-0.22, 0.40, -0.06); arm1.rotation.z = 0.28; arm1.castShadow = true; g.add(arm1);
+  var elbow = new THREE.Mesh(new THREE.SphereGeometry(0.058, 14, 14), jointMat);
+  elbow.position.set(-0.30, 0.66, -0.06); g.add(elbow);
+  var arm2 = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.034, 0.54, 14), armMat);
+  arm2.position.set(-0.07, 0.85, -0.02); arm2.rotation.z = -0.88; arm2.castShadow = true; g.add(arm2);
+  var neck = new THREE.Mesh(new THREE.SphereGeometry(0.052, 14, 14), jointMat);
+  neck.position.set(0.16, 1.02, 0.02); g.add(neck);
+
+  // 经典钟形弧面灯罩（LatheGeometry 平滑钟形，告别青色漏斗！）
+  var bellPts = [
+    new THREE.Vector2(0.06, 0.22),
+    new THREE.Vector2(0.11, 0.20),
+    new THREE.Vector2(0.16, 0.13),
+    new THREE.Vector2(0.24, 0.02),
+    new THREE.Vector2(0.31, -0.10),
+    new THREE.Vector2(0.32, -0.14)
+  ];
+  var shadeGroup = new THREE.Group();
+  shadeGroup.position.set(0.24, 0.96, 0.04);
+  shadeGroup.rotation.z = -0.34;
+  var shadeOuter = new THREE.Mesh(new THREE.LatheGeometry(bellPts, 28), toon('#60a5fa', { side: THREE.DoubleSide }));
+  shadeOuter.castShadow = true;
+  shadeGroup.add(shadeOuter);
+  var shadeCap = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.11, 0.08, 18), toon('#2563eb'));
+  shadeCap.position.y = 0.23; shadeGroup.add(shadeCap);
+  var shadeRim = new THREE.Mesh(new THREE.TorusGeometry(0.315, 0.014, 8, 28), toon('#e2e8f0'));
+  shadeRim.rotation.x = Math.PI / 2; shadeRim.position.y = -0.135; shadeGroup.add(shadeRim);
+
+  // 温暖发光灯泡
+  var bulbMat = new THREE.MeshBasicMaterial({ color: '#fef08a' });
+  var bulb = new THREE.Mesh(new THREE.SphereGeometry(0.105, 16, 16), bulbMat);
+  bulb.position.y = -0.06; shadeGroup.add(bulb);
+  g.add(shadeGroup);
+
+  lampLight.position.set(0.34, 0.78, 0.08);
+  g.add(lampLight);
+  var cone = new THREE.Mesh(new THREE.ConeGeometry(0.62, 0.88, 24, 1, true), lampConeMat);
+  cone.position.set(0.34, 0.44, 0.06);
+  g.add(cone);
+
+  return { group: g, extra: { bulbMat: bulbMat } };
+}
+
+// 2) 清凉电风扇（稳重底座3色风速键 + 金属细网罩 + 3片圆润弧形透明蓝扇叶 + 飘逸多节丝带测风架！）
+function buildFan() {
+  var g = new THREE.Group();
+  // 底座 + 3 颗彩色风速按键
+  var base = new THREE.Mesh(new THREE.CylinderGeometry(0.30, 0.36, 0.10, 24), toon('#dce7f0'));
+  base.position.y = 0.05; base.castShadow = true; base.receiveShadow = true; g.add(base);
+  var deck = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.05, 0.16), toon('#94a3b8'));
+  deck.position.set(0, 0.10, 0.17); g.add(deck);
+  ['#22c55e', '#f59e0b', '#ef4444'].forEach(function (c, i) {
+    var kb = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.045, 0.07), toon(c));
+    kb.position.set(-0.095 + i * 0.095, 0.135, 0.18);
+    g.add(kb);
+  });
+
+  // 支柱 + 电机圆壳
+  var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.058, 0.56, 14), toon('#cbd5e1'));
+  pole.position.set(0, 0.36, -0.04); pole.castShadow = true; g.add(pole);
+  var motor = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.24, 18), toon('#64748b'));
+  motor.rotation.x = Math.PI / 2; motor.position.set(0, 0.80, -0.10); motor.castShadow = true; g.add(motor);
+  var motorBack = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 14), toon('#475569'));
+  motorBack.position.set(0, 0.80, -0.22); g.add(motorBack);
+
+  // 金属细网罩（外圈 + 2道同心细环 + 8根细辐射金属丝）
+  var cageGroup = new THREE.Group();
+  cageGroup.position.set(0, 0.80, 0.06);
+  var cageOuter = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.028, 12, 32), toon('#0284c7'));
+  cageOuter.castShadow = true; cageGroup.add(cageOuter);
+  var wireMat = toon('#94a3b8');
+  var ringMid = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.010, 8, 28), wireMat);
+  ringMid.position.z = 0.05; cageGroup.add(ringMid);
+  var ringIn = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.010, 8, 24), wireMat);
+  ringIn.position.z = 0.06; cageGroup.add(ringIn);
+  for (var w = 0; w < 8; w++) {
+    var spoke = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.007, 0.82, 6), wireMat);
+    spoke.rotation.z = (w * Math.PI) / 8;
+    spoke.position.z = 0.045;
+    cageGroup.add(spoke);
+  }
+  var badgeCap = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.085, 0.03, 18), toon('#0369a1'));
+  badgeCap.rotation.x = Math.PI / 2; badgeCap.position.z = 0.07;
+  cageGroup.add(badgeCap);
+  g.add(cageGroup);
+
+  // 3 片圆润弧形透明蓝扇叶（THREE.Shape 挤出泪滴弧形）
+  var blades = new THREE.Group();
+  blades.position.set(0, 0.80, 0.05);
+  var bShape = new THREE.Shape();
+  bShape.moveTo(0, 0.03);
+  bShape.bezierCurveTo(0.14, 0.08, 0.18, 0.28, 0.07, 0.36);
+  bShape.bezierCurveTo(-0.04, 0.40, -0.14, 0.28, -0.06, 0.06);
+  bShape.closePath();
+  var bGeo = new THREE.ExtrudeGeometry(bShape, { depth: 0.016, bevelEnabled: false });
+  var bladeMat = new THREE.MeshToonMaterial({ color: '#38bdf8', transparent: true, opacity: 0.86 });
+  for (var i = 0; i < 3; i++) {
+    var holder = new THREE.Group();
+    holder.rotation.z = (i * Math.PI * 2) / 3;
+    var bm = new THREE.Mesh(bGeo, bladeMat);
+    bm.rotation.y = 0.24;
+    holder.add(bm);
+    blades.add(holder);
+  }
+  var hub = new THREE.Mesh(new THREE.SphereGeometry(0.068, 14, 14), toon('#f97316'));
+  blades.add(hub);
+  g.add(blades);
+
+  // 旁边小测风丝带架（木座 + 细杆 + 横挂臂 + 多节柔软飘逸丝带！）
+  var standBase = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.13, 0.045, 16), toon('#92400e'));
+  standBase.position.set(0.56, 0.022, 0.18); g.add(standBase);
+  var ribPole = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.016, 0.80, 8), toon('#cbd5e1'));
+  ribPole.position.set(0.56, 0.42, 0.18); g.add(ribPole);
+  var crossArm = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, 0.18, 8), toon('#94a3b8'));
+  crossArm.rotation.z = Math.PI / 2;
+  crossArm.position.set(0.64, 0.81, 0.18); g.add(crossArm);
+  var ribTop = new THREE.Mesh(new THREE.SphereGeometry(0.026, 10, 10), toon('#f59e0b'));
+  ribTop.position.set(0.56, 0.82, 0.18); g.add(ribTop);
+
+  // 两条多节柔软飘带（挂在横臂外端，静止优雅垂落，开机明显向右波浪飘飞！）
+  function buildRibbonChain(colHex, xOff, zOff) {
+    var segs = [];
+    var parent = g;
+    for (var s = 0; s < 4; s++) {
+      var piv = new THREE.Group();
+      if (s === 0) piv.position.set(0.66 + xOff, 0.80, 0.18 + zOff);
+      else piv.position.set(0, -0.105, 0);
+      var piece = new THREE.Mesh(new THREE.BoxGeometry(0.06 - s * 0.006, 0.115, 0.010), toon(colHex));
+      piece.position.y = -0.056;
+      piv.add(piece);
+      parent.add(piv);
+      segs.push(piv);
+      parent = piv;
+    }
+    return segs;
+  }
+  var rib1 = buildRibbonChain('#f43f5e', 0.0, 0.02);
+  var rib2 = buildRibbonChain('#fbbf24', 0.04, -0.02);
+
+  return { group: g, extra: { blades: blades, rib1: rib1, rib2: rib2 } };
+}
+
+// 3) 迷你双门大冰箱（浅银灰+薄荷冰蓝机身、上下双门缝、银色竖向门把手、温控屏、开门清晰可见隔板+苹果+橙子+牛奶盒！）
+function makeFridgeScreenTex() {
+  var c = document.createElement('canvas');
+  c.width = 256; c.height = 128;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, 256, 128);
+  ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 8; ctx.strokeRect(6, 6, 244, 116);
+  ctx.fillStyle = '#38bdf8'; ctx.font = '900 54px "Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'center'; ctx.fillText('4°C', 128, 76);
+  ctx.fillStyle = '#94a3b8'; ctx.font = '700 22px "Microsoft YaHei",sans-serif';
+  ctx.fillText('保鲜模式', 128, 108);
+  return new THREE.CanvasTexture(c);
+}
+function makeMilkTex() {
+  var c = document.createElement('canvas');
+  c.width = 128; c.height = 160;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#f8fafc'; ctx.fillRect(0, 0, 128, 160);
+  ctx.fillStyle = '#2563eb'; ctx.fillRect(0, 0, 128, 44);
+  ctx.fillStyle = '#38bdf8'; ctx.fillRect(0, 122, 128, 38);
+  ctx.fillStyle = '#1e3a8a'; ctx.font = '900 34px "Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'center'; ctx.fillText('牛奶', 64, 96);
+  return new THREE.CanvasTexture(c);
+}
+function buildFridge() {
+  var g = new THREE.Group();
+  var shellMat = toon('#64889c');   // 高级银灰冰蓝外壳（Toon 下绝不死白过曝！）
+  var innerMat = toon('#b8dfee');   // 内胆冰蓝色
+
+  // 凹腔外壳（背板 + 左右侧壁 + 顶底板，真正中空可装食物！）
+  var back = new THREE.Mesh(new THREE.BoxGeometry(0.76, 1.18, 0.08), shellMat);
+  back.position.set(0, 0.61, -0.24); back.castShadow = true; g.add(back);
+  var wallL = new THREE.Mesh(new THREE.BoxGeometry(0.07, 1.18, 0.50), shellMat);
+  wallL.position.set(-0.345, 0.61, -0.02); wallL.castShadow = true; g.add(wallL);
+  var wallR = new THREE.Mesh(new THREE.BoxGeometry(0.07, 1.18, 0.50), shellMat);
+  wallR.position.set(0.345, 0.61, -0.02); wallR.castShadow = true; g.add(wallR);
+  var topCap = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.07, 0.52), shellMat);
+  topCap.position.set(0, 1.17, -0.01); topCap.castShadow = true; g.add(topCap);
+  var botCap = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.07, 0.52), toon('#64748b'));
+  botCap.position.set(0, 0.055, -0.01); g.add(botCap);
+  var innerBack = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 1.04), new THREE.MeshBasicMaterial({ color: '#e0f2fe' }));
+  innerBack.position.set(0, 0.62, -0.195); g.add(innerBack);
+
+  // 冷藏/冷冻中隔板 + 上层透明隔板
+  var midDiv = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.06, 0.44), toon('#7aa1b2'));
+  midDiv.position.set(0, 0.50, -0.01); g.add(midDiv);
+  var shelf1 = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.028, 0.38), new THREE.MeshToonMaterial({ color: '#7dd3fc', transparent: true, opacity: 0.72 }));
+  shelf1.position.set(0, 0.80, 0.0); g.add(shelf1);
+
+  // 内部食物（上层：红苹果+绿叶、橙子；下层冷藏：牛奶盒+翠绿菜盒）
+  var apple = new THREE.Mesh(new THREE.SphereGeometry(0.095, 14, 14), toon('#ef4444'));
+  apple.position.set(-0.16, 0.90, 0.04); g.add(apple);
+  var aLeaf = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.02, 0.03), toon('#16a34a'));
+  aLeaf.position.set(-0.14, 1.00, 0.04); aLeaf.rotation.z = 0.4; g.add(aLeaf);
+  var orange = new THREE.Mesh(new THREE.SphereGeometry(0.09, 14, 14), toon('#f97316'));
+  orange.position.set(0.14, 0.90, 0.05); g.add(orange);
+
+  var milkBox = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.22, 0.13), [
+    toon('#e2e8f0'), toon('#e2e8f0'), toon('#2563eb'), toon('#e2e8f0'),
+    new THREE.MeshBasicMaterial({ map: makeMilkTex() }), toon('#e2e8f0')
+  ]);
+  milkBox.position.set(-0.14, 0.64, 0.04); g.add(milkBox);
+  var milkTop = new THREE.Mesh(new THREE.ConeGeometry(0.095, 0.07, 4), toon('#2563eb'));
+  milkTop.rotation.y = Math.PI / 4; milkTop.position.set(-0.14, 0.78, 0.04); g.add(milkTop);
+
+  var boxFruit = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.14, 0.24), toon('#86efac'));
+  boxFruit.position.set(0.14, 0.60, 0.04); g.add(boxFruit);
+
+  // 冷冻室固定下门（清凉冰蓝 + 银色竖门把手）
+  var doorDn = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.44, 0.075), toon('#6da8bc'));
+  doorDn.position.set(0, 0.28, 0.245); doorDn.castShadow = true; g.add(doorDn);
+  var handleDn = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, 0.22, 10), toon('#334155'));
+  handleDn.position.set(-0.28, 0.30, 0.305); g.add(handleDn);
+
+  // 上下门清晰深色分隔缝
+  var seam = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.042, 0.082), toon('#334155'));
+  seam.position.set(0, 0.515, 0.242); g.add(seam);
+
+  // 冷藏室可开上门（右铰链平滑向右打开！）
+  var doorPivot = new THREE.Group();
+  doorPivot.position.set(0.375, 0.87, 0.245);
+  var doorUp = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.66, 0.075), toon('#84bfd1'));
+  doorUp.position.set(-0.375, 0, 0); doorUp.castShadow = true;
+  doorPivot.add(doorUp);
+
+  // 顶部数字温控屏（4°C）
+  var screen = new THREE.Mesh(new THREE.PlaneGeometry(0.26, 0.13), new THREE.MeshBasicMaterial({ map: makeFridgeScreenTex() }));
+  screen.position.set(-0.375, 0.19, 0.041);
+  doorPivot.add(screen);
+
+  // 银色竖向门把手
+  var hBar = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.30, 10), toon('#475569'));
+  hBar.position.set(-0.655, -0.04, 0.062);
+  var hPin1 = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, 0.05), toon('#64748b'));
+  hPin1.position.set(-0.655, 0.08, 0.04);
+  var hPin2 = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, 0.05), toon('#64748b'));
+  hPin2.position.set(-0.655, -0.16, 0.04);
+  doorPivot.add(hBar, hPin1, hPin2);
+
+  g.add(doorPivot);
+  return { group: g, extra: { doorPivot: doorPivot } };
+}
+
+// 4) 小巧自行车（经典三角红车架 + 6辐条双轮 + 脚踏链盘 + 车座 + 车把银铃铛！）
+function buildBike() {
+  var g = new THREE.Group();
+  function makeWheel(x) {
+    var wg = new THREE.Group();
+    wg.position.set(x, 0.30, 0);
+    var tire = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.044, 12, 28), toon('#1e293b'));
+    tire.castShadow = true; wg.add(tire);
+    var rim = new THREE.Mesh(new THREE.TorusGeometry(0.21, 0.016, 8, 24), toon('#e2e8f0'));
+    wg.add(rim);
+    for (var s = 0; s < 6; s++) {
+      var sp = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.42, 6), toon('#cbd5e1'));
+      sp.rotation.z = (s * Math.PI) / 6;
+      wg.add(sp);
+    }
+    var hub = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.038, 0.07, 12), toon('#94a3b8'));
+    hub.rotation.x = Math.PI / 2; wg.add(hub);
+    g.add(wg);
+    return wg;
+  }
+  var wL = makeWheel(-0.42);
+  var wR = makeWheel(0.42);
+
+  // 工具函数：两点之间精准连管（打造真实三角车架！）
+  var frameMat = toon('#dc2626');
+  function addTube(p1, p2, rad, mat) {
+    var v1 = new THREE.Vector3(p1[0], p1[1], p1[2] || 0);
+    var v2 = new THREE.Vector3(p2[0], p2[1], p2[2] || 0);
+    var d = v1.distanceTo(v2);
+    var m = new THREE.Mesh(new THREE.CylinderGeometry(rad, rad, d, 10), mat || frameMat);
+    m.position.copy(v1).add(v2).multiplyScalar(0.5);
+    m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), v2.clone().sub(v1).normalize());
+    m.castShadow = true;
+    g.add(m);
+  }
+  var pRear = [-0.42, 0.30, 0], pBB = [-0.04, 0.28, 0], pSeatTop = [-0.18, 0.64, 0];
+  var pHeadTop = [0.27, 0.66, 0], pHeadBot = [0.30, 0.56, 0], pFront = [0.42, 0.30, 0];
+  addTube(pRear, pBB, 0.024);          // 后下叉
+  addTube(pRear, pSeatTop, 0.022);     // 后上叉
+  addTube(pBB, pSeatTop, 0.026);       // 立管
+  addTube(pSeatTop, pHeadTop, 0.026);  // 上管
+  addTube(pBB, pHeadBot, 0.028);       // 下管
+  addTube(pHeadTop, pHeadBot, 0.030);  // 头管
+  addTube(pHeadBot, pFront, 0.024);    // 前叉
+  addTube(pSeatTop, [-0.21, 0.74, 0], 0.018, toon('#cbd5e1')); // 座管
+  addTube(pHeadTop, [0.24, 0.82, 0], 0.020, toon('#cbd5e1'));  // 车把立管
+
+  // 脚踏链盘
+  var crankGroup = new THREE.Group();
+  crankGroup.position.set(pBB[0], pBB[1], 0.055);
+  var gear = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.10, 0.02, 18), toon('#94a3b8'));
+  gear.rotation.x = Math.PI / 2; crankGroup.add(gear);
+  var crankArm = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.18, 0.02), toon('#475569'));
+  crankArm.position.y = -0.06; crankGroup.add(crankArm);
+  var pedal = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.025, 0.06), toon('#1e293b'));
+  pedal.position.set(0, -0.15, 0.03); crankGroup.add(pedal);
+  g.add(crankGroup);
+
+  // 车座、车把与银色小车铃
+  var seat = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.065, 0.12), toon('#1e293b'));
+  seat.position.set(-0.22, 0.76, 0); seat.castShadow = true; g.add(seat);
+  var handleBar = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.48, 10), toon('#334155'));
+  handleBar.rotation.x = Math.PI / 2; handleBar.position.set(0.24, 0.83, 0); g.add(handleBar);
+  [-0.22, 0.22].forEach(function (gz) {
+    var grip = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, 0.12, 10), toon('#0f172a'));
+    grip.rotation.x = Math.PI / 2; grip.position.set(0.24, 0.83, gz); g.add(grip);
+  });
+  var bell = new THREE.Mesh(new THREE.SphereGeometry(0.058, 14, 14), toon('#e2e8f0'));
+  bell.scale.set(1, 0.78, 1);
+  bell.position.set(0.24, 0.87, 0.11); g.add(bell);
+  var bellRing = new THREE.Mesh(new THREE.TorusGeometry(0.052, 0.01, 8, 16), toon('#facc15'));
+  bellRing.rotation.x = Math.PI / 2; bellRing.position.set(0.24, 0.85, 0.11); g.add(bellRing);
+
+  return { group: g, extra: { wL: wL, wR: wR, crankGroup: crankGroup, bell: bell } };
+}
+
+// 5) 天然花岗岩石头（深灰+浅褐自然矿物斑点花岗岩 CanvasTexture + 凹凸棱角 + 一小撮深绿自然苔藓！）
+function makeGraniteTex() {
+  var c = document.createElement('canvas');
+  c.width = 512; c.height = 512;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#736c64'; // 沉稳天然花岗岩灰褐基色
+  ctx.fillRect(0, 0, 512, 512);
+  // 大块深浅矿物纹理云斑
+  for (var b = 0; b < 65; b++) {
+    ctx.fillStyle = b % 2 === 0 ? 'rgba(54,50,46,0.28)' : 'rgba(156,146,132,0.26)';
+    ctx.beginPath();
+    ctx.arc((b * 97) % 512, (b * 151) % 512, 18 + (b % 28), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // 细密黑云母、石英、长石结晶颗粒
+  var cols = ['#292524', '#44403c', '#a8a29e', '#d6cfc4', '#8c7862', '#57534e'];
+  for (var i = 0; i < 2400; i++) {
+    ctx.fillStyle = cols[i % cols.length];
+    var x = (i * 173 + (i % 19) * 11) % 512;
+    var y = (i * 257 + (i % 13) * 17) % 512;
+    var sz = 2 + (i % 5);
+    ctx.fillRect(x, y, sz, sz - 1);
+  }
+  return new THREE.CanvasTexture(c);
+}
+var graniteTex = makeGraniteTex();
+function buildStone() {
+  var g = new THREE.Group();
+  var stoneGroup = new THREE.Group();
+  g.add(stoneGroup);
+
+  var rockMat = new THREE.MeshToonMaterial({ map: graniteTex });
+  var darkRockMat = new THREE.MeshToonMaterial({ map: graniteTex, color: '#c4bdb4' });
+
+  // 主花岗岩块（稳重棱角）
+  var mainRock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.42, 0), rockMat);
+  mainRock.scale.set(1.26, 0.78, 0.96);
+  mainRock.position.set(-0.05, 0.28, 0);
+  mainRock.rotation.set(0.32, 0.68, 0.18);
+  mainRock.castShadow = true; mainRock.receiveShadow = true;
+  stoneGroup.add(mainRock);
+
+  // 侧边凹凸共生山石块
+  var sub1 = new THREE.Mesh(new THREE.DodecahedronGeometry(0.26, 0), darkRockMat);
+  sub1.scale.set(1.15, 0.72, 1.0);
+  sub1.position.set(0.30, 0.17, 0.14);
+  sub1.rotation.set(0.5, 1.1, 0.3);
+  sub1.castShadow = true; stoneGroup.add(sub1);
+
+  var sub2 = new THREE.Mesh(new THREE.IcosahedronGeometry(0.19, 0), darkRockMat);
+  sub2.scale.set(1.2, 0.65, 1.0);
+  sub2.position.set(-0.32, 0.14, 0.18);
+  sub2.rotation.set(0.2, 0.4, 0.6);
+  sub2.castShadow = true; stoneGroup.add(sub2);
+
+  // 一小撮自然深绿苔藓团（沉稳森林苔绿，贴合石缝绝非亮绿煎饼！）
+  var mossMat1 = toon('#2b4a14');
+  var mossMat2 = toon('#3b611c');
+  [
+    [-0.14, 0.53, 0.05, 0.12, mossMat1],
+    [-0.04, 0.54, 0.11, 0.09, mossMat2],
+    [-0.22, 0.48, 0.10, 0.08, mossMat2],
+    [-0.10, 0.50, -0.04, 0.075, mossMat1]
+  ].forEach(function (m) {
+    var tuft = new THREE.Mesh(new THREE.SphereGeometry(m[3], 10, 8), m[4]);
+    tuft.scale.set(1.2, 0.45, 1.05);
+    tuft.position.set(m[0], m[1], m[2]);
+    stoneGroup.add(tuft);
+  });
+
+  return { group: g, extra: { rock: stoneGroup } };
+}
+
+// 6) 自然绿树叶（THREE.Shape 真实挤出带叶柄+尖叶尖+波浪边缘+中脉与分叉侧脉的自然叶片！）
+function makeLeafTex() {
+  var c = document.createElement('canvas');
+  c.width = 512; c.height = 512;
+  var ctx = c.getContext('2d');
+  var lg = ctx.createLinearGradient(0, 0, 512, 512);
+  lg.addColorStop(0, '#2e7d47');
+  lg.addColorStop(0.5, '#3b9458');
+  lg.addColorStop(1, '#276b3d');
+  ctx.fillStyle = lg;
+  ctx.fillRect(0, 0, 512, 512);
+  // 细微自然叶肉肌理
+  for (var i = 0; i < 400; i++) {
+    ctx.fillStyle = i % 2 === 0 ? 'rgba(134,210,152,0.12)' : 'rgba(20,62,34,0.12)';
+    ctx.fillRect((i * 89) % 512, (i * 131) % 512, 12, 4);
+  }
+  return new THREE.CanvasTexture(c);
+}
+function buildLeaf() {
+  var g = new THREE.Group();
+  var leafPivot = new THREE.Group();
+  leafPivot.position.set(0, 0.16, 0);
+  g.add(leafPivot);
+
+  // 用 THREE.Shape 精确勾勒带波浪叶缘与尖叶尖的真实自然阔叶
+  var shape = new THREE.Shape();
+  shape.moveTo(-0.46, 0.0);
+  shape.bezierCurveTo(-0.34, 0.24, -0.14, 0.36, 0.04, 0.34);
+  shape.bezierCurveTo(0.22, 0.32, 0.38, 0.22, 0.56, 0.06);
+  shape.quadraticCurveTo(0.64, 0.01, 0.68, 0.0); // 优雅尖叶尖
+  shape.quadraticCurveTo(0.64, -0.01, 0.56, -0.06);
+  shape.bezierCurveTo(0.38, -0.22, 0.22, -0.32, 0.04, -0.34);
+  shape.bezierCurveTo(-0.14, -0.36, -0.34, -0.24, -0.46, 0.0);
+
+  var extrude = new THREE.ExtrudeGeometry(shape, {
+    depth: 0.032,
+    bevelEnabled: true,
+    bevelThickness: 0.012,
+    bevelSize: 0.012,
+    bevelSegments: 2
+  });
+  extrude.rotateX(-Math.PI / 2);
+  var leafMesh = new THREE.Mesh(extrude, new THREE.MeshToonMaterial({ map: makeLeafTex(), color: '#58b373' }));
+  leafMesh.castShadow = true; leafMesh.receiveShadow = true;
+  leafPivot.add(leafMesh);
+
+  // 立体中脉 + 5 对分叉侧脉
+  var veinMat = toon('#a7dfb8');
+  var midrib = new THREE.Mesh(new THREE.CylinderGeometry(0.010, 0.022, 1.04, 8), veinMat);
+  midrib.rotation.z = -Math.PI / 2;
+  midrib.position.set(0.08, 0.042, 0);
+  leafPivot.add(midrib);
+
+  [
+    [-0.24, 0.22, 0.55],
+    [-0.08, 0.28, 0.58],
+    [0.09, 0.26, 0.62],
+    [0.25, 0.20, 0.66],
+    [0.39, 0.13, 0.72]
+  ].forEach(function (v) {
+    [-1, 1].forEach(function (side) {
+      var sideVein = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.011, v[1], 6), veinMat);
+      sideVein.rotation.x = Math.PI / 2;
+      sideVein.rotation.z = side * (Math.PI / 2 - v[2]);
+      sideVein.position.set(v[0] + v[1] * 0.28, 0.042, side * v[1] * 0.42);
+      leafPivot.add(sideVein);
+    });
+  });
+
+  // 自然微弯连贯叶柄（零缝隙顺滑弯曲）
+  var stemCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-0.44, 0.036, 0),
+    new THREE.Vector3(-0.56, 0.028, 0.01),
+    new THREE.Vector3(-0.68, 0.015, 0.04)
+  ]);
+  var stemMesh = new THREE.Mesh(new THREE.TubeGeometry(stemCurve, 12, 0.021, 8, false), toon('#235c36'));
+  stemMesh.castShadow = true;
+  leafPivot.add(stemMesh);
+
+  // 微微翘起自然姿态
+  leafPivot.rotation.x = 0.16;
+  leafPivot.rotation.z = 0.06;
+
+  return { group: g, extra: { leafPivot: leafPivot } };
+}
+
+var ITEM_DEFS = [
+  { id: 'lamp',   name: '护眼台灯',   cat: 'tech',   pos: new THREE.Vector3(-3.55, 0, -0.58), builder: buildLamp,
+    testFloat: '💡 灯光亮起 · 照明驱暗！',
+    testSpeak: '点亮护眼台灯！它能在夜晚照亮书桌保护眼睛，是人类设计制造的科技产品！',
+    wrongSpeak: '护眼台灯是人类工程师设计制造来照明的科技产品，应该放进人工科技馆哦！' },
+  { id: 'fan',    name: '清凉电风扇', cat: 'tech',   pos: new THREE.Vector3(-1.75, 0, -0.58), builder: buildFan,
+    testFloat: '🌀 扇叶飞转 · 送风降温！',
+    testSpeak: '电风扇转起来啦，把旁边的小丝带吹得呼呼飘扬！它是给人们送风降温的科技产品！',
+    wrongSpeak: '电风扇是人类设计制造来帮助我们送风降温的科技产品，应该放进人工科技馆哦！' },
+  { id: 'fridge', name: '双门大冰箱', cat: 'tech',   pos: new THREE.Vector3(0.05, 0, -0.58),  builder: buildFridge,
+    testFloat: '❄ 飘出冷气 · 冷藏保鲜！',
+    testSpeak: '打开双门冰箱，飘出冰爽的白气，里面的苹果、橙子和牛奶真新鲜！冰箱是人类发明的科技产品！',
+    wrongSpeak: '双门冰箱是人类制造出来冷藏保鲜食物的科技产品，应该放进人工科技馆哦！' },
+  { id: 'bike',   name: '小巧自行车', cat: 'tech',   pos: new THREE.Vector3(-3.55, 0, 1.50),  builder: buildBike,
+    testFloat: '🚲 叮铃铃 · 快速代步！',
+    testSpeak: '叮铃铃！自行车车轮飞快转动，它是人类发明的代步科技产品！',
+    wrongSpeak: '自行车是人类设计制造的出行代步科技产品，应该放进人工科技馆哦！' },
+  { id: 'stone',  name: '天然花岗岩石头', cat: 'nature', pos: new THREE.Vector3(-1.75, 0, 1.50), builder: buildStone,
+    testFloat: '⛰ 自然形成 · 无需制造',
+    testSpeak: '这块花岗岩石头是大自然经过漫长岁月天然形成的，不是人类制造的科技产品哦！',
+    wrongSpeak: '石头是大自然天然形成的，不是人类工程师发明制造的哦，应该放进大自然展柜！' },
+  { id: 'leaf',   name: '自然绿树叶', cat: 'nature', pos: new THREE.Vector3(0.05, 0, 1.50),   builder: buildLeaf,
+    testFloat: '🌿 自然生长 · 大自然产物',
+    testSpeak: '这片绿树叶是大树在阳光雨露下自然长出来的，属于大自然产物！',
+    wrongSpeak: '树叶是植物在大自然里自己生长出来的，不是人类发明的科技产品，应该放进大自然展柜！' }
+];
+
+var itemHits = [];
+ITEM_DEFS.forEach(function (def) {
+  var built = def.builder();
+  var g = built.group;
+  g.position.copy(def.pos);
+  var ringMat = addItemBaseRing(g);
+  var hit = new THREE.Mesh(new THREE.BoxGeometry(1.22, 1.35, 1.08), hitMat);
+  hit.position.set(0, 0.62, 0);
+  hit.userData.itemId = def.id;
+  g.add(hit);
+  stage1Group.add(g);
+  itemHits.push(hit);
+  items.push({
+    id: def.id, name: def.name, cat: def.cat,
+    homePos: def.pos.clone(),
+    targetPos: def.pos.clone(),
+    targetScale: 1,
+    group: g, hit: hit, ringMat: ringMat, extra: built.extra,
+    tested: false, sorted: false, activeFx: false, fxTimer: 0,
+    testFloat: def.testFloat, testSpeak: def.testSpeak, wrongSpeak: def.wrongSpeak
+  });
+});
+
+/* ======================================================================
+   阶段 2：3D 桌面发光灯箱科技海报工坊（高清图文卡片 + 逼真红木柄橡胶印章！）
+   ====================================================================== */
+var HERO_LIST = [
+  { id: 'watch',  name: '电话手表',   badge: 'locate', color: '#2563eb', desc: '精准定位 · 随时通话' },
+  { id: 'lamp',   name: '护眼台灯',   badge: 'light',  color: '#ea580c', desc: '夜晚照明 · 保护眼睛' },
+  { id: 'fan',    name: '清凉电风扇', badge: 'cool',   color: '#0284c7', desc: '夏日送风 · 清凉降温' },
+  { id: 'bike',   name: '小巧自行车', badge: 'ride',   color: '#dc2626', desc: '轻便出行 · 快速代步' }
+];
+var BADGE_LIST = [
+  { id: 'light',  label: '照明驱暗', color: '#d97706', sub: '夜晚照亮书桌' },
+  { id: 'cool',   label: '送风降温', color: '#0284c7', sub: '夏天吹来凉风' },
+  { id: 'locate', label: '精准定位', color: '#4f46e5', sub: '安全定位通话' },
+  { id: 'ride',   label: '快速代步', color: '#dc2626', sub: '骑行便捷出行' }
+];
+
+var posterState = {
+  heroId: null,
+  badgeId: null,
+  stamped: false,
+  postersMade: 0
+};
+
+// 高清 1024x700 实时 CanvasTexture 发光灯箱画板
+var posterCv = document.createElement('canvas');
+posterCv.width = 1024; posterCv.height = 700;
+var posterCtx = posterCv.getContext('2d');
+var posterTex = new THREE.CanvasTexture(posterCv);
+posterTex.anisotropy = 4;
+
+function drawHeroArt(ctx, heroId, cx, cy, scale) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  if (scale) ctx.scale(scale, scale);
+  if (heroId === 'lamp') {
+    ctx.fillStyle = '#fef08a'; ctx.beginPath(); ctx.moveTo(-10, -20); ctx.lineTo(130, 110); ctx.lineTo(-95, 110); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#cbd5e1'; ctx.fillRect(-85, 92, 140, 24);
+    ctx.fillStyle = '#ef4444'; ctx.fillRect(-5, 84, 24, 10);
+    ctx.strokeStyle = '#64748b'; ctx.lineWidth = 16; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-40, 92); ctx.lineTo(-68, -16); ctx.lineTo(22, -74); ctx.stroke();
+    ctx.fillStyle = '#3b82f6';
+    ctx.beginPath(); ctx.moveTo(-26, -30); ctx.quadraticCurveTo(25, -120, 76, -30); ctx.closePath(); ctx.fill();
+  } else if (heroId === 'fan') {
+    ctx.fillStyle = '#cbd5e1'; ctx.fillRect(-52, 92, 104, 22);
+    ctx.fillRect(-10, 14, 20, 82);
+    ctx.strokeStyle = '#0284c7'; ctx.lineWidth = 12; ctx.beginPath(); ctx.arc(0, -34, 84, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = '#38bdf8';
+    for (var i = 0; i < 3; i++) {
+      ctx.save(); ctx.translate(0, -34); ctx.rotate((i * Math.PI * 2) / 3);
+      ctx.beginPath(); ctx.ellipse(0, -40, 20, 38, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+    ctx.fillStyle = '#f97316'; ctx.beginPath(); ctx.arc(0, -34, 18, 0, Math.PI * 2); ctx.fill();
+  } else if (heroId === 'bike') {
+    ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 14;
+    ctx.beginPath(); ctx.arc(-82, 46, 54, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(82, 46, 54, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 13; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(-82, 46); ctx.lineTo(-22, -28); ctx.lineTo(62, -28); ctx.lineTo(82, 46); ctx.moveTo(-22, -28); ctx.lineTo(12, 46); ctx.lineTo(-82, 46); ctx.stroke();
+    ctx.fillStyle = '#1e293b'; ctx.fillRect(-48, -44, 52, 14);
+    ctx.fillStyle = '#facc15'; ctx.beginPath(); ctx.arc(70, -52, 14, 0, Math.PI * 2); ctx.fill();
+  } else if (heroId === 'watch') {
+    ctx.fillStyle = '#1d4ed8'; ctx.fillRect(-36, -118, 72, 236);
+    ctx.fillStyle = '#38bdf8'; ctx.fillRect(-64, -70, 128, 140);
+    ctx.fillStyle = '#0f172a'; ctx.fillRect(-50, -56, 100, 112);
+    ctx.fillStyle = '#22c55e'; ctx.beginPath(); ctx.arc(0, -10, 20, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffffff'; ctx.font = '900 24px "Microsoft YaHei",sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('10:00', 0, 42);
+  }
+  ctx.restore();
+}
+
+function drawBadgeArt(ctx, badgeId, cx, cy, scale) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  if (scale) ctx.scale(scale, scale);
+  ctx.strokeStyle = '#ffffff'; ctx.fillStyle = '#fef08a';
+  if (badgeId === 'light') {
+    ctx.beginPath(); ctx.arc(0, -10, 32, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#e2e8f0'; ctx.fillRect(-16, 22, 32, 16);
+    ctx.strokeStyle = '#fef08a'; ctx.lineWidth = 7; ctx.lineCap = 'round';
+    for (var a = 0; a < 8; a++) {
+      var ang = (a * Math.PI) / 4;
+      ctx.beginPath(); ctx.moveTo(Math.cos(ang) * 42, -10 + Math.sin(ang) * 42);
+      ctx.lineTo(Math.cos(ang) * 56, -10 + Math.sin(ang) * 56); ctx.stroke();
+    }
+  } else if (badgeId === 'cool') {
+    ctx.strokeStyle = '#e0f2fe'; ctx.lineWidth = 10; ctx.lineCap = 'round';
+    [-22, 0, 22].forEach(function (y, idx) {
+      ctx.beginPath(); ctx.moveTo(-48, y);
+      ctx.quadraticCurveTo(0, y - 16, 40 - idx * 6, y); ctx.stroke();
+    });
+  } else if (badgeId === 'locate') {
+    ctx.fillStyle = '#fef08a';
+    ctx.beginPath(); ctx.arc(0, -16, 30, Math.PI, 0); ctx.lineTo(0, 42); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#4f46e5'; ctx.beginPath(); ctx.arc(0, -16, 13, 0, Math.PI * 2); ctx.fill();
+  } else if (badgeId === 'ride') {
+    ctx.strokeStyle = '#fef08a'; ctx.lineWidth = 10;
+    ctx.beginPath(); ctx.arc(0, 0, 38, 0, Math.PI * 2); ctx.stroke();
+    ctx.lineWidth = 5;
+    for (var s = 0; s < 4; s++) {
+      var sa = (s * Math.PI) / 4;
+      ctx.beginPath(); ctx.moveTo(-Math.cos(sa) * 34, -Math.sin(sa) * 34);
+      ctx.lineTo(Math.cos(sa) * 34, Math.sin(sa) * 34); ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+function redrawPoster() {
+  var ctx = posterCtx;
+  var lit = posterState.stamped;
+  ctx.fillStyle = lit ? '#fffdf5' : '#f8fafc';
+  ctx.fillRect(0, 0, 1024, 700);
+  ctx.fillStyle = lit ? '#ea580c' : '#1e3a8a';
+  ctx.fillRect(0, 0, 1024, 104);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 46px "Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('生活中的科技产品 · 我的科普海报', 512, 68);
+
+  // 左侧主角插画框
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(42, 134, 460, 430);
+  ctx.strokeStyle = posterState.heroId ? '#f59e0b' : '#94a3b8';
+  ctx.lineWidth = 6;
+  ctx.setLineDash(posterState.heroId ? [] : [16, 12]);
+  ctx.strokeRect(42, 134, 460, 430);
+  ctx.setLineDash([]);
+
+  var hero = HERO_LIST.find(function (h) { return h.id === posterState.heroId; });
+  if (hero) {
+    drawHeroArt(ctx, hero.id, 272, 330, 1.0);
+    ctx.fillStyle = hero.color;
+    ctx.font = '900 44px "Microsoft YaHei",sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(hero.name, 272, 535);
+  } else {
+    ctx.fillStyle = '#64748b';
+    ctx.font = '900 36px "Microsoft YaHei",sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('① 拖或点贴上科技主角卡', 272, 355);
+  }
+
+  // 右上便利徽章区
+  ctx.fillStyle = '#fffbeb';
+  ctx.fillRect(536, 134, 444, 200);
+  ctx.strokeStyle = posterState.badgeId ? '#16a34a' : '#94a3b8';
+  ctx.lineWidth = 6;
+  ctx.setLineDash(posterState.badgeId ? [] : [16, 12]);
+  ctx.strokeRect(536, 134, 444, 200);
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = '#9a3412';
+  ctx.font = '900 28px "Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('它带来的生活便利：', 564, 180);
+
+  var badge = BADGE_LIST.find(function (b) { return b.id === posterState.badgeId; });
+  if (badge) {
+    ctx.fillStyle = badge.color;
+    ctx.fillRect(566, 204, 384, 96);
+    drawBadgeArt(ctx, badge.id, 622, 252, 0.52);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 40px "Microsoft YaHei",sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(badge.label + ' ✓', 674, 254);
+    ctx.font = '700 23px "Microsoft YaHei",sans-serif';
+    ctx.fillStyle = '#fef08a';
+    ctx.fillText(badge.sub, 674, 288);
+  } else {
+    ctx.fillStyle = '#64748b';
+    ctx.font = '900 32px "Microsoft YaHei",sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('② 拖或点选生活便利徽章', 758, 268);
+  }
+
+  // 右下属性印章区
+  ctx.fillStyle = '#f8fafc';
+  ctx.fillRect(536, 360, 444, 204);
+  ctx.strokeStyle = lit ? '#dc2626' : '#94a3b8';
+  ctx.lineWidth = 6;
+  ctx.setLineDash(lit ? [] : [16, 12]);
+  ctx.strokeRect(536, 360, 444, 204);
+  ctx.setLineDash([]);
+
+  if (lit) {
+    ctx.save();
+    ctx.translate(758, 462);
+    ctx.rotate(-0.12);
+    ctx.strokeStyle = '#dc2626';
+    ctx.lineWidth = 10;
+    ctx.strokeRect(-146, -64, 292, 128);
+    ctx.fillStyle = 'rgba(220,38,38,0.12)';
+    ctx.fillRect(-146, -64, 292, 128);
+    ctx.fillStyle = '#dc2626';
+    ctx.font = '900 54px "Microsoft YaHei",sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('人工制造', 0, 12);
+    ctx.font = '800 24px "Microsoft YaHei",sans-serif';
+    ctx.fillText('★ 科技产品认证 ★', 0, 48);
+    ctx.restore();
+  } else {
+    ctx.fillStyle = '#64748b';
+    ctx.font = '900 32px "Microsoft YaHei",sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('③ 拖或点盖上属性印章', 758, 474);
+  }
+
+  // 底部签名栏
+  ctx.fillStyle = lit ? '#fef3c7' : '#e2e8f0';
+  ctx.fillRect(42, 588, 938, 78);
+  ctx.fillStyle = lit ? '#9a3412' : '#475569';
+  ctx.font = '900 32px "Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(lit ? '小科学家签名：二年级科技策展师  ★ 海报已点亮 ★' : '小科学家签名：完成后自动签名并点亮灯箱', 72, 638);
+
+  posterTex.needsUpdate = true;
+}
+
+// 3D 倾斜发光灯箱画板
+var boardGroup = new THREE.Group();
+boardGroup.position.set(-0.05, 1.36, -1.28);
+boardGroup.rotation.x = -0.24;
+boardGroup.scale.setScalar(0.82);
+stage2Group.add(boardGroup);
+
+var boardFrame = new THREE.Mesh(new THREE.BoxGeometry(5.1, 3.55, 0.24), toon('#1e293b'));
+boardFrame.castShadow = true;
+boardGroup.add(boardFrame);
+
+var ledStripMat = new THREE.MeshBasicMaterial({ color: '#64748b' });
+var ledFrame = new THREE.Mesh(new THREE.BoxGeometry(5.32, 3.76, 0.14), ledStripMat);
+ledFrame.position.z = -0.06;
+boardGroup.add(ledFrame);
+
+var posterPlane = new THREE.Mesh(new THREE.PlaneGeometry(4.78, 3.26), new THREE.MeshBasicMaterial({ map: posterTex }));
+posterPlane.position.z = 0.125;
+boardGroup.add(posterPlane);
+
+var standL = new THREE.Mesh(new THREE.BoxGeometry(0.18, 1.5, 0.2), toon('#334155'));
+standL.position.set(-1.55, 0.72, -1.78); standL.rotation.x = 0.3; stage2Group.add(standL);
+var standR = new THREE.Mesh(new THREE.BoxGeometry(0.18, 1.5, 0.2), toon('#334155'));
+standR.position.set(1.55, 0.72, -1.78); standR.rotation.x = 0.3; stage2Group.add(standR);
+
+// 超大画板碰撞体（拖卡/拖印章屏幕射线直命即亮边，松手 100% 精准贴上！）
+var hitBoard = new THREE.Mesh(new THREE.BoxGeometry(6.0, 4.3, 1.1), hitMat);
+hitBoard.position.set(0, 0, 0.25);
+hitBoard.userData.pTarget = 'board';
+boardGroup.add(hitBoard);
+
+redrawPoster();
+
+/* ===== 阶段 2 高清图文卡纹理（图标 + 大字！）与逼真红木柄橡胶印章 ===== */
+function makeIllustratedHeroCardTex(h) {
+  var c = document.createElement('canvas');
+  c.width = 512; c.height = 352;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#fffdf8'; ctx.fillRect(0, 0, 512, 352);
+  ctx.strokeStyle = h.color; ctx.lineWidth = 18; ctx.strokeRect(9, 9, 494, 334);
+  // 顶彩条
+  ctx.fillStyle = h.color; ctx.fillRect(18, 18, 476, 62);
+  ctx.fillStyle = '#ffffff'; ctx.font = '900 32px "Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'center'; ctx.fillText('① 科技主角卡', 256, 60);
+  // 左图示
+  drawHeroArt(ctx, h.id, 138, 212, 0.62);
+  // 右大字
+  ctx.fillStyle = h.color; ctx.font = '900 54px "Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'center'; ctx.fillText(h.name, 344, 212);
+  ctx.fillStyle = '#64748b'; ctx.font = '700 24px "Microsoft YaHei",sans-serif';
+  ctx.fillText(h.desc, 344, 266);
+  var tex = new THREE.CanvasTexture(c); tex.anisotropy = 4; return tex;
+}
+
+function makeIllustratedBadgeCardTex(b) {
+  var c = document.createElement('canvas');
+  c.width = 512; c.height = 352;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = b.color; ctx.fillRect(0, 0, 512, 352);
+  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 14; ctx.strokeRect(10, 10, 492, 332);
+  ctx.fillStyle = 'rgba(0,0,0,0.16)'; ctx.fillRect(18, 18, 476, 58);
+  ctx.fillStyle = '#fef08a'; ctx.font = '900 30px "Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'center'; ctx.fillText('② 生活便利徽章', 256, 58);
+  drawBadgeArt(ctx, b.id, 118, 206, 0.92);
+  ctx.fillStyle = '#ffffff'; ctx.font = '900 56px "Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'center'; ctx.fillText(b.label, 332, 206);
+  ctx.fillStyle = '#fef3c7'; ctx.font = '700 28px "Microsoft YaHei",sans-serif';
+  ctx.fillText(b.sub, 332, 262);
+  var tex = new THREE.CanvasTexture(c); tex.anisotropy = 4; return tex;
+}
+
+function makeStampPlaqueTex(bg, title, sub) {
+  var c = document.createElement('canvas');
+  c.width = 384; c.height = 224;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, 384, 224);
+  ctx.strokeStyle = '#fef08a'; ctx.lineWidth = 10; ctx.strokeRect(10, 10, 364, 204);
+  ctx.fillStyle = '#ffffff'; ctx.font = '900 62px "Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'center'; ctx.fillText(title, 192, 116);
+  ctx.fillStyle = '#fef08a'; ctx.font = '800 30px "Microsoft YaHei",sans-serif';
+  ctx.fillText(sub, 192, 174);
+  var tex = new THREE.CanvasTexture(c); tex.anisotropy = 4; return tex;
+}
+
+var posterCards = [];
+var posterHits = [];
+
+// 1) 4 张高清图文 3D 科技主角卡（桌前左侧 2×2）
+HERO_LIST.forEach(function (h, idx) {
+  var col = idx % 2, row = Math.floor(idx / 2);
+  var pos = new THREE.Vector3(-3.35 + col * 1.44, 0.07, 1.04 + row * 1.04);
+  var g = new THREE.Group();
+  g.position.copy(pos);
+  var mesh = new THREE.Mesh(new THREE.BoxGeometry(1.30, 0.11, 0.90), [
+    toon(h.color), toon(h.color),
+    new THREE.MeshBasicMaterial({ map: makeIllustratedHeroCardTex(h) }),
+    toon(h.color), toon(h.color), toon(h.color)
+  ]);
+  mesh.castShadow = true;
+  g.add(mesh);
+  var hit = new THREE.Mesh(new THREE.BoxGeometry(1.36, 0.44, 0.96), hitMat);
+  hit.position.y = 0.14;
+  hit.userData.cardKind = 'hero';
+  hit.userData.cardId = h.id;
+  g.add(hit);
+  stage2Group.add(g);
+  posterHits.push(hit);
+  posterCards.push({ kind: 'hero', id: h.id, name: h.name, group: g, hit: hit, homePos: pos.clone(), targetPos: pos.clone() });
+});
+
+// 2) 4 张高清图文 3D 便利徽章卡（桌前中 2×2）
+BADGE_LIST.forEach(function (b, idx) {
+  var col = idx % 2, row = Math.floor(idx / 2);
+  var pos = new THREE.Vector3(-0.30 + col * 1.44, 0.07, 1.04 + row * 1.04);
+  var g = new THREE.Group();
+  g.position.copy(pos);
+  var mesh = new THREE.Mesh(new THREE.BoxGeometry(1.30, 0.11, 0.90), [
+    toon(b.color), toon(b.color),
+    new THREE.MeshBasicMaterial({ map: makeIllustratedBadgeCardTex(b) }),
+    toon(b.color), toon(b.color), toon(b.color)
+  ]);
+  mesh.castShadow = true;
+  g.add(mesh);
+  var hit = new THREE.Mesh(new THREE.BoxGeometry(1.36, 0.44, 0.96), hitMat);
+  hit.position.y = 0.14;
+  hit.userData.cardKind = 'badge';
+  hit.userData.cardId = b.id;
+  g.add(hit);
+  stage2Group.add(g);
+  posterHits.push(hit);
+  posterCards.push({ kind: 'badge', id: b.id, name: b.label, group: g, hit: hit, homePos: pos.clone(), targetPos: pos.clone() });
+});
+
+// 3) 2 枚逼真红木柄 + 橡胶底章（木柄立于后侧，正面清晰大字名牌绝不被遮挡！）
+function buildStampProp(id, label, colorHex, woodHex, pos) {
+  var g = new THREE.Group();
+  g.position.copy(pos);
+
+  // 底部弹性橡胶印面
+  var rubberPad = new THREE.Mesh(new THREE.BoxGeometry(1.26, 0.08, 0.78), toon(colorHex));
+  rubberPad.position.y = 0.04; rubberPad.castShadow = true; g.add(rubberPad);
+
+  // 红木底座块
+  var woodBlock = new THREE.Mesh(new THREE.BoxGeometry(1.32, 0.16, 0.84), toon(woodHex));
+  woodBlock.position.y = 0.16; woodBlock.castShadow = true; g.add(woodBlock);
+
+  // 精致车削红木印章柄（LatheGeometry 经典束腰木柄，立于底座后半部绝不挡字！）
+  var hPts = [
+    new THREE.Vector2(0.16, 0.0),
+    new THREE.Vector2(0.12, 0.08),
+    new THREE.Vector2(0.085, 0.22),
+    new THREE.Vector2(0.145, 0.38),
+    new THREE.Vector2(0.155, 0.46),
+    new THREE.Vector2(0.10, 0.54),
+    new THREE.Vector2(0.0, 0.56)
+  ];
+  var handle = new THREE.Mesh(new THREE.LatheGeometry(hPts, 20), toon(woodHex));
+  handle.position.set(0, 0.24, -0.20); handle.castShadow = true; g.add(handle);
+  var collar = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.018, 8, 20), toon('#f59e0b'));
+  collar.rotation.x = Math.PI / 2; collar.position.set(0, 0.25, -0.20); g.add(collar);
+
+  // 前倾清晰标牌（100% 面向相机零遮挡！）
+  var plaque = new THREE.Mesh(new THREE.PlaneGeometry(1.20, 0.54), new THREE.MeshBasicMaterial({
+    map: makeStampPlaqueTex(colorHex, label, '③ 拖去盖章')
+  }));
+  plaque.rotation.x = -Math.PI / 2 + 0.32;
+  plaque.position.set(0, 0.30, 0.17);
+  g.add(plaque);
+
+  var hit = new THREE.Mesh(new THREE.BoxGeometry(1.32, 0.42, 0.84), hitMat);
+  hit.position.y = 0.21;
+  hit.userData.cardKind = 'stamp';
+  hit.userData.cardId = id;
+  g.add(hit);
+
+  stage2Group.add(g);
+  posterHits.push(hit);
+  posterCards.push({ kind: 'stamp', id: id, name: label, group: g, hit: hit, homePos: pos.clone(), targetPos: pos.clone() });
+}
+buildStampProp('artificial', '人工制造', '#dc2626', '#8c2d19', new THREE.Vector3(2.42, 0, 1.00));
+buildStampProp('natural',    '自然产物', '#15803d', '#6b4c2a', new THREE.Vector3(2.98, 0, 2.14));
+
+// 桌左后 3D 返回展馆标牌
+var backSignGroup = new THREE.Group();
+backSignGroup.position.set(-4.25, 0.1, -1.60);
+var backSignMesh = new THREE.Mesh(new THREE.BoxGeometry(1.52, 0.62, 0.14), new THREE.MeshBasicMaterial({
+  map: makeSignTex('#475569', '#94a3b8', '↺ 回展馆', '重看6件展品')
+}));
+backSignMesh.position.y = 0.44; backSignMesh.rotation.y = 0.35; backSignMesh.castShadow = true;
+backSignGroup.add(backSignMesh);
+var hitBackSign = new THREE.Mesh(new THREE.BoxGeometry(1.68, 0.88, 0.45), hitMat);
+hitBackSign.position.y = 0.44; hitBackSign.userData.cardKind = 'backMuseum';
+backSignGroup.add(hitBackSign);
+stage2Group.add(backSignGroup);
+posterHits.push(hitBackSign);
+
+/* ===== 阶段 1 去海报工坊标牌（全部分完后可自由切换） ===== */
+var goPosterSign = new THREE.Group();
+goPosterSign.position.set(-4.25, 0.1, -1.95);
+goPosterSign.visible = false;
+var goPosterMesh = new THREE.Mesh(new THREE.BoxGeometry(1.62, 0.66, 0.14), new THREE.MeshBasicMaterial({
+  map: makeSignTex('#ea580c', '#fed7aa', '🎨 海报工坊', '继续画海报')
+}));
+goPosterMesh.position.y = 0.44; goPosterMesh.rotation.y = 0.3; goPosterMesh.castShadow = true;
+goPosterSign.add(goPosterMesh);
+var hitGoPoster = new THREE.Mesh(new THREE.BoxGeometry(1.78, 0.92, 0.45), hitMat);
+hitGoPoster.position.y = 0.44; hitGoPoster.userData.goPoster = true;
+goPosterSign.add(hitGoPoster);
+stage1Group.add(goPosterSign);
+
+/* ===== 冰箱冷气白雾粒子 ===== */
+var mistGeo = new THREE.SphereGeometry(0.095, 10, 10);
+function spawnColdMist(worldPos) {
+  var m = new THREE.Mesh(mistGeo, new THREE.MeshBasicMaterial({ color: '#e0f2fe', transparent: true, opacity: 0.72 }));
+  m.position.set(worldPos.x + (Math.random() - 0.5) * 0.32, worldPos.y + 0.62 + Math.random() * 0.25, worldPos.z + 0.28);
+  stage1Group.add(m);
+  coldMist.push({ mesh: m, vy: 0.40 + Math.random() * 0.30, vz: 0.28 + Math.random() * 0.22, life: 0.95 });
+}
+function tickMist(dt) {
+  for (var i = coldMist.length - 1; i >= 0; i--) {
+    var p = coldMist[i];
+    p.life -= dt;
+    if (p.life <= 0) { stage1Group.remove(p.mesh); coldMist.splice(i, 1); continue; }
+    p.mesh.position.y += p.vy * dt;
+    p.mesh.position.z += p.vz * dt;
+    p.mesh.scale.setScalar(1 + (1 - p.life) * 0.85);
+    p.mesh.material.opacity = Math.max(0, p.life * 0.76);
+  }
+}
+
+/* ===== 整体状态机 ===== */
+var stage = 1;
+var selectedItemId = null;
+var lastWrongTarget = null;
+var hoverCabId = null;
+var hoverBoard = false;
+var found = {}, stamps = { s1: false, s2: false, s3: false }, celebrated = false, demo = false;
+var resetGen = 0;
+var curGuideSpeech = '第1步：先点击桌上每件实物，通电体验它们的便利功能或观察自然物！';
+
+var camPosTarget = new THREE.Vector3(-0.15, 6.2, 7.85);
+var camLookTarget = new THREE.Vector3(-0.12, 0.34, 0.32);
+camera.position.copy(camPosTarget);
+camera.lookAt(camLookTarget);
+var lookCur = camLookTarget.clone();
+
+function updateCameraTarget() {
+  if (stage === 1) {
+    camPosTarget.set(-0.15, 6.15, 7.85);
+    camLookTarget.set(-0.12, 0.34, 0.32);
+  } else {
+    camPosTarget.set(-0.05, 5.75, 8.55);
+    camLookTarget.set(-0.05, 0.72, 0.18);
+  }
+}
+
+/* ===== 屏幕投影与飘字 ===== */
+function project3D(vec) {
+  var v = vec.clone().project(camera);
+  return {
+    x: (v.x * 0.5 + 0.5) * window.innerWidth,
+    y: (-v.y * 0.5 + 0.5) * window.innerHeight,
+    inFront: v.z < 1
+  };
+}
+function floatText(worldPos, text, cls) {
+  var p = project3D(worldPos);
+  var el = document.createElement('div');
+  el.className = 'float-msg' + (cls ? ' ' + cls : '');
+  el.textContent = text;
+  el.style.left = Math.max(90, Math.min(window.innerWidth - 120, p.x)) + 'px';
+  el.style.top = Math.max(85, Math.min(window.innerHeight - 95, p.y)) + 'px';
+  $('#labels').appendChild(el);
+  setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1550);
+}
+
+/* ===== 更新左侧进度卡与发现栏 ===== */
+function countTested() { return items.filter(function (it) { return it.tested; }).length; }
+function countSorted() { return items.filter(function (it) { return it.sorted; }).length; }
+
+function refreshStageUI() {
+  var tCnt = countTested(), sCnt = countSorted();
+  $('#sgTitle').textContent = stage === 1 ? '🔬 阶段1 · 体验分拣' : '🎨 阶段2 · 灯箱海报';
+  $('#sgStep').textContent = stage + ' / 2';
+  $('#sgVal1').textContent = tCnt + ' / 6';
+  $('#sgRow1').classList.toggle('ok', tCnt === 6);
+  $('#sgVal2').textContent = sCnt + ' / 6';
+  $('#sgRow2').classList.toggle('ok', sCnt === 6);
+  var pTxt = posterState.stamped ? ('已亮灯(' + posterState.postersMade + '张) ✓') : (posterState.badgeId ? '待盖印章' : (posterState.heroId ? '待贴徽章' : '待选主角'));
+  $('#sgVal3').textContent = pTxt;
+  $('#sgRow3').classList.toggle('ok', posterState.postersMade > 0);
+  goPosterSign.visible = (sCnt === 6);
+}
+
+function addDiscovery(key, stampKey, html, spoken) {
+  if (!found[key]) {
+    found[key] = true;
+    var el = document.createElement('div');
+    el.className = 'stk';
+    el.innerHTML = html;
+    $('#ntList').prepend(el);
+    $('#ntCnt').textContent = Object.keys(found).length;
+  }
+  if (stampKey && !stamps[stampKey]) {
+    stamps[stampKey] = true;
+    var sEl = $('#' + stampKey.replace('s', 'st'));
+    if (sEl) sEl.classList.add('lit');
+  }
+  refreshStageUI();
+  updateGuide(false);
+  if (spoken && !demo) speak(spoken);
+}
+
+function switchToStage(nextStage, spoken) {
+  stage = nextStage;
+  selectedItemId = null;
+  lastWrongTarget = null;
+  hoverCabId = null;
+  hoverBoard = false;
+  stage1Group.visible = (stage === 1);
+  stage2Group.visible = (stage === 2);
+  updateCameraTarget();
+  refreshStageUI();
+  updateGuide(false);
+  if (spoken && !demo) speak(spoken);
+}
+
+/* ===== 动态引导与单焦点 #targetCue（U2 + U10） ===== */
+function updateGuide(speakIt) {
+  var ico = '💡';
+  if (stage === 1) {
+    var tCnt = countTested(), sCnt = countSorted();
+    if (tCnt < 6 && !selectedItemId) {
+      ico = '💡';
+      curGuideSpeech = '第1步：点击桌上3D实物体验功能，或直接拖进展柜分类，还剩' + (6 - tCnt) + '件哦！';
+    } else if (selectedItemId) {
+      var sel = items.find(function (x) { return x.id === selectedItemId; });
+      ico = '👉';
+      curGuideSpeech = '已选中' + (sel ? sel.name : '物品') + '！拖进或点右侧「人工科技馆」「大自然展柜」吧！';
+    } else if (sCnt < 6) {
+      ico = '📦';
+      curGuideSpeech = '第2步：把体验过的6件物品拖进或点放进「人工科技馆」和「大自然展柜」吧！';
+    } else {
+      ico = '🎨';
+      curGuideSpeech = '分类全对啦！点击左侧3D「海报工坊」标牌，制作发光科技海报！';
+    }
+  } else {
+    if (!posterState.heroId) {
+      ico = '🎨';
+      curGuideSpeech = '海报第1步：把桌左任意1张「科技主角卡」拖到或点贴到发光灯箱画板上！';
+    } else if (!posterState.badgeId) {
+      ico = '✨';
+      var hero = HERO_LIST.find(function (h) { return h.id === posterState.heroId; });
+      curGuideSpeech = '海报第2步：想一想' + hero.name + '带来什么便利？拖或点正确的便利徽章贴上海报！';
+    } else if (!posterState.stamped) {
+      ico = '★';
+      curGuideSpeech = '海报第3步：把桌右红色的「人工制造」木柄印章拖到或点盖上海报点亮灯箱！';
+    } else {
+      ico = '🏆';
+      curGuideSpeech = '科技海报点亮啦！拖或点桌左其他科技主角卡，可以继续创作更多张不同主题海报！';
+    }
+  }
+  $('#guideIco').textContent = ico;
+  $('#guideTxt').textContent = curGuideSpeech;
+  var gb = $('#guideBar');
+  gb.classList.remove('pulse'); void gb.offsetWidth; gb.classList.add('pulse');
+  if (speakIt) speak(curGuideSpeech, true);
+}
+
+function updateTargetCue() {
+  var cue = $('#targetCue');
+  if (celebrated || $('#winToast').classList.contains('show')) {
+    cue.classList.remove('show');
+    return;
+  }
+  var worldPt = null, txt = '', urgent = false;
+  if (stage === 1) {
+    if (lastWrongTarget === 'tech') {
+      worldPt = cabTech.group.position.clone().add(new THREE.Vector3(0, 1.65, 0));
+      txt = '👉 科技产品放人工科技馆';
+      urgent = true;
+    } else if (lastWrongTarget === 'nature') {
+      worldPt = cabNature.group.position.clone().add(new THREE.Vector3(0, 1.65, 0));
+      txt = '🌿 自然物放大自然展柜';
+      urgent = true;
+    } else if (selectedItemId) {
+      var sel = items.find(function (x) { return x.id === selectedItemId; });
+      var targetCab = (sel && sel.cat === 'tech') ? cabTech : cabNature;
+      worldPt = targetCab.group.position.clone().add(new THREE.Vector3(0, 1.65, 0));
+      txt = '👉 拖或点展柜放入 ' + (sel ? sel.name : '');
+    } else {
+      var nextUntested = items.find(function (it) { return !it.tested; });
+      if (nextUntested) {
+        worldPt = nextUntested.group.position.clone().add(new THREE.Vector3(0, 1.28, 0));
+        txt = '💡 点' + nextUntested.name + '先体验';
+      } else {
+        var nextUnsorted = items.find(function (it) { return !it.sorted; });
+        if (nextUnsorted) {
+          worldPt = nextUnsorted.group.position.clone().add(new THREE.Vector3(0, 1.28, 0));
+          txt = '👉 拖或点' + nextUnsorted.name + '入馆';
+        }
+      }
+    }
+  } else {
+    if (lastWrongTarget && lastWrongTarget.indexOf('badge:') === 0) {
+      var needB = lastWrongTarget.split(':')[1];
+      var bc = posterCards.find(function (c) { return c.kind === 'badge' && c.id === needB; });
+      if (bc) {
+        worldPt = bc.group.position.clone().add(new THREE.Vector3(0, 0.55, 0));
+        txt = '✨ 找这张「' + bc.name + '」徽章！';
+        urgent = true;
+      }
+    } else if (lastWrongTarget === 'stamp:artificial') {
+      var sc = posterCards.find(function (c) { return c.kind === 'stamp' && c.id === 'artificial'; });
+      if (sc) {
+        worldPt = sc.group.position.clone().add(new THREE.Vector3(0, 0.85, 0));
+        txt = '★ 盖红色「人工制造」印章！';
+        urgent = true;
+      }
+    } else if (!posterState.heroId) {
+      var hc = posterCards.find(function (c) { return c.kind === 'hero' && c.id === 'lamp'; });
+      worldPt = hc.group.position.clone().add(new THREE.Vector3(0, 0.55, 0));
+      txt = '🎨 拖或点任意科技主角卡';
+    } else if (!posterState.badgeId) {
+      var hObj = HERO_LIST.find(function (h) { return h.id === posterState.heroId; });
+      var rightB = posterCards.find(function (c) { return c.kind === 'badge' && c.id === hObj.badge; });
+      if (rightB) {
+        worldPt = rightB.group.position.clone().add(new THREE.Vector3(0, 0.55, 0));
+        txt = '✨ 拖或点匹配' + hObj.name + '的徽章';
+      }
+    } else if (!posterState.stamped) {
+      var stC = posterCards.find(function (c) { return c.kind === 'stamp' && c.id === 'artificial'; });
+      worldPt = stC.group.position.clone().add(new THREE.Vector3(0, 0.88, 0));
+      txt = '★ 拖或点红木柄印章盖上海报！';
+    }
+  }
+
+  if (!worldPt) { cue.classList.remove('show'); return; }
+  var p = project3D(worldPt);
+  if (!p.inFront) { cue.classList.remove('show'); return; }
+  cue.textContent = txt;
+  cue.className = 'cue3d show' + (urgent ? ' urgent' : '');
+  var cx = Math.max(125, Math.min(window.innerWidth - 260, p.x));
+  var cy = Math.max(105, Math.min(window.innerHeight - 95, p.y));
+  cue.style.left = cx + 'px';
+  cue.style.top = cy + 'px';
+}
+
+/* ===== 阶段 1 体验与分类逻辑（直接拖也自动播放体验再入柜，绝不静默没反应！） ===== */
+function triggerItemTest(it, silentSpeak) {
+  it.tested = true;
+  it.activeFx = true;
+  it.fxTimer = 6.0;
+  it.ringMat.color.set('#facc15');
+  it.ringMat.opacity = 0.85;
+  if (it.id === 'bike') sfxBell();
+  else sfxClick();
+  floatText(it.group.position.clone().add(new THREE.Vector3(0, 1.25, 0)), it.testFloat, 'ok');
+  var doneAllTest = countTested() === 6;
+  addDiscovery('test_' + it.id, doneAllTest ? 's1' : null, it.testFloat.split(' ')[0] + ' 体验' + it.name + '：' + (it.cat === 'tech' ? '人工科技产品' : '大自然产物'), silentSpeak ? '' : it.testSpeak);
+}
+
+function trySortItem(it, cabId) {
+  if (!it || it.sorted) return;
+  if (!it.tested) {
+    // 孩子直接把未点过的实物拖进展柜时：自动先触发体验特效与发现记录，绝不静默卡死！
+    triggerItemTest(it, true);
+  }
+  var correct = (it.cat === cabId);
+  if (!correct) {
+    it.targetPos.copy(it.homePos);
+    selectedItemId = null;
+    lastWrongTarget = it.cat;
+    sfxErr();
+    floatText(it.group.position.clone().add(new THREE.Vector3(0, 1.32, 0)), '放错展柜啦！再想想哦', 'bad');
+    speak(it.wrongSpeak);
+    updateGuide(false);
+    return;
+  }
+
+  it.sorted = true;
+  selectedItemId = null;
+  lastWrongTarget = null;
+  var cab = cabId === 'tech' ? cabTech : cabNature;
+  var slotLocal = cab.slots[cab.filled] || new THREE.Vector3(0, 0.19, 0.08);
+  cab.filled++;
+  it.targetPos.copy(cab.group.position).add(slotLocal);
+  it.targetScale = 0.50;
+  it.ringMat.opacity = 0;
+  sfxOk();
+  floatText(it.targetPos.clone().add(new THREE.Vector3(0, 1.15, 0)), it.name + ' 入馆成功！✓', 'ok');
+
+  var sortedNow = countSorted();
+  if (sortedNow === 6) {
+    addDiscovery('sort_all', 's2', '★ 6件展品全部正确入馆（4科技 + 2自然）！', '太棒啦！六件展品全部精准入馆！现在进入发光灯箱海报工坊，亲手做一张你的科技产品科普海报吧！');
+    var myGen = resetGen;
+    setTimeout(function () {
+      if (myGen !== resetGen) return;
+      switchToStage(2, '');
+    }, 1150);
+  } else {
+    addDiscovery('sort_' + it.id, null, '✓ ' + it.name + ' → ' + (cabId === 'tech' ? '人工科技馆' : '大自然展柜'), '分得真准！' + it.name + '放进' + (cabId === 'tech' ? '人工科技馆' : '大自然展柜') + '啦！');
+  }
+}
+
+/* ===== 阶段 2 发光灯箱海报工坊逻辑 ===== */
+function applyHeroCard(heroId) {
+  var hero = HERO_LIST.find(function (h) { return h.id === heroId; });
+  if (!hero) return;
+  posterState.heroId = heroId;
+  posterState.badgeId = null;
+  posterState.stamped = false;
+  lastWrongTarget = null;
+  ledStripMat.color.set('#64748b');
+  redrawPoster();
+  sfxOk();
+  floatText(boardGroup.position.clone().add(new THREE.Vector3(-0.7, 1.25, 0.4)), '贴上主角：' + hero.name + '！', 'ok');
+  speak('选定了' + hero.name + '当海报主角！想一想它给生活带来什么便利，快挑一张正确的便利徽章贴上去吧！');
+  refreshStageUI();
+  updateGuide(false);
+}
+
+function applyBadgeCard(badgeId) {
+  if (!posterState.heroId) {
+    sfxErr();
+    floatText(boardGroup.position.clone().add(new THREE.Vector3(0, 1.1, 0.4)), '先选一位科技主角哦！', 'bad');
+    speak('请先从桌左挑一张科技主角卡贴到画板上，再来配便利徽章哦！');
+    return;
+  }
+  var hero = HERO_LIST.find(function (h) { return h.id === posterState.heroId; });
+  var badge = BADGE_LIST.find(function (b) { return b.id === badgeId; });
+  if (hero.badge !== badgeId) {
+    lastWrongTarget = 'badge:' + hero.badge;
+    sfxErr();
+    floatText(boardGroup.position.clone().add(new THREE.Vector3(0.85, 1.25, 0.4)), '不太匹配哦，再想想！', 'bad');
+    var rightBadge = BADGE_LIST.find(function (b) { return b.id === hero.badge; });
+    speak(hero.name + '可不是用来' + badge.label + '的呀，它最大的便利是' + rightBadge.sub + '！快找找' + rightBadge.label + '徽章贴上去吧！');
+    updateGuide(false);
+    return;
+  }
+  posterState.badgeId = badgeId;
+  lastWrongTarget = null;
+  redrawPoster();
+  sfxOk();
+  floatText(boardGroup.position.clone().add(new THREE.Vector3(0.85, 1.25, 0.4)), '便利徽章：' + badge.label + ' ✓', 'ok');
+  speak('搭配完全正确！' + hero.name + '带来的便利就是' + badge.label + '！最后快拿起红色的人工制造印章盖上海报吧！');
+  refreshStageUI();
+  updateGuide(false);
+}
+
+function applyStampProp(stampId) {
+  if (!posterState.heroId || !posterState.badgeId) {
+    sfxErr();
+    speak('先把科技主角卡和生活便利徽章都贴上海报，再来盖章点亮灯箱哦！');
+    return;
+  }
+  if (stampId !== 'artificial') {
+    lastWrongTarget = 'stamp:artificial';
+    sfxErr();
+    floatText(boardGroup.position.clone().add(new THREE.Vector3(0.85, 0.1, 0.4)), '这是科技产品，不是自然产物哦！', 'bad');
+    speak('不对哦，我们画的是人类工程师发明制造的科技产品，不是大自然生成的，快拿起红色的人工制造印章盖上去吧！');
+    updateGuide(false);
+    return;
+  }
+
+  posterState.stamped = true;
+  posterState.postersMade++;
+  lastWrongTarget = null;
+  redrawPoster();
+  sfxStamp();
+  launchConfetti();
+  var hero = HERO_LIST.find(function (h) { return h.id === posterState.heroId; });
+  floatText(boardGroup.position.clone().add(new THREE.Vector3(0, 1.35, 0.5)), '✨ 人工制造 · 灯箱点亮！', 'ok');
+  addDiscovery('poster_' + hero.id, 's3', '🎨 完成《' + hero.name + '》发光科技海报并加盖人工制造印章！', '');
+
+  if (!demo && !celebrated && countSorted() === 6) {
+    celebrated = true;
+    saveProgress(LESSON_ID, false);
+    sfxWin();
+    var myGen = resetGen;
+    setTimeout(function () {
+      if (myGen !== resetGen) return;
+      $('#winToast').classList.add('show');
+      speak('太棒啦！你的发光科技海报盖章点亮啦！快来看看科学小结论，答对问题领取小红花吧！', true);
+    }, 950);
+  } else {
+    speak('又完成一张精美的' + hero.name + '发光科技海报！点桌左其他主角卡还能继续创作哦！');
+  }
+  refreshStageUI();
+  updateGuide(false);
+}
+
+/* ===== U8 纯 Mesh 优先屏幕射线检测 + 展柜/画板发光提示 + 拖拽/单点双通道 ===== */
+function markInteracted() { document.body.classList.add('interacted'); }
+var ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+var dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.45);
+var drag = null;
+
+function getNDC(e) {
+  var r = cv.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+}
+
+function detectDropCabinet(itemWorldPos) {
+  ray.setFromCamera(ptr, camera);
+  var hCab = ray.intersectObjects([cabTech.hit, cabNature.hit], false);
+  if (hCab.length) return hCab[0].object.userData.cabId;
+  if (itemWorldPos) {
+    var dTech = itemWorldPos.distanceTo(cabTech.group.position);
+    var dNat = itemWorldPos.distanceTo(cabNature.group.position);
+    if (dTech < 1.95 && dTech <= dNat) return 'tech';
+    if (dNat < 1.95) return 'nature';
+  }
+  return null;
+}
+
+function detectDropBoard(cardWorldPos) {
+  ray.setFromCamera(ptr, camera);
+  if (ray.intersectObject(hitBoard, false).length > 0) return true;
+  if (cardWorldPos && cardWorldPos.z < 0.72) return true;
+  return false;
+}
+
+cv.addEventListener('pointerdown', function (e) {
+  markInteracted();
+  getNDC(e);
+  ray.setFromCamera(ptr, camera);
+
+  if (stage === 1) {
+    var activeItemHits = items.filter(function (it) { return !it.sorted; }).map(function (it) { return it.hit; });
+    var hItems = ray.intersectObjects(activeItemHits, false);
+    if (hItems.length) {
+      var iid = hItems[0].object.userData.itemId;
+      var it = items.find(function (x) { return x.id === iid; });
+      drag = { kind: 'item', item: it, sx: e.clientX, sy: e.clientY, moved: false };
+      try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+      return;
+    }
+    var hCab = ray.intersectObjects([cabTech.hit, cabNature.hit], false);
+    if (hCab.length) {
+      var cabId = hCab[0].object.userData.cabId;
+      if (selectedItemId) {
+        var selIt = items.find(function (x) { return x.id === selectedItemId; });
+        trySortItem(selIt, cabId);
+      } else {
+        speak(cabId === 'tech' ? '这里是人工科技馆，先点一下或拖起桌上的科技产品放进来吧！' : '这里是大自然展柜，先点一下或拖起桌上的自然物放进来吧！');
+      }
+      return;
+    }
+    if (goPosterSign.visible && ray.intersectObject(hitGoPoster, false).length) {
+      sfxClick();
+      switchToStage(2, '回到发光灯箱海报工坊，继续创作你的科技产品海报吧！');
+      return;
+    }
+  } else {
+    var readyHits = [hitBackSign];
+    posterCards.forEach(function (c) {
+      if (c.group.position.distanceTo(c.homePos) < 0.28) readyHits.push(c.hit);
+    });
+    var hCards = ray.intersectObjects(readyHits, false);
+    if (hCards.length) {
+      var u = hCards[0].object.userData;
+      if (u.cardKind === 'backMuseum') {
+        sfxClick();
+        switchToStage(1, '回到科技展馆，可以再看看分类好的展品！');
+        return;
+      }
+      var cObj = posterCards.find(function (c) { return c.kind === u.cardKind && c.id === u.cardId; });
+      if (cObj) {
+        drag = { kind: 'card', card: cObj, sx: e.clientX, sy: e.clientY, moved: false };
+        try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+      }
+    }
+  }
+});
+
+cv.addEventListener('pointermove', function (e) {
+  if (!drag) return;
+  var dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+  if (!drag.moved && Math.hypot(dx, dy) >= 14) {
+    drag.moved = true;
+  }
+  if (drag.moved) {
+    getNDC(e);
+    ray.setFromCamera(ptr, camera);
+    var pt = new THREE.Vector3();
+    if (ray.ray.intersectPlane(dragPlane, pt)) {
+      if (drag.kind === 'item') {
+        drag.item.group.position.set(pt.x, 0.56, pt.z);
+        hoverCabId = detectDropCabinet(drag.item.group.position);
+      } else if (drag.kind === 'card') {
+        drag.card.group.position.set(pt.x, 0.68, pt.z);
+        hoverBoard = detectDropBoard(drag.card.group.position);
+      }
+    }
+  }
+});
+
+cv.addEventListener('pointerup', function (e) {
+  if (!drag) return;
+  var d = drag;
+  drag = null;
+  hoverCabId = null;
+  hoverBoard = false;
+  try { cv.releasePointerCapture(e.pointerId); } catch (err) {}
+
+  if (d.kind === 'item') {
+    var it = d.item;
+    if (!d.moved) {
+      triggerItemTest(it, false);
+      selectedItemId = it.id;
+      updateGuide(false);
+    } else {
+      getNDC(e);
+      var dropCab = detectDropCabinet(it.group.position);
+      if (dropCab) {
+        trySortItem(it, dropCab);
+      } else {
+        it.targetPos.copy(it.homePos);
+        speak('把' + it.name + '拖到右侧展柜亮光处松手，或者先点一下再点展柜也能放进去哦！');
+      }
+    }
+  } else if (d.kind === 'card') {
+    var c = d.card;
+    c.targetPos.copy(c.homePos);
+    var shouldApply = !d.moved;
+    if (d.moved) {
+      getNDC(e);
+      if (detectDropBoard(c.group.position)) {
+        shouldApply = true;
+      } else {
+        speak('把' + c.name + '拖到发光灯箱画板上松手，或者直接点一下就能贴上去哦！');
+      }
+    }
+    if (shouldApply) {
+      if (c.kind === 'hero') applyHeroCard(c.id);
+      else if (c.kind === 'badge') applyBadgeCard(c.id);
+      else if (c.kind === 'stamp') applyStampProp(c.id);
+    }
+  }
+});
+
+/* ===== HUD 与巩固弹窗 ===== */
+$('#voiceBtn').addEventListener('click', function () {
+  markInteracted();
+  voiceOn = !voiceOn;
+  this.classList.toggle('on', voiceOn);
+  if (voiceOn) updateGuide(true); else stopVoice();
+});
+$('#guideBar').addEventListener('click', function () { markInteracted(); updateGuide(true); });
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+$('#winKeepBtn').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgainBtn').addEventListener('click', resetAll);
+$('#resetBtn').addEventListener('click', resetAll);
+
+$('#qOpts').addEventListener('click', function (e) {
+  var b = e.target.closest('.qopt');
+  if (!b) return;
+  if (b.dataset.ok === '1') {
+    b.classList.add('ok');
+    $('#qFb').textContent = '🌸 答对啦！获得本课小红花！';
+    saveProgress(LESSON_ID, true);
+    sfxWin();
+    speak('答对啦！护眼台灯是人类设计制造、夜晚照亮书桌的科技产品！获得本课小红花！', true);
+  } else {
+    b.classList.add('bad');
+    var h = b.dataset.hint || '再想想人工科技产品和大自然产物的区别哦！';
+    $('#qFb').textContent = h;
+    sfxErr();
+    speak(h, true);
+  }
+});
+
+function resetAll() {
+  resetGen++;
+  demo = false;
+  stopVoice();
+  stage = 1;
+  selectedItemId = null;
+  lastWrongTarget = null;
+  hoverCabId = null;
+  hoverBoard = false;
+  cabTech.filled = 0; cabNature.filled = 0;
+  items.forEach(function (it) {
+    it.tested = false; it.sorted = false; it.activeFx = false; it.fxTimer = 0;
+    it.targetPos.copy(it.homePos);
+    it.group.position.copy(it.homePos);
+    it.targetScale = 1;
+    it.group.scale.setScalar(1);
+    it.ringMat.opacity = 0;
+    if (it.id === 'fridge') it.extra.doorPivot.rotation.y = 0;
+  });
+  lampLight.intensity = 0;
+  lampConeMat.opacity = 0;
+  posterState = { heroId: null, badgeId: null, stamped: false, postersMade: 0 };
+  ledStripMat.color.set('#64748b');
+  redrawPoster();
+
+  found = {}; stamps = { s1: false, s2: false, s3: false }; celebrated = false;
+  $('#ntList').innerHTML = ''; $('#ntCnt').textContent = '0';
+  $$('.st').forEach(function (s) { s.classList.remove('lit'); });
+  $('#winToast').classList.remove('show');
+  $('#qFb').textContent = '';
+  $$('.qopt').forEach(function (b) { b.classList.remove('ok', 'bad'); });
+
+  stage1Group.visible = true;
+  stage2Group.visible = false;
+  updateCameraTarget();
+  refreshStageUI();
+  updateGuide(false);
+}
+
+/* ===== 慢速有声演示（▶ 演示） ===== */
+$('#demoBtn').addEventListener('click', function () {
+  markInteracted();
+  if (demo) return;
+  resetAll();
+  demo = true;
+  var myGen = resetGen;
+  speak('看我演示！先点一点桌上的护眼台灯和石头体验一下，再把它们分进对应的展柜！', true);
+  setTimeout(function () { if (myGen !== resetGen) return; triggerItemTest(items[0], false); }, 900);
+  setTimeout(function () { if (myGen !== resetGen) return; trySortItem(items[0], 'tech'); }, 2200);
+  setTimeout(function () { if (myGen !== resetGen) return; triggerItemTest(items[4], false); }, 3400);
+  setTimeout(function () { if (myGen !== resetGen) return; trySortItem(items[4], 'nature'); }, 4600);
+  setTimeout(function () {
+    if (myGen !== resetGen) return;
+    switchToStage(2, '分类完成后就会进入发光灯箱海报工坊：贴上主角卡、便利徽章，再盖上红色人工制造印章！');
+  }, 6000);
+  setTimeout(function () { if (myGen !== resetGen) return; applyHeroCard('lamp'); }, 7300);
+  setTimeout(function () { if (myGen !== resetGen) return; applyBadgeCard('light'); }, 8500);
+  setTimeout(function () { if (myGen !== resetGen) return; applyStampProp('artificial'); }, 9700);
+  setTimeout(function () { if (myGen !== resetGen) return; demo = false; resetAll(); speak('演示完成啦，现在轮到你自己体验、分拣并制作专属科技海报吧！', true); }, 12200);
+});
+
+/* ===== 窗口与主帧循环 ===== */
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', fit);
+fit();
+
+var introT0 = performance.now(), lastT = performance.now(), mistAcc = 0;
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (now - lastT) / 1000));
+  lastT = now;
+
+  var pop = Math.min(1, (performance.now() - introT0) / 650);
+  var ease = 1 - Math.pow(1 - pop, 3);
+  live.scale.setScalar(0.01 + 0.99 * ease);
+
+  var tSec = now * 0.001;
+  items.forEach(function (it) {
+    var isDraggingThis = (drag && drag.kind === 'item' && drag.item === it && drag.moved);
+    if (!isDraggingThis) {
+      var hoverY = (selectedItemId === it.id && !it.sorted) ? 0.24 + Math.sin(tSec * 6) * 0.05 : 0;
+      var dst = it.targetPos.clone();
+      dst.y += hoverY;
+      it.group.position.lerp(dst, Math.min(1, dt * 10));
+    }
+    var curS = it.group.scale.x;
+    it.group.scale.setScalar(curS + (it.targetScale - curS) * Math.min(1, dt * 10));
+
+    if (it.fxTimer > 0) it.fxTimer -= dt;
+    var active = it.activeFx && (it.fxTimer > 0 || it.sorted);
+
+    if (it.id === 'lamp') {
+      var want = active ? 1 : 0;
+      lampLight.intensity += (want * 1.45 - lampLight.intensity) * Math.min(1, dt * 8);
+      lampConeMat.opacity += (want * 0.34 - lampConeMat.opacity) * Math.min(1, dt * 8);
+      it.extra.bulbMat.color.set(active ? '#fff9c4' : '#e2d79c');
+    } else if (it.id === 'fan') {
+      if (active) {
+        it.extra.blades.rotation.z -= dt * (it.sorted ? 7 : 20);
+        // 柔软多节丝带随风水平波浪飘扬！
+        [it.extra.rib1, it.extra.rib2].forEach(function (chain, cIdx) {
+          chain.forEach(function (seg, sIdx) {
+            var baseAng = sIdx === 0 ? 1.32 : 0.08;
+            var wave = Math.sin(tSec * 16 - sIdx * 1.15 + cIdx * 1.2) * (0.18 + sIdx * 0.08);
+            seg.rotation.z += ((baseAng + wave) - seg.rotation.z) * Math.min(1, dt * 14);
+          });
+        });
+      } else {
+        [it.extra.rib1, it.extra.rib2].forEach(function (chain, cIdx) {
+          chain.forEach(function (seg, sIdx) {
+            var rest = Math.sin(tSec * 2 + sIdx + cIdx) * 0.04;
+            seg.rotation.z += (rest - seg.rotation.z) * Math.min(1, dt * 6);
+          });
+        });
+      }
+    } else if (it.id === 'fridge') {
+      // 冷藏室上门优雅向右打开（+Y 旋转 1.65 rad），清楚露出双隔板、苹果、橙子和牛奶盒！
+      var openAng = (it.activeFx && it.fxTimer > 0) ? 1.65 : 0;
+      it.extra.doorPivot.rotation.y += (openAng - it.extra.doorPivot.rotation.y) * Math.min(1, dt * 7);
+      if (it.activeFx && it.fxTimer > 0) {
+        mistAcc += dt;
+        if (mistAcc > 0.14) { mistAcc = 0; spawnColdMist(it.group.position); }
+      }
+    } else if (it.id === 'bike') {
+      if (active) {
+        var spd = it.sorted ? 4.5 : 15;
+        it.extra.wL.rotation.z -= dt * spd;
+        it.extra.wR.rotation.z -= dt * spd;
+        it.extra.crankGroup.rotation.z -= dt * spd * 0.7;
+      }
+    } else if (it.id === 'stone') {
+      if (it.activeFx && it.fxTimer > 0) {
+        it.extra.rock.rotation.y += dt * 1.5;
+      }
+    } else if (it.id === 'leaf') {
+      if (active) {
+        it.extra.leafPivot.rotation.z = 0.06 + Math.sin(tSec * 5.2) * 0.15;
+      }
+    }
+  });
+
+  // 展柜门框发光提示（选中时微亮，拖近展柜时鲜亮发光提示松手！）
+  var pulseGlow = 0.55 + Math.sin(tSec * 8) * 0.25;
+  var techGlow = (stage === 1) ? (hoverCabId === 'tech' ? 0.92 : (selectedItemId ? pulseGlow * 0.55 : 0)) : 0;
+  var natGlow = (stage === 1) ? (hoverCabId === 'nature' ? 0.92 : (selectedItemId ? pulseGlow * 0.55 : 0)) : 0;
+  cabTech.frameGlowMat.opacity += (techGlow - cabTech.frameGlowMat.opacity) * Math.min(1, dt * 14);
+  cabNature.frameGlowMat.opacity += (natGlow - cabNature.frameGlowMat.opacity) * Math.min(1, dt * 14);
+
+  // 阶段 2 卡牌归位 & 灯箱拖近高亮/点亮流光
+  posterCards.forEach(function (c) {
+    var isDragCard = (drag && drag.kind === 'card' && drag.card === c && drag.moved);
+    if (!isDragCard) {
+      c.group.position.lerp(c.targetPos, Math.min(1, dt * 18));
+    }
+  });
+  if (posterState.stamped) {
+    var hue = (tSec * 0.22) % 1;
+    ledStripMat.color.setHSL(hue, 0.92, 0.62);
+  } else if (hoverBoard) {
+    ledStripMat.color.set('#22c55e');
+  } else {
+    ledStripMat.color.set('#64748b');
+  }
+
+  camera.position.lerp(camPosTarget, Math.min(1, dt * 5.2));
+  lookCur.lerp(camLookTarget, Math.min(1, dt * 5.2));
+  camera.lookAt(lookCur);
+
+  tickMist(dt);
+  tickConfetti(dt);
+  updateTargetCue();
+  renderer.render(scene, camera);
+}
+
+/* ===== 调试与自动化验证接口 ===== */
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () {
+    return {
+      triangles: renderer.info.render.triangles,
+      celebrated: celebrated,
+      stage: stage,
+      testedCount: countTested(),
+      sortedCount: countSorted(),
+      posterHero: posterState.heroId,
+      posterBadge: posterState.badgeId,
+      posterStamped: posterState.stamped,
+      postersMade: posterState.postersMade
+    };
+  },
+  getState: function () {
+    var itemPts = {};
+    items.forEach(function (it) {
+      itemPts[it.id] = project3D(it.group.position.clone().add(new THREE.Vector3(0, 0.55, 0)));
+    });
+    var cardPts = {};
+    posterCards.forEach(function (c) {
+      cardPts[c.kind + '_' + c.id] = project3D(c.group.position.clone().add(new THREE.Vector3(0, 0.25, 0)));
+    });
+    return {
+      stage: stage,
+      celebrated: celebrated,
+      testedCount: countTested(),
+      sortedCount: countSorted(),
+      selectedItemId: selectedItemId,
+      posterState: Object.assign({}, posterState),
+      stamps: Object.assign({}, stamps),
+      hitScreen: {
+        items: itemPts,
+        cabTech: project3D(cabTech.group.position.clone().add(new THREE.Vector3(0, 0.72, 0.05))),
+        cabNature: project3D(cabNature.group.position.clone().add(new THREE.Vector3(0, 0.72, 0.05))),
+        board: project3D(boardGroup.position.clone()),
+        cards: cardPts,
+        backSign: project3D(backSignGroup.position.clone().add(new THREE.Vector3(0, 0.44, 0)))
+      }
+    };
+  }
+};
+
+refreshStageUI();
+updateCameraTarget();
+updateGuide(false);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -283,8 +283,8 @@ body.no-py rt{display:none}
 <svg id="hand" viewBox="0 0 64 64"><path d="M26 6c3 0 5 2 5 5v17l3-1c2-6 9-5 9 0 2-3 8-2 8 3 3-1 7 1 7 5v12c0 9-7 15-16 15h-6c-6 0-10-3-13-8L13 41c-2-3 0-7 4-7 2 0 3 1 4 2V11c0-3 2-5 5-5z" fill="#fff" stroke="#2a3040" stroke-width="3" stroke-linejoin="round"/></svg>
 
 <script src="../vendor/three.min.js"></script>
-<script src="../audio/manifest.js"></script>
-<script src="../vendor/voice.js"></script>
+<script src="../audio/manifest.js?v=doubao-2"></script>
+<script src="../vendor/voice.js?v=doubao-2"></script>
 <script>
 (function () {
 'use strict';
@@ -346,9 +346,7 @@ var currentGuideSpeech = '小朋友你好！先拖动下面滑块，把橘色纸
 var lastCoachMsg = '';
 function speak(text, force) {
   if (!text || (!voiceOn && !force)) return;
-  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
-  if (!('speechSynthesis' in window)) return;
-  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+  if (window.__xkVoice) { window.__xkVoice.speak(text, '../audio/', true); return; }
 }
 function welcomeVoiceOnce() {
   dismissEntryCues();
@@ -558,20 +556,32 @@ var midRuler = mesh(new THREE.BoxGeometry(0.46, 4.2, 0.06), [
 midRuler.position.set(0, BASE + 2.1, -0.52);
 arena.add(midRuler);
 
-// 可上下拖动的松手放飞横杆
+// 可上下拖动的松手放飞横杆（抬高于纸蜻蜓飞翼上方，留出清晰缝隙绝不穿模）
+var BAR_Y_OFFSET = 1.24;
 var gantryBar = new THREE.Group();
-gantryBar.position.set(0, BASE + 3.65, 0.12);
+gantryBar.position.set(0, BASE + 2.30 + BAR_Y_OFFSET, 0.12);
 arena.add(gantryBar);
-var barRod = mesh(new THREE.BoxGeometry(4.1, 0.11, 0.16), toon('#f2b63d'));
+var barRod = mesh(new THREE.BoxGeometry(4.4, 0.11, 0.16), toon('#f2b63d'));
 barRod.userData.pick = 'bar'; gantryBar.add(barRod);
 var barHandle = mesh(new THREE.SphereGeometry(0.19, 16, 12), toon('#f06818'));
 barHandle.position.set(0, 0, 0.14); barHandle.userData.pick = 'bar'; gantryBar.add(barHandle);
 
 /* ===================== 双机 3D 模型（高对比度：天蓝 vs 鲜橘） ===================== */
 var pickMeshes = [barRod, barHandle];
-function makeDragonfly(wingHex, stemHex) {
+function makeWingTex(baseHex) {
+  return ctex(256, 128, function (g, w, h) {
+    g.fillStyle = baseHex; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(255,255,255,0.42)'; g.lineWidth = 3;
+    for (var x = 32; x < w; x += 32) { g.beginPath(); g.moveTo(x, 6); g.lineTo(x, h - 6); g.stroke(); }
+    for (var y = 32; y < h; y += 32) { g.beginPath(); g.moveTo(6, y); g.lineTo(w - 6, y); g.stroke(); }
+    g.strokeStyle = 'rgba(255,255,255,0.85)'; g.lineWidth = 6;
+    g.strokeRect(4, 4, w - 8, h - 8);
+  });
+}
+function makeDragonfly(wingHex, stemHex, addOrigGuide) {
   var root = new THREE.Group();
-  var wingMat = toon(wingHex), stemMat = toon(stemHex);
+  var wingMat = toon('#ffffff', { map: makeWingTex(wingHex), emissive: new THREE.Color('#ffe066'), emissiveIntensity: 0 });
+  var stemMat = toon(stemHex);
 
   var stem = mesh(new THREE.BoxGeometry(0.16, 0.68, 0.075), stemMat);
   stem.position.y = 0.34; stem.userData.pick = 'df'; pickMeshes.push(stem); root.add(stem);
@@ -592,14 +602,30 @@ function makeDragonfly(wingHex, stemHex) {
 
   // 左/右飞翼锚点（实时缩放长度 X 与宽度 Z）
   var wLPiv = new THREE.Group(); wLPiv.position.set(0, 0.68, 0); root.add(wLPiv);
-  var wL = mesh(new THREE.BoxGeometry(0.85, 0.024, 0.3), wingMat);
+  var wL = mesh(new THREE.BoxGeometry(0.85, 0.028, 0.32), wingMat);
   wL.position.set(-0.425, 0, 0); wL.userData.pick = 'df'; pickMeshes.push(wL); wLPiv.add(wL);
-  wLPiv.rotation.z = -0.17; wLPiv.rotation.x = 0.28;
+  wLPiv.rotation.z = -0.14; wLPiv.rotation.x = 0.24;
 
   var wRPiv = new THREE.Group(); wRPiv.position.set(0, 0.68, 0); root.add(wRPiv);
-  var wR = mesh(new THREE.BoxGeometry(0.85, 0.024, 0.3), wingMat);
+  var wR = mesh(new THREE.BoxGeometry(0.85, 0.028, 0.32), wingMat);
   wR.position.set(0.425, 0, 0); wR.userData.pick = 'df'; pickMeshes.push(wR); wRPiv.add(wR);
-  wRPiv.rotation.z = 0.17; wRPiv.rotation.x = -0.28;
+  wRPiv.rotation.z = 0.14; wRPiv.rotation.x = -0.24;
+
+  // 原尺寸淡白虚框参考线（调大/调小飞翼时一眼看出尺寸变化！）
+  var origGuide = null;
+  if (addOrigGuide) {
+    origGuide = new THREE.Group();
+    origGuide.position.set(0, 0.68, 0);
+    var refMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.92 });
+    var refGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(0.85 * 1.076, 0.036, 0.32 * 1.1925));
+    var gL = new THREE.Group(); gL.rotation.z = -0.14; gL.rotation.x = 0.24;
+    var lLine = new THREE.LineSegments(refGeo, refMat); lLine.position.set(-0.425 * 1.076, 0.01, 0); gL.add(lLine);
+    var gR = new THREE.Group(); gR.rotation.z = 0.14; gR.rotation.x = -0.24;
+    var rLine = new THREE.LineSegments(refGeo, refMat); rLine.position.set(0.425 * 1.076, 0.01, 0); gR.add(rLine);
+    origGuide.add(gL, gR);
+    origGuide.visible = false;
+    root.add(origGuide);
+  }
 
   // 旋转气流光环
   var swirl = new THREE.Group();
@@ -615,11 +641,11 @@ function makeDragonfly(wingHex, stemHex) {
   swirl.visible = false;
   arena.add(swirl);
 
-  return { root: root, wLPiv: wLPiv, wRPiv: wRPiv, tailFold: tailFold, clips: clips, swirl: swirl, rings: rings };
+  return { root: root, wLPiv: wLPiv, wRPiv: wRPiv, wingMat: wingMat, origGuide: origGuide, tailFold: tailFold, clips: clips, swirl: swirl, rings: rings };
 }
 
-var dfBase = makeDragonfly('#2b8cf0', '#1864ba'); // 天蓝：上节课款
-var dfMine = makeDragonfly('#f06818', '#c24908'); // 鲜橘：我的改进款
+var dfBase = makeDragonfly('#2b8cf0', '#1864ba', false); // 天蓝：上节课款
+var dfMine = makeDragonfly('#f06818', '#c24908', true);  // 鲜橘：我的改进款
 arena.add(dfBase.root);
 arena.add(dfMine.root);
 
@@ -640,12 +666,16 @@ arena.add(crownGrp);
 /* ===================== 实时变形与物理参数 ===================== */
 var cfgBase = { len: 45, wid: 45, wt: 45 };
 var cfgMine = { len: 45, wid: 45, wt: 45 };
+var morphPulse = 0, morphTagFlags = { len: false, wid: false };
 
 function applyMorph(df, c) {
-  var sx = 0.58 + (c.len / 100) * 0.92;  // 飞翼长度 0.58 ~ 1.50
-  var sz = 0.55 + (c.wid / 100) * 0.95;  // 飞翼宽度 0.55 ~ 1.50
+  var sx = 0.50 + (c.len / 100) * 1.28;  // 飞翼长度 0.50 ~ 1.78（变化一目了然）
+  var sz = 0.45 + (c.wid / 100) * 1.65;  // 飞翼宽度 0.45 ~ 2.10（加宽变化极清晰）
   df.wLPiv.scale.set(sx, 1, sz);
   df.wRPiv.scale.set(sx, 1, sz);
+  if (df.origGuide) {
+    df.origGuide.visible = (raceState === 'ready') && (Math.abs(c.len - cfgBase.len) > 5 || Math.abs(c.wid - cfgBase.wid) > 5);
+  }
   // 折尾厚度与可见回形针数（1~3个）
   var wScale = 0.75 + (c.wt / 100) * 0.75;
   df.tailFold.scale.set(1, wScale, 0.8 + (c.wt / 100) * 0.9);
@@ -666,15 +696,16 @@ function aeroOf(c) {
   return { fallSpd: fallSpd, spinRate: spinRate, wobble: wobble };
 }
 
-var DF_X = 1.22;
-var launchY = 3.55;
+var DF_X = 1.38;
+var DEFAULT_LAUNCH_Y = 2.30;
+var launchY = DEFAULT_LAUNCH_Y;
 var raceState = 'ready'; // 'ready' | 'dropping' | 'done'
-var pBase = { x: -DF_X, y: 3.55, vy: 0, yaw: 0, t: 0, landed: false, aero: aeroOf(cfgBase) };
-var pMine = { x:  DF_X, y: 3.55, vy: 0, yaw: 0, t: 0, landed: false, aero: aeroOf(cfgMine) };
+var pBase = { x: -DF_X, y: DEFAULT_LAUNCH_Y, vy: 0, yaw: 0, t: 0, landed: false, aero: aeroOf(cfgBase) };
+var pMine = { x:  DF_X, y: DEFAULT_LAUNCH_Y, vy: 0, yaw: 0, t: 0, landed: false, aero: aeroOf(cfgMine) };
 
 function resetRace(keepY) {
   raceState = 'ready';
-  if (!keepY) launchY = 3.55;
+  if (!keepY) launchY = DEFAULT_LAUNCH_Y;
   crownGrp.visible = false;
   pBase = { x: -DF_X, y: launchY, vy: 0, yaw: 0, t: 0, landed: false, aero: aeroOf(cfgBase) };
   pMine = { x:  DF_X, y: launchY, vy: 0, yaw: 0, t: 0, landed: false, aero: aeroOf(cfgMine) };
@@ -712,10 +743,19 @@ function onSlide(e) {
   markAct('tune'); ghost.off = true;
   tone(380 + (cfgMine.len + cfgMine.wid) * 2.2, 0.05, 'triangle', 0.05);
   var sid = e && e.target ? e.target.id : '';
+  morphPulse = 1.0;
   var firstTune = !kinds.t;
   if (sid === 'inLen') {
+    if (cfgMine.len > 68 && !morphTagFlags.len) {
+      morphTagFlags.len = true;
+      floatWord('↔ 飞翼拉长!', 'fēi yì lā cháng', new THREE.Vector3(DF_X, BASE + launchY + 0.92, 0.25), 'ok');
+    }
     discover('tune-len', 't', '改变飞翼长度看造型变化', 'gǎi biàn fēi yì cháng dù kàn zào xíng biàn huà', '#e56d17', '🔧', firstTune);
   } else if (sid === 'inWid') {
+    if (cfgMine.wid > 68 && !morphTagFlags.wid) {
+      morphTagFlags.wid = true;
+      floatWord('↕ 飞翼加宽!', 'fēi yì jiā kuān', new THREE.Vector3(DF_X, BASE + launchY + 0.92, 0.25), 'ok');
+    }
     discover('tune-wid', 't', '改变飞翼宽度看造型变化', 'gǎi biàn fēi yì kuān dù kàn zào xíng biàn huà', '#e56d17', '🔧', firstTune);
   } else if (sid === 'inWt') {
     discover('tune-wt', 't', '增减折尾配重改变重心', 'zēng jiǎn zhé wěi pèi zhòng gǎi biàn zhòng xīn', '#e56d17', '⚖', firstTune);
@@ -733,9 +773,9 @@ function fit() {
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
   portrait = w / h < 0.85;
-  var tgt = new THREE.Vector3(portrait ? 0 : 0.95, portrait ? 1.85 : 2.1, 0);
+  var tgt = new THREE.Vector3(portrait ? 0 : 0.95, portrait ? 1.85 : 2.26, 0);
   var dir = new THREE.Vector3(0, 0.30, 0.954).normalize();
-  var needW = portrait ? 6.8 : 9.8, needH = portrait ? 8.2 : 6.4;
+  var needW = portrait ? 6.8 : 10.1, needH = portrait ? 8.2 : 6.7;
   var vf = THREE.MathUtils.degToRad(camera.fov), hf = 2 * Math.atan(Math.tan(vf / 2) * camera.aspect);
   var d = Math.max(needW / 2 / Math.tan(hf / 2), needH / 2 / Math.tan(vf / 2) * 0.9);
   camera.position.copy(tgt).addScaledVector(dir, d);
@@ -985,7 +1025,7 @@ canvas.addEventListener('pointermove', function (e) {
   setNDC(e);
   if (dragBar) {
     if (raycaster.ray.intersectPlane(pPlaneV, ptmp)) {
-      launchY = THREE.MathUtils.clamp(ptmp.y - 0.68, BASE + 1.5, 3.85);
+      launchY = THREE.MathUtils.clamp(ptmp.y - BAR_Y_OFFSET, BASE + 1.3, 2.95);
       pBase.y = pMine.y = launchY;
     }
     return;
@@ -1101,6 +1141,7 @@ function updateIntro(dt) {
 function resetAll(keepDemo) {
   if (!keepDemo) stopDemo();
   cfgMine = { len: 45, wid: 45, wt: 45 };
+  morphPulse = 0; morphTagFlags = { len: false, wid: false };
   syncSlidersUI();
   resetRace(false);
   found = {}; foundN = 0; kinds = { t: false, c: false, w: false };
@@ -1117,13 +1158,22 @@ function resetAll(keepDemo) {
 
 /* ===================== 主循环 ===================== */
 var last = performance.now(), now = 0;
-function stepOneDF(p, df, dt, baseX) {
+function stepOneDF(p, df, dt, baseX, isMine) {
   if (raceState === 'ready') {
     df.root.position.set(baseX, BASE + p.y, 0.12);
-    df.root.rotation.set(0, now * 0.5, 0);
+    // 悬停展示态：向镜头微倾展示完整翼面（长度+宽度变化一目了然，绝不侧刃隐身）
+    var pulseBoost = (isMine && morphPulse > 0) ? Math.sin(morphPulse * Math.PI) : 0;
+    df.root.rotation.set(0.46 + pulseBoost * 0.14, Math.sin(now * 1.1) * 0.12, 0);
+    var sc = 1 + pulseBoost * 0.08;
+    df.root.scale.setScalar(sc);
+    if (df.origGuide) {
+      df.origGuide.visible = (Math.abs(cfgMine.len - cfgBase.len) > 5 || Math.abs(cfgMine.wid - cfgBase.wid) > 5);
+    }
     df.swirl.visible = false;
     return;
   }
+  df.root.scale.setScalar(1);
+  if (df.origGuide) df.origGuide.visible = false;
   if (!p.landed) {
     p.t += dt;
     var a = p.aero;
@@ -1151,9 +1201,16 @@ function frame(t) {
   updateIntro(dt);
   stepDemo(dt);
 
-  gantryBar.position.y = BASE + launchY + 0.72;
-  stepOneDF(pBase, dfBase, dt, -DF_X);
-  stepOneDF(pMine, dfMine, dt,  DF_X);
+  if (morphPulse > 0) {
+    morphPulse = Math.max(0, morphPulse - dt * 2.2);
+    dfMine.wingMat.emissiveIntensity = Math.sin(morphPulse * Math.PI) * 0.65;
+  } else {
+    dfMine.wingMat.emissiveIntensity = 0;
+  }
+
+  gantryBar.position.y = BASE + launchY + BAR_Y_OFFSET;
+  stepOneDF(pBase, dfBase, dt, -DF_X, false);
+  stepOneDF(pMine, dfMine, dt,  DF_X, true);
 
   if (raceState === 'dropping' && pBase.landed && pMine.landed) {
     raceState = 'done';
@@ -1172,8 +1229,9 @@ function frame(t) {
   if (showTmr) {
     tmrL.innerHTML = ruby('上节课款', 'shàng jié kè kuǎn') + '<span class="sec">' + pBase.t.toFixed(1) + 's</span>';
     tmrR.innerHTML = ruby('我的改进款', 'wǒ de gǎi jìn kuǎn') + '<span class="sec">' + pMine.t.toFixed(1) + 's</span>';
-    var spL = toScreen(new THREE.Vector3(pBase.x, BASE + pBase.y + 1.15, 0.12));
-    var spR = toScreen(new THREE.Vector3(pMine.x, BASE + pMine.y + 1.15, 0.12));
+    var tmrOff = (raceState === 'ready') ? (BAR_Y_OFFSET + 0.24) : 1.15;
+    var spL = toScreen(new THREE.Vector3(pBase.x, BASE + pBase.y + tmrOff, 0.12));
+    var spR = toScreen(new THREE.Vector3(pMine.x, BASE + pMine.y + tmrOff, 0.12));
     var minY = 94;
     tmrL.style.transform = 'translate(' + spL.x + 'px,' + Math.max(minY, spL.y) + 'px) translate(-50%,-100%)';
     tmrR.style.transform = 'translate(' + spR.x + 'px,' + Math.max(minY, spR.y) + 'px) translate(-50%,-100%)';

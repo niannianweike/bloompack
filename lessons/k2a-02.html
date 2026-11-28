@@ -1,0 +1,2067 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第2课 观察水 · 3D水的形状水平面与安全观察台</title>
+<style>
+:root{--accent:#0284c7;--accent-dark:#0369a1;--ink:#241d15;--line:#e4d5ba;--card:rgba(255,253,248,.95)}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#4b3523;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas#cv.grabbing{cursor:grabbing}
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.46em;color:#6d5f49;font-weight:600}
+body.no-py rt{display:none}
+
+/* 左上标题卡片 */
+#hudTL{position:fixed;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:10px;
+  padding:7px 14px 7px 9px;border-radius:16px;background:var(--card);border:1.5px solid var(--line);
+  box-shadow:0 4px 16px rgba(20,12,4,.22)}
+#backBtn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:#5c4b34;font-size:19px;font-weight:900}
+#backBtn:hover{border-color:var(--accent);color:var(--accent)}
+.hd-t{font-size:16px;font-weight:900;line-height:1.5}
+.hd-sub{font-size:11.5px;color:#7b6c56;font-weight:700}
+
+/* 顶部中央动态引导栏 */
+#guideBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:6;
+  max-width:min(470px,calc(100vw - 630px));display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:15px;background:rgba(255,252,244,.97);
+  border:2px solid var(--accent);box-shadow:0 6px 18px rgba(2,132,199,.22);
+  font-size:13.5px;font-weight:800;color:#0c4a6e;cursor:pointer;line-height:1.38;transition:all .2s}
+#guideBar.flash{transform:translateX(-50%) scale(1.04)}
+#guideBar.stage2{border-color:#16a34a;background:#f0fdf4;color:#14532d}
+
+/* 右上工具条 */
+#hudTR{position:fixed;top:12px;right:12px;z-index:7;display:flex;align-items:center;gap:6px}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:38px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);
+  background:var(--card);font-size:13.5px;font-weight:800;color:#4a3c28;cursor:pointer;
+  box-shadow:0 3px 0 #d9c8ab;transition:all .14s;white-space:nowrap}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:var(--accent-dark);color:#fff;box-shadow:0 3px 0 var(--accent-dark)}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#e0f2fe;border:1.5px solid var(--accent);color:#0369a1;font-size:10.5px;font-weight:900;
+  white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(2,132,199,.24);
+  animation:cuePop 1.6s ease-in-out infinite;transition:opacity .25s}
+body.interacted .entry-cue{opacity:0;animation:none}
+@keyframes cuePop{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+
+/* 右上可收起窄版发现栏（D3 防遮挡） */
+#notes{position:fixed;top:60px;right:12px;z-index:6;width:224px;padding:9px 11px;border-radius:15px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 6px 18px rgba(20,12,4,.22)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+.nt-title{font-size:13.5px;font-weight:900}
+.nt-cnt{font-size:12.5px;font-weight:900;color:var(--accent)}
+.nt-tog{padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:11px;font-weight:800;color:#6c5c45;cursor:pointer}
+.stamps{display:flex;gap:4px;margin-bottom:6px}
+.st{flex:1;text-align:center;padding:3px 2px;border-radius:8px;font-size:11px;font-weight:800;
+  border:1.5px dashed #d7c5a4;color:#9b8a70;background:#faf4e8;transition:all .2s;line-height:1.4}
+.st.lit{border-style:solid;border-color:var(--accent);background:#e0f2fe;color:#0369a1}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList,#notes.collapsed .stamps{display:none}
+#notes.collapsed .nt-head{margin-bottom:0}
+.stk{padding:5px 8px;border-radius:10px;background:#fff;border:1px solid #ece0c9;font-size:12px;font-weight:700;line-height:1.4}
+.stk b{color:#0369a1}
+
+/* 左上进度胶囊 */
+#scoreBadge{position:fixed;left:14px;top:74px;z-index:5;display:flex;align-items:center;gap:8px;
+  padding:6px 12px;border-radius:99px;background:var(--card);border:1.5px solid var(--line);
+  font-size:12.5px;font-weight:900;color:#3f311e;box-shadow:0 4px 12px rgba(20,12,4,.18)}
+#scoreBadge span.num{color:var(--accent);font-size:14px}
+
+/* 左侧 2D 实时双视角剖面框（俯视图 + 平视图） */
+#profileBox{position:fixed;left:14px;top:116px;z-index:6;width:176px;padding:8px 9px;border-radius:16px;
+  background:rgba(15,23,42,.90);border:2px solid #38bdf8;box-shadow:0 10px 24px rgba(10,18,30,.36);color:#e0f2fe}
+.pf-head{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;font-weight:900;margin-bottom:5px;color:#7dd3fc}
+.pf-cup{padding:1px 6px;border-radius:99px;background:rgba(56,189,248,.22);color:#fff;font-size:10.5px}
+#pfCanvas{width:154px;height:212px;display:block;border-radius:10px;background:#0f172a}
+.pf-foot{margin-top:5px;font-size:10.5px;font-weight:800;color:#bae6fd;text-align:center;line-height:1.35}
+
+/* 唯一底部图标视角切换钮（<= 1 个，严守 U7） */
+#viewBtn{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:7;
+  height:40px;padding:0 16px;border-radius:99px;border:2px solid #7dd3fc;
+  background:rgba(15,23,42,.90);color:#e0f2fe;font-size:13.5px;font-weight:900;cursor:pointer;
+  box-shadow:0 6px 18px rgba(10,18,30,.36);transition:all .16s}
+#viewBtn:hover{background:#0284c7;border-color:#bae6fd;color:#fff}
+#viewBtn.top-on{background:#0284c7;border-color:#e0f2fe;color:#fff}
+
+/* 3D 场景浮动标签与单焦点指引（U10） */
+#nameTags{position:fixed;inset:0;pointer-events:none;z-index:3}
+.ntag{position:absolute;transform:translate(-50%,-100%);padding:3px 9px;border-radius:99px;
+  background:rgba(15,23,42,.86);color:#f8fafc;border:1.5px solid rgba(148,163,184,.55);
+  font-size:11.5px;font-weight:800;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.25);transition:opacity .2s}
+.ntag.safe{background:rgba(21,128,61,.95);border-color:#86efac}
+.ntag.danger{background:rgba(185,28,28,.94);border-color:#fca5a5}
+.ntag.tool{background:rgba(3,105,161,.94);border-color:#7dd3fc}
+
+#labels{position:fixed;inset:0;pointer-events:none;z-index:5}
+.cue3d{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:5px 13px;border-radius:99px;
+  background:#e0f2fe;border:2px solid #0284c7;color:#0c4a6e;font-size:13px;font-weight:900;white-space:nowrap;
+  box-shadow:0 4px 14px rgba(2,132,199,.34);animation:cueBob 1.3s ease-in-out infinite;display:none;pointer-events:none}
+.cue3d.show{display:block}
+.cue3d.drop{background:#dcfce7;border-color:#16a34a;color:#14532d;box-shadow:0 4px 16px rgba(22,163,74,.42)}
+.cue3d.warn-drop{background:#fee2e2;border-color:#dc2626;color:#7f1d1d;box-shadow:0 4px 16px rgba(220,38,38,.42)}
+@keyframes cueBob{0%,100%{transform:translate(-50%,-100%) translateY(0)}50%{transform:translate(-50%,-100%) translateY(-6px)}}
+.popword{position:absolute;transform:translate(-50%,-100%);padding:5px 13px;border-radius:99px;
+  background:rgba(3,105,161,.95);color:#fff;font-size:13.5px;font-weight:800;white-space:nowrap;
+  box-shadow:0 4px 12px rgba(0,0,0,.28);animation:popFloat 2.0s ease-out forwards;pointer-events:none}
+.popword.warn{background:rgba(185,28,28,.96);border:1.5px solid #fecaca}
+.popword.good{background:rgba(21,128,61,.96)}
+@keyframes popFloat{0%{opacity:0;transform:translate(-50%,-70%) scale(.75)}16%{opacity:1;transform:translate(-50%,-110%) scale(1.05)}82%{opacity:1;transform:translate(-50%,-140%) scale(1)}100%{opacity:0;transform:translate(-50%,-178%) scale(.96)}}
+
+/* 通关弹窗 */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+#winToast{position:fixed;inset:0;z-index:35;display:none;place-items:center;background:rgba(24,18,12,.42);padding:16px}
+#winToast.show{display:grid}
+.win-card{width:min(458px,100%);max-height:85vh;overflow-y:auto;background:#fffdf8;
+  border:2.5px solid var(--accent);border-radius:22px;padding:18px 20px;text-align:center;
+  box-shadow:0 20px 50px rgba(20,12,4,.34)}
+.win-concl{margin:10px 0;padding:10px 12px;border-radius:13px;background:#e0f2fe;border:1.5px solid #7dd3fc;
+  text-align:left;font-size:13.5px;line-height:1.58;color:#0c4a6e}
+.win-quiz{margin:10px 0;padding:10px 12px;border-radius:13px;background:#f8fafc;border:1.5px solid #d9e2ec;text-align:left}
+.win-quiz h4{margin:0 0 8px;font-size:13.5px;color:#0369a1}
+.qopts{display:flex;flex-direction:column;gap:7px}
+.qopt{padding:8px 11px;border-radius:11px;border:1.5px solid #d9d0be;background:#fff;
+  font-size:13.5px;font-weight:800;text-align:left;cursor:pointer;transition:all .14s}
+.qopt:hover{border-color:var(--accent);background:#f0f9ff}
+.qopt.ok{border-color:#16a34a;background:#dcfce7;color:#14532d}
+.qopt.bad{border-color:#e03131;background:#fff5f5;color:#c92a2a}
+.qfb{margin-top:7px;font-size:12.5px;font-weight:800;min-height:18px;color:#166534}
+.win-acts{display:flex;justify-content:center;gap:10px;margin-top:12px}
+
+@media (max-width:960px){
+  #guideBar{top:58px;max-width:min(420px,calc(100vw - 260px));font-size:12.5px}
+}
+@media (max-width:740px){
+  #guideBar{top:54px;left:10px;right:10px;transform:none;max-width:none}
+  #scoreBadge,#profileBox{display:none}
+}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="nameTags"></div>
+<div id="labels">
+  <div class="cue3d" id="targetCue">👆 拖起或点蓝色水壶给异形杯倒水</div>
+</div>
+<canvas id="confetti"></canvas>
+
+<div id="hudTL">
+  <a id="backBtn" href="../index.html" title="返回书包">‹</a>
+  <div>
+    <div class="hd-t" data-py="dì kè guān chá shuǐ">第2课 观察水</div>
+    <div class="hd-sub">活页 · 课本第 7 页「异形杯倾斜看水平面 + 安全扇闻法」</div>
+  </div>
+</div>
+
+<div id="guideBar" title="点我重听当前步骤">
+  <span id="guideIco">💧</span>
+  <span id="guideTxt">阶段1：先拖起或点蓝色浇水壶，给三只不同形状的玻璃杯分别倒半杯水吧！</span>
+</div>
+
+<div id="hudTR">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<div id="scoreBadge"><span id="phaseLabel">💧 观察水：</span><span class="num" id="progNum">0 / 6</span></div>
+
+<div id="profileBox">
+  <div class="pf-head">
+    <span>📐 双视角剖面</span>
+    <span class="pf-cup" id="pfCupName">高窄圆柱杯</span>
+  </div>
+  <canvas id="pfCanvas" width="308" height="424"></canvas>
+  <div class="pf-foot" id="pfFoot">倒水并倾斜杯子，看水面总保持水平！</div>
+</div>
+
+<button id="viewBtn" type="button">👁 切换俯视</button>
+
+<aside id="notes">
+  <div class="nt-head">
+    <span class="nt-title" data-py="wǒ de fā xiàn">我的发现</span>
+    <span class="nt-cnt" id="ntCnt">0</span>
+    <button class="nt-tog" id="ntTog" type="button">收起</button>
+  </div>
+  <div class="stamps">
+    <span class="st" id="st1" data-py="biàn xíng zhuàng">变形状</span>
+    <span class="st" id="st2" data-py="shuǐ miàn píng">水面平</span>
+    <span class="st" id="st3" data-py="ān quán bǐ">安全比</span>
+  </div>
+  <div id="ntList"></div>
+</aside>
+
+<div id="winToast">
+  <div class="win-card">
+    <div style="font-size:38px">🏆</div>
+    <h3 style="margin:4px 0;color:#0c4a6e">太棒啦！水的形状、水平面与安全观察全通关！</h3>
+    <div class="win-concl">
+      <b>✨ 科学小结论：</b>水没有固定形状，倒入不同容器会变成容器的形状，静止时水面总是水平的；纯净水无色、无味、透明。面对未知液体，绝不能直接喝或贴鼻猛吸，要用扇闻法安全观察！
+    </div>
+    <div class="win-quiz">
+      <h4>💡 考考你 · 答对领小红花 🌸</h4>
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:8px">实验桌上有一杯不知道是什么的无色透明液体，想闻一闻气味，最安全正确的做法是？</div>
+      <div class="qopts" id="qOpts">
+        <button class="qopt" type="button" data-ok="1">✋ 用手在杯口上方轻轻扇风，把少量气味扇过来闻</button>
+        <button class="qopt" type="button" data-hint="未知液体可能有危险，千万不能直接喝或用舌头尝哦！">🥤 直接端起杯子尝一小口</button>
+        <button class="qopt" type="button" data-hint="把鼻子凑近杯口猛吸可能会呛到或伤害鼻子，要用扇闻法哦！">👃 把鼻子紧紧贴在杯口用力猛吸</button>
+      </div>
+      <div class="qfb" id="qFb"></div>
+    </div>
+    <div class="win-acts">
+      <button class="tbtn" id="winKeepBtn" type="button">继续玩</button>
+      <button class="tbtn on" id="winAgainBtn" type="button">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js?v=doubao-2"></script>
+<script src="../vendor/voice.js?v=doubao-2"></script>
+<script>
+(function () {
+'use strict';
+
+try { sessionStorage.setItem('xk_last_vol', 'k2a'); } catch (e) {}
+
+var LESSON_ID = 'k2a-02';
+var BOOK_PROGRESS_KEY = 'xk_k2a_progress';
+var $ = function (s) { return document.querySelector(s); };
+var $$ = function (s) { return document.querySelectorAll(s); };
+
+/* ===== 拼音标注 ===== */
+var HAN = /[\u3400-\u9fff]/;
+var pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function ruby(text, py) {
+  if (!py) return esc(text);
+  var syl = py.trim().split(/\s+/), i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) {
+      var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; }
+      out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>';
+    } else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+$$('[data-py]').forEach(function (el) { el.innerHTML = ruby(el.textContent, el.dataset.py); });
+
+/* ===== 音效与离线豆包语音 ===== */
+var actx = null;
+function beep(freqs, dur) {
+  try {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    var t = actx.currentTime;
+    freqs.forEach(function (f, idx) {
+      var o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'triangle'; o.frequency.setValueAtTime(f, t + idx * 0.08);
+      g.gain.setValueAtTime(0.001, t + idx * 0.08);
+      g.gain.exponentialRampToValueAtTime(0.11, t + idx * 0.08 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.08 + (dur || 0.2));
+      o.connect(g); g.connect(actx.destination);
+      o.start(t + idx * 0.08); o.stop(t + idx * 0.08 + (dur || 0.22));
+    });
+  } catch (e) {}
+}
+
+var voiceOn = true;
+function stopVoice() {
+  if (window.__xkVoice) window.__xkVoice.stop();
+  else if (window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
+}
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text, '../audio/', true); return; }
+}
+
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem(BOOK_PROGRESS_KEY) || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem(BOOK_PROGRESS_KEY, JSON.stringify(d));
+  } catch (e) {}
+}
+
+/* ===== 彩带 ===== */
+var cfCanvas = $('#confetti'), cfCtx = cfCanvas.getContext('2d'), cfParts = [], cfOn = false;
+function fireConfetti() {
+  cfCanvas.width = window.innerWidth; cfCanvas.height = window.innerHeight;
+  cfParts = [];
+  var cols = ['#0284c7', '#22c55e', '#f59e0b', '#ec4899', '#38bdf8', '#facc15'];
+  for (var i = 0; i < 94; i++) {
+    cfParts.push({
+      x: cfCanvas.width * (0.14 + Math.random() * 0.72), y: -15 - Math.random() * 110,
+      vx: (Math.random() - 0.5) * 210, vy: 120 + Math.random() * 190,
+      r: 5 + Math.random() * 5, a: Math.random() * 6.28, va: (Math.random() - 0.5) * 9,
+      c: cols[i % cols.length]
+    });
+  }
+  cfOn = true;
+}
+
+/* ===== Three.js r147 深木桌+青灰高对比垫（启用局部裁剪平面做真实水平面！） ===== */
+var cv = $('#cv');
+var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.localClippingEnabled = true;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color('#543d2b');
+var camera = new THREE.PerspectiveCamera(35, 16 / 9, 0.1, 80);
+var camSidePos = new THREE.Vector3(0.26, 4.85, 8.85);
+var camSideLook = new THREE.Vector3(0.06, 0.62, 0.25);
+var camTopPos = new THREE.Vector3(0.10, 9.5, 1.45);
+var camTopLook = new THREE.Vector3(0.10, 0.35, 0.18);
+var viewMode = 'side';
+var camCurLook = camSideLook.clone();
+camera.position.copy(camSidePos);
+camera.lookAt(camCurLook);
+
+scene.add(new THREE.HemisphereLight('#fffaf2', '#4c3828', 0.80));
+var sunL = new THREE.DirectionalLight('#fff6e8', 0.78);
+sunL.position.set(-4.5, 11, 6.5);
+sunL.castShadow = true;
+sunL.shadow.mapSize.set(1024, 1024);
+sunL.shadow.camera.left = -8; sunL.shadow.camera.right = 8;
+sunL.shadow.camera.top = 8; sunL.shadow.camera.bottom = -8;
+sunL.shadow.bias = -0.0008;
+scene.add(sunL);
+var rimL = new THREE.DirectionalLight('#bae6fd', 0.34);
+rimL.position.set(5, 6, -5);
+scene.add(rimL);
+
+var ramp = new THREE.DataTexture(new Uint8Array([120,120,120,255, 184,184,184,255, 232,232,232,255, 255,255,255,255]), 4, 1, THREE.RGBAFormat);
+ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+
+function toon(hex, extra) {
+  var o = { color: new THREE.Color(hex), gradientMap: ramp };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshToonMaterial(o);
+}
+function mesh(geo, mat) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+function ctex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c);
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+
+// 深木桌底
+var woodTex = ctex(512, 512, function (g, w, h) {
+  g.fillStyle = '#533a27'; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 80; i++) {
+    g.fillStyle = 'rgba(30,18,8,' + (0.04 + Math.random() * 0.08).toFixed(3) + ')';
+    g.fillRect(0, Math.random() * h, w, 2 + Math.random() * 4);
+  }
+});
+woodTex.wrapS = woodTex.wrapT = THREE.RepeatWrapping; woodTex.repeat.set(3, 3);
+var deskFloor = new THREE.Mesh(new THREE.PlaneGeometry(55, 55), new THREE.MeshLambertMaterial({ map: woodTex }));
+deskFloor.rotation.x = -Math.PI / 2; deskFloor.position.y = -0.18; deskFloor.receiveShadow = true;
+scene.add(deskFloor);
+
+var live = new THREE.Group();
+scene.add(live);
+
+// 青灰高对比实验垫（U11）
+var matTex = ctex(512, 360, function (g, w, h) {
+  g.fillStyle = '#24414b'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(148,210,224,0.16)'; g.lineWidth = 2;
+  for (var x = 32; x < w; x += 32) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); }
+  for (var y = 32; y < h; y += 32) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+  g.strokeStyle = '#5d95a6'; g.lineWidth = 10; g.strokeRect(8, 8, w - 16, h - 16);
+});
+var matBoard = mesh(new THREE.BoxGeometry(9.4, 0.14, 5.8), new THREE.MeshLambertMaterial({ map: matTex }));
+matBoard.position.set(0.05, -0.07, 0.25); matBoard.castShadow = false;
+live.add(matBoard);
+
+var HIT_MAT = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false });
+var pickMeshes = [];
+var shapedCupHits = [];
+var s2CupHits = [];
+
+function tagPick(root, kind, extra) {
+  root.traverse(function (ch) {
+    if (ch.isMesh) {
+      ch.userData.pickKind = kind;
+      if (extra) for (var k in extra) ch.userData[k] = extra[k];
+      pickMeshes.push(ch);
+    }
+  });
+}
+
+function makeTag(text, cls) {
+  var el = document.createElement('div');
+  el.className = 'ntag' + (cls ? ' ' + cls : '');
+  el.textContent = text;
+  $('#nameTags').appendChild(el);
+  return el;
+}
+
+/* ===== 精致小深胡桃木托盘（绝不使用刺眼惨白大圆盘！） ===== */
+function makeWoodTray(r, rimCol) {
+  var tg = new THREE.Group();
+  var base = mesh(new THREE.CylinderGeometry(r, r + 0.04, 0.042, 26), toon('#3e2a1d'));
+  base.position.y = 0.021; base.castShadow = false; tg.add(base);
+  var inner = mesh(new THREE.CylinderGeometry(r - 0.045, r - 0.045, 0.046, 24), toon('#523929'));
+  inner.position.y = 0.023; inner.castShadow = false; tg.add(inner);
+  if (rimCol) {
+    var trim = new THREE.Mesh(new THREE.TorusGeometry(r - 0.015, 0.016, 8, 28),
+      new THREE.MeshBasicMaterial({ color: rimCol }));
+    trim.rotation.x = Math.PI / 2; trim.position.y = 0.045; tg.add(trim);
+  }
+  return tg;
+}
+
+/* ===== 精致圆润 5 指 3D 扇闻小手 + 3 道清新青蓝弧形微风波浪 ===== */
+function buildFanHand3D(g) {
+  var skinMat = toon('#f0b592');
+  var palmBlushMat = toon('#e89e7c');
+  var cuffMat = toon('#16a34a');
+  var trimMat = toon('#dcfce7');
+
+  // 翠绿袖口 + 白边
+  var cuff = mesh(new THREE.CylinderGeometry(0.11, 0.13, 0.17, 16), cuffMat);
+  cuff.position.set(-0.04, 0.09, 0); g.add(cuff);
+  var cuffTrim = mesh(new THREE.TorusGeometry(0.112, 0.016, 8, 20), trimMat);
+  cuffTrim.rotation.x = Math.PI / 2; cuffTrim.position.set(-0.04, 0.17, 0); g.add(cuffTrim);
+  var wrist = mesh(new THREE.CylinderGeometry(0.085, 0.092, 0.09, 14), skinMat);
+  wrist.position.set(-0.04, 0.21, 0); g.add(wrist);
+
+  // 圆润立体掌心
+  var handPivot = new THREE.Group();
+  handPivot.position.set(-0.04, 0.24, 0);
+  handPivot.rotation.z = 0.08;
+  g.add(handPivot);
+
+  var palm = mesh(new THREE.SphereGeometry(0.185, 18, 14), skinMat);
+  palm.scale.set(1.05, 1.02, 0.56);
+  palm.position.set(0.01, 0.14, 0); handPivot.add(palm);
+
+  var pad = mesh(new THREE.SphereGeometry(0.105, 14, 12), palmBlushMat);
+  pad.scale.set(1.0, 0.90, 0.35);
+  pad.position.set(0.01, 0.12, 0.072); handPivot.add(pad);
+
+  var thenar = mesh(new THREE.SphereGeometry(0.09, 12, 10), skinMat);
+  thenar.scale.set(0.95, 1.1, 0.72);
+  thenar.position.set(-0.105, 0.09, 0.04); handPivot.add(thenar);
+
+  function addFinger(x, y, z, len, rad, rotZ, rotX) {
+    var fg = new THREE.Group();
+    fg.position.set(x, y, z);
+    fg.rotation.z = rotZ || 0;
+    fg.rotation.x = rotX || 0.12;
+    var seg = mesh(new THREE.CylinderGeometry(rad * 0.92, rad, len, 12), skinMat);
+    seg.position.y = len * 0.5; fg.add(seg);
+    var tip = mesh(new THREE.SphereGeometry(rad * 0.94, 12, 10), skinMat);
+    tip.position.y = len; fg.add(tip);
+    var base = mesh(new THREE.SphereGeometry(rad, 10, 8), skinMat);
+    fg.add(base);
+    handPivot.add(fg);
+  }
+
+  addFinger(-0.12, 0.27, 0.005, 0.20, 0.039,  0.14, 0.14);
+  addFinger(-0.038, 0.30, 0.008, 0.24, 0.040,  0.04, 0.12);
+  addFinger( 0.050, 0.29, 0.005, 0.21, 0.038, -0.05, 0.13);
+  addFinger( 0.130, 0.25, 0.000, 0.155, 0.034, -0.17, 0.14);
+  addFinger(-0.170, 0.11, 0.035, 0.165, 0.043,  0.76, 0.18);
+
+  // 3 道清新青蓝弧形微风波浪（一眼认出“轻轻扇风闻”！）
+  var breezeG = new THREE.Group();
+  breezeG.position.set(0.24, 0.48, 0.06);
+  g.add(breezeG);
+  var breezeCols = ['#38bdf8', '#22d3ee', '#7dd3fc'];
+  for (var bi = 0; bi < 3; bi++) {
+    var rad = 0.14 + bi * 0.085;
+    var arc = new THREE.Mesh(
+      new THREE.TorusGeometry(rad, 0.017 - bi * 0.002, 8, 22, Math.PI * 0.62),
+      new THREE.MeshBasicMaterial({ color: breezeCols[bi] })
+    );
+    arc.position.set(-0.04 + bi * 0.035, 0.05 - bi * 0.04, bi * 0.01);
+    arc.rotation.z = -0.62;
+    breezeG.add(arc);
+    // 末端微风小箭头圆点
+    var tipAng = -0.62 + Math.PI * 0.62;
+    var dot = new THREE.Mesh(
+      new THREE.ConeGeometry(0.028, 0.065, 8),
+      new THREE.MeshBasicMaterial({ color: breezeCols[bi] })
+    );
+    dot.position.set(
+      arc.position.x + Math.cos(tipAng) * rad,
+      arc.position.y + Math.sin(tipAng) * rad,
+      arc.position.z
+    );
+    dot.rotation.z = tipAng;
+    breezeG.add(dot);
+  }
+  g.userData.breezeG = breezeG;
+}
+
+/* =====================================================================
+   阶段 1：蓝色浇水壶 + 三只异形玻璃杯（高窄圆柱、矮胖球腹、方棱柱）
+   ===================================================================== */
+var stage1Root = new THREE.Group();
+live.add(stage1Root);
+
+// 蓝色浇水壶（左前方安全区，配精致小深胡桃木托盘）
+var canHomeS1 = new THREE.Vector3(-2.22, 0.05, 1.38);
+var canGoal = canHomeS1.clone();
+var canTray = makeWoodTray(0.46, '#38bdf8');
+canTray.position.set(canHomeS1.x, 0, canHomeS1.z);
+stage1Root.add(canTray);
+
+var canG = new THREE.Group();
+canG.position.copy(canHomeS1);
+stage1Root.add(canG);
+(function buildWateringCan(g) {
+  var blue = toon('#38bdf8'), dark = toon('#0284c7');
+  var body = mesh(new THREE.CylinderGeometry(0.30, 0.36, 0.50, 24), blue);
+  body.position.y = 0.28; g.add(body);
+  var band = mesh(new THREE.TorusGeometry(0.328, 0.018, 8, 26), dark);
+  band.rotation.x = Math.PI / 2; band.position.y = 0.30; g.add(band);
+  var rim = mesh(new THREE.TorusGeometry(0.28, 0.044, 10, 24), dark);
+  rim.rotation.x = Math.PI / 2; rim.position.y = 0.54; g.add(rim);
+  var handle = mesh(new THREE.TorusGeometry(0.24, 0.045, 10, 20, Math.PI * 1.25), dark);
+  handle.position.set(-0.30, 0.36, 0); handle.rotation.z = Math.PI * 0.62; g.add(handle);
+  var spout = mesh(new THREE.CylinderGeometry(0.046, 0.086, 0.56, 12), blue);
+  spout.position.set(0.38, 0.38, 0); spout.rotation.z = -0.92; g.add(spout);
+  var rose = mesh(new THREE.CylinderGeometry(0.125, 0.055, 0.13, 16), toon('#facc15'));
+  rose.position.set(0.60, 0.55, 0); rose.rotation.z = -0.92; g.add(rose);
+  var hit = new THREE.Mesh(new THREE.SphereGeometry(0.72, 12, 10), HIT_MAT);
+  hit.position.y = 0.38; g.add(hit);
+})(canG);
+tagPick(canTray, 'can');
+tagPick(canG, 'can');
+var canTag = makeTag('💧 蓝色浇水壶', 'tool');
+var canPourT = 0;
+
+// 玻璃杯材质
+var glassWallMat = new THREE.MeshPhongMaterial({
+  color: '#e0f2fe', specular: '#ffffff', shininess: 120,
+  transparent: true, opacity: 0.26, side: THREE.DoubleSide, depthWrite: false
+});
+var rimMat = new THREE.MeshBasicMaterial({ color: '#e0f2fe' });
+
+var CUPS = {};
+var cupOrder = ['tall', 'round', 'square'];
+
+function createShapedCup(def) {
+  var holder = new THREE.Group();
+  holder.position.copy(def.posS1);
+  stage1Root.add(holder);
+
+  var pivot = new THREE.Group();
+  pivot.position.y = def.pivotY;
+  holder.add(pivot);
+
+  var bodyG = new THREE.Group();
+  bodyG.position.y = -def.pivotY;
+  pivot.add(bodyG);
+
+  // 世界空间水平裁剪平面：无论杯子怎么歪，法线永远指 (0,-1,0)！
+  var clipPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0.5);
+  var waterMat = new THREE.MeshPhongMaterial({
+    color: '#38bdf8', emissive: '#0369a1', emissiveIntensity: 0.22,
+    specular: '#e0f2fe', shininess: 95,
+    transparent: true, opacity: 0.78, side: THREE.DoubleSide,
+    clippingPlanes: [clipPlane]
+  });
+
+  var liquidMesh = null;
+  var meniscus = null;
+
+  if (def.id === 'tall') {
+    var wWall = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.33, 1.54, 28, 1, true), glassWallMat);
+    wWall.position.y = 0.80; bodyG.add(wWall);
+    var wBase = new THREE.Mesh(new THREE.CylinderGeometry(0.33, 0.34, 0.08, 28),
+      new THREE.MeshPhongMaterial({ color: '#bae6fd', transparent: true, opacity: 0.58 }));
+    wBase.position.y = 0.04; bodyG.add(wBase);
+    var wRim = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.025, 10, 28), rimMat);
+    wRim.rotation.x = Math.PI / 2; wRim.position.y = 1.57; bodyG.add(wRim);
+    liquidMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.315, 0.30, 1.40, 24), waterMat);
+    liquidMesh.position.y = 0.76; liquidMesh.visible = false; bodyG.add(liquidMesh);
+    meniscus = new THREE.Mesh(new THREE.CircleGeometry(0.31, 24),
+      new THREE.MeshBasicMaterial({ color: '#bae6fd', transparent: true, opacity: 0.78, side: THREE.DoubleSide }));
+    meniscus.rotation.x = -Math.PI / 2; meniscus.visible = false; holder.add(meniscus);
+  } else if (def.id === 'round') {
+    var sphereWall = new THREE.Mesh(new THREE.SphereGeometry(0.58, 28, 22, 0, Math.PI * 2, 0.55, Math.PI - 0.88), glassWallMat);
+    sphereWall.position.y = 0.54; bodyG.add(sphereWall);
+    var neck = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.30, 0.18, 24, 1, true), glassWallMat);
+    neck.position.y = 1.04; bodyG.add(neck);
+    var rBase = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.36, 0.07, 24),
+      new THREE.MeshPhongMaterial({ color: '#bae6fd', transparent: true, opacity: 0.58 }));
+    rBase.position.y = 0.035; bodyG.add(rBase);
+    var rRim = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.026, 10, 28), rimMat);
+    rRim.rotation.x = Math.PI / 2; rRim.position.y = 1.13; bodyG.add(rRim);
+    liquidMesh = new THREE.Mesh(new THREE.SphereGeometry(0.535, 24, 20), waterMat);
+    liquidMesh.position.y = 0.54; liquidMesh.visible = false; bodyG.add(liquidMesh);
+    meniscus = new THREE.Mesh(new THREE.CircleGeometry(0.51, 26),
+      new THREE.MeshBasicMaterial({ color: '#bae6fd', transparent: true, opacity: 0.78, side: THREE.DoubleSide }));
+    meniscus.rotation.x = -Math.PI / 2; meniscus.visible = false; holder.add(meniscus);
+  } else {
+    var sqWall = new THREE.Mesh(new THREE.BoxGeometry(0.84, 1.18, 0.84), [
+      glassWallMat, glassWallMat,
+      new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }),
+      new THREE.MeshPhongMaterial({ color: '#bae6fd', transparent: true, opacity: 0.58 }),
+      glassWallMat, glassWallMat
+    ]);
+    sqWall.position.y = 0.62; bodyG.add(sqWall);
+    [
+      [0, 1.21, 0.42, 0.86, 0.035, 0.035],
+      [0, 1.21, -0.42, 0.86, 0.035, 0.035],
+      [0.42, 1.21, 0, 0.035, 0.035, 0.86],
+      [-0.42, 1.21, 0, 0.035, 0.035, 0.86]
+    ].forEach(function (e) {
+      var bar = new THREE.Mesh(new THREE.BoxGeometry(e[3], e[4], e[5]), rimMat);
+      bar.position.set(e[0], e[1], e[2]); bodyG.add(bar);
+    });
+    liquidMesh = new THREE.Mesh(new THREE.BoxGeometry(0.76, 1.06, 0.76), waterMat);
+    liquidMesh.position.y = 0.59; liquidMesh.visible = false; bodyG.add(liquidMesh);
+    meniscus = new THREE.Mesh(new THREE.PlaneGeometry(0.74, 0.74),
+      new THREE.MeshBasicMaterial({ color: '#bae6fd', transparent: true, opacity: 0.76, side: THREE.DoubleSide }));
+    meniscus.rotation.x = -Math.PI / 2; meniscus.visible = false; holder.add(meniscus);
+  }
+
+  var ring = new THREE.Mesh(new THREE.RingGeometry(0.48, 0.66, 28),
+    new THREE.MeshBasicMaterial({ color: '#38bdf8', transparent: true, opacity: 0.14, side: THREE.DoubleSide, depthWrite: false }));
+  ring.rotation.x = -Math.PI / 2; ring.position.y = 0.03; holder.add(ring);
+
+  var hit = new THREE.Mesh(new THREE.CylinderGeometry(0.76, 0.72, 1.85, 14), HIT_MAT);
+  hit.position.y = 0.90; holder.add(hit);
+  hit.userData.cupId = def.id;
+  shapedCupHits.push(hit);
+
+  var tag = makeTag(def.name);
+
+  var cup = {
+    id: def.id, name: def.name, shapeDesc: def.shapeDesc,
+    holder: holder, pivot: pivot, bodyG: bodyG,
+    liquidMesh: liquidMesh, meniscus: meniscus, clipPlane: clipPlane, ring: ring,
+    posS1: def.posS1.clone(), posS2: def.posS2.clone(), goalPos: def.posS1.clone(),
+    pivotY: def.pivotY, fillHeight: def.fillHeight,
+    filled: false, fillAnim: 0,
+    tilted: false, tilt: 0, tiltGoal: 0, tapDir: 1,
+    tagEl: tag
+  };
+  tagPick(holder, 'shapedCup', { cupId: def.id });
+  CUPS[def.id] = cup;
+  return cup;
+}
+
+// 阶段 2 左侧展示区彻底重排（浇水壶阶段 2 收起，三杯缩小 0.58 倍整齐排布，彼此及与右侧主杯均留足宽敞空隙，0 穿模！）
+createShapedCup({
+  id: 'tall', name: '高窄圆柱杯', shapeDesc: '高高的细圆柱',
+  posS1: new THREE.Vector3(-0.72, 0, 0.28), posS2: new THREE.Vector3(-2.35, 0, -1.18),
+  pivotY: 0.72, fillHeight: 0.86
+});
+createShapedCup({
+  id: 'round', name: '矮胖球腹杯', shapeDesc: '圆鼓鼓的球形',
+  posS1: new THREE.Vector3(0.75, 0, 0.28), posS2: new THREE.Vector3(-1.38, 0, -1.24),
+  pivotY: 0.54, fillHeight: 0.58
+});
+createShapedCup({
+  id: 'square', name: '方形棱柱杯', shapeDesc: '方方正正的立方体',
+  posS1: new THREE.Vector3(2.22, 0, 0.28), posS2: new THREE.Vector3(-2.38, 0, 0.42),
+  pivotY: 0.58, fillHeight: 0.66
+});
+
+var activeCupId = 'tall';
+
+/* =====================================================================
+   阶段 2：纯净水杯、牛奶杯、未知透明液体杯(?)、3D小黄鸭、精雕三件安全行为道具
+   ===================================================================== */
+var stage2Root = new THREE.Group();
+stage2Root.visible = false;
+stage2Root.scale.setScalar(0.01);
+live.add(stage2Root);
+
+var S2CUPS = {};
+function createS2Cup(id, pos, labelTxt, liquidCol, liquidOp, isUnknown) {
+  var g = new THREE.Group();
+  g.position.copy(pos);
+  stage2Root.add(g);
+
+  var liqMat = new THREE.MeshPhongMaterial({
+    color: liquidCol, shininess: 90,
+    transparent: liquidOp < 1, opacity: liquidOp
+  });
+  var liq = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.40, 0.88, 24), liqMat);
+  liq.position.y = 0.48; g.add(liq);
+
+  var wall = new THREE.Mesh(new THREE.CylinderGeometry(0.50, 0.44, 1.18, 26, 1, true), glassWallMat);
+  wall.position.y = 0.61; g.add(wall);
+  var rim = new THREE.Mesh(new THREE.TorusGeometry(0.50, 0.025, 10, 28), rimMat);
+  rim.rotation.x = Math.PI / 2; rim.position.y = 1.20; g.add(rim);
+
+  if (isUnknown) {
+    var qTex = ctex(128, 128, function (c, w, h) {
+      c.fillStyle = '#facc15'; c.beginPath(); c.arc(w / 2, h / 2, 54, 0, Math.PI * 2); c.fill();
+      c.strokeStyle = '#b45309'; c.lineWidth = 8; c.stroke();
+      c.fillStyle = '#7c2d12'; c.font = '900 76px "Microsoft YaHei",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillText('?', w / 2, h / 2 + 4);
+    });
+    var qSign = new THREE.Mesh(new THREE.PlaneGeometry(0.48, 0.48), new THREE.MeshBasicMaterial({ map: qTex, transparent: true }));
+    qSign.position.set(0, 0.62, 0.50); g.add(qSign);
+  }
+
+  var warnRing = new THREE.Mesh(new THREE.RingGeometry(0.52, 0.72, 28),
+    new THREE.MeshBasicMaterial({ color: '#ef4444', transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
+  warnRing.rotation.x = -Math.PI / 2; warnRing.position.y = 0.04; g.add(warnRing);
+
+  var dropRing = new THREE.Mesh(new THREE.RingGeometry(0.52, 0.70, 28),
+    new THREE.MeshBasicMaterial({ color: '#4ade80', transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
+  dropRing.rotation.x = -Math.PI / 2; dropRing.position.y = 0.03; g.add(dropRing);
+
+  var hit = new THREE.Mesh(new THREE.CylinderGeometry(0.76, 0.70, 1.60, 14), HIT_MAT);
+  hit.position.y = 0.78; g.add(hit);
+  hit.userData.s2CupId = id;
+  s2CupHits.push(hit);
+
+  var tag = makeTag(labelTxt);
+  tag.style.display = 'none';
+
+  var rec = { id: id, g: g, pos: pos.clone(), warnRing: warnRing, dropRing: dropRing, warnT: 0, shakeT: 0, tagEl: tag };
+  tagPick(g, 's2Cup', { s2CupId: id });
+  S2CUPS[id] = rec;
+  return rec;
+}
+
+createS2Cup('pure', new THREE.Vector3(-0.22, 0, 0.22), '💧 纯净水杯', '#7dd3fc', 0.34, false);
+createS2Cup('milk', new THREE.Vector3(1.15, 0, 0.22), '🥛 牛奶杯', '#f8fafc', 1.0, false);
+createS2Cup('unknown', new THREE.Vector3(2.52, 0, 0.22), '⚠ 未知液体 ?', '#bae6fd', 0.30, true);
+
+// 3D 小黄鸭（放纯净水杯或牛奶杯后面比透明度）
+var duckHome = new THREE.Vector3(-1.55, 0, 1.76);
+var duckPureBack = new THREE.Vector3(S2CUPS.pure.pos.x, 0, S2CUPS.pure.pos.z - 0.84);
+var duckMilkBack = new THREE.Vector3(S2CUPS.milk.pos.x, 0, S2CUPS.milk.pos.z - 0.84);
+var duckG = new THREE.Group();
+duckG.position.copy(duckHome);
+stage2Root.add(duckG);
+var duckGoal = duckHome.clone();
+var duckSlot = 'home';
+
+(function buildDuck(g) {
+  var yl = toon('#facc15'), or = toon('#f97316'), bk = toon('#111827');
+  var body = mesh(new THREE.SphereGeometry(0.28, 16, 14), yl);
+  body.scale.set(1.22, 0.85, 0.92); body.position.y = 0.26; g.add(body);
+  var tail = mesh(new THREE.ConeGeometry(0.11, 0.22, 8), yl);
+  tail.position.set(-0.32, 0.38, 0); tail.rotation.z = 0.8; g.add(tail);
+  var head = mesh(new THREE.SphereGeometry(0.21, 16, 14), yl);
+  head.position.set(0.18, 0.56, 0); g.add(head);
+  var beak = mesh(new THREE.CylinderGeometry(0.05, 0.11, 0.20, 10), or);
+  beak.rotation.z = -Math.PI / 2; beak.position.set(0.42, 0.53, 0); g.add(beak);
+  [-1, 1].forEach(function (s) {
+    var eye = mesh(new THREE.SphereGeometry(0.032, 8, 8), bk);
+    eye.position.set(0.28, 0.62, s * 0.14); g.add(eye);
+    var wing = mesh(new THREE.SphereGeometry(0.15, 10, 8), toon('#eab308'));
+    wing.scale.set(1.2, 0.65, 0.35); wing.position.set(-0.02, 0.30, s * 0.26); g.add(wing);
+  });
+  var hit = new THREE.Mesh(new THREE.SphereGeometry(0.62, 12, 10), HIT_MAT);
+  hit.position.y = 0.38; g.add(hit);
+})(duckG);
+tagPick(duckG, 'duck');
+var duckTag = makeTag('🦆 3D 小黄鸭'); duckTag.style.display = 'none';
+
+// 3 件精雕 3D 感官行为道具（小深胡桃木底座，彻底告别荧光大煎蛋与怪异造型！）
+var ACTIONS = {};
+function registerActionProp(id, homePos, trimCol, tagText, tagCls, buildFn) {
+  var tray = makeWoodTray(0.40, trimCol);
+  tray.position.set(homePos.x, 0.0, homePos.z);
+  stage2Root.add(tray);
+
+  var ring = new THREE.Mesh(new THREE.RingGeometry(0.43, 0.53, 28),
+    new THREE.MeshBasicMaterial({ color: trimCol, transparent: true, opacity: 0.22, side: THREE.DoubleSide, depthWrite: false }));
+  ring.rotation.x = -Math.PI / 2; ring.position.set(homePos.x, 0.04, homePos.z);
+  stage2Root.add(ring);
+
+  var g = new THREE.Group();
+  g.position.copy(homePos);
+  stage2Root.add(g);
+  buildFn(g);
+
+  var hit = new THREE.Mesh(new THREE.SphereGeometry(0.62, 10, 8), HIT_MAT);
+  hit.position.y = 0.42; g.add(hit);
+
+  var tag = makeTag(tagText, tagCls);
+  tag.style.display = 'none';
+
+  var rec = { id: id, g: g, home: homePos.clone(), goal: homePos.clone(), ring: ring, tagEl: tag, animT: 0 };
+  tagPick(tray, 'actionProp', { actionId: id });
+  tagPick(g, 'actionProp', { actionId: id });
+  ACTIONS[id] = rec;
+  return rec;
+}
+
+// ① ✋ 精雕安全扇闻小手（圆润 5 指小手 + 3 道清新青蓝弧形微风波浪）
+registerActionProp('fanHand', new THREE.Vector3(-0.22, 0.05, 1.82), '#22c55e', '✋ 扇闻小手', 'safe', function (g) {
+  buildFanHand3D(g);
+});
+
+// ② 👃 精雕「贴鼻猛吸（错）」立体行为警示圆牌（卡通小鼻紧贴杯口猛吸 + 红色虚线禁止警示圈）
+var sniffWarnTex = ctex(256, 256, function (g, w, h) {
+  var cx = w / 2, cy = h / 2;
+  g.clearRect(0, 0, w, h);
+  // 浅粉白警示底
+  var bg = g.createRadialGradient(cx, cy - 18, 12, cx, cy, 120);
+  bg.addColorStop(0, '#fff5f5');
+  bg.addColorStop(1, '#fee2e2');
+  g.fillStyle = bg;
+  g.beginPath(); g.arc(cx, cy, 118, 0, Math.PI * 2); g.fill();
+
+  // 下方玻璃杯口（装着问号未知液）
+  g.fillStyle = 'rgba(125, 211, 252, 0.45)';
+  g.strokeStyle = '#0369a1'; g.lineWidth = 6;
+  g.beginPath();
+  g.moveTo(cx - 46, cy + 28);
+  g.lineTo(cx - 38, cy + 92);
+  g.lineTo(cx + 38, cy + 92);
+  g.lineTo(cx + 46, cy + 28);
+  g.closePath();
+  g.fill(); g.stroke();
+  g.beginPath(); g.ellipse(cx, cy + 28, 46, 10, 0, 0, Math.PI * 2); g.stroke();
+
+  // 刺鼻橙红气体猛冲上去
+  g.strokeStyle = '#ea580c'; g.lineWidth = 5; g.lineCap = 'round';
+  [-18, 0, 18].forEach(function (dx) {
+    g.beginPath();
+    g.moveTo(cx + dx, cy + 26);
+    g.quadraticCurveTo(cx + dx - 8, cy + 8, cx + dx + 4, cy - 10);
+    g.stroke();
+  });
+
+  // 上方凑得很近的卡通小鼻子侧面头像
+  g.fillStyle = '#fde2c8';
+  g.strokeStyle = '#9a3412'; g.lineWidth = 6; g.lineJoin = 'round';
+  g.beginPath();
+  g.moveTo(cx - 58, cy - 72);
+  g.quadraticCurveTo(cx - 10, cy - 66, cx + 12, cy - 32);
+  // 凑近杯口的小鼻尖
+  g.quadraticCurveTo(cx + 34, cy - 8, cx + 10, cy + 6);
+  g.quadraticCurveTo(cx - 16, cy + 8, cx - 28, cy - 14);
+  g.quadraticCurveTo(cx - 58, cy - 18, cx - 58, cy - 72);
+  g.closePath();
+  g.fill(); g.stroke();
+  // 紧闭皱眉小眼（呛到的表情）
+  g.strokeStyle = '#7c2d12'; g.lineWidth = 5;
+  g.beginPath(); g.moveTo(cx - 36, cy - 42); g.lineTo(cx - 18, cy - 34); g.lineTo(cx - 34, cy - 26); g.stroke();
+
+  // 红色虚线禁止警示外圈 + 醒目红色禁止斜杠
+  g.setLineDash([14, 9]);
+  g.strokeStyle = '#dc2626'; g.lineWidth = 10;
+  g.beginPath(); g.arc(cx, cy, 106, 0, Math.PI * 2); g.stroke();
+  g.setLineDash([]);
+  g.strokeStyle = 'rgba(220, 38, 38, 0.88)'; g.lineWidth = 12; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(cx - 72, cy - 72); g.lineTo(cx + 72, cy + 72); g.stroke();
+});
+
+registerActionProp('sniffClose', new THREE.Vector3(1.15, 0.05, 1.82), '#ef4444', '👃 贴鼻猛吸', 'danger', function (g) {
+  var stand = mesh(new THREE.CylinderGeometry(0.044, 0.056, 0.22, 12), toon('#991b1b'));
+  stand.position.set(0, 0.12, 0); g.add(stand);
+  var rim = mesh(new THREE.TorusGeometry(0.30, 0.036, 12, 32), toon('#dc2626'));
+  rim.position.set(0, 0.50, 0); g.add(rim);
+  var disk = mesh(new THREE.CylinderGeometry(0.295, 0.295, 0.055, 30), toon('#fee2e2'));
+  disk.rotation.x = Math.PI / 2; disk.position.set(0, 0.50, 0); g.add(disk);
+  var faceMat = new THREE.MeshBasicMaterial({ map: sniffWarnTex, transparent: true });
+  var front = new THREE.Mesh(new THREE.CircleGeometry(0.292, 30), faceMat);
+  front.position.set(0, 0.50, 0.032); g.add(front);
+  var back = new THREE.Mesh(new THREE.CircleGeometry(0.292, 30), faceMat);
+  back.rotation.y = Math.PI; back.position.set(0, 0.50, -0.032); g.add(back);
+});
+
+// ③ 🥤 精雕「直接端杯喝（错）」立体徽章牌 + 3D 微缩倾斜小红水杯与水滴（一眼看懂！）
+var drinkWarnTex = ctex(256, 256, function (g, w, h) {
+  var cx = w / 2, cy = h / 2;
+  g.clearRect(0, 0, w, h);
+  var bg = g.createRadialGradient(cx, cy - 18, 12, cx, cy, 120);
+  bg.addColorStop(0, '#fff5f5');
+  bg.addColorStop(1, '#fee2e2');
+  g.fillStyle = bg;
+  g.beginPath(); g.arc(cx, cy, 118, 0, Math.PI * 2); g.fill();
+
+  // 右上倾斜倒水的小玻璃杯
+  g.save();
+  g.translate(cx + 32, cy - 26);
+  g.rotate(-0.78);
+  g.fillStyle = 'rgba(56, 189, 248, 0.55)';
+  g.fillRect(-24, -4, 48, 40);
+  g.strokeStyle = '#0369a1'; g.lineWidth = 6;
+  g.strokeRect(-26, -34, 52, 72);
+  g.restore();
+
+  // 蓝水滴向嘴边倒下
+  g.fillStyle = '#0ea5e9';
+  [[cx - 10, cy + 4], [cx - 24, cy + 28]].forEach(function (pt) {
+    g.beginPath();
+    g.moveTo(pt[0], pt[1] - 14);
+    g.quadraticCurveTo(pt[0] + 11, pt[1] + 2, pt[0], pt[1] + 10);
+    g.quadraticCurveTo(pt[0] - 11, pt[1] + 2, pt[0], pt[1] - 14);
+    g.fill();
+  });
+
+  // 左下卡通张开的小嘴巴
+  g.fillStyle = '#fb7185';
+  g.strokeStyle = '#9f1239'; g.lineWidth = 6;
+  g.beginPath();
+  g.ellipse(cx - 38, cy + 56, 28, 18, 0.15, 0, Math.PI * 2);
+  g.fill(); g.stroke();
+  g.fillStyle = '#fff';
+  g.fillRect(cx - 52, cy + 44, 28, 7);
+
+  // 红色警示圆圈 + 醒目红色禁止斜杠
+  g.strokeStyle = '#dc2626'; g.lineWidth = 12;
+  g.beginPath(); g.arc(cx, cy, 108, 0, Math.PI * 2); g.stroke();
+  g.strokeStyle = 'rgba(220, 38, 38, 0.88)'; g.lineWidth = 12; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(cx - 74, cy - 74); g.lineTo(cx + 74, cy + 74); g.stroke();
+});
+
+registerActionProp('drinkDirect', new THREE.Vector3(2.52, 0.05, 1.82), '#ef4444', '🥤 直接端杯喝', 'danger', function (g) {
+  // 后方立体警示圆牌
+  var stand = mesh(new THREE.CylinderGeometry(0.044, 0.056, 0.22, 12), toon('#991b1b'));
+  stand.position.set(0, 0.12, -0.05); g.add(stand);
+  var rim = mesh(new THREE.TorusGeometry(0.30, 0.036, 12, 32), toon('#dc2626'));
+  rim.position.set(0, 0.50, -0.05); g.add(rim);
+  var disk = mesh(new THREE.CylinderGeometry(0.295, 0.295, 0.055, 30), toon('#fee2e2'));
+  disk.rotation.x = Math.PI / 2; disk.position.set(0, 0.50, -0.05); g.add(disk);
+  var faceMat = new THREE.MeshBasicMaterial({ map: drinkWarnTex, transparent: true });
+  var front = new THREE.Mesh(new THREE.CircleGeometry(0.292, 30), faceMat);
+  front.position.set(0, 0.50, -0.018); g.add(front);
+  var back = new THREE.Mesh(new THREE.CircleGeometry(0.292, 30), faceMat);
+  back.rotation.y = Math.PI; back.position.set(0, 0.50, -0.082); g.add(back);
+
+  // 前方呼应的 3D 微缩倾斜警示小红杯 + 悬空蓝水滴
+  var miniCup = new THREE.Group();
+  miniCup.position.set(0.18, 0.22, 0.14);
+  miniCup.rotation.z = 0.65;
+  var mcBody = mesh(new THREE.CylinderGeometry(0.095, 0.072, 0.20, 14), toon('#ef4444'));
+  miniCup.add(mcBody);
+  var mcRim = mesh(new THREE.TorusGeometry(0.095, 0.015, 8, 16), toon('#fecaca'));
+  mcRim.rotation.x = Math.PI / 2; mcRim.position.y = 0.10; miniCup.add(mcRim);
+  g.add(miniCup);
+
+  var drop1 = mesh(new THREE.SphereGeometry(0.036, 10, 8), toon('#38bdf8'));
+  drop1.scale.set(0.85, 1.3, 0.85); drop1.position.set(0.04, 0.24, 0.16); g.add(drop1);
+  var drop2 = mesh(new THREE.SphereGeometry(0.028, 10, 8), toon('#7dd3fc'));
+  drop2.scale.set(0.85, 1.3, 0.85); drop2.position.set(-0.02, 0.14, 0.16); g.add(drop2);
+});
+
+/* ===== 2D 实时双视角剖面框绘制（正上方俯视图 + 正前方平视图，水平面绝对水平！） ===== */
+var pfCanvas = $('#pfCanvas'), pfCtx = pfCanvas.getContext('2d');
+function drawProfileBox() {
+  var cup = CUPS[activeCupId];
+  var g = pfCtx, w = pfCanvas.width, h = pfCanvas.height;
+  g.clearRect(0, 0, w, h);
+
+  g.fillStyle = '#0f172a'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = '#334155'; g.lineWidth = 2;
+  g.beginPath(); g.moveTo(12, 186); g.lineTo(w - 12, 186); g.stroke();
+
+  g.fillStyle = '#7dd3fc'; g.font = 'bold 20px "Microsoft YaHei",sans-serif'; g.textAlign = 'center';
+  g.fillText('俯视图（杯口形状）', w / 2, 26);
+
+  var tcx = w / 2, tcy = 108;
+  var fillF = cup.fillAnim;
+  if (cup.id === 'tall') {
+    if (fillF > 0.05) {
+      g.fillStyle = 'rgba(56,189,248,0.78)';
+      g.beginPath(); g.arc(tcx, tcy, 38, 0, Math.PI * 2); g.fill();
+    }
+    g.strokeStyle = '#bae6fd'; g.lineWidth = 5;
+    g.beginPath(); g.arc(tcx, tcy, 42, 0, Math.PI * 2); g.stroke();
+  } else if (cup.id === 'round') {
+    if (fillF > 0.05) {
+      g.fillStyle = 'rgba(56,189,248,0.78)';
+      g.beginPath(); g.arc(tcx, tcy, 58, 0, Math.PI * 2); g.fill();
+    }
+    g.strokeStyle = 'rgba(186,230,253,0.45)'; g.lineWidth = 3;
+    g.beginPath(); g.arc(tcx, tcy, 62, 0, Math.PI * 2); g.stroke();
+    g.strokeStyle = '#bae6fd'; g.lineWidth = 5;
+    g.beginPath(); g.arc(tcx, tcy, 38, 0, Math.PI * 2); g.stroke();
+  } else {
+    if (fillF > 0.05) {
+      g.fillStyle = 'rgba(56,189,248,0.78)';
+      g.fillRect(tcx - 48, tcy - 48, 96, 96);
+    }
+    g.strokeStyle = '#bae6fd'; g.lineWidth = 5;
+    g.strokeRect(tcx - 52, tcy - 52, 104, 104);
+  }
+
+  g.fillStyle = '#7dd3fc'; g.font = 'bold 20px "Microsoft YaHei",sans-serif'; g.textAlign = 'center';
+  g.fillText('平视图（水面总水平）', w / 2, 214);
+
+  var fcx = w / 2, fcy = 314;
+  var ang = -cup.tilt;
+
+  function traceCupPath() {
+    g.beginPath();
+    if (cup.id === 'tall') {
+      g.rect(-36, -74, 72, 146);
+    } else if (cup.id === 'round') {
+      g.arc(0, 10, 62, -0.85, Math.PI + 0.85, false);
+      g.lineTo(-40, -64); g.lineTo(40, -64); g.closePath();
+    } else {
+      g.rect(-52, -56, 104, 122);
+    }
+  }
+
+  if (fillF > 0.02) {
+    g.save();
+    g.translate(fcx, fcy);
+    g.rotate(ang);
+    traceCupPath();
+    g.clip();
+    g.rotate(-ang);
+    var surfY = 72 - fillF * 80;
+    g.fillStyle = 'rgba(56,189,248,0.82)';
+    g.fillRect(-160, surfY, 320, 200);
+    g.strokeStyle = '#e0f2fe'; g.lineWidth = 5;
+    g.beginPath(); g.moveTo(-140, surfY); g.lineTo(140, surfY); g.stroke();
+    g.restore();
+
+    var worldSurfY = fcy + (72 - fillF * 80);
+    g.save();
+    g.setLineDash([7, 6]);
+    g.strokeStyle = '#facc15'; g.lineWidth = 2.5;
+    g.beginPath(); g.moveTo(16, worldSurfY); g.lineTo(w - 16, worldSurfY); g.stroke();
+    g.setLineDash([]);
+    g.fillStyle = '#fde047'; g.font = 'bold 17px "Microsoft YaHei",sans-serif'; g.textAlign = 'right';
+    g.fillText('水平面', w - 16, worldSurfY - 6);
+    g.restore();
+  }
+
+  g.save();
+  g.translate(fcx, fcy);
+  g.rotate(ang);
+  traceCupPath();
+  g.strokeStyle = '#bae6fd'; g.lineWidth = 5; g.stroke();
+  g.restore();
+
+  var deg = Math.round(Math.abs(cup.tilt * 180 / Math.PI));
+  $('#pfCupName').textContent = cup.name;
+  $('#pfFoot').textContent = !cup.filled
+    ? '还未倒水：先用蓝色水壶倒半杯水'
+    : (deg > 4 ? ('倾斜 ' + deg + '° · 水面依然严格水平！') : ('静止平放 · 呈' + cup.shapeDesc));
+}
+
+/* ===== 水花与特效粒子（D4 自动消退） ===== */
+var fxParts = [];
+function spawnFX(x, y, z, col, count, dur, mode) {
+  var maxL = dur || 1.5;
+  for (var i = 0; i < count; i++) {
+    var m = new THREE.Mesh(
+      mode === 'star' ? new THREE.OctahedronGeometry(0.065, 0) : new THREE.SphereGeometry(0.055, 8, 6),
+      new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.94 })
+    );
+    m.position.set(x + (Math.random() - 0.5) * 0.28, y + (mode === 'water' ? 0.55 + Math.random() * 0.35 : Math.random() * 0.3), z + (Math.random() - 0.5) * 0.28);
+    live.add(m);
+    fxParts.push({
+      m: m,
+      vx: (Math.random() - 0.5) * (mode === 'water' ? 0.45 : 1.15),
+      vy: mode === 'water' ? -1.55 : (0.75 + Math.random() * 0.75),
+      vz: (Math.random() - 0.5) * (mode === 'water' ? 0.45 : 1.15),
+      grav: mode === 'water' ? -2.2 : 0,
+      life: maxL, maxLife: maxL
+    });
+  }
+}
+
+/* ===== 教学核心状态 ===== */
+var phase = 1;
+var stage2T0 = 0;
+var doneFlags = {
+  pourAll: false,
+  tiltAll: false,
+  duckSee: false,
+  safeUnknown: false,
+  fanPure: false,
+  fanMilk: false
+};
+var testedSafetyFail = false;
+var preferFanCue = false;
+var found = {}, stamps = { s1: false, s2: false, s3: false }, celebrated = false, demo = false;
+var resetGen = 0;
+var activeTimers = [];
+var curGuideSpeech = '阶段1：先拖起或点蓝色浇水壶，给三只不同形状的玻璃杯分别倒半杯水吧！';
+
+function later(fn, ms) {
+  var g = resetGen;
+  var id = setTimeout(function () { if (g === resetGen) fn(); }, ms);
+  activeTimers.push(id);
+  return id;
+}
+
+function markInteracted() { document.body.classList.add('interacted'); }
+
+function popLabelAt3D(worldPos, text, cls) {
+  var v = worldPos.clone().project(camera);
+  var x = (v.x * 0.5 + 0.5) * window.innerWidth;
+  var y = (-v.y * 0.5 + 0.5) * window.innerHeight;
+  var el = document.createElement('div');
+  el.className = 'popword' + (cls ? ' ' + cls : '');
+  el.textContent = text;
+  var topY = Math.max(76, Math.min(window.innerHeight - 96, y - 16));
+  var maxX = (topY < 310) ? (window.innerWidth - 390) : (window.innerWidth - 150);
+  el.style.left = Math.max(220, Math.min(maxX, x)) + 'px';
+  el.style.top = topY + 'px';
+  $('#labels').appendChild(el);
+  later(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 2000);
+}
+
+function countPoured() {
+  var n = 0;
+  cupOrder.forEach(function (k) { if (CUPS[k].filled) n++; });
+  return n;
+}
+function countTilted() {
+  var n = 0;
+  cupOrder.forEach(function (k) { if (CUPS[k].tilted) n++; });
+  return n;
+}
+function countDone() {
+  return (doneFlags.pourAll ? 1 : 0) + (doneFlags.tiltAll ? 1 : 0) +
+    (doneFlags.duckSee ? 1 : 0) + (doneFlags.safeUnknown ? 1 : 0) +
+    (doneFlags.fanPure ? 1 : 0) + (doneFlags.fanMilk ? 1 : 0);
+}
+
+function lightStamp(id, key) {
+  if (!stamps[key]) {
+    stamps[key] = true;
+    var el = $('#' + id);
+    if (el) el.classList.add('lit');
+    beep([523, 659, 784], 0.22);
+  }
+}
+
+function addDiscovery(key, html, spoken) {
+  if (!found[key]) {
+    found[key] = true;
+    var el = document.createElement('div');
+    el.className = 'stk';
+    el.innerHTML = html;
+    $('#ntList').prepend(el);
+    $('#ntCnt').textContent = Object.keys(found).length;
+  }
+  $('#progNum').textContent = countDone() + ' / 6';
+
+  if (doneFlags.pourAll) lightStamp('st1', 's1');
+  if (doneFlags.tiltAll) lightStamp('st2', 's2');
+  if (doneFlags.duckSee && doneFlags.safeUnknown && doneFlags.fanPure && doneFlags.fanMilk) lightStamp('st3', 's3');
+
+  updateGuide(false);
+
+  if (!demo && !celebrated && countDone() === 6 && stamps.s1 && stamps.s2 && stamps.s3) {
+    celebrated = true;
+    saveProgress(LESSON_ID, true);
+    fireConfetti();
+    beep([523, 659, 784, 1046], 0.28);
+    later(function () {
+      $('#winToast').classList.add('show');
+      speak('太棒啦！水没有固定形状、水面总保持水平，以及安全扇闻法你全都掌握啦！快来看科学小结论领小红花吧！', true);
+    }, 650);
+    return;
+  }
+  if (spoken && !demo) speak(spoken);
+}
+
+function enterStage2() {
+  if (phase === 2) return;
+  phase = 2;
+  stage2T0 = performance.now();
+  stage2Root.visible = true;
+  // 阶段 2 浇水壶收起，彻底杜绝左后方穿模！三只异形杯整齐回正并移至左后方独立展示区
+  canG.visible = false;
+  canTray.visible = false;
+  canTag.style.display = 'none';
+  cupOrder.forEach(function (k) {
+    CUPS[k].tiltGoal = 0;
+    CUPS[k].goalPos.copy(CUPS[k].posS2);
+  });
+  Object.keys(S2CUPS).forEach(function (k) { S2CUPS[k].tagEl.style.display = 'block'; });
+  duckTag.style.display = 'block';
+  Object.keys(ACTIONS).forEach(function (k) { ACTIONS[k].tagEl.style.display = 'block'; });
+  $('#phaseLabel').textContent = '🔬 安全观察：';
+  updateGuide(false);
+}
+
+function updateGuide(speakIt) {
+  if (phase === 1) {
+    $('#guideBar').classList.remove('stage2');
+    $('#guideIco').textContent = '💧';
+    if (countPoured() < 3) {
+      curGuideSpeech = '阶段1：拖起或点蓝色浇水壶，给三只不同形状的玻璃杯分别倒半杯水！';
+    } else if (countTilted() < 3) {
+      curGuideSpeech = '阶段1：水变出三种形状啦！左右拖动或轻点每只装水杯倾斜，看水面总保持水平！';
+    } else {
+      curGuideSpeech = '太棒啦！水面总是水平的，马上进入纯净水与未知液体安全观察！';
+    }
+  } else if (countDone() < 6) {
+    $('#guideBar').classList.add('stage2');
+    $('#guideIco').textContent = '🔬';
+    if (!doneFlags.duckSee) {
+      curGuideSpeech = '阶段2：把可爱小黄鸭拖或点到纯净水杯后面，对比水透明、牛奶不透明！';
+    } else if (!doneFlags.safeUnknown) {
+      curGuideSpeech = '阶段2：面对带问号的未知液体，快用安全的扇闻小手轻轻扇风闻一闻！';
+    } else if (!doneFlags.fanPure) {
+      curGuideSpeech = '阶段2：再用扇闻小手闻一闻纯净水杯，记录纯净水的特征！';
+    } else {
+      curGuideSpeech = '阶段2：最后用扇闻小手闻一闻牛奶杯，对比纯净水和牛奶的不同！';
+    }
+  } else {
+    $('#guideBar').classList.add('stage2');
+    $('#guideIco').textContent = '🏆';
+    curGuideSpeech = '全部发现集齐啦！你还可以继续切换俯视、拖动杯子倾斜或自由观察对比哦！';
+  }
+  $('#guideTxt').textContent = curGuideSpeech;
+  $('#guideBar').classList.remove('flash');
+  void $('#guideBar').offsetWidth;
+  $('#guideBar').classList.add('flash');
+  if (speakIt) speak(curGuideSpeech, true);
+}
+
+/* ===== 阶段 1 实验动作：倒水 + 亲手左右拖倾斜看水平面（松手回正） ===== */
+function pourIntoCup(cupId) {
+  markInteracted();
+  var cup = CUPS[cupId];
+  if (!cup) return;
+  activeCupId = cupId;
+  canPourT = 0.95;
+  canGoal.set(cup.holder.position.x - 0.62, 1.40, cup.holder.position.z + 0.15);
+  spawnFX(cup.holder.position.x, 0.85, cup.holder.position.z, 0x38bdf8, 12, 1.4, 'water');
+  beep([440, 554, 659], 0.18);
+
+  if (!cup.filled) {
+    cup.filled = true;
+    cup.liquidMesh.visible = true;
+    cup.meniscus.visible = true;
+    popLabelAt3D(cup.holder.position.clone().add(new THREE.Vector3(0, 1.62, 0)), '💧 水变成了' + cup.shapeDesc + '！', 'good');
+    if (countPoured() === 3) {
+      doneFlags.pourAll = true;
+      addDiscovery(
+        'pour_3',
+        '💧 <b>水随容器变形状</b>：分别变成细圆柱、圆球形和方形，没有固定形状',
+        '太棒啦！水在圆柱杯、球腹杯和方杯里变成了三种不同形状，说明水没有固定形状！现在左右拖动或轻点每只装水杯倾斜，看看水面会怎么变！'
+      );
+    } else {
+      updateGuide(false);
+      if (!demo) speak('哇，倒进杯子里的水立刻变成杯子的形状啦！快给剩下的异形玻璃杯也倒半杯水吧！');
+    }
+  } else {
+    popLabelAt3D(cup.holder.position.clone().add(new THREE.Vector3(0, 1.62, 0)), '💧 已经有半杯清水啦，左右拖动倾斜看水面吧！');
+    if (!demo) speak('这只杯子已经倒好半杯水啦！左右拖动或轻点它倾斜看看水面吧！');
+  }
+
+  later(function () {
+    if (draggingKind !== 'can' && phase === 1) canGoal.copy(canHomeS1);
+  }, 520);
+}
+
+function recordCupTilted(cup) {
+  if (!cup.filled) return;
+  if (!cup.tilted) {
+    cup.tilted = true;
+    spawnFX(cup.holder.position.x, 1.15, cup.holder.position.z, 0xfde047, 8, 1.4, 'star');
+    beep([523, 659, 784], 0.18);
+    popLabelAt3D(cup.holder.position.clone().add(new THREE.Vector3(0, 1.62, 0)), '📐 杯子斜了，水面依然保持水平！', 'good');
+    if (countTilted() === 3) {
+      doneFlags.tiltAll = true;
+      addDiscovery(
+        'tilt_level',
+        '📐 <b>倾斜杯子看水面</b>：三只杯子怎么歪，静止水面都始终保持水平',
+        '神奇的规律找到啦！不管哪只杯子怎么倾斜，静止的水面始终保持水平！接下来我们对比纯净水、牛奶和未知透明液体吧！'
+      );
+      later(function () { enterStage2(); }, 1150);
+    } else {
+      updateGuide(false);
+      if (!demo) speak('你看！杯子歪斜了，可里面的水面和左边剖面图都依然保持水平！再倾斜另外的杯子验证一下吧！');
+    }
+  }
+}
+
+/* ===== 阶段 2 实验动作：小鸭透视 + 危险失败分支 + 安全扇闻法 ===== */
+function placeDuck(slot) {
+  markInteracted();
+  duckSlot = slot;
+  if (slot === 'pure') {
+    duckGoal.copy(duckPureBack);
+    doneFlags.duckSee = true;
+    spawnFX(S2CUPS.pure.pos.x, 0.9, S2CUPS.pure.pos.z, 0x7dd3fc, 10, 1.5, 'star');
+    beep([523, 659, 784], 0.2);
+    popLabelAt3D(S2CUPS.pure.pos.clone().add(new THREE.Vector3(0, 1.45, 0)), '🦆 透过纯净水清清楚楚看见小黄鸭！', 'good');
+    addDiscovery(
+      'duck_see',
+      '🦆 <b>小鸭比透明度</b>：隔着纯净水看见小鸭（透明），隔着牛奶看不见',
+      '哇！小黄鸭躲在纯净水杯后面，我们清清楚楚看见了它，说明纯净水是透明的！躲在牛奶后面就被乳白色牛奶挡住啦！'
+    );
+  } else if (slot === 'milk') {
+    duckGoal.copy(duckMilkBack);
+    beep([360, 310], 0.16);
+    popLabelAt3D(S2CUPS.milk.pos.clone().add(new THREE.Vector3(0, 1.45, 0)), '🥛 牛奶是不透明的，小黄鸭被挡住啦！', 'warn');
+    if (!demo) speak('牛奶是乳白色的不透明液体，小黄鸭躲在牛奶杯后面就看不见啦！移到纯净水杯后面比一比吧！');
+  } else {
+    duckGoal.copy(duckHome);
+    beep([420], 0.1);
+    if (!demo) speak('小黄鸭回到前面啦，随时可以放回杯子后面对比透明度！');
+  }
+}
+
+function triggerDangerFail(actionId, cupId) {
+  testedSafetyFail = true;
+  preferFanCue = true;
+  var cup = S2CUPS[cupId] || S2CUPS.unknown;
+  var act = ACTIONS[actionId];
+  act.animT = 0.85;
+  act.goal.set(cup.pos.x, 1.38, cup.pos.z + 0.35);
+  cup.warnT = 1.8;
+  cup.shakeT = 0.9;
+  beep([240, 175, 240], 0.20);
+  popLabelAt3D(cup.pos.clone().add(new THREE.Vector3(0, 1.52, 0)), '⚠ 危险！未知液体不能直接喝或贴鼻猛吸！', 'warn');
+  if (!demo) {
+    speak('危险哦！未知液体可能不安全，不能直接尝或凑近猛闻！试试用绿托盘上的扇闻小手轻轻扇一点气味过来！', true);
+  }
+  updateGuide(false);
+  later(function () { if (draggingKind !== 'actionProp') act.goal.copy(act.home); }, 950);
+}
+
+function applySafeFan(cupId) {
+  markInteracted();
+  var act = ACTIONS.fanHand;
+  var cup = S2CUPS[cupId];
+  if (!cup) return;
+  act.animT = 1.25;
+  act.goal.set(cup.pos.x + 0.18, 1.48, cup.pos.z + 0.28);
+  spawnFX(cup.pos.x, 1.22, cup.pos.z, 0x4ade80, 10, 1.5, 'star');
+  beep([523, 659, 784], 0.2);
+
+  if (cupId === 'unknown') {
+    doneFlags.safeUnknown = true;
+    preferFanCue = false;
+    popLabelAt3D(cup.pos.clone().add(new THREE.Vector3(0, 1.55, 0)), '✋ 轻轻扇风闻未知液，安全又科学！', 'good');
+    addDiscovery(
+      'safe_unknown',
+      '✋ <b>安全扇闻未知液</b>：用手在杯口上方轻轻扇风闻气味，安全保护鼻子',
+      '真棒！用手在杯口上方轻轻扇风，把少量气味扇过来闻，这就是最安全的扇闻法！再用扇闻小手对比纯净水和牛奶吧！'
+    );
+  } else if (cupId === 'pure') {
+    doneFlags.fanPure = true;
+    popLabelAt3D(cup.pos.clone().add(new THREE.Vector3(0, 1.55, 0)), '💧 纯净水无色、无味、透明！', 'good');
+    addDiscovery(
+      'fan_pure',
+      '💧 <b>扇闻观察纯净水</b>：无色、无气味、清澈透明',
+      '轻轻扇闻纯净水，它没有颜色、也没有任何气味，清澈又透明！'
+    );
+  } else if (cupId === 'milk') {
+    doneFlags.fanMilk = true;
+    popLabelAt3D(cup.pos.clone().add(new THREE.Vector3(0, 1.55, 0)), '🥛 牛奶乳白色、有奶香味、不透明！', 'good');
+    addDiscovery(
+      'fan_milk',
+      '🥛 <b>扇闻对比牛奶</b>：乳白色、有甜甜奶香味、不透明',
+      '轻轻扇闻牛奶杯，牛奶是乳白色的，有淡淡的奶香味，而且不透明！'
+    );
+  }
+
+  later(function () { if (draggingKind !== 'actionProp') act.goal.copy(act.home); }, 780);
+}
+
+/* ===== 强化拖拽（射线直命 + 屏幕投影 + 3D距离双判 + 目标高亮）+ 顺滑倾斜松手回正 ===== */
+var ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+var dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.55);
+var dragPt = new THREE.Vector3();
+var draggingKind = null; // 'can' | 'shapedCup' | 'duck' | 'actionProp'
+var draggingId = null;
+var hoverTarget = null; // { group: 'shaped'|'s2', id: string } | null
+var downX = 0, downY = 0, didDrag = false;
+var cupTiltStart = 0;
+var spillWarnCd = 0;
+
+function getNDC(e) {
+  var r = cv.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+}
+
+function worldToScreen(wx, wy, wz) {
+  var v = new THREE.Vector3(wx, wy, wz).project(camera);
+  return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight };
+}
+
+function getActivePickMeshes() {
+  return pickMeshes.filter(function (m) {
+    var p = m;
+    while (p) { if (!p.visible) return false; p = p.parent; }
+    return true;
+  });
+}
+
+// 统一三合一双判检测（指针射线直命碰撞体 OR 屏幕投影距离 OR 3D 距离）
+function detectDropTarget(kind, clientX, clientY, objGoal) {
+  ray.setFromCamera(ptr, camera);
+
+  if (kind === 'can') {
+    var hitShaped = ray.intersectObjects(shapedCupHits, false);
+    if (hitShaped.length > 0) return { group: 'shaped', id: hitShaped[0].object.userData.cupId };
+
+    // 花洒嘴位置 + 屏幕投影 + 3D XZ 距离兜底
+    var spoutX = objGoal.x + 0.52, spoutZ = objGoal.z;
+    var bestId = null, bestScore = Infinity;
+    cupOrder.forEach(function (k) {
+      var c = CUPS[k];
+      var sc = worldToScreen(c.holder.position.x, 0.85, c.holder.position.z);
+      var dPx = Math.hypot(clientX - sc.x, clientY - sc.y);
+      var d3 = Math.hypot(spoutX - c.holder.position.x, spoutZ - c.holder.position.z);
+      var d3c = Math.hypot(objGoal.x - c.holder.position.x, objGoal.z - c.holder.position.z);
+      if (dPx < 125 || d3 < 1.65 || d3c < 1.65) {
+        var score = Math.min(dPx, d3 * 80, d3c * 80);
+        if (score < bestScore) { bestScore = score; bestId = k; }
+      }
+    });
+    return bestId ? { group: 'shaped', id: bestId } : null;
+  }
+
+  if ((kind === 'duck' || kind === 'actionProp') && phase === 2) {
+    var hitS2 = ray.intersectObjects(s2CupHits, false);
+    if (hitS2.length > 0) {
+      var sid = hitS2[0].object.userData.s2CupId;
+      if (kind === 'duck' && sid === 'unknown') {
+        // 小黄鸭只比纯净水杯和牛奶杯，但也给个近邻判断
+      } else {
+        return { group: 's2', id: sid };
+      }
+    }
+
+    var candidates = (kind === 'duck') ? ['pure', 'milk'] : ['pure', 'milk', 'unknown'];
+    var bestS2 = null, bestScore2 = Infinity;
+    candidates.forEach(function (k) {
+      var sc = S2CUPS[k];
+      var ptSc = worldToScreen(sc.pos.x, 0.68, sc.pos.z);
+      var dPx = Math.hypot(clientX - ptSc.x, clientY - ptSc.y);
+      var d3 = Math.hypot(objGoal.x - sc.pos.x, objGoal.z - sc.pos.z);
+      if (dPx < 120 || d3 < 1.55) {
+        var s = Math.min(dPx, d3 * 80);
+        if (s < bestScore2) { bestScore2 = s; bestS2 = k; }
+      }
+    });
+    return bestS2 ? { group: 's2', id: bestS2 } : null;
+  }
+  return null;
+}
+
+cv.addEventListener('pointerdown', function (e) {
+  markInteracted();
+  getNDC(e);
+  ray.setFromCamera(ptr, camera);
+  downX = e.clientX; downY = e.clientY; didDrag = false;
+  hoverTarget = null;
+
+  var hits = ray.intersectObjects(getActivePickMeshes(), false);
+  if (!hits.length) return;
+  // 优先级拾取（U8）：可拖拽道具（尤其是躲在杯后的小黄鸭、安全动作道具、水壶）永远优先于静止对比杯！
+  var prioHit = hits.find(function (h) {
+    var pk = h.object.userData.pickKind;
+    return pk === 'actionProp' || pk === 'duck' || pk === 'can';
+  }) || hits[0];
+  var u = prioHit.object.userData;
+  var kind = u.pickKind;
+
+  if (kind === 'can') {
+    draggingKind = 'can'; draggingId = 'can';
+    cv.classList.add('grabbing');
+    beep([460], 0.07);
+    return;
+  }
+  if (kind === 'shapedCup') {
+    draggingKind = 'shapedCup'; draggingId = u.cupId;
+    activeCupId = u.cupId;
+    cupTiltStart = CUPS[u.cupId].tilt;
+    cv.classList.add('grabbing');
+    beep([420], 0.06);
+    return;
+  }
+  if (kind === 'duck') {
+    draggingKind = 'duck'; draggingId = 'duck';
+    cv.classList.add('grabbing');
+    beep([480], 0.07);
+    return;
+  }
+  if (kind === 'actionProp') {
+    draggingKind = 'actionProp'; draggingId = u.actionId;
+    cv.classList.add('grabbing');
+    beep([460], 0.07);
+    return;
+  }
+  if (kind === 's2Cup') {
+    if (u.s2CupId === 'pure' && !doneFlags.duckSee) placeDuck('pure');
+    else applySafeFan(u.s2CupId);
+  }
+});
+
+window.addEventListener('pointermove', function (e) {
+  if (!draggingKind) return;
+  if (!didDrag && Math.hypot(e.clientX - downX, e.clientY - downY) >= 14) didDrag = true;
+  if (!didDrag) return;
+
+  if (draggingKind === 'shapedCup') {
+    var cup = CUPS[draggingId];
+    if (!cup.filled) return;
+    var dx = e.clientX - downX;
+    var rawTilt = cupTiltStart - dx * 0.0052;
+    if (Math.abs(rawTilt) > 0.62) {
+      cup.tiltGoal = Math.sign(rawTilt) * 0.48;
+      if (spillWarnCd <= 0) {
+        spillWarnCd = 1.4;
+        spawnFX(cup.holder.position.x + Math.sign(rawTilt) * -0.32, 1.05, cup.holder.position.z, 0x7dd3fc, 8, 1.3, 'water');
+        beep([300, 240], 0.16);
+        popLabelAt3D(cup.holder.position.clone().add(new THREE.Vector3(0, 1.65, 0)), '⚠ 小心洒出！已帮你稳住杯子！', 'warn');
+        speak('小心水要洒出来啦！我已经帮你稳住杯子，快看水面还是水平的哦！');
+      }
+    } else {
+      cup.tiltGoal = rawTilt;
+    }
+    if (Math.abs(cup.tiltGoal) > 0.24) recordCupTilted(cup);
+    return;
+  }
+
+  getNDC(e);
+  ray.setFromCamera(ptr, camera);
+  if (!ray.ray.intersectPlane(dragPlane, dragPt)) return;
+  var gx = Math.max(-3.6, Math.min(3.4, dragPt.x));
+  var gz = Math.max(-1.8, Math.min(2.4, dragPt.z));
+
+  if (draggingKind === 'can') {
+    canGoal.set(gx, 1.25, gz);
+    hoverTarget = detectDropTarget('can', e.clientX, e.clientY, canGoal);
+  } else if (draggingKind === 'duck') {
+    duckGoal.set(gx, 0.42, gz);
+    hoverTarget = detectDropTarget('duck', e.clientX, e.clientY, duckGoal);
+  } else if (draggingKind === 'actionProp') {
+    ACTIONS[draggingId].goal.set(gx, 1.18, gz);
+    hoverTarget = detectDropTarget('actionProp', e.clientX, e.clientY, ACTIONS[draggingId].goal);
+  }
+});
+
+window.addEventListener('pointerup', function (e) {
+  cv.classList.remove('grabbing');
+  if (!draggingKind) return;
+  var kind = draggingKind, id = draggingId, lastHover = hoverTarget;
+  draggingKind = null; draggingId = null; hoverTarget = null;
+
+  if (!didDrag) {
+    // 单击自动飞去/倾斜示范双通道（U8）
+    if (kind === 'can') {
+      var nextEmpty = cupOrder.find(function (k) { return !CUPS[k].filled; }) || 'tall';
+      pourIntoCup(nextEmpty);
+    } else if (kind === 'shapedCup') {
+      var cup = CUPS[id];
+      activeCupId = id;
+      if (!cup.filled) {
+        beep([280, 240], 0.15);
+        popLabelAt3D(cup.holder.position.clone().add(new THREE.Vector3(0, 1.55, 0)), '💡 先用蓝色水壶倒半杯水哦！', 'warn');
+        speak('这个杯子还是空的，先拖起或点蓝色浇水壶给它倒半杯水，再倾斜观察水面吧！');
+      } else {
+        // 单击自动倾斜示范，停留 1.35 秒后自动回正！
+        cup.tiltGoal = 0.46 * cup.tapDir;
+        cup.tapDir *= -1;
+        recordCupTilted(cup);
+        later(function () {
+          if (draggingKind !== 'shapedCup' || draggingId !== id) cup.tiltGoal = 0;
+        }, 1350);
+      }
+    } else if (kind === 'duck') {
+      if (duckSlot === 'home') placeDuck('pure');
+      else if (duckSlot === 'pure') placeDuck('milk');
+      else placeDuck('home');
+    } else if (kind === 'actionProp') {
+      if (id === 'drinkDirect' || id === 'sniffClose') {
+        triggerDangerFail(id, 'unknown');
+      } else {
+        var nextCup = !doneFlags.safeUnknown ? 'unknown' : (!doneFlags.fanPure ? 'pure' : (!doneFlags.fanMilk ? 'milk' : 'unknown'));
+        applySafeFan(nextCup);
+      }
+    }
+    return;
+  }
+
+  // 拖拽松手判定（射线直命 + 屏幕投影 + 3D距离三合一）
+  getNDC(e);
+  if (kind === 'can') {
+    var tgtC = detectDropTarget('can', e.clientX, e.clientY, canGoal) || lastHover;
+    if (tgtC && tgtC.group === 'shaped') pourIntoCup(tgtC.id);
+    else canGoal.copy(canHomeS1);
+  } else if (kind === 'shapedCup') {
+    var c2 = CUPS[id];
+    if (!c2.filled) {
+      popLabelAt3D(c2.holder.position.clone().add(new THREE.Vector3(0, 1.55, 0)), '💡 先用蓝色水壶倒半杯水哦！', 'warn');
+      speak('这个杯子还是空的，先拖起或点蓝色浇水壶给它倒半杯水再倾斜吧！');
+    }
+    // 拖拽倾斜松手后平滑自动回正！
+    c2.tiltGoal = 0;
+  } else if (kind === 'duck') {
+    var tgtD = detectDropTarget('duck', e.clientX, e.clientY, duckGoal) || lastHover;
+    if (tgtD && tgtD.id === 'pure') placeDuck('pure');
+    else if (tgtD && tgtD.id === 'milk') placeDuck('milk');
+    else placeDuck('home');
+  } else if (kind === 'actionProp') {
+    var act = ACTIONS[id];
+    var tgtA = detectDropTarget('actionProp', e.clientX, e.clientY, act.goal) || lastHover;
+    if (tgtA && tgtA.group === 's2') {
+      if (id === 'drinkDirect' || id === 'sniffClose') triggerDangerFail(id, tgtA.id);
+      else applySafeFan(tgtA.id);
+    } else {
+      act.goal.copy(act.home);
+    }
+  }
+});
+
+/* ===== 视角切换钮（唯一底部图标钮） + HUD 控制 ===== */
+$('#viewBtn').addEventListener('click', function () {
+  markInteracted();
+  viewMode = (viewMode === 'side') ? 'top' : 'side';
+  this.classList.toggle('top-on', viewMode === 'top');
+  this.textContent = viewMode === 'top' ? '👁 切换平视' : '👁 切换俯视';
+  beep([523, 659], 0.12);
+  if (viewMode === 'top') speak('切换到正上方俯视视角啦！看看圆柱杯、球腹杯和方杯里的水面是不是圆形和方形！');
+  else speak('切回平视视角啦！倾斜杯子时可以清楚看到水平面哦！');
+});
+
+$('#backBtn').addEventListener('click', function () { try { sessionStorage.setItem('xk_last_vol', 'k2a'); } catch (e) {} });
+$('#voiceBtn').addEventListener('click', function () {
+  markInteracted();
+  voiceOn = !voiceOn;
+  this.classList.toggle('on', voiceOn);
+  if (voiceOn) updateGuide(true); else stopVoice();
+});
+$('#guideBar').addEventListener('click', function () { markInteracted(); updateGuide(true); });
+$('#resetBtn').addEventListener('click', resetAll);
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+$('#winKeepBtn').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgainBtn').addEventListener('click', resetAll);
+$('#qOpts').addEventListener('click', function (e) {
+  var b = e.target.closest('.qopt'); if (!b) return;
+  if (b.dataset.ok === '1') {
+    b.classList.add('ok');
+    $('#qFb').textContent = '🌸 答对啦！获得本课小红花！';
+    saveProgress(LESSON_ID, true);
+    beep([523, 659, 784, 1046], 0.24);
+    speak('答对啦！面对未知液体，要用手在杯口上方轻轻扇风闻少量气味，获得本课小红花！', true);
+  } else {
+    b.classList.add('bad');
+    beep([260, 220], 0.16);
+    var h = b.dataset.hint || '再想想刚才的安全扇闻实验哦！';
+    $('#qFb').textContent = '💡 ' + h;
+    speak(h, true);
+  }
+});
+
+/* ===== 演示模式（不触发通关） ===== */
+function startDemo() {
+  markInteracted();
+  resetAll();
+  demo = true;
+  $('#demoBtn').classList.add('on');
+  var steps = [
+    function () { pourIntoCup('tall'); speak('第1步，用蓝色浇水壶分别给三只异形杯倒半杯水，看看水的形状变化！', true); },
+    function () { pourIntoCup('round'); },
+    function () { pourIntoCup('square'); },
+    function () {
+      activeCupId = 'square';
+      CUPS.square.tiltGoal = 0.45; recordCupTilted(CUPS.square);
+      CUPS.tall.tiltGoal = -0.42; recordCupTilted(CUPS.tall);
+      CUPS.round.tiltGoal = 0.42; recordCupTilted(CUPS.round);
+      speak('轻轻倾斜杯子，看看3D水面和左边双视角剖面框，水面始终保持水平！', true);
+    },
+    function () {
+      enterStage2();
+      placeDuck('pure');
+      speak('阶段2，把小黄鸭放纯净水杯后比透明度，并用扇闻小手安全闻未知液体、纯净水和牛奶吧！', true);
+    },
+    function () { applySafeFan('unknown'); },
+    function () { demo = false; $('#demoBtn').classList.remove('on'); resetAll(); }
+  ];
+  steps.forEach(function (fn, idx) { later(fn, idx * 2400); });
+}
+$('#demoBtn').addEventListener('click', startDemo);
+
+function resetAll() {
+  resetGen++;
+  activeTimers.forEach(function (id) { clearTimeout(id); });
+  activeTimers = [];
+  stopVoice();
+  demo = false;
+  $('#demoBtn').classList.remove('on');
+  phase = 1; stage2T0 = 0; viewMode = 'side';
+  $('#viewBtn').classList.remove('top-on');
+  $('#viewBtn').textContent = '👁 切换俯视';
+  canG.visible = true; canTray.visible = true; canTag.style.display = 'block';
+  canGoal.copy(canHomeS1); canG.position.copy(canHomeS1); canPourT = 0;
+  cupOrder.forEach(function (k) {
+    var c = CUPS[k];
+    c.goalPos.copy(c.posS1); c.holder.position.copy(c.posS1);
+    c.holder.scale.setScalar(1);
+    c.filled = false; c.fillAnim = 0;
+    c.tilted = false; c.tilt = 0; c.tiltGoal = 0; c.tapDir = 1;
+    c.pivot.rotation.z = 0;
+    c.liquidMesh.visible = false; c.meniscus.visible = false;
+  });
+  activeCupId = 'tall';
+  stage2Root.visible = false; stage2Root.scale.setScalar(0.01);
+  Object.keys(S2CUPS).forEach(function (k) {
+    S2CUPS[k].warnT = 0; S2CUPS[k].shakeT = 0;
+    S2CUPS[k].warnRing.material.opacity = 0;
+    S2CUPS[k].dropRing.material.opacity = 0;
+    S2CUPS[k].g.position.copy(S2CUPS[k].pos);
+    S2CUPS[k].g.scale.setScalar(1);
+    S2CUPS[k].tagEl.style.display = 'none';
+  });
+  duckSlot = 'home'; duckGoal.copy(duckHome); duckG.position.copy(duckHome); duckTag.style.display = 'none';
+  Object.keys(ACTIONS).forEach(function (k) {
+    var a = ACTIONS[k];
+    a.goal.copy(a.home); a.g.position.copy(a.home); a.animT = 0;
+    a.tagEl.style.display = 'none';
+  });
+  doneFlags = { pourAll: false, tiltAll: false, duckSee: false, safeUnknown: false, fanPure: false, fanMilk: false };
+  testedSafetyFail = false;
+  preferFanCue = false;
+  found = {}; stamps = { s1: false, s2: false, s3: false }; celebrated = false;
+  draggingKind = null; draggingId = null; hoverTarget = null; spillWarnCd = 0;
+  cv.classList.remove('grabbing');
+  fxParts.forEach(function (f) { live.remove(f.m); }); fxParts = [];
+  $('#ntList').innerHTML = ''; $('#ntCnt').textContent = '0';
+  $('#phaseLabel').textContent = '💧 观察水：';
+  $('#progNum').textContent = '0 / 6';
+  $$('.st').forEach(function (s) { s.classList.remove('lit'); });
+  $('#winToast').classList.remove('show');
+  $('#qFb').textContent = '';
+  $$('.qopt').forEach(function (b) { b.classList.remove('ok', 'bad'); });
+  updateGuide(false);
+}
+
+/* ===== 帧循环 ===== */
+var introT0 = performance.now(), lastT = performance.now();
+var projV = new THREE.Vector3();
+
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', fit);
+fit();
+
+function placeTag(el, wx, wy, wz) {
+  if (el.style.display === 'none') return;
+  projV.set(wx, wy, wz).project(camera);
+  el.style.left = ((projV.x * 0.5 + 0.5) * window.innerWidth) + 'px';
+  el.style.top = ((-projV.y * 0.5 + 0.5) * window.innerHeight) + 'px';
+}
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (now - lastT) / 1000));
+  lastT = now;
+  var t = now * 0.001;
+  if (spillWarnCd > 0) spillWarnCd = Math.max(0, spillWarnCd - dt);
+
+  var pop = Math.min(1, (performance.now() - introT0) / 680);
+  live.scale.setScalar(0.01 + 0.99 * (1 - Math.pow(1 - pop, 3)));
+
+  // 相机平滑切换：平视 / 俯视
+  var targetCamPos = (viewMode === 'top') ? camTopPos : camSidePos;
+  var targetCamLook = (viewMode === 'top') ? camTopLook : camSideLook;
+  camera.position.lerp(targetCamPos, Math.min(1, dt * 6));
+  camCurLook.lerp(targetCamLook, Math.min(1, dt * 6));
+  camera.lookAt(camCurLook);
+
+  // 浇水壶动画（仅阶段 1 显示，阶段 2 收起彻底消除左后方穿模）
+  if (canG.visible) {
+    canG.position.lerp(canGoal, Math.min(1, dt * 15));
+    if (canPourT > 0) {
+      canPourT = Math.max(0, canPourT - dt);
+      canG.rotation.z = -0.62;
+    } else if (draggingKind === 'can' && hoverTarget) {
+      canG.rotation.z += (-0.28 - canG.rotation.z) * Math.min(1, dt * 10);
+    } else {
+      canG.rotation.z *= 0.86;
+    }
+    placeTag(canTag, canG.position.x, canG.position.y + 0.96, canG.position.z);
+  }
+
+  // 三只异形玻璃杯位置、缩放、倾斜与真实世界水平裁剪平面！
+  var cupTargetScale = (phase === 2) ? 0.58 : 1.0;
+  cupOrder.forEach(function (k) {
+    var c = CUPS[k];
+    c.holder.position.lerp(c.goalPos, Math.min(1, dt * 7));
+    var isHov = (hoverTarget && hoverTarget.group === 'shaped' && hoverTarget.id === k);
+    var scBoost = isHov ? 1.06 : 1.0;
+    c.holder.scale.lerp(new THREE.Vector3(cupTargetScale * scBoost, cupTargetScale * scBoost, cupTargetScale * scBoost), Math.min(1, dt * 8));
+
+    var fillTarget = c.filled ? 1 : 0;
+    c.fillAnim += (fillTarget - c.fillAnim) * Math.min(1, dt * 5.5);
+    c.tilt += (c.tiltGoal - c.tilt) * Math.min(1, dt * 11);
+    c.pivot.rotation.z = c.tilt;
+
+    var sNow = c.holder.scale.y;
+    var localWaterY = 0.08 + c.fillHeight * c.fillAnim;
+    var worldWaterY = c.holder.position.y + localWaterY * sNow * live.scale.y;
+    c.clipPlane.normal.set(0, -1, 0);
+    c.clipPlane.constant = worldWaterY;
+
+    if (c.meniscus.visible) {
+      c.meniscus.position.set(-Math.sin(c.tilt) * (localWaterY - c.pivotY) * 0.92, localWaterY, 0);
+      var stretchX = (c.id === 'round') ? 1.0 : (1.0 / Math.max(0.76, Math.cos(c.tilt)));
+      c.meniscus.scale.set(stretchX, 1, 1);
+    }
+
+    if (isHov) {
+      c.ring.material.color.set('#4ade80');
+      c.ring.material.opacity = 0.72 + 0.24 * Math.sin(t * 14);
+    } else {
+      c.ring.material.color.set('#38bdf8');
+      c.ring.material.opacity = (activeCupId === k) ? (0.44 + 0.22 * Math.sin(t * 5)) : 0.12;
+    }
+    placeTag(c.tagEl, c.holder.position.x, c.holder.position.y + (c.id === 'tall' ? 1.80 : 1.48) * sNow, c.holder.position.z);
+  });
+
+  // 实时重绘左侧 2D 双视角剖面框
+  drawProfileBox();
+
+  // 阶段 2 道具动画（时间驱动 320ms 必达 1.0，零帧率偏差）与拖拽目标高亮脉冲
+  if (phase === 2) {
+    var s2p = Math.min(1, (performance.now() - stage2T0) / 320);
+    stage2Root.scale.setScalar(0.35 + 0.65 * (1 - Math.pow(1 - s2p, 3)));
+    duckG.position.lerp(duckGoal, Math.min(1, dt * 12));
+    duckG.rotation.y = Math.sin(t * 2.2) * 0.14;
+    duckTag.style.opacity = (duckSlot === 'home') ? '1' : '0';
+    placeTag(duckTag, duckG.position.x, duckG.position.y + 0.95, duckG.position.z);
+
+    Object.keys(S2CUPS).forEach(function (k) {
+      var sc = S2CUPS[k];
+      var isHov2 = (hoverTarget && hoverTarget.group === 's2' && hoverTarget.id === k);
+      if (sc.warnT > 0) {
+        sc.warnT = Math.max(0, sc.warnT - dt);
+        sc.warnRing.material.opacity = 0.55 + 0.42 * Math.sin(t * 18);
+      } else {
+        sc.warnRing.material.opacity = 0;
+      }
+      if (isHov2) {
+        var isDangerDrag = (draggingKind === 'actionProp' && (draggingId === 'sniffClose' || draggingId === 'drinkDirect'));
+        sc.dropRing.material.color.set(isDangerDrag ? '#f87171' : '#4ade80');
+        sc.dropRing.material.opacity = 0.72 + 0.25 * Math.sin(t * 14);
+        sc.g.scale.lerp(new THREE.Vector3(1.06, 1.06, 1.06), Math.min(1, dt * 10));
+      } else {
+        sc.dropRing.material.opacity = 0;
+        sc.g.scale.lerp(new THREE.Vector3(1, 1, 1), Math.min(1, dt * 10));
+      }
+
+      if (sc.shakeT > 0) {
+        sc.shakeT = Math.max(0, sc.shakeT - dt);
+        sc.g.position.x = sc.pos.x + Math.sin(sc.shakeT * 36) * 0.11;
+      } else {
+        sc.g.position.x += (sc.pos.x - sc.g.position.x) * Math.min(1, dt * 12);
+      }
+      placeTag(sc.tagEl, sc.g.position.x, 1.42, sc.g.position.z);
+    });
+
+    Object.keys(ACTIONS).forEach(function (k) {
+      var a = ACTIONS[k];
+      var bob = (draggingId !== k && a.animT <= 0) ? Math.sin(t * 3 + a.home.x) * 0.035 : 0;
+      a.g.position.x += (a.goal.x - a.g.position.x) * Math.min(1, dt * 13);
+      a.g.position.y += ((a.goal.y + bob) - a.g.position.y) * Math.min(1, dt * 13);
+      a.g.position.z += (a.goal.z - a.g.position.z) * Math.min(1, dt * 13);
+      if (a.animT > 0) {
+        a.animT = Math.max(0, a.animT - dt);
+        a.g.rotation.z = Math.sin(a.animT * 18) * (k === 'fanHand' ? 0.36 : 0.24);
+      } else {
+        a.g.rotation.z *= 0.85;
+      }
+      if (k === 'fanHand' && a.g.userData.breezeG) {
+        a.g.userData.breezeG.rotation.z = Math.sin(t * 4.5) * 0.14;
+      }
+      a.ring.material.opacity = (k === 'fanHand') ? (0.42 + 0.32 * Math.sin(t * 5)) : 0.20;
+      placeTag(a.tagEl, a.g.position.x, a.g.position.y + 0.96, a.g.position.z);
+    });
+  }
+
+  // 单焦点 #targetCue（平时指引下一步；拖拽靠近目标时切换为“松手生效”！）
+  var cueEl = $('#targetCue');
+  var cueWorld = null, cueTxt = '', cueActionId = null, dropCls = '';
+  if (hoverTarget) {
+    if (hoverTarget.group === 'shaped') {
+      var hc = CUPS[hoverTarget.id];
+      cueWorld = new THREE.Vector3(hc.holder.position.x, 1.78, hc.holder.position.z);
+      cueTxt = '✨ 松手给「' + hc.name + '」倒半杯水！';
+      dropCls = 'drop';
+    } else if (hoverTarget.group === 's2') {
+      var hs = S2CUPS[hoverTarget.id];
+      cueWorld = new THREE.Vector3(hs.pos.x, 1.56, hs.pos.z);
+      if (draggingKind === 'duck') {
+        cueTxt = hoverTarget.id === 'pure' ? '✨ 松手放到纯净水杯后！' : '✨ 松手放到牛奶杯后对比！';
+        dropCls = 'drop';
+      } else if (draggingId === 'fanHand') {
+        cueTxt = '✨ 松手轻轻扇风闻一闻！';
+        dropCls = 'drop';
+      } else {
+        cueTxt = '⚠ 松手测试这种危险做法！';
+        dropCls = 'warn-drop';
+      }
+    }
+  } else if (!demo && !celebrated && !draggingKind) {
+    if (phase === 1) {
+      if (countPoured() < 3) {
+        cueWorld = new THREE.Vector3(canG.position.x, canG.position.y + 1.15, canG.position.z);
+        cueTxt = '👆 拖起或点蓝色水壶给杯子倒水';
+      } else if (countTilted() < 3) {
+        var nextTiltId = cupOrder.find(function (k) { return !CUPS[k].tilted; }) || 'tall';
+        var tc = CUPS[nextTiltId];
+        cueWorld = new THREE.Vector3(tc.holder.position.x, 1.85, tc.holder.position.z);
+        cueTxt = '👆 左右拖动或点「' + tc.name + '」倾斜';
+      }
+    } else if (countDone() < 6) {
+      if (preferFanCue && !doneFlags.safeUnknown) {
+        cueActionId = 'fanHand';
+        cueWorld = new THREE.Vector3(ACTIONS.fanHand.g.position.x, ACTIONS.fanHand.g.position.y + 1.06, ACTIONS.fanHand.g.position.z);
+        cueTxt = '👆 拖起或点扇闻小手闻未知液';
+      } else if (!doneFlags.duckSee) {
+        cueWorld = new THREE.Vector3(duckG.position.x, duckG.position.y + 1.12, duckG.position.z);
+        cueTxt = '👆 拖起或点小黄鸭到纯净水杯后';
+      } else if (!doneFlags.safeUnknown) {
+        cueActionId = 'fanHand';
+        cueWorld = new THREE.Vector3(ACTIONS.fanHand.g.position.x, ACTIONS.fanHand.g.position.y + 1.06, ACTIONS.fanHand.g.position.z);
+        cueTxt = '👆 拖起或点扇闻小手闻未知液';
+      } else if (!doneFlags.fanPure) {
+        cueActionId = 'fanHand';
+        cueWorld = new THREE.Vector3(ACTIONS.fanHand.g.position.x, ACTIONS.fanHand.g.position.y + 1.06, ACTIONS.fanHand.g.position.z);
+        cueTxt = '👆 用扇闻小手闻纯净水杯';
+      } else if (!doneFlags.fanMilk) {
+        cueActionId = 'fanHand';
+        cueWorld = new THREE.Vector3(ACTIONS.fanHand.g.position.x, ACTIONS.fanHand.g.position.y + 1.06, ACTIONS.fanHand.g.position.z);
+        cueTxt = '👆 用扇闻小手闻牛奶杯';
+      }
+    }
+  }
+  Object.keys(ACTIONS).forEach(function (k) { ACTIONS[k].tagEl.style.opacity = (cueActionId === k) ? '0' : '1'; });
+  cueEl.classList.toggle('drop', dropCls === 'drop');
+  cueEl.classList.toggle('warn-drop', dropCls === 'warn-drop');
+  if (cueWorld && cueTxt) {
+    projV.copy(cueWorld).project(camera);
+    var cx = (projV.x * 0.5 + 0.5) * window.innerWidth;
+    var cy = (-projV.y * 0.5 + 0.5) * window.innerHeight;
+    if (cy < 290) cx = Math.min(window.innerWidth - 270, cx);
+    cueEl.textContent = cueTxt;
+    cueEl.style.left = Math.max(210, Math.min(window.innerWidth - 120, cx)) + 'px';
+    cueEl.style.top = Math.max(92, Math.min(window.innerHeight - 68, cy)) + 'px';
+    cueEl.classList.add('show');
+  } else {
+    cueEl.classList.remove('show');
+  }
+
+  // 粒子自动消退（D4）
+  for (var i = fxParts.length - 1; i >= 0; i--) {
+    var fp = fxParts[i];
+    fp.life -= dt;
+    fp.vy += (fp.grav || 0) * dt;
+    fp.m.position.x += fp.vx * dt;
+    fp.m.position.y += fp.vy * dt;
+    fp.m.position.z += fp.vz * dt;
+    if (fp.m.position.y < 0.04) fp.m.position.y = 0.04;
+    fp.m.material.opacity = Math.max(0, fp.life / fp.maxLife);
+    if (fp.life <= 0) { live.remove(fp.m); fxParts.splice(i, 1); }
+  }
+
+  // 彩带
+  if (cfOn) {
+    cfCtx.clearRect(0, 0, cfCanvas.width, cfCanvas.height);
+    var alive = 0;
+    cfParts.forEach(function (p) {
+      p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 240 * dt; p.a += p.va * dt;
+      if (p.y < cfCanvas.height + 24) {
+        alive++;
+        cfCtx.save(); cfCtx.translate(p.x, p.y); cfCtx.rotate(p.a);
+        cfCtx.fillStyle = p.c; cfCtx.fillRect(-p.r, -p.r * 0.5, p.r * 2, p.r);
+        cfCtx.restore();
+      }
+    });
+    if (!alive) { cfOn = false; cfCtx.clearRect(0, 0, cfCanvas.width, cfCanvas.height); }
+  }
+
+  renderer.render(scene, camera);
+}
+
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () {
+    return {
+      triangles: renderer.info.render.triangles,
+      celebrated: celebrated,
+      phase: phase,
+      poured: countPoured(),
+      tilted: countTilted(),
+      doneCount: countDone(),
+      testedSafetyFail: testedSafetyFail,
+      viewMode: viewMode
+    };
+  },
+  getState: function () {
+    return {
+      phase: phase,
+      activeCupId: activeCupId,
+      viewMode: viewMode,
+      poured: { tall: CUPS.tall.filled, round: CUPS.round.filled, square: CUPS.square.filled },
+      tilted: { tall: CUPS.tall.tilted, round: CUPS.round.tilted, square: CUPS.square.tilted },
+      tiltAngles: { tall: CUPS.tall.tilt, round: CUPS.round.tilt, square: CUPS.square.tilt },
+      duckSlot: duckSlot,
+      doneFlags: doneFlags,
+      stamps: stamps,
+      celebrated: celebrated,
+      testedSafetyFail: testedSafetyFail
+    };
+  },
+  project3D: function (x, y, z) {
+    var v = new THREE.Vector3(x, y, z).project(camera);
+    return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight };
+  },
+  getTargets: function () {
+    var self = this;
+    function wPt(obj, dy) {
+      var v = new THREE.Vector3();
+      obj.getWorldPosition(v);
+      v.y += (dy || 0);
+      return self.project3D(v.x, v.y, v.z);
+    }
+    return {
+      can: wPt(canG, 0.36),
+      tall: wPt(CUPS.tall.holder, 0.72),
+      round: wPt(CUPS.round.holder, 0.58),
+      square: wPt(CUPS.square.holder, 0.62),
+      pure: wPt(S2CUPS.pure.g, 0.65),
+      milk: wPt(S2CUPS.milk.g, 0.65),
+      unknown: wPt(S2CUPS.unknown.g, 0.65),
+      duck: wPt(duckG, 0.36),
+      fanHand: wPt(ACTIONS.fanHand.g, 0.42),
+      sniffClose: wPt(ACTIONS.sniffClose.g, 0.44),
+      drinkDirect: wPt(ACTIONS.drinkDirect.g, 0.44)
+    };
+  },
+  startDemo: startDemo,
+  resetAll: resetAll
+};
+
+updateGuide(false);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

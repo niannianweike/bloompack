@@ -1,0 +1,2265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第10课 季节变化对动物的影响 · 生态山谷四季生存帮手</title>
+<style>
+:root{--accent:#d9661a;--accent-dark:#a8480c;--green:#1e7e46;--ink:#2a2218;--line:#dfd0b8;--card:rgba(255,252,246,.95)}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#8ecae6;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:pointer}
+canvas#cv.grabbing{cursor:grabbing}
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.46em;color:#7a6a52;font-weight:600}
+body.no-py rt{display:none}
+
+/* 左上标题卡片 */
+#hudTL{position:fixed;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:10px;
+  padding:7px 14px 7px 9px;border-radius:16px;background:var(--card);border:1.5px solid var(--line);
+  box-shadow:0 4px 16px rgba(38,28,16,.15)}
+#backBtn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:#5c4b34;font-size:19px;font-weight:900}
+#backBtn:hover{border-color:var(--accent);color:var(--accent)}
+.hd-t{font-size:16px;font-weight:900;line-height:1.5}
+.hd-sub{font-size:11.5px;color:#766650;font-weight:700}
+
+/* 顶部中央动态分步小助手（U2） */
+#guideBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:6;
+  max-width:min(460px,calc(100vw - 640px));display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:15px;background:rgba(255,250,242,.96);
+  border:2px solid #e07b26;box-shadow:0 6px 18px rgba(120,62,14,.16);
+  font-size:13.5px;font-weight:800;color:#73390c;cursor:pointer;line-height:1.38;transition:all .2s}
+#guideBar:active{transform:translateX(-50%) scale(.98)}
+#guideBar.done{border-color:#1e7e46;background:#effbf4;color:#14532d}
+@media (max-width:1180px){
+  #guideBar{top:62px;left:12px;transform:none;max-width:min(440px,calc(100vw - 260px))}
+  #guideBar:active{transform:scale(.98)}
+}
+
+/* 右上工具条 + 顶部防遮挡入口微标签（U2） */
+#hudTR{position:fixed;top:12px;right:12px;z-index:7;display:flex;align-items:center;gap:6px}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:38px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);
+  background:var(--card);font-family:inherit;font-size:13.5px;font-weight:800;color:#4a3c28;cursor:pointer;
+  box-shadow:0 3px 0 #d5c4a6;transition:all .14s;white-space:nowrap}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:var(--accent-dark);color:#fff;box-shadow:0 3px 0 var(--accent-dark)}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#ffedd5;border:1.5px solid var(--accent);color:#a8440a;font-size:10.5px;font-weight:900;
+  white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(217,102,26,.24);
+  animation:cuePop 1.6s ease-in-out infinite;transition:opacity .25s}
+body.interacted .entry-cue{opacity:0;animation:none}
+@keyframes cuePop{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+
+/* 右上可收起窄版发现栏（D3 防遮挡） */
+#notes{position:fixed;top:60px;right:12px;z-index:6;width:224px;padding:9px 11px;border-radius:15px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 6px 18px rgba(38,28,16,.14)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:4px;margin-bottom:6px}
+.nt-title{font-size:13px;font-weight:900}
+.nt-cnt{font-size:12px;font-weight:900;color:var(--accent)}
+.nt-btns{display:flex;gap:4px}
+.nt-tog{padding:2px 6px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:11px;font-weight:800;color:#6c5c45;cursor:pointer}
+.nt-tog:hover{border-color:var(--accent);color:var(--accent)}
+.stamps{display:flex;gap:4px;margin-bottom:6px}
+.st{flex:1;text-align:center;padding:3px 2px;border-radius:8px;font-size:11px;font-weight:800;
+  border:1.5px dashed #d7c5a4;color:#9b8a70;background:#faf4e8;transition:all .2s;line-height:1.4}
+.st.lit{border-style:solid;border-color:var(--accent);background:#fff2df;color:#a8480c;animation:pop .4s cubic-bezier(.2,1.6,.4,1)}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList,#notes.collapsed .stamps{display:none}
+#notes.collapsed .nt-head{margin-bottom:0}
+.stk{padding:5px 8px;border-radius:10px;background:#fff;border:1px solid #ece0c9;font-size:12px;font-weight:700;line-height:1.4;animation:pop .35s cubic-bezier(.2,1.5,.4,1)}
+.stk b{color:#a8480c}
+@keyframes pop{0%{transform:scale(.68);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* 左上当前季节与温度徽标（纯展示非按钮） */
+#envBadge{position:fixed;left:16px;top:76px;z-index:5;padding:6px 13px;border-radius:99px;
+  background:rgba(255,252,246,.94);border:2px solid #59ad77;font-size:13px;font-weight:900;color:#175a35;
+  box-shadow:0 4px 12px rgba(30,50,35,.13);pointer-events:none;transition:all .2s}
+#envBadge.summer{border-color:#dc2626;color:#991b1b;background:#fff5f5}
+#envBadge.autumn{border-color:#d97706;color:#92400e;background:#fffbeb}
+#envBadge.winter{border-color:#0284c7;color:#075985;background:#eef7fc}
+
+/* 2D 四季动物生存策略对比卡弹层 */
+#cmpModal{position:fixed;inset:0;z-index:32;display:none;place-items:center;background:rgba(36,24,10,.36);padding:16px}
+#cmpModal.show{display:grid}
+.cmp-card{width:min(540px,100%);background:#fffdf8;border:2.5px solid var(--accent);border-radius:22px;padding:16px 18px;
+  box-shadow:0 18px 46px rgba(40,22,4,.26);animation:pop .26s ease-out}
+.cmp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cmp-head h3{margin:0;font-size:16px;color:#7c2d12}
+.cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.cmp-box{padding:9px 11px;border-radius:14px;border:1.5px solid #e7d7bc;background:#fff;text-align:left;font-size:12.5px;line-height:1.5}
+.cmp-box.sp{background:#f0fdf4;border-color:#86efac}
+.cmp-box.su{background:#fff7ed;border-color:#fdba74}
+.cmp-box.au{background:#fefce8;border-color:#fde047}
+.cmp-box.wi{background:#f0f9ff;border-color:#7dd3fc}
+.cmp-box .ct{font-weight:900;font-size:13.5px;margin-bottom:3px;display:flex;justify-content:space-between}
+
+/* 3D 浮动反馈词层 + 单焦点跳动提示气泡（U10） */
+#floatLayer{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden}
+.cue3d{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:6px 14px;border-radius:99px;
+  background:#fff7ed;border:2px solid #d9661a;color:#9a3412;font-size:13px;font-weight:900;white-space:nowrap;
+  box-shadow:0 4px 14px rgba(217,102,26,.32);animation:cueBob 1.3s ease-in-out infinite;display:none;pointer-events:none}
+.cue3d.show{display:block}
+@keyframes cueBob{0%,100%{transform:translate(-50%,-100%) translateY(0)}50%{transform:translate(-50%,-100%) translateY(-6px)}}
+.fword{position:absolute;transform:translate(-50%,-100%);padding:5px 13px;border-radius:99px;
+  background:rgba(255,252,244,.96);border:2px solid var(--accent);color:#9a3412;
+  font-size:14px;font-weight:900;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.18);
+  animation:floatUp 1.9s ease-out forwards;pointer-events:none}
+.fword.ok{border-color:#16a34a;color:#14532d;background:#f0fdf4}
+.fword.warn{border-color:#dc2626;color:#991b1b;background:#fef2f2}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-60%) scale(.75)}16%{opacity:1;transform:translate(-50%,-100%) scale(1.04)}100%{opacity:0;transform:translate(-50%,-185%) scale(1)}}
+
+/* 通关彩带 + 结论与1题巩固弹窗（D2 + U1 + U3） */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+#winToast{position:fixed;inset:0;z-index:35;display:none;place-items:center;background:rgba(36,24,10,.38);padding:16px}
+#winToast.show{display:grid}
+.win-card{width:min(500px,100%);max-height:88vh;overflow-y:auto;background:#fffdf8;
+  border:2.5px solid var(--accent);border-radius:22px;padding:16px 18px;text-align:center;
+  box-shadow:0 20px 50px rgba(40,22,4,.28);animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+.win-concl{margin:8px 0;padding:9px 12px;border-radius:13px;background:#fff8eb;border:1.5px solid #f2cf9b;
+  text-align:left;font-size:13px;line-height:1.55;color:#5a3309}
+.win-cmp{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0;text-align:left;font-size:11.8px;line-height:1.42}
+.win-cmp div{padding:6px 8px;border-radius:10px;border:1px solid #e6d7bd;background:#fff}
+.win-quiz{margin:8px 0;padding:10px 12px;border-radius:13px;background:#f8fafc;border:1.5px solid #d9e2ec;text-align:left}
+.win-quiz h4{margin:0 0 7px;font-size:13.5px;color:#2b3a4a}
+.qopts{display:flex;flex-direction:column;gap:6px}
+.qopt{padding:7px 11px;border-radius:11px;border:1.5px solid #d9d0be;background:#fff;
+  font-family:inherit;font-size:13px;font-weight:800;text-align:left;cursor:pointer;transition:all .14s;color:var(--ink)}
+.qopt:hover{border-color:var(--accent);background:#fff9f0}
+.qopt.ok{border-color:#16a34a;background:#dcfce7;color:#14532d}
+.qopt.bad{border-color:#e03131;background:#fff5f5;color:#c92a2a}
+.qfb{margin-top:6px;font-size:12.5px;font-weight:800;min-height:18px;color:#b45309}
+.qfb.ok{color:#166534}
+.win-acts{display:flex;justify-content:center;gap:10px;margin-top:10px}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="floatLayer">
+  <div class="cue3d" id="targetCue">🥚 拖或点鸟蛋放进树枝鸟巢孵雏鸟</div>
+</div>
+<canvas id="confetti"></canvas>
+
+<div id="hudTL">
+  <a id="backBtn" href="../index.html" title="返回书包">‹</a>
+  <div>
+    <div class="hd-t" data-py="dì kè jì jié biàn huà duì dòng wù de yǐng xiǎng">第10课 季节变化对动物的影响</div>
+    <div class="hd-sub">活页 · 课本第 41 页「生态山谷动物四季生存帮手」</div>
+  </div>
+</div>
+
+<div id="guideBar" title="点我重听当前步骤">
+  <span id="guideIco">🌸</span>
+  <span id="guideTxt">春季任务1：把地上的青斑鸟蛋拖或点进树枝鸟巢，帮池鹭妈妈孵出小雏鸟！</span>
+</div>
+
+<div id="hudTR">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<div id="envBadge">🌸 春季 · 20℃ · 繁育新生</div>
+
+<aside id="notes">
+  <div class="nt-head">
+    <span class="nt-title" data-py="wǒ de fā xiàn">我的发现</span>
+    <span class="nt-cnt" id="ntCnt">0/9</span>
+    <span class="nt-btns">
+      <button class="nt-tog" id="cmpBtn" type="button">对比卡</button>
+      <button class="nt-tog" id="ntTog" type="button">收起</button>
+    </span>
+  </div>
+  <div class="stamps">
+    <span class="st" id="st1" data-py="chūn xià guān chá">春夏观察</span>
+    <span class="st" id="st2" data-py="qiū dōng shēng cún">秋冬生存</span>
+    <span class="st" id="st3" data-py="sì jì lǜ dòng">四季律动</span>
+  </div>
+  <div id="ntList"></div>
+</aside>
+
+<!-- 2D 四季动物生存策略对比卡 -->
+<div id="cmpModal">
+  <div class="cmp-card">
+    <div class="cmp-head">
+      <h3>✨ 四季动物生存策略对比卡</h3>
+      <button class="nt-tog" id="cmpCloseBtn" type="button">关闭</button>
+    </div>
+    <div class="cmp-grid" id="cmpGrid">
+      <div class="cmp-box sp"><div class="ct"><span>🌸 春季 · 繁育新生</span><span id="cmpS0">0/2</span></div>🐦 池鹭筑巢孵蛋养雏鸟<br>🐵 白头叶猴产下金毛宝宝</div>
+      <div class="cmp-box su"><div class="ct"><span>☀️ 夏季 · 避暑鸣叫</span><span id="cmpS1">0/2</span></div>🐃 水牛泡清凉水塘降温<br>🎵 蝉在浓荫树干阵阵鸣叫</div>
+      <div class="cmp-box au"><div class="ct"><span>🍁 秋季 · 储粮南迁</span><span id="cmpS2">0/2</span></div>🐿 松鼠搬运松果进树洞储粮<br>🐦 大雁排「人」字形飞向南方</div>
+      <div class="cmp-box wi"><div class="ct"><span>❄️ 冬季 · 换毛冬眠抱团</span><span id="cmpS3">0/3</span></div>🐇 北极兔换雪白冬毛躲雄鹰<br>🦔 刺猬钻暖树洞冬眠 · 🐵 猕猴抱团</div>
+    </div>
+  </div>
+</div>
+
+<div id="winToast">
+  <div class="win-card">
+    <div style="font-size:36px">🏆</div>
+    <h3 style="margin:4px 0;color:#7c2d12" data-py="tài bàng la sì jì dòng wù xiǎo mì mì quán jiě kāi">太棒啦！四季动物小秘密全解开！</h3>
+    <div class="win-concl">
+      <b>✨ 科学小结论：</b>不同季节温度和食物不断变化，动物进化出奇妙的适应本领：春季繁殖育儿，夏季避暑鸣叫，秋季储粮和迁徙，冬季换白毛保护色、冬眠或抱团取暖！
+    </div>
+    <div class="win-cmp">
+      <div style="background:#f0fdf4"><b>🌸 春 · 繁育：</b>池鹭孵蛋、白头叶猴育儿</div>
+      <div style="background:#fff7ed"><b>☀️ 夏 · 避暑：</b>水牛泡水降温、蝉儿鸣叫</div>
+      <div style="background:#fefce8"><b>🍁 秋 · 备冬：</b>松鼠储松果、大雁南迁</div>
+      <div style="background:#f0f9ff"><b>❄️ 冬 · 越冬：</b>北极兔换白毛、刺猬冬眠、猕猴抱团</div>
+    </div>
+    <div class="win-quiz">
+      <h4>💡 考考你 · 答对领小红花 🌸</h4>
+      <div style="font-size:13px;font-weight:800;margin-bottom:7px">冬天雪地里，北极兔为什么要把棕灰色的毛换成雪白色？</div>
+      <div class="qopts" id="qOpts">
+        <button class="qopt" type="button" data-ok="1">❄️ 和白雪融为一体形成保护色，既保暖又不容易被雄鹰等天敌发现</button>
+        <button class="qopt" type="button" data-hint="再想想哦！白毛在雪地里更隐蔽，能帮北极兔躲避雄鹰。">☀️ 为了在白雪地里更显眼，方便雄鹰远远看见它</button>
+        <button class="qopt" type="button" data-hint="不对哦！北极兔换上厚厚的雪白冬毛是为了保暖和隐蔽伪装。">💧 因为雪水把它的毛洗掉色了，冬天会变得更冷</button>
+      </div>
+      <div class="qfb" id="qFb"></div>
+    </div>
+    <div class="win-acts">
+      <button class="tbtn" id="winKeepBtn" type="button">继续玩</button>
+      <button class="tbtn on" id="winAgainBtn" type="button">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js?v=doubao-2"></script>
+<script src="../vendor/voice.js?v=doubao-2"></script>
+<script>
+(function () {
+'use strict';
+
+try { sessionStorage.setItem('xk_last_vol', 'k2a'); } catch (e) {}
+
+var LESSON_ID = 'k2a-10';
+var BOOK_PROGRESS_KEY = 'xk_k2a_progress';
+
+var $ = function (s) { return document.querySelector(s); };
+var $$ = function (s) { return document.querySelectorAll(s); };
+
+/* ===== 严格 1 对 1 拼音 ===== */
+var HAN = /[\u3400-\u9fff]/;
+var pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function ruby(text, py) {
+  if (!py) return esc(text);
+  var syl = py.trim().split(/\s+/), i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) {
+      var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; }
+      out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>';
+    } else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+$$('[data-py]').forEach(function (el) { el.innerHTML = ruby(el.textContent, el.dataset.py); });
+
+$('#backBtn').addEventListener('click', function () {
+  try { sessionStorage.setItem('xk_last_vol', 'k2a'); } catch (e) {}
+});
+
+/* ===== 语音 + 拟真 WebAudio 音效 ===== */
+var voiceOn = true;
+function stopVoice() {
+  if (window.__xkVoice) window.__xkVoice.stop();
+  else if (window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
+}
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text, '../audio/', true); return; }
+}
+
+var audioCtx = null;
+function ensureAC() {
+  var AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  if (!audioCtx) audioCtx = new AC();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+function playChime(freqs) {
+  try {
+    var ac = ensureAC(); if (!ac) return;
+    var now = ac.currentTime;
+    freqs.forEach(function (f, idx) {
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(f, now + idx * 0.085);
+      g.gain.setValueAtTime(0.001, now + idx * 0.085);
+      g.gain.exponentialRampToValueAtTime(0.11, now + idx * 0.085 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.085 + 0.23);
+      o.connect(g); g.connect(ac.destination);
+      o.start(now + idx * 0.085); o.stop(now + idx * 0.085 + 0.25);
+    });
+  } catch (e) {}
+}
+function playChirp() {
+  try {
+    var ac = ensureAC(); if (!ac) return;
+    var now = ac.currentTime;
+    [0, 0.16, 0.34].forEach(function (off) {
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(1450, now + off);
+      o.frequency.exponentialRampToValueAtTime(2400, now + off + 0.07);
+      o.frequency.exponentialRampToValueAtTime(1600, now + off + 0.12);
+      g.gain.setValueAtTime(0.001, now + off);
+      g.gain.exponentialRampToValueAtTime(0.11, now + off + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, now + off + 0.13);
+      o.connect(g); g.connect(ac.destination);
+      o.start(now + off); o.stop(now + off + 0.14);
+    });
+  } catch (e) {}
+}
+function playCicada() {
+  try {
+    var ac = ensureAC(); if (!ac) return;
+    var now = ac.currentTime;
+    for (var b = 0; b < 3; b++) {
+      var t0 = now + b * 0.36;
+      var o = ac.createOscillator(), lfo = ac.createOscillator(), lg = ac.createGain(), g = ac.createGain();
+      o.type = 'sawtooth'; o.frequency.setValueAtTime(3400 + b * 120, t0);
+      lfo.type = 'sine'; lfo.frequency.setValueAtTime(36, t0);
+      lg.gain.setValueAtTime(220, t0);
+      lfo.connect(lg); lg.connect(o.frequency);
+      g.gain.setValueAtTime(0.001, t0);
+      g.gain.exponentialRampToValueAtTime(0.055, t0 + 0.04);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.30);
+      o.connect(g); g.connect(ac.destination);
+      o.start(t0); lfo.start(t0); o.stop(t0 + 0.31); lfo.stop(t0 + 0.31);
+    }
+  } catch (e) {}
+}
+function playSplash() {
+  try {
+    var ac = ensureAC(); if (!ac) return;
+    var now = ac.currentTime;
+    [320, 460, 620, 420].forEach(function (f, i) {
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(f, now + i * 0.055);
+      o.frequency.exponentialRampToValueAtTime(f * 1.45, now + i * 0.055 + 0.09);
+      g.gain.setValueAtTime(0.001, now + i * 0.055);
+      g.gain.exponentialRampToValueAtTime(0.09, now + i * 0.055 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.055 + 0.14);
+      o.connect(g); g.connect(ac.destination);
+      o.start(now + i * 0.055); o.stop(now + i * 0.055 + 0.15);
+    });
+  } catch (e) {}
+}
+
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem(BOOK_PROGRESS_KEY) || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem(BOOK_PROGRESS_KEY, JSON.stringify(d));
+  } catch (e) {}
+}
+
+/* ===== 彩带庆祝 ===== */
+var cCv = $('#confetti'), cCtx = cCv.getContext('2d'), cfParts = [];
+function resizeConfetti() { cCv.width = window.innerWidth; cCv.height = window.innerHeight; }
+function burstConfetti() {
+  cfParts = [];
+  var cols = ['#d9661a', '#1e7e46', '#dc2626', '#0284c7', '#ec4899', '#eab308'];
+  for (var i = 0; i < 90; i++) {
+    cfParts.push({
+      x: cCv.width * (0.2 + Math.random() * 0.6), y: cCv.height * 0.28,
+      vx: (Math.random() - 0.5) * 9, vy: -4 - Math.random() * 7,
+      s: 6 + Math.random() * 6, r: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.24,
+      col: cols[i % cols.length], life: 1
+    });
+  }
+}
+function tickConfetti() {
+  if (!cfParts.length) return;
+  cCtx.clearRect(0, 0, cCv.width, cCv.height);
+  for (var i = cfParts.length - 1; i >= 0; i--) {
+    var p = cfParts[i];
+    p.x += p.vx; p.y += p.vy; p.vy += 0.21; p.r += p.vr; p.life -= 0.008;
+    if (p.life <= 0 || p.y > cCv.height + 24) { cfParts.splice(i, 1); continue; }
+    cCtx.save(); cCtx.globalAlpha = Math.max(0, p.life);
+    cCtx.translate(p.x, p.y); cCtx.rotate(p.r);
+    cCtx.fillStyle = p.col; cCtx.fillRect(-p.s * 0.5, -p.s * 0.3, p.s, p.s * 0.6);
+    cCtx.restore();
+  }
+}
+
+/* ===== Three.js r147 柔和自然三点光立体生态沙盘（去塑料 + 绝不惨白过曝！） ===== */
+var cv = $('#cv');
+var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color('#8ecae6');
+scene.fog = new THREE.Fog('#9cd2eb', 20, 48);
+
+var camera = new THREE.PerspectiveCamera(37, 16 / 9, 0.1, 95);
+camera.position.set(0.0, 5.38, 11.45);
+camera.lookAt(0.0, 1.15, 0.25);
+
+var hemiL = new THREE.HemisphereLight('#fffbf0', '#4f684e', 0.65);
+scene.add(hemiL);
+var sunL = new THREE.DirectionalLight('#fff2d6', 0.80);
+sunL.position.set(5.2, 9.4, 6.2);
+sunL.castShadow = true;
+sunL.shadow.mapSize.set(1024, 1024);
+sunL.shadow.camera.left = -10; sunL.shadow.camera.right = 10;
+sunL.shadow.camera.top = 10; sunL.shadow.camera.bottom = -10;
+sunL.shadow.bias = -0.0008;
+scene.add(sunL);
+var rimL = new THREE.DirectionalLight('#b8dcff', 0.24);
+rimL.position.set(-5.5, 4.5, -6.5);
+scene.add(rimL);
+
+function stdMat(hex, extra) {
+  var o = { color: new THREE.Color(hex), roughness: 0.82, metalness: 0.02 };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshStandardMaterial(o);
+}
+function mesh(geo, mat, cast, recv) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = cast !== false;
+  m.receiveShadow = recv !== false;
+  return m;
+}
+function ctex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c); t.needsUpdate = true; return t;
+}
+var HIT_MAT = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false });
+var live = new THREE.Group();
+scene.add(live);
+
+/* 1. 精致木质沙盘地形 + 远山 + 阴影雪坡 + 深蓝水塘/冰湖 + 生态树（含清晰伸出横枝鸟巢 + 正面树洞） */
+var woodTex = ctex(256, 64, function (c, w, h) {
+  c.fillStyle = '#7c5332'; c.fillRect(0, 0, w, h);
+  for (var i = 0; i < 16; i++) {
+    c.fillStyle = i % 2 ? 'rgba(52,30,12,0.22)' : 'rgba(168,120,76,0.16)';
+    c.fillRect(0, i * 4, w, 2.2);
+  }
+});
+var groundTex = ctex(256, 256, function (c, w, h) {
+  c.fillStyle = '#ffffff'; c.fillRect(0, 0, w, h);
+  for (var i = 0; i < 240; i++) {
+    c.fillStyle = i % 2 ? 'rgba(0,0,0,0.055)' : 'rgba(255,255,255,0.05)';
+    c.beginPath();
+    c.ellipse((i * 71) % w, (i * 113) % h, 10 + (i % 5) * 4, 4 + (i % 3) * 2, (i % 6) * 0.5, 0, Math.PI * 2);
+    c.fill();
+  }
+});
+
+var woodBase = mesh(new THREE.CylinderGeometry(7.45, 7.9, 0.55, 48), stdMat('#8a5e3b', { map: woodTex, roughness: 0.72 }), false, true);
+woodBase.position.set(0, -0.28, -0.2);
+live.add(woodBase);
+
+var groundMat = stdMat('#6aa36a', { map: groundTex, roughness: 0.90 });
+var valleyFloor = mesh(new THREE.CylinderGeometry(7.24, 7.30, 0.14, 48), groundMat, false, true);
+valleyFloor.position.set(0, 0.02, -0.2);
+live.add(valleyFloor);
+
+var rimMesh = mesh(new THREE.TorusGeometry(7.32, 0.15, 12, 52), stdMat('#9c6e44', { roughness: 0.68 }), false, true);
+rimMesh.rotation.x = Math.PI / 2; rimMesh.position.set(0, 0.06, -0.2);
+live.add(rimMesh);
+
+var hillMat = stdMat('#528758', { roughness: 0.92 });
+[[-4.5, -4.5, 3.0, 1.48], [4.3, -4.6, 3.2, 1.56], [0.0, -5.4, 3.8, 1.18]].forEach(function (h) {
+  var hm = mesh(new THREE.SphereGeometry(h[2], 22, 14, 0, Math.PI * 2, 0, Math.PI * 0.5), hillMat, false, true);
+  hm.scale.set(1, h[3] / h[2], 0.65);
+  hm.position.set(h[0], -0.02, h[1]);
+  live.add(hm);
+});
+
+// 冬季起伏冷灰蓝阴影雪丘（增加冬季地貌明暗层次，彻底消灭纯白过曝！）
+var winterDriftsG = new THREE.Group();
+winterDriftsG.visible = false;
+live.add(winterDriftsG);
+var driftDarkMat = stdMat('#8fb0cc', { roughness: 0.88 });
+var driftLightMat = stdMat('#bdd5e8', { roughness: 0.86 });
+[[-0.9, -2.5, 1.8, 0.42, driftDarkMat], [3.6, -2.1, 1.5, 0.36, driftDarkMat],
+ [-3.8, 1.2, 1.25, 0.28, driftLightMat], [0.35, 0.96, 1.15, 0.16, driftDarkMat]].forEach(function (dr) {
+  var dm = mesh(new THREE.SphereGeometry(dr[2], 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.5), dr[4], false, true);
+  dm.scale.set(1.2, dr[3] / dr[2], 0.85);
+  dm.position.set(dr[0], 0.06, dr[1]);
+  winterDriftsG.add(dm);
+});
+
+// 右后山坡（冬季猕猴抱团台）
+var slopeMat = stdMat('#5e965d', { roughness: 0.90 });
+var slopeHill = mesh(new THREE.CylinderGeometry(1.42, 1.92, 0.56, 24), slopeMat, false, true);
+slopeHill.position.set(2.12, 0.30, -1.32);
+live.add(slopeHill);
+
+// 右前清凉水塘（夏季水牛泡水降温 / 冬季深蓝冰湖）
+var POND_POS = new THREE.Vector3(2.18, 0.10, 0.64);
+var pondG = new THREE.Group();
+pondG.position.copy(POND_POS);
+live.add(pondG);
+var pondWaterMat = stdMat('#2994d6', { roughness: 0.25, metalness: 0.08 });
+var pondWater = mesh(new THREE.CylinderGeometry(1.44, 1.50, 0.10, 30), pondWaterMat, false, true);
+pondWater.scale.set(1.14, 1, 0.88);
+pondG.add(pondWater);
+var pondRipple = new THREE.Mesh(
+  new THREE.RingGeometry(0.45, 0.58, 26),
+  new THREE.MeshBasicMaterial({ color: '#e0f2fe', transparent: true, opacity: 0.68, side: THREE.DoubleSide })
+);
+pondRipple.rotation.x = -Math.PI / 2; pondRipple.position.y = 0.07;
+pondG.add(pondRipple);
+// 水塘目标发光高亮环（拖水牛时高亮！）
+var pondTargetRing = new THREE.Mesh(
+  new THREE.RingGeometry(1.46, 1.66, 32),
+  new THREE.MeshBasicMaterial({ color: '#22c55e', transparent: true, opacity: 0, side: THREE.DoubleSide })
+);
+pondTargetRing.rotation.x = -Math.PI / 2; pondTargetRing.scale.set(1.12, 0.88, 1); pondTargetRing.position.y = 0.09;
+pondG.add(pondTargetRing);
+// 冰湖白裂纹（仅冬季可见）
+var iceCracksG = new THREE.Group();
+iceCracksG.visible = false;
+for (var ic = 0; ic < 4; ic++) {
+  var cr = new THREE.Mesh(new THREE.PlaneGeometry(1.35, 0.045), new THREE.MeshBasicMaterial({ color: '#d8eefc', transparent: true, opacity: 0.72 }));
+  cr.rotation.x = -Math.PI / 2; cr.rotation.z = ic * 0.72 + 0.3;
+  cr.position.set((ic - 1.5) * 0.25, 0.065, (ic % 2 ? 0.18 : -0.18));
+  iceCracksG.add(cr);
+}
+pondG.add(iceCracksG);
+
+var rockMat = stdMat('#8a929a', { roughness: 0.88 });
+for (var rk = 0; rk < 11; rk++) {
+  var ra = rk * Math.PI * 2 / 11;
+  var st = mesh(new THREE.DodecahedronGeometry(0.18 + (rk % 3) * 0.045, 0), rockMat, true, true);
+  st.scale.set(1.2, 0.58, 1.0);
+  st.position.set(Math.cos(ra) * 1.62, 0.08, Math.sin(ra) * 1.24);
+  pondG.add(st);
+}
+var pondHitMesh = new THREE.Mesh(new THREE.CylinderGeometry(1.88, 1.88, 1.25, 18), HIT_MAT);
+pondHitMesh.position.y = 0.45;
+pondHitMesh.userData.hit = 'pond';
+pondG.add(pondHitMesh);
+
+// 中左生态大树（向右前方清晰伸出粗壮横枝托着大鸟巢，完全不被树冠遮挡！）
+var HOLLOW_POS = new THREE.Vector3(-2.02, 0.98, -0.66);
+var NEST_POS = new THREE.Vector3(-0.78, 2.22, -0.34);
+var treeG = new THREE.Group();
+treeG.position.set(-2.55, 0.06, -1.25);
+live.add(treeG);
+
+var barkTex = ctex(128, 256, function (c, w, h) {
+  c.fillStyle = '#5c3a21'; c.fillRect(0, 0, w, h);
+  for (var i = 0; i < 24; i++) {
+    c.fillStyle = i % 2 ? 'rgba(34,18,8,0.38)' : 'rgba(130,86,52,0.22)';
+    c.fillRect((i * 11) % w, 0, 5, h);
+  }
+});
+var treeBarkMat = stdMat('#694226', { map: barkTex, roughness: 0.90 });
+var treeTrunk = mesh(new THREE.CylinderGeometry(0.42, 0.66, 2.68, 16), treeBarkMat);
+treeTrunk.position.y = 1.32;
+treeG.add(treeTrunk);
+for (var tr = 0; tr < 4; tr++) {
+  var tra = tr * Math.PI * 0.5 + 0.4;
+  var trM = mesh(new THREE.CylinderGeometry(0.10, 0.22, 0.72, 8), stdMat('#4f301b'));
+  trM.position.set(Math.cos(tra) * 0.48, 0.16, Math.sin(tra) * 0.48);
+  trM.rotation.z = -Math.cos(tra) * 0.9; trM.rotation.x = Math.sin(tra) * 0.9;
+  treeG.add(trM);
+}
+
+// 向右前方清晰舒展的粗壮横枝（完全伸出树冠阴影，稳托大鸟巢！）
+var nestBranch = mesh(new THREE.CylinderGeometry(0.11, 0.22, 2.25, 12), treeBarkMat);
+nestBranch.position.set(0.92, 2.04, 0.46);
+nestBranch.rotation.z = -1.36;
+nestBranch.rotation.y = -0.45;
+treeG.add(nestBranch);
+var nestSubTwig = mesh(new THREE.CylinderGeometry(0.055, 0.095, 0.95, 8), treeBarkMat);
+nestSubTwig.position.set(1.98, 2.18, 0.86);
+nestSubTwig.rotation.z = -1.42;
+nestSubTwig.rotation.y = -0.25;
+treeG.add(nestSubTwig);
+
+var brLeft = mesh(new THREE.CylinderGeometry(0.10, 0.18, 1.55, 10), treeBarkMat);
+brLeft.position.set(-0.68, 2.38, 0.12); brLeft.rotation.z = 0.92;
+treeG.add(brLeft);
+var brTop = mesh(new THREE.CylinderGeometry(0.09, 0.16, 1.45, 10), treeBarkMat);
+brTop.position.set(-0.08, 2.75, -0.15); brTop.rotation.z = 0.18;
+treeG.add(brTop);
+
+// 冬季枯树枝与柔和枝雪（冬季替代大树冠，彻底消除白色棉花糖遮挡！）
+var winterTwigsG = new THREE.Group();
+winterTwigsG.visible = false;
+[[-1.12, 2.76, 0.12, 0.2, 0.88], [-0.45, 3.25, -0.10, -0.2, 0.42], [0.22, 3.28, -0.18, -0.25, -0.36],
+ [0.82, 2.55, 0.22, 0.18, -0.78], [-0.78, 3.02, 0.34, 0.45, 0.65]].forEach(function (tw) {
+  var tm = mesh(new THREE.CylinderGeometry(0.04, 0.08, 0.96, 7), stdMat('#4d2e19'));
+  tm.position.set(tw[0], tw[1], tw[2]); tm.rotation.set(tw[3], 0, tw[4]);
+  winterTwigsG.add(tm);
+  var sn = mesh(new THREE.SphereGeometry(0.18, 10, 8), stdMat('#e8f2fa'), false, false);
+  sn.scale.set(1.5, 0.35, 0.8); sn.position.set(tw[0], tw[1] + 0.12, tw[2]);
+  winterTwigsG.add(sn);
+});
+treeG.add(winterTwigsG);
+
+// 正面迎光大树洞（松鼠储松果 & 刺猬冬眠的家）
+var hollowRim = mesh(new THREE.TorusGeometry(0.42, 0.09, 12, 22), stdMat('#4e2e16', { roughness: 0.9 }));
+hollowRim.position.set(0.42, 0.96, 0.46); hollowRim.rotation.y = 0.56;
+treeG.add(hollowRim);
+var hollowDark = mesh(new THREE.CircleGeometry(0.40, 20), new THREE.MeshBasicMaterial({ color: '#1f1107' }), false, false);
+hollowDark.position.set(0.40, 0.96, 0.44); hollowDark.rotation.y = 0.56;
+treeG.add(hollowDark);
+var hollowTargetRing = new THREE.Mesh(
+  new THREE.RingGeometry(0.48, 0.60, 26),
+  new THREE.MeshBasicMaterial({ color: '#fbbf24', transparent: true, opacity: 0, side: THREE.DoubleSide })
+);
+hollowTargetRing.position.set(0.46, 0.96, 0.50); hollowTargetRing.rotation.y = 0.56;
+treeG.add(hollowTargetRing);
+
+var hollowLeavesG = new THREE.Group();
+hollowLeavesG.position.set(0.46, 0.68, 0.52);
+for (var hl = 0; hl < 9; hl++) {
+  var lf = mesh(new THREE.SphereGeometry(0.11, 8, 6), stdMat(hl % 2 ? '#d97706' : '#ea580c'), false, false);
+  lf.scale.set(1.25, 0.42, 0.9);
+  lf.position.set((hl - 4) * 0.065, (hl % 2) * 0.03, (hl % 3) * 0.04);
+  hollowLeavesG.add(lf);
+}
+treeG.add(hollowLeavesG);
+
+var hollowHitMesh = new THREE.Mesh(new THREE.SphereGeometry(1.15, 14, 12), HIT_MAT);
+hollowHitMesh.position.set(0.52, 0.98, 0.62);
+hollowHitMesh.userData.hit = 'hollow';
+treeG.add(hollowHitMesh);
+
+// 生态树树冠（刻意偏左上，绝不遮挡伸向右前方的横枝大鸟巢！）
+var treeCanopyMat = stdMat('#3c944c', { roughness: 0.85 });
+var treeCanopyG = new THREE.Group();
+[[-0.25, 3.48, -0.15, 1.05], [-1.12, 3.12, 0.05, 0.82], [0.42, 3.35, -0.32, 0.78],
+ [-0.15, 4.02, -0.18, 0.78], [-0.72, 3.22, 0.52, 0.66]].forEach(function (c) {
+  var cm = mesh(new THREE.IcosahedronGeometry(c[3], 1), treeCanopyMat);
+  cm.position.set(c[0], c[1], c[2]); cm.scale.set(1.08, 0.82, 0.98);
+  treeCanopyG.add(cm);
+});
+treeG.add(treeCanopyG);
+
+// 显眼的褐色多层编织碗状大鸟巢（稳稳坐落在伸出的横枝末端，完全迎光清晰可见！）
+var nestG = new THREE.Group();
+nestG.position.copy(NEST_POS);
+live.add(nestG);
+var nestBase = mesh(new THREE.CylinderGeometry(0.52, 0.34, 0.28, 20), stdMat('#7a4e26', { roughness: 0.92 }));
+nestG.add(nestBase);
+var nestInner = mesh(new THREE.CylinderGeometry(0.40, 0.26, 0.16, 16), stdMat('#4a2d13', { roughness: 0.95 }));
+nestInner.position.y = 0.09; nestG.add(nestInner);
+// 编织交错的 16 根深浅棕色细树枝环绕碗边！
+for (var nw = 0; nw < 16; nw++) {
+  var na = nw * Math.PI * 2 / 16;
+  var twig = mesh(new THREE.CylinderGeometry(0.032, 0.038, 0.48, 6), stdMat(nw % 2 ? '#9a6838' : '#5e3819', { roughness: 0.92 }));
+  twig.position.set(Math.cos(na) * 0.44, 0.04 + (nw % 3) * 0.045, Math.sin(na) * 0.44);
+  twig.rotation.z = Math.PI / 2 + (nw % 2 ? 0.22 : -0.22);
+  twig.rotation.y = -na + 0.15;
+  nestG.add(twig);
+}
+var nestTargetRing = new THREE.Mesh(
+  new THREE.RingGeometry(0.58, 0.72, 28),
+  new THREE.MeshBasicMaterial({ color: '#fbbf24', transparent: true, opacity: 0, side: THREE.DoubleSide })
+);
+nestTargetRing.rotation.x = -Math.PI / 2; nestTargetRing.position.y = 0.16;
+nestG.add(nestTargetRing);
+var nestHitMesh = new THREE.Mesh(new THREE.SphereGeometry(1.12, 14, 12), HIT_MAT);
+nestHitMesh.position.y = 0.15;
+nestHitMesh.userData.hit = 'nest';
+nestG.add(nestHitMesh);
+
+// 夏季干热岩石区（水牛拖错区 U10 失败分支）
+var dryRockPos = new THREE.Vector3(-1.95, 0.22, 1.18);
+var dryRock = mesh(new THREE.DodecahedronGeometry(0.52, 0), stdMat('#a68b6c', { roughness: 0.92 }), true, true);
+dryRock.scale.set(1.38, 0.56, 1.12);
+dryRock.position.copy(dryRockPos);
+live.add(dryRock);
+
+/* 2. 场景前方 4 块可直点切换的 3D 季节石碑（春/夏/秋/冬，底栏 0 文字按钮 U7！） */
+var SEASON_META = [
+  { key: 'spring', label: '春', icon: '🌸', name: '春季', badge: '🌸 春季 · 20℃ · 繁育新生', cls: '', sky: '#8ecae6', ground: '#6aa36a', hill: '#528758', slope: '#5e965d', canopy: '#3c944c', pond: '#2994d6', col: '#22a055' },
+  { key: 'summer', label: '夏', icon: '☀️', name: '夏季', badge: '☀️ 夏季 · 38℃ 酷暑 · 避暑鸣叫', cls: 'summer', sky: '#63b4e4', ground: '#4d8c4a', hill: '#3a723a', slope: '#468244', canopy: '#1f6e33', pond: '#1788cc', col: '#dc2626' },
+  { key: 'autumn', label: '秋', icon: '🍁', name: '秋季', badge: '🍁 秋季 · 14℃ · 储粮与南迁', cls: 'autumn', sky: '#d9b485', ground: '#a3844b', hill: '#876b3b', slope: '#967640', canopy: '#cc681e', pond: '#4a8ec2', col: '#d97706' },
+  { key: 'winter', label: '冬', icon: '❄️', name: '冬季', badge: '❄️ 冬季 · -8℃ 飘雪 · 换毛冬眠抱团', cls: 'winter', sky: '#7fa3c4', ground: '#adc6dc', hill: '#8aa9c4', slope: '#99b7d0', canopy: '#d8e7f4', pond: '#457fa8', col: '#0284c7' }
+];
+
+var steleXs = [-2.48, -0.83, 0.83, 2.48];
+var steleHitMeshes = [];
+var steleRings = [];
+var steleChecks = [];
+var steleWorldPos = [];
+
+SEASON_META.forEach(function (sm, idx) {
+  var sg = new THREE.Group();
+  sg.position.set(steleXs[idx], 0.08, 3.04);
+  live.add(sg);
+  steleWorldPos.push(new THREE.Vector3(steleXs[idx], 0.96, 3.04));
+
+  var plinth = mesh(new THREE.BoxGeometry(1.18, 0.16, 0.64), stdMat('#8a7f70', { roughness: 0.86 }), true, true);
+  plinth.position.y = 0.08; sg.add(plinth);
+
+  var stTex = ctex(220, 140, function (c, w, h) {
+    c.fillStyle = '#fffdf8'; c.fillRect(0, 0, w, h);
+    c.strokeStyle = sm.col; c.lineWidth = 12; c.strokeRect(8, 8, w - 16, h - 16);
+    c.fillStyle = '#251e16'; c.font = 'bold 56px "Microsoft YaHei",sans-serif';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(sm.icon + ' ' + sm.label, w / 2, h / 2 + 2);
+  });
+  var stoneMat = stdMat('#cfc4b4', { roughness: 0.82 });
+  var faceMat = new THREE.MeshBasicMaterial({ map: stTex });
+  var slab = mesh(new THREE.BoxGeometry(1.06, 0.68, 0.22), [stoneMat, stoneMat, stoneMat, stoneMat, faceMat, stoneMat]);
+  slab.position.set(0, 0.48, 0);
+  slab.rotation.x = -0.32;
+  sg.add(slab);
+
+  var ring = new THREE.Mesh(
+    new THREE.RingGeometry(0.56, 0.68, 26),
+    new THREE.MeshBasicMaterial({ color: sm.col, transparent: true, opacity: 0.48, side: THREE.DoubleSide })
+  );
+  ring.rotation.x = -Math.PI / 2; ring.position.y = 0.03;
+  sg.add(ring);
+  steleRings.push(ring);
+
+  var chkTex = ctex(64, 64, function (c) {
+    c.fillStyle = '#16a34a'; c.beginPath(); c.arc(32, 32, 28, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = '#ffffff'; c.lineWidth = 6; c.lineCap = 'round'; c.lineJoin = 'round';
+    c.beginPath(); c.moveTo(18, 33); c.lineTo(28, 43); c.lineTo(46, 22); c.stroke();
+  });
+  var chk = new THREE.Mesh(new THREE.CircleGeometry(0.18, 16), new THREE.MeshBasicMaterial({ map: chkTex, side: THREE.DoubleSide }));
+  chk.position.set(0.48, 0.78, 0.16);
+  chk.visible = false;
+  sg.add(chk);
+  steleChecks.push(chk);
+
+  var shit = new THREE.Mesh(new THREE.BoxGeometry(1.22, 0.88, 0.56), HIT_MAT);
+  shit.position.y = 0.48;
+  shit.userData.hit = 'stele';
+  shit.userData.seasonIdx = idx;
+  sg.add(shit);
+  steleHitMeshes.push(shit);
+});
+
+/* ===== 四个季节 9 种精雕高辨识度 3D 动物群组（一眼就能叫出名字！） ===== */
+var seasonGroups = [new THREE.Group(), new THREE.Group(), new THREE.Group(), new THREE.Group()];
+seasonGroups.forEach(function (g, i) { g.visible = (i === 0); live.add(g); });
+
+/* =====================================================================
+   🌸 春季组：
+   1. 池鹭妈妈（长尖黄嘴+细长红褐脖+白腹灰蓝背+细长水鸟腿，站在显眼编织大鸟巢旁）
+      + 地面软草垫上 3 颗淡青带斑点椭圆鸟蛋 -> 拖进鸟巢孵出张嘴小雏鸟
+   2. 白头叶猴母子（坐在左前迎光木桩上！漆黑修长身+雪白头冠+长翘尾+怀抱金毛猴宝宝）
+   ===================================================================== */
+var springG = seasonGroups[0];
+
+// 1) 池鹭妈妈（面向左侧鸟巢，清晰水鸟剪影！）
+var EGRET_INIT = new THREE.Vector3(-0.08, 2.34, -0.28);
+var egretG = new THREE.Group();
+egretG.position.copy(EGRET_INIT);
+springG.add(egretG);
+
+var egBackMat = stdMat('#3d5266', { roughness: 0.75 });
+var egWhiteMat = stdMat('#f6f8fa', { roughness: 0.78 });
+var egNeckMat = stdMat('#8c4223', { roughness: 0.78 });
+var egLegMat = stdMat('#c89c42', { roughness: 0.72 });
+// 细长水鸟双腿与脚爪
+[-0.07, 0.07].forEach(function (lz) {
+  var leg = mesh(new THREE.CylinderGeometry(0.022, 0.020, 0.36, 8), egLegMat);
+  leg.position.set(0.02, -0.04, lz); egretG.add(leg);
+  var foot = mesh(new THREE.CylinderGeometry(0.045, 0.055, 0.025, 6), egLegMat, false, false);
+  foot.position.set(-0.01, -0.21, lz); egretG.add(foot);
+});
+// 饱满白腹 + 蓝灰背羽 + 叠层双翅 + 尾羽
+var egBelly = mesh(new THREE.SphereGeometry(0.24, 16, 14), egWhiteMat);
+egBelly.scale.set(1.25, 0.88, 0.85); egBelly.position.set(0.02, 0.24, 0); egretG.add(egBelly);
+var egBack = mesh(new THREE.SphereGeometry(0.24, 16, 14), egBackMat);
+egBack.scale.set(1.30, 0.72, 0.90); egBack.position.set(0.05, 0.30, 0); egretG.add(egBack);
+[-1, 1].forEach(function (sd) {
+  var wing = mesh(new THREE.SphereGeometry(0.18, 12, 10), egBackMat);
+  wing.scale.set(1.48, 0.65, 0.32); wing.position.set(0.08, 0.28, sd * 0.19); wing.rotation.z = -0.15;
+  egretG.add(wing);
+});
+var egTail = mesh(new THREE.ConeGeometry(0.11, 0.32, 8), egBackMat);
+egTail.rotation.z = -1.35; egTail.position.set(0.38, 0.22, 0); egretG.add(egTail);
+// 修长微弯红褐长脖 + 圆头 + 羽冠 + 细长尖黄大嘴 + 明亮双眼
+var egNeck1 = mesh(new THREE.CylinderGeometry(0.062, 0.085, 0.32, 10), egNeckMat);
+egNeck1.position.set(-0.20, 0.44, 0); egNeck1.rotation.z = 0.42; egretG.add(egNeck1);
+var egNeck2 = mesh(new THREE.CylinderGeometry(0.056, 0.065, 0.26, 10), egNeckMat);
+egNeck2.position.set(-0.28, 0.66, 0); egNeck2.rotation.z = -0.12; egretG.add(egNeck2);
+var egHead = mesh(new THREE.SphereGeometry(0.13, 14, 12), egNeckMat);
+egHead.scale.set(1.18, 0.96, 0.95); egHead.position.set(-0.30, 0.79, 0); egretG.add(egHead);
+var egPlume = mesh(new THREE.ConeGeometry(0.04, 0.22, 6), egWhiteMat);
+egPlume.position.set(-0.18, 0.85, 0); egPlume.rotation.z = -1.1; egretG.add(egPlume);
+var egBeak = mesh(new THREE.ConeGeometry(0.045, 0.38, 8), stdMat('#eab308', { roughness: 0.45 }));
+egBeak.position.set(-0.56, 0.77, 0); egBeak.rotation.z = Math.PI / 2 + 0.06; egretG.add(egBeak);
+[-1, 1].forEach(function (sd) {
+  var eyeW = mesh(new THREE.SphereGeometry(0.036, 8, 8), stdMat('#fde047'), false, false);
+  eyeW.position.set(-0.36, 0.82, sd * 0.095); egretG.add(eyeW);
+  var eyeP = mesh(new THREE.SphereGeometry(0.020, 8, 8), stdMat('#111827'), false, false);
+  eyeP.position.set(-0.38, 0.82, sd * 0.115); egretG.add(eyeP);
+});
+
+// 地面柔软青草编织小草窝 + 3 颗淡青色带斑点椭圆形鸟蛋（绝非白面饼！）
+var EGG_HOME = new THREE.Vector3(-0.08, 0.28, 1.05);
+var grassPadG = new THREE.Group();
+grassPadG.position.set(EGG_HOME.x, 0.11, EGG_HOME.z);
+springG.add(grassPadG);
+var grassPad = mesh(new THREE.CylinderGeometry(0.50, 0.58, 0.10, 22), stdMat('#4d8f49', { roughness: 0.92 }), false, true);
+grassPadG.add(grassPad);
+for (var gb = 0; gb < 12; gb++) {
+  var ga = gb * Math.PI * 2 / 12;
+  var blade = mesh(new THREE.ConeGeometry(0.055, 0.22, 5), stdMat(gb % 2 ? '#5ca654' : '#3d7a3b'), false, false);
+  blade.position.set(Math.cos(ga) * 0.46, 0.08, Math.sin(ga) * 0.46);
+  blade.rotation.z = -Math.cos(ga) * 0.45; blade.rotation.x = Math.sin(ga) * 0.45;
+  grassPadG.add(blade);
+}
+var eggFloorRing = new THREE.Mesh(
+  new THREE.RingGeometry(0.56, 0.68, 28),
+  new THREE.MeshBasicMaterial({ color: '#f59e0b', transparent: true, opacity: 0.72, side: THREE.DoubleSide })
+);
+eggFloorRing.rotation.x = -Math.PI / 2; eggFloorRing.position.y = 0.06;
+grassPadG.add(eggFloorRing);
+
+var eggTex = ctex(128, 128, function (c, w, h) {
+  c.fillStyle = '#c2e6dc'; c.fillRect(0, 0, w, h);
+  c.fillStyle = '#538a7c';
+  for (var i = 0; i < 36; i++) {
+    c.beginPath(); c.arc((i * 41) % w, (i * 67) % h, 2.5 + (i % 4) * 1.4, 0, Math.PI * 2); c.fill();
+  }
+  c.fillStyle = '#386358';
+  for (var j = 0; j < 14; j++) {
+    c.beginPath(); c.arc((j * 59 + 18) % w, (j * 43 + 12) % h, 2 + (j % 3), 0, Math.PI * 2); c.fill();
+  }
+});
+var eggMat = stdMat('#d6f0e8', { map: eggTex, roughness: 0.48 });
+
+var eggsG = new THREE.Group();
+eggsG.position.copy(EGG_HOME);
+springG.add(eggsG);
+[[-0.17, 0.02, 0.06, 0.14], [0.16, 0.02, 0.08, -0.16], [0.0, 0.04, -0.14, 0.06]].forEach(function (ep) {
+  var eg = mesh(new THREE.SphereGeometry(0.155, 16, 14), eggMat);
+  eg.scale.set(0.82, 1.18, 0.82);
+  eg.position.set(ep[0], ep[1], ep[2]);
+  eg.rotation.z = ep[3];
+  eggsG.add(eg);
+});
+var eggHitMesh = new THREE.Mesh(new THREE.SphereGeometry(0.84, 14, 12), HIT_MAT);
+eggHitMesh.userData.hit = 'eggs';
+eggsG.add(eggHitMesh);
+var eggsGoal = EGG_HOME.clone();
+
+// 孵出的 2 只毛茸茸张嘴啾啾叫的黄嘴小雏鸟（初始隐藏）
+var chicksG = new THREE.Group();
+chicksG.position.set(NEST_POS.x, NEST_POS.y + 0.22, NEST_POS.z);
+chicksG.visible = false;
+springG.add(chicksG);
+[[-0.15, 0, 0.05], [0.15, 0, -0.02]].forEach(function (cp) {
+  var ck = new THREE.Group(); ck.position.set(cp[0], cp[1], cp[2]);
+  ck.add(mesh(new THREE.SphereGeometry(0.135, 12, 12), stdMat('#facc15', { roughness: 0.78 })));
+  var tuft = mesh(new THREE.ConeGeometry(0.04, 0.10, 5), stdMat('#fde047'));
+  tuft.position.y = 0.15; ck.add(tuft);
+  // 张开的上喙和下喙（露出红口啾啾叫！）
+  var bkTop = mesh(new THREE.ConeGeometry(0.055, 0.13, 6), stdMat('#ea580c'));
+  bkTop.position.set(0, 0.06, 0.13); bkTop.rotation.x = 0.9; ck.add(bkTop);
+  var bkBot = mesh(new THREE.ConeGeometry(0.048, 0.11, 6), stdMat('#f97316'));
+  bkBot.position.set(0, -0.01, 0.12); bkBot.rotation.x = 1.65; ck.add(bkBot);
+  var mouthIn = mesh(new THREE.SphereGeometry(0.042, 8, 8), stdMat('#dc2626'), false, false);
+  mouthIn.position.set(0, 0.02, 0.11); ck.add(mouthIn);
+  [-1, 1].forEach(function (sd) {
+    var e1 = mesh(new THREE.SphereGeometry(0.028, 8, 8), stdMat('#111827'), false, false);
+    e1.position.set(sd * 0.06, 0.06, 0.10); ck.add(e1);
+  });
+  chicksG.add(ck);
+});
+
+// 2) 白头叶猴母子（坐在左前迎光大木桩上，完全脱离阴影！严格还原课本 P41 照片！）
+var langurPerchG = new THREE.Group();
+langurPerchG.position.set(-2.95, 0.08, 0.55);
+springG.add(langurPerchG);
+var stumpM = mesh(new THREE.CylinderGeometry(0.46, 0.58, 1.02, 16), treeBarkMat);
+stumpM.position.y = 0.51; langurPerchG.add(stumpM);
+var stumpTop = mesh(new THREE.CylinderGeometry(0.44, 0.44, 0.04, 16), stdMat('#c49b6c', { roughness: 0.82 }), false, true);
+stumpTop.position.y = 1.03; langurPerchG.add(stumpTop);
+var langurRing = new THREE.Mesh(
+  new THREE.RingGeometry(0.62, 0.74, 28),
+  new THREE.MeshBasicMaterial({ color: '#22c55e', transparent: true, opacity: 0.55, side: THREE.DoubleSide })
+);
+langurRing.rotation.x = -Math.PI / 2; langurRing.position.y = 0.05;
+langurPerchG.add(langurRing);
+
+var langurG = new THREE.Group();
+langurG.position.set(-2.95, 1.48, 0.55);
+langurG.rotation.y = 0.36;
+springG.add(langurG);
+
+var blkFur = stdMat('#1d2128', { roughness: 0.84 });
+var whtFur = stdMat('#f6f8fa', { roughness: 0.78 });
+var faceSkin = stdMat('#3c434d', { roughness: 0.80 });
+// 妈妈躯干 + 盘坐双腿 + 环抱双臂 + 长长翘尾
+var lTorso = mesh(new THREE.SphereGeometry(0.32, 16, 14), blkFur);
+lTorso.scale.set(0.92, 1.24, 0.86); langurG.add(lTorso);
+[-1, 1].forEach(function (sd) {
+  var leg = mesh(new THREE.CylinderGeometry(0.085, 0.075, 0.44, 10), blkFur);
+  leg.position.set(sd * 0.24, -0.26, 0.16); leg.rotation.x = 1.12; leg.rotation.z = -sd * 0.32; langurG.add(leg);
+  var arm = mesh(new THREE.CylinderGeometry(0.068, 0.062, 0.46, 10), blkFur);
+  arm.position.set(sd * 0.26, 0.08, 0.16); arm.rotation.x = 0.85; arm.rotation.z = sd * 0.55; langurG.add(arm);
+});
+// 标志性高耸雪白蓬松头冠与白颊毛
+var lHead = mesh(new THREE.SphereGeometry(0.24, 16, 14), whtFur);
+lHead.position.set(0, 0.48, 0.04); langurG.add(lHead);
+var lCrest = mesh(new THREE.ConeGeometry(0.18, 0.32, 12), whtFur);
+lCrest.position.set(0, 0.72, 0.02); langurG.add(lCrest);
+[-1, 1].forEach(function (sd) {
+  var cheek = mesh(new THREE.SphereGeometry(0.13, 10, 10), whtFur);
+  cheek.position.set(sd * 0.16, 0.44, 0.06); langurG.add(cheek);
+});
+var lFace = mesh(new THREE.SphereGeometry(0.15, 12, 10), faceSkin);
+lFace.scale.set(0.95, 0.92, 0.72); lFace.position.set(0, 0.44, 0.20); langurG.add(lFace);
+[-1, 1].forEach(function (sd) {
+  var ey = mesh(new THREE.SphereGeometry(0.026, 8, 8), stdMat('#fde68a'), false, false);
+  ey.position.set(sd * 0.065, 0.47, 0.30); langurG.add(ey);
+  var ep = mesh(new THREE.SphereGeometry(0.014, 6, 6), stdMat('#111827'), false, false);
+  ep.position.set(sd * 0.065, 0.47, 0.32); langurG.add(ep);
+});
+// 长长弯曲上翘的漆黑丝滑猴尾巴（CatmullRomCurve3 样条管道）
+var lTailCurve = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-0.14, -0.22, -0.18),
+  new THREE.Vector3(-0.46, -0.28, -0.24),
+  new THREE.Vector3(-0.68, -0.02, -0.26),
+  new THREE.Vector3(-0.62, 0.34, -0.20)
+]);
+var lTailMesh = mesh(new THREE.TubeGeometry(lTailCurve, 18, 0.038, 8, false), blkFur);
+langurG.add(lTailMesh);
+
+// 怀里鲜明亮金黄色小猴宝宝（课本 P41 标志特征！）
+var babyMonkeyG = new THREE.Group();
+babyMonkeyG.position.set(0.02, 0.06, 0.30);
+var goldFur = stdMat('#f5b82e', { roughness: 0.74 });
+var goldLight = stdMat('#fcd34d', { roughness: 0.72 });
+var bmBody = mesh(new THREE.SphereGeometry(0.16, 14, 12), goldFur); bmBody.scale.set(0.95, 1.15, 0.88); babyMonkeyG.add(bmBody);
+var bmHead = mesh(new THREE.SphereGeometry(0.145, 14, 12), goldLight); bmHead.position.set(0, 0.22, 0.04); babyMonkeyG.add(bmHead);
+[-1, 1].forEach(function (sd) {
+  var bear = mesh(new THREE.SphereGeometry(0.055, 8, 8), goldFur);
+  bear.scale.set(0.55, 1.0, 0.85); bear.position.set(sd * 0.14, 0.24, 0.02); babyMonkeyG.add(bear);
+  var barm = mesh(new THREE.CylinderGeometry(0.035, 0.032, 0.20, 8), goldFur);
+  barm.position.set(sd * 0.13, 0.06, -0.04); barm.rotation.z = sd * 0.6; babyMonkeyG.add(barm);
+});
+var bmFace = mesh(new THREE.SphereGeometry(0.095, 10, 10), stdMat('#fde6c4'));
+bmFace.scale.set(1.0, 0.88, 0.65); bmFace.position.set(0, 0.20, 0.14); babyMonkeyG.add(bmFace);
+[-1, 1].forEach(function (sd) {
+  var be = mesh(new THREE.SphereGeometry(0.024, 8, 8), stdMat('#111827'), false, false);
+  be.position.set(sd * 0.042, 0.22, 0.19); babyMonkeyG.add(be);
+});
+langurG.add(babyMonkeyG);
+
+var langurHitMesh = new THREE.Mesh(new THREE.SphereGeometry(0.96, 14, 12), HIT_MAT);
+langurHitMesh.position.set(0, 0.22, 0.12);
+langurHitMesh.userData.hit = 'langur';
+langurG.add(langurHitMesh);
+
+/* =====================================================================
+   ☀️ 夏季组：
+   1. 酷暑 38℃ 精雕大黑水牛（宽厚炭黑牛身 + 弯月大牛角 + 湿润鼻孔 + 垂耳 + 4腿 + 摆尾）
+   2. 树干迎光处精雕大蝉（深褐身 + 红复眼 + 展开的透明翅脉蝉翼 + 声波环）
+   ===================================================================== */
+var summerG = seasonGroups[1];
+
+var hotSun = new THREE.Mesh(new THREE.SphereGeometry(0.52, 18, 14), new THREE.MeshBasicMaterial({ color: '#ffcf24' }));
+hotSun.position.set(1.85, 3.85, -2.5);
+summerG.add(hotSun);
+var hotHalo = new THREE.Mesh(new THREE.SphereGeometry(0.80, 16, 12), new THREE.MeshBasicMaterial({ color: '#f97316', transparent: true, opacity: 0.34 }));
+hotHalo.position.copy(hotSun.position);
+summerG.add(hotHalo);
+
+var BUFFALO_HOME = new THREE.Vector3(-0.18, 0.56, 0.90);
+var buffaloG = new THREE.Group();
+buffaloG.position.copy(BUFFALO_HOME);
+summerG.add(buffaloG);
+
+var bufMat = stdMat('#27292e', { roughness: 0.78 });
+var bufSnoutMat = stdMat('#454952', { roughness: 0.65 });
+var bufHornMat = stdMat('#cbd5e1', { roughness: 0.52 });
+// 宽厚牛躯 + 隆起肩峰 + 颈部
+var bufBody = mesh(new THREE.SphereGeometry(0.54, 18, 14), bufMat);
+bufBody.scale.set(1.42, 0.92, 0.88); buffaloG.add(bufBody);
+var bufHump = mesh(new THREE.SphereGeometry(0.32, 14, 12), bufMat);
+bufHump.position.set(0.30, 0.26, 0); bufHump.scale.set(1.05, 0.85, 0.85); buffaloG.add(bufHump);
+// 牛头 + 宽大湿润鼻口 + 两只鼻孔
+var bufHead = mesh(new THREE.SphereGeometry(0.30, 14, 12), bufMat);
+bufHead.position.set(0.76, 0.18, 0); bufHead.scale.set(1.18, 0.92, 0.88); buffaloG.add(bufHead);
+var bufSnout = mesh(new THREE.SphereGeometry(0.20, 12, 10), bufSnoutMat);
+bufSnout.position.set(1.05, 0.08, 0); bufSnout.scale.set(0.85, 0.82, 1.10); buffaloG.add(bufSnout);
+[-0.08, 0.08].forEach(function (nz) {
+  var nos = mesh(new THREE.SphereGeometry(0.036, 8, 8), stdMat('#111827'), false, false);
+  nos.position.set(1.20, 0.09, nz); buffaloG.add(nos);
+});
+// 标志性向后外上方优雅弯曲的一对弯月形大牛角 + 垂耳 + 双眼
+[-1, 1].forEach(function (side) {
+  var horn = mesh(new THREE.TorusGeometry(0.32, 0.058, 10, 18, Math.PI * 0.88), bufHornMat);
+  horn.position.set(0.62, 0.42, side * 0.22);
+  horn.rotation.set(side * 0.62, side * 0.28, 0.65);
+  buffaloG.add(horn);
+  var ear = mesh(new THREE.SphereGeometry(0.12, 10, 8), bufMat);
+  ear.scale.set(0.55, 0.42, 1.35); ear.position.set(0.68, 0.18, side * 0.30); ear.rotation.x = side * 0.35;
+  buffaloG.add(ear);
+  var eyeW = mesh(new THREE.SphereGeometry(0.052, 8, 8), stdMat('#ffffff'), false, false);
+  eyeW.position.set(0.86, 0.26, side * 0.22); buffaloG.add(eyeW);
+  var eyeP = mesh(new THREE.SphereGeometry(0.028, 8, 8), stdMat('#111827'), false, false);
+  eyeP.position.set(0.90, 0.26, side * 0.24); buffaloG.add(eyeP);
+});
+// 4 条稳健牛腿带蹄子 + 摆动牛尾巴
+[[-0.40, -0.38, 0.26], [-0.40, -0.38, -0.26], [0.38, -0.38, 0.26], [0.38, -0.38, -0.26]].forEach(function (lp) {
+  var leg = mesh(new THREE.CylinderGeometry(0.095, 0.075, 0.44, 10), bufMat);
+  leg.position.set(lp[0], lp[1], lp[2]); buffaloG.add(leg);
+  var hoof = mesh(new THREE.CylinderGeometry(0.085, 0.095, 0.08, 10), stdMat('#111827'));
+  hoof.position.set(lp[0], lp[1] - 0.20, lp[2]); buffaloG.add(hoof);
+});
+var bufTailG = new THREE.Group();
+bufTailG.position.set(-0.74, 0.05, 0);
+var tailStem = mesh(new THREE.CylinderGeometry(0.032, 0.026, 0.48, 8), bufMat);
+tailStem.position.set(-0.08, -0.20, 0); tailStem.rotation.z = -0.32; bufTailG.add(tailStem);
+var tailTuft = mesh(new THREE.ConeGeometry(0.07, 0.18, 7), stdMat('#111827'));
+tailTuft.position.set(-0.16, -0.44, 0); tailTuft.rotation.z = 2.8; bufTailG.add(tailTuft);
+buffaloG.add(bufTailG);
+
+// 酷暑蓝汗珠气团（泡水后隐藏）
+var sweatG = new THREE.Group();
+[[0.78, 0.62, 0.20, 0.075], [0.50, 0.68, 0.24, 0.062], [0.96, 0.52, -0.18, 0.055]].forEach(function (sw) {
+  var drop = mesh(new THREE.ConeGeometry(sw[3], sw[3] * 2.1, 8), stdMat('#38bdf8', { roughness: 0.2 }), false, false);
+  drop.position.set(sw[0], sw[1], sw[2]); sweatG.add(drop);
+});
+buffaloG.add(sweatG);
+// 清凉泡水气泡（泡水后显现）
+var coolBubblesG = new THREE.Group();
+coolBubblesG.visible = false;
+for (var cb = 0; cb < 7; cb++) {
+  var bb = mesh(new THREE.SphereGeometry(0.07 + (cb % 2) * 0.035, 10, 8),
+    new THREE.MeshBasicMaterial({ color: '#e0f2fe', transparent: true, opacity: 0.85 }), false, false);
+  bb.position.set(-0.55 + cb * 0.22, 0.45 + (cb % 3) * 0.18, (cb % 2 ? 0.30 : -0.24));
+  coolBubblesG.add(bb);
+}
+buffaloG.add(coolBubblesG);
+
+var buffaloHitMesh = new THREE.Mesh(new THREE.SphereGeometry(1.18, 14, 12), HIT_MAT);
+buffaloHitMesh.position.set(0.22, 0.12, 0);
+buffaloHitMesh.userData.hit = 'buffalo';
+buffaloG.add(buffaloHitMesh);
+var buffaloGoal = BUFFALO_HOME.clone();
+
+// 树干迎光面精雕 3D 鸣蝉（展开的透明翅脉蝉翼 + 大红复眼！）
+var cicadaWingTex = ctex(128, 256, function (c, w, h) {
+  c.clearRect(0, 0, w, h);
+  c.fillStyle = 'rgba(218, 240, 252, 0.62)';
+  c.beginPath(); c.ellipse(w / 2, h / 2, w * 0.42, h * 0.46, 0, 0, Math.PI * 2); c.fill();
+  c.strokeStyle = 'rgba(42, 32, 22, 0.78)'; c.lineWidth = 4; c.stroke();
+  c.lineWidth = 2.4;
+  c.beginPath(); c.moveTo(w / 2, 16); c.lineTo(w / 2, h - 18); c.stroke();
+  for (var i = 1; i <= 5; i++) {
+    var y = i * 38;
+    c.beginPath(); c.moveTo(w / 2, y); c.lineTo(w * 0.14, y + 26); c.stroke();
+    c.beginPath(); c.moveTo(w / 2, y); c.lineTo(w * 0.86, y + 26); c.stroke();
+  }
+});
+var cicadaG = new THREE.Group();
+cicadaG.position.set(-2.02, 1.92, -0.56);
+cicadaG.rotation.y = 0.62;
+cicadaG.scale.setScalar(1.32);
+summerG.add(cicadaG);
+var ciAbd = mesh(new THREE.SphereGeometry(0.13, 12, 10), stdMat('#3d2516', { roughness: 0.65 }));
+ciAbd.scale.set(0.88, 1.65, 0.78); ciAbd.position.y = -0.06; cicadaG.add(ciAbd);
+var ciThorax = mesh(new THREE.SphereGeometry(0.14, 12, 10), stdMat('#2b180e', { roughness: 0.6 }));
+ciThorax.scale.set(1.05, 0.92, 0.88); ciThorax.position.y = 0.14; cicadaG.add(ciThorax);
+// 一对大红色突出复眼
+[-1, 1].forEach(function (sd) {
+  var cEye = mesh(new THREE.SphereGeometry(0.052, 10, 8), stdMat('#dc2626', { roughness: 0.3 }), false, false);
+  cEye.position.set(sd * 0.12, 0.22, 0.06); cicadaG.add(cEye);
+});
+var ciWingMat = new THREE.MeshBasicMaterial({ map: cicadaWingTex, transparent: true, side: THREE.DoubleSide, depthWrite: false });
+var ciWingL = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.56), ciWingMat);
+ciWingL.position.set(-0.18, -0.04, 0.08); ciWingL.rotation.set(0.12, -0.38, -0.35); cicadaG.add(ciWingL);
+var ciWingR = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.56), ciWingMat);
+ciWingR.position.set(0.18, -0.04, 0.08); ciWingR.rotation.set(0.12, 0.38, 0.35); cicadaG.add(ciWingR);
+var ciWave = new THREE.Mesh(new THREE.RingGeometry(0.28, 0.36, 24), new THREE.MeshBasicMaterial({ color: '#facc15', transparent: true, opacity: 0, side: THREE.DoubleSide }));
+ciWave.position.z = 0.16; cicadaG.add(ciWave);
+var cicadaHitMesh = new THREE.Mesh(new THREE.SphereGeometry(0.75, 12, 10), HIT_MAT);
+cicadaHitMesh.userData.hit = 'cicada';
+cicadaG.add(cicadaHitMesh);
+
+/* =====================================================================
+   🍁 秋季组：
+   1. 红棕超大蓬松卷尾小松鼠 + 3 颗多层纹理清晰棕褐松果 -> 拖进大树洞
+   2. 5 只带长脖+折角展翅双翼的清晰飞雁 -> 排成「人」字形南迁
+   ===================================================================== */
+var autumnG = seasonGroups[2];
+
+var squirrelG = new THREE.Group();
+squirrelG.position.set(-1.32, 0.42, 0.62);
+squirrelG.rotation.y = 0.42;
+autumnG.add(squirrelG);
+var sqMat = stdMat('#b84d18', { roughness: 0.80 });
+var sqBellyMat = stdMat('#f6e4cc', { roughness: 0.82 });
+var sqTailMat = stdMat('#cf5e1e', { roughness: 0.86 });
+var sqBody = mesh(new THREE.SphereGeometry(0.24, 14, 12), sqMat); sqBody.scale.set(0.92, 1.22, 0.90); squirrelG.add(sqBody);
+var sqBelly = mesh(new THREE.SphereGeometry(0.17, 12, 10), sqBellyMat); sqBelly.position.set(0.10, -0.02, 0.04); sqBelly.scale.set(0.7, 1.05, 0.82); squirrelG.add(sqBelly);
+var sqHead = mesh(new THREE.SphereGeometry(0.175, 14, 12), sqMat); sqHead.position.set(0.14, 0.28, 0); squirrelG.add(sqHead);
+var sqSnout = mesh(new THREE.SphereGeometry(0.08, 10, 8), sqBellyMat); sqSnout.position.set(0.29, 0.25, 0); squirrelG.add(sqSnout);
+var sqNose = mesh(new THREE.SphereGeometry(0.03, 8, 8), stdMat('#111827'), false, false); sqNose.position.set(0.36, 0.26, 0); squirrelG.add(sqNose);
+[-1, 1].forEach(function (sd) {
+  var ear = mesh(new THREE.ConeGeometry(0.055, 0.14, 7), sqMat);
+  ear.position.set(0.08, 0.45, sd * 0.09); ear.rotation.z = 0.2; squirrelG.add(ear);
+  var eye = mesh(new THREE.SphereGeometry(0.032, 8, 8), stdMat('#111827'), false, false);
+  eye.position.set(0.24, 0.32, sd * 0.11); squirrelG.add(eye);
+  var paw = mesh(new THREE.SphereGeometry(0.055, 8, 8), sqMat);
+  paw.position.set(0.22, 0.05, sd * 0.10); squirrelG.add(paw);
+});
+// 标志性超大蓬松 S 形卷翘大尾巴（4 团叠出丰满毛绒大尾！）
+[[-0.24, 0.02, 0, 0.18], [-0.34, 0.24, 0, 0.22], [-0.30, 0.50, 0, 0.24], [-0.14, 0.68, 0, 0.19]].forEach(function (tb) {
+  var tm = mesh(new THREE.SphereGeometry(tb[3], 12, 10), sqTailMat);
+  tm.scale.set(0.95, 1.18, 0.90); tm.position.set(tb[0], tb[1], tb[2]);
+  squirrelG.add(tm);
+});
+
+// 3 颗纹理清晰的立体松果（多层鳞片锥形）
+var pinecones = [];
+var pineconeHitMeshes = [];
+[[-0.45, 0.28, 0.68], [0.35, 0.28, 0.92], [1.10, 0.28, 0.55]].forEach(function (pp, idx) {
+  var pg = new THREE.Group();
+  pg.position.set(pp[0], pp[1], pp[2]);
+  autumnG.add(pg);
+  var scaleMat1 = stdMat('#6e3b1b', { roughness: 0.88 });
+  var scaleMat2 = stdMat('#8f5128', { roughness: 0.85 });
+  // 3 层交错松鳞叠成真实立体松果！
+  [[-0.08, 0.17, 0.15, scaleMat1], [0.04, 0.15, 0.15, scaleMat2], [0.15, 0.11, 0.14, scaleMat1]].forEach(function (ly) {
+    var cone = mesh(new THREE.ConeGeometry(ly[1], ly[2], 7), ly[3]);
+    cone.position.y = ly[0]; pg.add(cone);
+  });
+  var stem = mesh(new THREE.CylinderGeometry(0.02, 0.025, 0.10, 6), stdMat('#4a2810'));
+  stem.position.y = 0.25; pg.add(stem);
+
+  var ring = new THREE.Mesh(new THREE.RingGeometry(0.26, 0.35, 20), new THREE.MeshBasicMaterial({ color: '#f59e0b', transparent: true, opacity: 0.65, side: THREE.DoubleSide }));
+  ring.rotation.x = -Math.PI / 2; ring.position.y = -0.17; pg.add(ring);
+
+  var phit = new THREE.Mesh(new THREE.SphereGeometry(0.68, 12, 10), HIT_MAT);
+  phit.userData.hit = 'pinecone';
+  phit.userData.coneIdx = idx;
+  pg.add(phit);
+  pineconeHitMeshes.push(phit);
+
+  pinecones.push({
+    idx: idx, group: pg, ring: ring,
+    homePos: new THREE.Vector3(pp[0], pp[1], pp[2]),
+    goalPos: new THREE.Vector3(pp[0], pp[1], pp[2]),
+    stored: false
+  });
+});
+
+// 温暖南方太阳 + 5 只清晰长脖展翅飞雁
+var SOUTH_POS = new THREE.Vector3(2.55, 3.35, -1.45);
+var southSun = new THREE.Mesh(new THREE.SphereGeometry(0.42, 18, 14), new THREE.MeshBasicMaterial({ color: '#fbbf24' }));
+southSun.position.copy(SOUTH_POS);
+autumnG.add(southSun);
+var southRing = new THREE.Mesh(new THREE.RingGeometry(0.52, 0.68, 26), new THREE.MeshBasicMaterial({ color: '#ea580c', transparent: true, opacity: 0.68, side: THREE.DoubleSide }));
+southRing.position.copy(SOUTH_POS);
+autumnG.add(southRing);
+var southHitMesh = new THREE.Mesh(new THREE.SphereGeometry(1.35, 12, 10), HIT_MAT);
+southHitMesh.position.copy(SOUTH_POS);
+southHitMesh.userData.hit = 'south';
+autumnG.add(southHitMesh);
+
+var GEESE_HOME = new THREE.Vector3(-0.32, 3.22, -0.95);
+var geeseG = new THREE.Group();
+geeseG.position.copy(GEESE_HOME);
+autumnG.add(geeseG);
+var gooseUnits = [];
+var gooseScatter = [[0, 0, 0], [-0.90, 0.28, 0.22], [-0.48, -0.36, -0.22], [0.58, 0.32, 0.16], [0.26, -0.30, 0.38]];
+var gooseVForm = [[0.55, 0.0, 0.0], [0.05, 0.28, -0.32], [0.05, -0.28, 0.32], [-0.46, 0.54, -0.62], [-0.46, -0.54, 0.62]];
+var gBodyMat = stdMat('#5c6670', { roughness: 0.78 });
+var gNeckMat = stdMat('#1e242b', { roughness: 0.80 });
+var gWingMat = stdMat('#8b95a1', { roughness: 0.78 });
+for (var gi = 0; gi < 5; gi++) {
+  var ug = new THREE.Group();
+  ug.position.set(gooseScatter[gi][0], gooseScatter[gi][1], gooseScatter[gi][2]);
+  var gb = mesh(new THREE.SphereGeometry(0.12, 12, 10), gBodyMat); gb.scale.set(1.68, 0.72, 0.82); ug.add(gb);
+  var gTail = mesh(new THREE.ConeGeometry(0.08, 0.16, 6), stdMat('#f1f5f9')); gTail.rotation.z = 1.5; gTail.position.set(-0.22, 0.02, 0); ug.add(gTail);
+  var gn = mesh(new THREE.CylinderGeometry(0.032, 0.042, 0.24, 8), gNeckMat); gn.position.set(0.24, 0.05, 0); gn.rotation.z = -1.32; ug.add(gn);
+  var gh = mesh(new THREE.SphereGeometry(0.055, 10, 8), gNeckMat); gh.position.set(0.36, 0.08, 0); ug.add(gh);
+  var gBeak = mesh(new THREE.ConeGeometry(0.024, 0.09, 5), stdMat('#ea580c')); gBeak.rotation.z = -Math.PI / 2; gBeak.position.set(0.43, 0.07, 0); ug.add(gBeak);
+  // 真实折角展翅双翼（内翼+外翼尖，绝非矩形木条！）
+  var gwL = new THREE.Group(); gwL.position.set(0.02, 0.03, -0.08);
+  var inL = mesh(new THREE.ConeGeometry(0.11, 0.30, 4), gWingMat); inL.scale.set(1.2, 1.0, 0.24); inL.rotation.x = -Math.PI / 2; inL.position.set(0.0, 0, -0.14); gwL.add(inL);
+  var outL = mesh(new THREE.ConeGeometry(0.09, 0.28, 4), gNeckMat); outL.scale.set(1.1, 1.0, 0.22); outL.rotation.x = -Math.PI / 2; outL.rotation.y = 0.28; outL.position.set(-0.08, 0.02, -0.34); gwL.add(outL);
+  ug.add(gwL);
+  var gwR = new THREE.Group(); gwR.position.set(0.02, 0.03, 0.08);
+  var inR = mesh(new THREE.ConeGeometry(0.11, 0.30, 4), gWingMat); inR.scale.set(1.2, 1.0, 0.24); inR.rotation.x = Math.PI / 2; inR.position.set(0.0, 0, 0.14); gwR.add(inR);
+  var outR = mesh(new THREE.ConeGeometry(0.09, 0.28, 4), gNeckMat); outR.scale.set(1.1, 1.0, 0.22); outR.rotation.x = Math.PI / 2; outR.rotation.y = -0.28; outR.position.set(-0.08, 0.02, 0.34); gwR.add(outR);
+  ug.add(gwR);
+
+  ug.userData = { wL: gwL, wR: gwR, ph: gi * 0.9 };
+  geeseG.add(ug);
+  gooseUnits.push(ug);
+}
+var geeseHitMesh = new THREE.Mesh(new THREE.SphereGeometry(1.28, 12, 10), HIT_MAT);
+geeseHitMesh.userData.hit = 'geese';
+geeseG.add(geeseHitMesh);
+var geeseGoal = GEESE_HOME.clone();
+
+/* =====================================================================
+   ❄️ 冬季组（冷灰蓝阴影雪坡 + 深蓝冰湖，绝不惨白过曝！）：
+   1. 长耳北极兔（超长双耳+淡粉耳内+黑耳尖+短绒尾）+ 精雕 3D 展翅勾嘴雄鹰
+   2. 精雕小刺猬（满背32根放射硬刺+紧贴小黑鼻，绝不漂浮！）
+   3. 3 只精雕小猕猴（桃心猴脸+招风圆耳+双臂双腿+长翘尾，绝非橙鸡蛋！）
+   ===================================================================== */
+var winterG = seasonGroups[3];
+
+// 1) 北极兔（初始深棕褐夏秋毛 -> 换毛后变雪白长耳兔，配冷蓝底影轮廓清晰可辨！）
+var HARE_POS = new THREE.Vector3(0.36, 0.40, 0.96);
+var hareG = new THREE.Group();
+hareG.position.copy(HARE_POS);
+hareG.rotation.y = -0.35;
+winterG.add(hareG);
+
+var hareFurMat = stdMat('#7a5538', { roughness: 0.84 });
+var hareEarInMat = stdMat('#e8b4b8', { roughness: 0.80 });
+var hareTipMat = stdMat('#1f2937', { roughness: 0.85 });
+// 饱满兔身 + 粗壮弯曲后腿 + 前小爪 + 圆滚短绒尾
+var hareBody = mesh(new THREE.SphereGeometry(0.31, 16, 14), hareFurMat);
+hareBody.scale.set(1.26, 0.92, 0.92); hareG.add(hareBody);
+[-1, 1].forEach(function (sd) {
+  var hind = mesh(new THREE.SphereGeometry(0.18, 12, 10), hareFurMat);
+  hind.scale.set(1.25, 0.95, 0.72); hind.position.set(-0.20, -0.10, sd * 0.22); hareG.add(hind);
+  var hfoot = mesh(new THREE.SphereGeometry(0.09, 10, 8), hareFurMat);
+  hfoot.scale.set(2.0, 0.52, 0.85); hfoot.position.set(-0.08, -0.24, sd * 0.22); hareG.add(hfoot);
+  var fleg = mesh(new THREE.CylinderGeometry(0.052, 0.048, 0.28, 8), hareFurMat);
+  fleg.position.set(0.24, -0.14, sd * 0.14); hareG.add(fleg);
+});
+var hareTail = mesh(new THREE.SphereGeometry(0.135, 12, 10), stdMat('#f8fafc'));
+hareTail.position.set(-0.42, 0.04, 0); hareG.add(hareTail);
+// 圆兔头 + 粉小鼻 + 大黑眼 + 一对标志性超长竖起大兔耳！
+var hareHead = mesh(new THREE.SphereGeometry(0.22, 16, 14), hareFurMat);
+hareHead.scale.set(1.08, 0.96, 0.94); hareHead.position.set(0.30, 0.24, 0); hareG.add(hareHead);
+var hareNose = mesh(new THREE.SphereGeometry(0.036, 8, 8), stdMat('#f472b6'), false, false);
+hareNose.position.set(0.52, 0.22, 0); hareG.add(hareNose);
+[-1, 1].forEach(function (sd) {
+  var ey = mesh(new THREE.SphereGeometry(0.038, 10, 8), stdMat('#111827'), false, false);
+  ey.position.set(0.42, 0.28, sd * 0.14); hareG.add(ey);
+  var hl = mesh(new THREE.SphereGeometry(0.014, 6, 6), stdMat('#ffffff'), false, false);
+  hl.position.set(0.45, 0.30, sd * 0.155); hareG.add(hl);
+  // 超长兔耳（外毛 + 淡粉耳窝 + 标志性北极兔黑耳尖！）
+  var earG = new THREE.Group();
+  earG.position.set(0.24, 0.42, sd * 0.09);
+  earG.rotation.z = 0.22; earG.rotation.x = sd * 0.16;
+  var eOut = mesh(new THREE.SphereGeometry(0.085, 12, 12), hareFurMat);
+  eOut.scale.set(0.58, 3.15, 0.90); eOut.position.y = 0.24; earG.add(eOut);
+  var eIn = mesh(new THREE.SphereGeometry(0.055, 10, 10), hareEarInMat, false, false);
+  eIn.scale.set(0.38, 2.55, 0.64); eIn.position.set(0.03, 0.22, 0); earG.add(eIn);
+  var eTip = mesh(new THREE.SphereGeometry(0.048, 8, 8), hareTipMat, false, false);
+  eTip.scale.set(0.62, 1.15, 0.78); eTip.position.y = 0.48; earG.add(eTip);
+  hareG.add(earG);
+});
+// 淡冷蓝地面轮廓投影环（换白毛后保留清晰轮廓，绝不白底消失！）
+var hareShadowRing = new THREE.Mesh(
+  new THREE.RingGeometry(0.34, 0.46, 28),
+  new THREE.MeshBasicMaterial({ color: '#6b94b8', transparent: true, opacity: 0.42, side: THREE.DoubleSide })
+);
+hareShadowRing.rotation.x = -Math.PI / 2; hareShadowRing.position.y = -0.26;
+hareG.add(hareShadowRing);
+
+var hareAlertRing = new THREE.Mesh(
+  new THREE.RingGeometry(0.50, 0.64, 28),
+  new THREE.MeshBasicMaterial({ color: '#dc2626', transparent: true, opacity: 0.88, side: THREE.DoubleSide })
+);
+hareAlertRing.rotation.x = -Math.PI / 2; hareAlertRing.position.y = -0.24;
+hareG.add(hareAlertRing);
+var hareTargetRing = new THREE.Mesh(
+  new THREE.RingGeometry(0.66, 0.80, 28),
+  new THREE.MeshBasicMaterial({ color: '#0284c7', transparent: true, opacity: 0, side: THREE.DoubleSide })
+);
+hareTargetRing.rotation.x = -Math.PI / 2; hareTargetRing.position.y = -0.23;
+hareG.add(hareTargetRing);
+
+var hareHitMesh = new THREE.Mesh(new THREE.SphereGeometry(0.95, 14, 12), HIT_MAT);
+hareHitMesh.position.set(0.10, 0.22, 0);
+hareHitMesh.userData.hit = 'hare';
+hareG.add(hareHitMesh);
+
+// 雪花换毛徽章（大而清晰，可拖到北极兔身上或轻点！）
+var MOLT_HOME = new THREE.Vector3(1.70, 0.74, 1.38);
+var moltBadgeG = new THREE.Group();
+moltBadgeG.position.copy(MOLT_HOME);
+winterG.add(moltBadgeG);
+var moltTex = ctex(160, 160, function (c) {
+  c.fillStyle = '#0369a1'; c.beginPath(); c.arc(80, 80, 74, 0, Math.PI * 2); c.fill();
+  c.strokeStyle = '#ffffff'; c.lineWidth = 8; c.stroke();
+  c.fillStyle = '#ffffff'; c.font = 'bold 50px sans-serif';
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText('❄️', 80, 62);
+  c.font = 'bold 28px "Microsoft YaHei",sans-serif';
+  c.fillText('换白毛', 80, 118);
+});
+var moltBack = mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.08, 24), stdMat('#0369a1'));
+moltBack.rotation.x = Math.PI / 2 - 0.35;
+moltBadgeG.add(moltBack);
+var moltFace = new THREE.Mesh(new THREE.CircleGeometry(0.41, 24), new THREE.MeshBasicMaterial({ map: moltTex }));
+moltFace.position.set(0, 0.02, 0.045);
+moltFace.rotation.x = -0.35;
+moltBadgeG.add(moltFace);
+var moltHitMesh = new THREE.Mesh(new THREE.SphereGeometry(0.76, 12, 10), HIT_MAT);
+moltHitMesh.userData.hit = 'molt';
+moltBadgeG.add(moltHitMesh);
+var moltGoal = MOLT_HOME.clone();
+
+// 精雕盘旋 3D 雄鹰（威严勾嘴 + 层次展翅飞羽 + 白色扇尾，彻底干掉木板条！）
+var eagleG = new THREE.Group();
+eagleG.position.set(0.45, 3.20, -0.35);
+winterG.add(eagleG);
+var egBrown = stdMat('#52321b', { roughness: 0.78 });
+var egDark = stdMat('#361f10', { roughness: 0.82 });
+var egWhite = stdMat('#f4f7fa', { roughness: 0.75 });
+var egGold = stdMat('#eab308', { roughness: 0.45 });
+var egBody = mesh(new THREE.SphereGeometry(0.24, 14, 12), egBrown);
+egBody.scale.set(1.55, 0.76, 0.85); eagleG.add(egBody);
+var egTail = mesh(new THREE.ConeGeometry(0.18, 0.38, 6), egWhite);
+egTail.scale.set(1.0, 1.0, 0.25); egTail.rotation.z = 1.55; egTail.position.set(-0.46, 0.02, 0); eagleG.add(egTail);
+var egHead = mesh(new THREE.SphereGeometry(0.155, 14, 12), egWhite);
+egHead.scale.set(1.12, 0.95, 0.92); egHead.position.set(0.36, 0.07, 0); eagleG.add(egHead);
+// 标志性金黄弯勾鹰嘴
+var egBeak1 = mesh(new THREE.ConeGeometry(0.055, 0.16, 7), egGold);
+egBeak1.position.set(0.52, 0.06, 0); egBeak1.rotation.z = -1.55; eagleG.add(egBeak1);
+var egBeakHook = mesh(new THREE.ConeGeometry(0.032, 0.10, 6), egGold);
+egBeakHook.position.set(0.58, 0.01, 0); egBeakHook.rotation.z = -2.45; eagleG.add(egBeakHook);
+[-1, 1].forEach(function (sd) {
+  var ee = mesh(new THREE.SphereGeometry(0.026, 8, 8), stdMat('#111827'), false, false);
+  ee.position.set(0.42, 0.11, sd * 0.11); eagleG.add(ee);
+  var talon = mesh(new THREE.ConeGeometry(0.035, 0.14, 5), egGold);
+  talon.position.set(-0.08, -0.18, sd * 0.08); talon.rotation.z = 0.6; eagleG.add(talon);
+});
+// 宽大带飞羽指尖的雄鹰双翼
+function buildEagleWing(side) {
+  var wg = new THREE.Group();
+  wg.position.set(0.04, 0.05, side * 0.14);
+  var inner = mesh(new THREE.BoxGeometry(0.38, 0.055, 0.56), egBrown);
+  inner.position.set(0.0, 0.02, side * 0.26); wg.add(inner);
+  var outer = mesh(new THREE.BoxGeometry(0.32, 0.042, 0.50), egDark);
+  outer.position.set(-0.06, 0.06, side * 0.72); outer.rotation.x = -side * 0.14; outer.rotation.y = side * 0.20; wg.add(outer);
+  // 4 根清晰翼尖飞羽
+  for (var f = 0; f < 4; f++) {
+    var feather = mesh(new THREE.ConeGeometry(0.032, 0.26, 5), egDark);
+    feather.rotation.x = side * Math.PI / 2;
+    feather.position.set(-0.18 + f * 0.075, 0.08, side * (0.98 + f * 0.03));
+    wg.add(feather);
+  }
+  return wg;
+}
+var egWingL = buildEagleWing(-1);
+var egWingR = buildEagleWing(1);
+eagleG.add(egWingL); eagleG.add(egWingR);
+var eagleHitMesh = new THREE.Mesh(new THREE.SphereGeometry(0.95, 12, 10), HIT_MAT);
+eagleHitMesh.userData.hit = 'eagle';
+eagleG.add(eagleHitMesh);
+
+// 2) 精雕小刺猬（满背32根放射状硬刺 + 紧贴的尖俏吻脸与小黑鼻，鼻子绝不漂浮！）
+var HEDGE_HOME = new THREE.Vector3(-1.18, 0.34, 1.32);
+var hedgeG = new THREE.Group();
+hedgeG.position.copy(HEDGE_HOME);
+hedgeG.rotation.y = 0.38;
+winterG.add(hedgeG);
+var hgBodyMat = stdMat('#694b34', { roughness: 0.88 });
+var hgSpikeMat = stdMat('#3e2817', { roughness: 0.82 });
+var hgFaceMat = stdMat('#e6c7a8', { roughness: 0.82 });
+var hgBody = mesh(new THREE.SphereGeometry(0.28, 16, 14), hgBodyMat);
+hgBody.scale.set(1.18, 0.90, 0.94); hedgeG.add(hgBody);
+// 紧贴身体的吻脸与鼻尖
+var hgFace = mesh(new THREE.ConeGeometry(0.16, 0.26, 12), hgFaceMat);
+hgFace.position.set(0.32, -0.04, 0); hgFace.rotation.z = -Math.PI / 2; hedgeG.add(hgFace);
+var hgNose = mesh(new THREE.SphereGeometry(0.042, 10, 8), stdMat('#111827'), false, false);
+hgNose.position.set(0.44, -0.04, 0); hedgeG.add(hgNose);
+[-1, 1].forEach(function (sd) {
+  var hEar = mesh(new THREE.SphereGeometry(0.045, 8, 8), hgFaceMat);
+  hEar.position.set(0.20, 0.12, sd * 0.14); hedgeG.add(hEar);
+  var hEye = mesh(new THREE.SphereGeometry(0.028, 8, 8), stdMat('#111827'), false, false);
+  hEye.position.set(0.30, 0.04, sd * 0.10); hedgeG.add(hEye);
+  var f1 = mesh(new THREE.SphereGeometry(0.05, 8, 8), hgFaceMat);
+  f1.position.set(0.14, -0.22, sd * 0.14); hedgeG.add(f1);
+  var f2 = mesh(new THREE.SphereGeometry(0.05, 8, 8), hgFaceMat);
+  f2.position.set(-0.14, -0.22, sd * 0.14); hedgeG.add(f2);
+});
+// 32 根沿背部椭球放射状自然排列的硬刺！
+for (var row = 0; row < 4; row++) {
+  var cnt = 6 + row * 2;
+  var lat = 0.25 + row * 0.28;
+  for (var si2 = 0; si2 < cnt; si2++) {
+    var lon = ((si2 + 0.5) / cnt - 0.5) * Math.PI * 1.45;
+    var sx = -Math.cos(lat) * Math.cos(lon) * 0.28 + 0.02;
+    var sy = Math.sin(lat) * 0.23 + 0.02;
+    var sz = Math.cos(lat) * Math.sin(lon) * 0.24;
+    if (sx > 0.16) continue; // 脸部不长刺
+    var sp = mesh(new THREE.ConeGeometry(0.028, 0.18, 5), (si2 + row) % 2 ? hgSpikeMat : stdMat('#5c3d24'), false, false);
+    sp.position.set(sx, sy, sz);
+    sp.lookAt(sx * 2.4 - 0.35, sy * 2.2 + 0.2, sz * 2.2);
+    sp.rotateX(Math.PI / 2);
+    hedgeG.add(sp);
+  }
+}
+var hedgeHitMesh = new THREE.Mesh(new THREE.SphereGeometry(0.80, 12, 10), HIT_MAT);
+hedgeHitMesh.userData.hit = 'hedgehog';
+hedgeG.add(hedgeHitMesh);
+var hedgeGoal = HEDGE_HOME.clone();
+
+// 3) 山坡 3 只精雕小猕猴（桃心猴脸 + 招风圆耳 + 双臂双腿 + 长翘尾，绝不是橙鸡蛋！）
+var macaqueG = new THREE.Group();
+macaqueG.position.set(2.12, 0.80, -1.32);
+winterG.add(macaqueG);
+var macaques = [];
+var macApart = [[-0.78, 0, 0.24], [0.02, 0.04, -0.26], [0.76, 0, 0.22]];
+var macHuddle = [[-0.28, 0, 0.12], [0.0, 0.04, -0.14], [0.28, 0, 0.12]];
+var macFur = stdMat('#9c5f32', { roughness: 0.82 });
+var macLight = stdMat('#b57442', { roughness: 0.80 });
+var macFace = stdMat('#f0cbb0', { roughness: 0.78 });
+
+for (var mi = 0; mi < 3; mi++) {
+  var mg = new THREE.Group();
+  mg.position.set(macApart[mi][0], macApart[mi][1], macApart[mi][2]);
+  var mb = mesh(new THREE.SphereGeometry(0.21, 14, 12), macFur);
+  mb.scale.set(0.92, 1.15, 0.86); mg.add(mb);
+  var mBelly = mesh(new THREE.SphereGeometry(0.14, 10, 10), macFace);
+  mBelly.position.set(0, -0.02, 0.11); mBelly.scale.set(0.85, 1.0, 0.65); mg.add(mBelly);
+  // 圆头 + 桃心脸颊 + 左右大圆招风耳
+  var mh = mesh(new THREE.SphereGeometry(0.175, 14, 12), macLight);
+  mh.position.set(0, 0.30, 0.02); mg.add(mh);
+  var mf = mesh(new THREE.SphereGeometry(0.125, 12, 10), macFace);
+  mf.scale.set(1.05, 0.92, 0.72); mf.position.set(0, 0.28, 0.12); mg.add(mf);
+  var mSnout = mesh(new THREE.SphereGeometry(0.068, 10, 8), macFace);
+  mSnout.position.set(0, 0.23, 0.19); mg.add(mSnout);
+  [-1, 1].forEach(function (sd) {
+    var ear = mesh(new THREE.SphereGeometry(0.068, 10, 8), macFace);
+    ear.scale.set(0.55, 1.0, 0.85); ear.position.set(sd * 0.18, 0.31, 0.02); mg.add(ear);
+    var ey = mesh(new THREE.SphereGeometry(0.025, 8, 8), stdMat('#111827'), false, false);
+    ey.position.set(sd * 0.052, 0.31, 0.21); mg.add(ey);
+    // 清晰双腿与双臂
+    var leg = mesh(new THREE.CylinderGeometry(0.048, 0.042, 0.26, 8), macFur);
+    leg.position.set(sd * 0.12, -0.20, 0.10); leg.rotation.x = 1.0; mg.add(leg);
+    var arm = mesh(new THREE.CylinderGeometry(0.042, 0.038, 0.30, 8), macFur);
+    arm.position.set(sd * 0.20, 0.06, 0.08); arm.rotation.z = sd * 0.55; arm.rotation.x = 0.65; mg.add(arm);
+  });
+  // 身后长长卷翘的猴尾巴
+  var mTail = mesh(new THREE.TorusGeometry(0.18, 0.026, 8, 14, Math.PI * 1.15), macFur);
+  mTail.position.set(0, -0.02, -0.22); mTail.rotation.y = Math.PI / 2; mg.add(mTail);
+
+  macaqueG.add(mg);
+  macaques.push(mg);
+}
+var warmHalo = new THREE.Mesh(new THREE.SphereGeometry(0.76, 16, 12), new THREE.MeshBasicMaterial({ color: '#f97316', transparent: true, opacity: 0 }));
+warmHalo.position.set(0, 0.18, 0);
+macaqueG.add(warmHalo);
+var macaqueHitMesh = new THREE.Mesh(new THREE.SphereGeometry(1.26, 14, 12), HIT_MAT);
+macaqueHitMesh.userData.hit = 'macaques';
+macaqueG.add(macaqueHitMesh);
+
+// 冬季精致六角雪花飘落粒子（告别方块雪花！）
+var snowFlakeTex = ctex(64, 64, function (c) {
+  c.clearRect(0, 0, 64, 64);
+  c.save(); c.translate(32, 32); c.strokeStyle = '#ffffff'; c.lineWidth = 4; c.lineCap = 'round';
+  for (var k = 0; k < 6; k++) {
+    c.rotate(Math.PI / 3);
+    c.beginPath(); c.moveTo(0, 0); c.lineTo(0, -24); c.stroke();
+    c.beginPath(); c.moveTo(0, -14); c.lineTo(-6, -19); c.moveTo(0, -14); c.lineTo(6, -19); c.stroke();
+  }
+  c.restore();
+});
+var snowG = new THREE.Group();
+snowG.visible = false;
+live.add(snowG);
+var snowFlakes = [];
+var sfGeo = new THREE.PlaneGeometry(0.22, 0.22);
+var sfMat = new THREE.MeshBasicMaterial({ map: snowFlakeTex, transparent: true, opacity: 0.92, side: THREE.DoubleSide, depthWrite: false });
+for (var sf = 0; sf < 38; sf++) {
+  var fm = new THREE.Mesh(sfGeo, sfMat);
+  fm.position.set((Math.random() - 0.5) * 9.0, 0.4 + Math.random() * 4.8, -2.5 + Math.random() * 5.2);
+  fm.userData = { vy: 0.42 + Math.random() * 0.42, ph: Math.random() * 6.28, vr: (Math.random() - 0.5) * 2.0 };
+  snowG.add(fm); snowFlakes.push(fm);
+}
+
+/* ===== 任务状态与 9/9 通关引擎 ===== */
+var curSeason = 0;
+var tasks = {
+  spring_egret: false, spring_langur: false,
+  summer_buffalo: false, summer_cicada: false,
+  autumn_squirrel: false, autumn_geese: false,
+  winter_hare: false, winter_hedgehog: false, winter_macaques: false
+};
+var storedCones = 0;
+var cicadaBuzzT = 0;
+var hareWhiteAmt = 0;
+var wrongDropCount = 0;
+var stamps = { s1: false, s2: false, s3: false };
+var celebrated = false, demo = false, resetGen = 0;
+var curGuideSpeech = '';
+
+function countDone() {
+  var n = 0; for (var k in tasks) if (tasks[k]) n++; return n;
+}
+function seasonDoneCount(sIdx) {
+  if (sIdx === 0) return (tasks.spring_egret ? 1 : 0) + (tasks.spring_langur ? 1 : 0);
+  if (sIdx === 1) return (tasks.summer_buffalo ? 1 : 0) + (tasks.summer_cicada ? 1 : 0);
+  if (sIdx === 2) return (tasks.autumn_squirrel ? 1 : 0) + (tasks.autumn_geese ? 1 : 0);
+  return (tasks.winter_hare ? 1 : 0) + (tasks.winter_hedgehog ? 1 : 0) + (tasks.winter_macaques ? 1 : 0);
+}
+function seasonTotal(sIdx) { return sIdx === 3 ? 3 : 2; }
+
+function spawnFloat(text, xPct, yPct, cls) {
+  var el = document.createElement('div');
+  el.className = 'fword' + (cls ? ' ' + cls : '');
+  el.textContent = text;
+  el.style.left = xPct + '%';
+  el.style.top = yPct + '%';
+  $('#floatLayer').appendChild(el);
+  setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1950);
+}
+
+function updateCompareUI() {
+  for (var i = 0; i < 4; i++) {
+    var d = seasonDoneCount(i), t = seasonTotal(i);
+    var el = $('#cmpS' + i);
+    if (el) el.textContent = (d === t ? '✓ ' : '') + d + '/' + t;
+    steleChecks[i].visible = (d === t);
+  }
+}
+
+function completeTask(key, noteHtml, floatText, spoken) {
+  var isNew = !tasks[key];
+  if (isNew) {
+    tasks[key] = true;
+    var el = document.createElement('div');
+    el.className = 'stk';
+    el.innerHTML = noteHtml;
+    $('#ntList').prepend(el);
+    $('#ntCnt').textContent = countDone() + '/9';
+  }
+  updateCompareUI();
+
+  if (seasonDoneCount(0) === 2 && seasonDoneCount(1) === 2 && !stamps.s1) {
+    stamps.s1 = true; $('#st1').classList.add('lit');
+  }
+  if (seasonDoneCount(2) === 2 && seasonDoneCount(3) === 3 && !stamps.s2) {
+    stamps.s2 = true; $('#st2').classList.add('lit');
+  }
+  var allDone = countDone() === 9;
+  if (allDone && !stamps.s3) {
+    stamps.s3 = true; $('#st3').classList.add('lit');
+  }
+  updateGuide(false);
+
+  if (floatText) spawnFloat(floatText, 48, 34, 'ok');
+
+  if (!demo && !celebrated && allDone) {
+    celebrated = true;
+    saveProgress(LESSON_ID, true);
+    burstConfetti();
+    playChime([523, 659, 784, 1046]);
+    var g = resetGen;
+    setTimeout(function () {
+      if (g !== resetGen) return;
+      $('#winToast').classList.add('show');
+      speak('太棒啦！你帮助春夏秋冬所有小动物完成了繁育、避暑、储粮南迁和换毛冬眠抱团的生存任务！快看四季策略对比卡和科学小结论领小红花吧！', true);
+    }, 680);
+    return;
+  }
+  if (!demo && spoken) speak(spoken);
+}
+
+function switchSeason(idx, announce) {
+  curSeason = Math.max(0, Math.min(3, idx));
+  var sm = SEASON_META[curSeason];
+  seasonGroups.forEach(function (g, i) { g.visible = (i === curSeason); });
+  scene.background.set(sm.sky);
+  scene.fog.color.set(sm.sky);
+  groundMat.color.set(sm.ground);
+  hillMat.color.set(sm.hill);
+  slopeMat.color.set(sm.slope);
+  treeCanopyMat.color.set(sm.canopy);
+  treeCanopyG.visible = (curSeason !== 3); // 冬季露枯枝积雪，绝不变成大白球！
+  winterTwigsG.visible = (curSeason === 3);
+  winterDriftsG.visible = (curSeason === 3);
+  iceCracksG.visible = (curSeason === 3);
+  pondWaterMat.color.set(sm.pond);
+  hollowLeavesG.visible = (curSeason >= 2);
+  snowG.visible = (curSeason === 3);
+  dryRock.visible = (curSeason === 1);
+  sunL.intensity = curSeason === 3 ? 0.68 : 0.80;
+
+  $('#envBadge').textContent = sm.badge;
+  $('#envBadge').className = sm.cls;
+  updateGuide(false);
+
+  if (announce && !demo) {
+    playChime([523, 659]);
+    var intro = [
+      '来到温暖的春天啦！快把草地上的青斑鸟蛋拖进树枝鸟巢帮池鹭孵蛋，再点左前木桩上的白头叶猴母子！',
+      '来到三十八度酷暑的夏天啦！大黑水牛热得满头汗，快带它去清凉水塘降温，再听听树干上的蝉鸣！',
+      '来到凉爽的秋天啦！快帮大尾巴小松鼠把松果搬进树洞储粮，再引领大雁排成人字形飞向南方！',
+      '来到大雪纷飞的冬天啦！棕灰色的北极兔在雪坡上太显眼，快帮它换雪白冬毛躲雄鹰，再帮刺猬冬眠、小猕猴抱团取暖！'
+    ];
+    speak(intro[curSeason]);
+  }
+}
+
+function nextIncompleteSeason() {
+  for (var i = 0; i < 4; i++) if (seasonDoneCount(i) < seasonTotal(i)) return i;
+  return -1;
+}
+
+function updateGuide(speakIt) {
+  var ico = SEASON_META[curSeason].icon;
+  if (countDone() === 9) {
+    ico = '🏆';
+    curGuideSpeech = '太棒啦！四季动物任务全完成，随时点石碑自由切换继续和小动物互动！';
+  } else if (curSeason === 0 && seasonDoneCount(0) < 2) {
+    curGuideSpeech = !tasks.spring_egret
+      ? '春季任务1：把地上的青斑鸟蛋拖或点进树枝鸟巢，帮池鹭妈妈安心孵出小雏鸟！'
+      : '春季任务2：点击左前木桩上的白头叶猴妈妈和金毛小猴宝宝，观察春日育儿！';
+  } else if (curSeason === 1 && seasonDoneCount(1) < 2) {
+    curGuideSpeech = !tasks.summer_buffalo
+      ? '夏季任务1：38℃太热啦！把大黑水牛拖或点进右侧清凉水塘里泡水降温吧！'
+      : '夏季任务2：点击树干上的大蝉，听一听夏天树梢阵阵蝉鸣声！';
+  } else if (curSeason === 2 && seasonDoneCount(2) < 2) {
+    curGuideSpeech = !tasks.autumn_squirrel
+      ? '秋季任务1：把地上的松果一颗颗拖或点进大树洞，帮小松鼠储粮过冬！(' + storedCones + '/3)'
+      : '秋季任务2：拖或点天空的大雁群，引领它们排成「人」字形飞向南方暖阳！';
+  } else if (curSeason === 3 && seasonDoneCount(3) < 3) {
+    if (!tasks.winter_hare) curGuideSpeech = '冬季任务1：雄鹰发现棕褐长耳北极兔啦！快点或拖雪花徽章帮它换雪白冬毛伪装！';
+    else if (!tasks.winter_hedgehog) curGuideSpeech = '冬季任务2：把发抖的小刺猬拖或点进温暖的落叶树洞里冬眠吧！';
+    else curGuideSpeech = '冬季任务3：点击雪坡上发抖的3只小猕猴，让它们立刻紧紧抱团取暖！';
+  } else {
+    var ns = nextIncompleteSeason();
+    ico = SEASON_META[ns].icon;
+    curGuideSpeech = '这一季任务全完成啦！快点击前方「' + SEASON_META[ns].icon + ' ' + SEASON_META[ns].label + '」石碑切换季节！';
+  }
+  $('#guideIco').textContent = ico;
+  $('#guideTxt').textContent = curGuideSpeech;
+  $('#guideBar').classList.toggle('done', countDone() === 9);
+  if (speakIt) speak(curGuideSpeech, true);
+}
+
+/* ===== 单焦点 #targetCue（U10） ===== */
+var cueEl = $('#targetCue');
+var tmpV = new THREE.Vector3();
+function projectToScreen(wp) {
+  tmpV.copy(wp).project(camera);
+  return {
+    x: (tmpV.x * 0.5 + 0.5) * window.innerWidth,
+    y: (-tmpV.y * 0.5 + 0.5) * window.innerHeight
+  };
+}
+var forcePondCue = false;
+
+function updateTargetCue() {
+  if ($('#winToast').classList.contains('show') || $('#cmpModal').classList.contains('show') || demo) {
+    cueEl.classList.remove('show');
+    return;
+  }
+  var wp = null, txt = '';
+  if (countDone() < 9) {
+    if (curSeason === 0 && seasonDoneCount(0) < 2) {
+      if (!tasks.spring_egret) { wp = eggsG.position.clone().add(new THREE.Vector3(0, 0.62, 0)); txt = '🥚 拖/点青斑鸟蛋进树枝鸟巢'; }
+      else { wp = langurG.position.clone().add(new THREE.Vector3(0.15, 0.95, 0)); txt = '🐵 点白头叶猴与金毛宝宝'; }
+    } else if (curSeason === 1 && seasonDoneCount(1) < 2) {
+      if (!tasks.summer_buffalo) {
+        if (forcePondCue) { wp = POND_POS.clone().add(new THREE.Vector3(0, 0.72, 0)); txt = '💧 把大黑水牛拖进这片清凉水塘！'; }
+        else { wp = buffaloG.position.clone().add(new THREE.Vector3(0.2, 0.98, 0)); txt = '🐃 拖/点大黑水牛进右侧水塘降温'; }
+      } else { wp = cicadaG.position.clone().add(new THREE.Vector3(0, 0.62, 0)); txt = '🎵 点树干上的大蝉听夏鸣'; }
+    } else if (curSeason === 2 && seasonDoneCount(2) < 2) {
+      if (!tasks.autumn_squirrel) {
+        var nextC = pinecones.find(function (c) { return !c.stored; });
+        if (nextC) { wp = nextC.group.position.clone().add(new THREE.Vector3(0, 0.60, 0)); txt = '🌰 拖/点松果进大树洞储粮(' + storedCones + '/3)'; }
+      } else { wp = geeseG.position.clone().add(new THREE.Vector3(0, 0.78, 0)); txt = '🐦 拖/点大雁排人字南飞'; }
+    } else if (curSeason === 3 && seasonDoneCount(3) < 3) {
+      if (!tasks.winter_hare) { wp = moltBadgeG.position.clone().add(new THREE.Vector3(0, 0.68, 0)); txt = '❄️ 点/拖雪花帮北极兔换白毛'; }
+      else if (!tasks.winter_hedgehog) { wp = hedgeG.position.clone().add(new THREE.Vector3(0, 0.60, 0)); txt = '🦔 拖/点刺猬进暖树洞冬眠'; }
+      else { wp = macaqueG.position.clone().add(new THREE.Vector3(0, 0.85, 0)); txt = '🐵 点雪坡3只小猕猴抱团取暖'; }
+    } else {
+      var ns = nextIncompleteSeason();
+      if (ns !== -1) {
+        wp = steleWorldPos[ns];
+        txt = '👆 点「' + SEASON_META[ns].icon + ' ' + SEASON_META[ns].label + '」石碑换季节';
+      }
+    }
+  }
+  if (!wp) { cueEl.classList.remove('show'); return; }
+  var p = projectToScreen(wp);
+  cueEl.style.left = Math.max(130, Math.min(window.innerWidth - 255, p.x)) + 'px';
+  cueEl.style.top = Math.max(115, Math.min(window.innerHeight - 28, p.y)) + 'px';
+  cueEl.textContent = txt;
+  cueEl.classList.add('show');
+}
+
+/* ===== 各项动物生存任务执行函数 ===== */
+function doSpringEgret() {
+  eggsGoal.set(NEST_POS.x, NEST_POS.y + 0.08, NEST_POS.z);
+  eggsG.visible = false;
+  eggFloorRing.visible = false;
+  chicksG.visible = true;
+  egretG.position.set(NEST_POS.x + 0.56, NEST_POS.y + 0.14, NEST_POS.z + 0.04);
+  playChirp();
+  completeTask('spring_egret', '🐦 <b>春季·池鹭</b>：在树巢安心孵出小雏鸟', '🐤 啾啾啾！毛茸茸小雏鸟孵出来啦！',
+    '太棒啦！春天暖和、食物变多，池鹭妈妈在树枝编织鸟巢里安心孵出了张嘴啾啾叫的小雏鸟！');
+}
+
+function doSpringLangur() {
+  playChime([587, 740, 880]);
+  completeTask('spring_langur', '🐵 <b>春季·白头叶猴</b>：产下金毛小猴宝宝育儿', '🐵 春日产崽！金毛小猴宝宝真可爱！',
+    '看木桩上！白头叶猴妈妈雪白的头冠真醒目，它在温暖的春天生下金黄色毛发的小猴宝宝，细心怀抱喂养它长大！');
+}
+
+function doSummerBuffaloSuccess() {
+  forcePondCue = false;
+  buffaloGoal.set(POND_POS.x - 0.18, 0.24, POND_POS.z);
+  sweatG.visible = false;
+  coolBubblesG.visible = true;
+  playSplash();
+  completeTask('summer_buffalo', '🐃 <b>夏季·水牛</b>：泡清凉水塘降温避暑', '💧 哗啦！大黑水牛泡水真凉快！',
+    '太凉快啦！夏天三十八度酷暑，大黑水牛泡在清凉水塘里冒着气泡降温避暑，舒服极了！');
+}
+
+function doSummerBuffaloWrong() {
+  wrongDropCount++;
+  forcePondCue = true;
+  buffaloGoal.copy(BUFFALO_HOME);
+  playChime([310, 250]);
+  spawnFloat('🥵 这里太晒太热啦！水牛要去清凉水塘！', 48, 44, 'warn');
+  speak('夏天太热啦，水牛不怕水，快带它去右边清凉的水塘里泡泡降温吧！');
+}
+
+function doSummerCicada() {
+  cicadaBuzzT = 1.65;
+  playCicada();
+  completeTask('summer_cicada', '🎵 <b>夏季·蝉</b>：在浓荫树干上振翅阵阵鸣叫', '🎵 知了—知了—夏日蝉鸣响起！',
+    '听！知了知了！夏天炎热时，大蝉停在浓荫树干上振动透明翅膀发出响亮的蝉鸣声！');
+}
+
+function doAutumnPinecone(coneIdx) {
+  var c = pinecones[coneIdx];
+  if (!c || c.stored) return;
+  c.stored = true;
+  c.ring.visible = false;
+  c.goalPos.set(HOLLOW_POS.x + (storedCones - 1) * 0.13, HOLLOW_POS.y - 0.10, HOLLOW_POS.z + 0.08);
+  storedCones++;
+  playChime([523 + storedCones * 70, 659 + storedCones * 70]);
+  if (storedCones < 3) {
+    spawnFloat('🌰 存好第 ' + storedCones + ' 颗松果！还差 ' + (3 - storedCones) + ' 颗！', 46, 38, 'ok');
+    speak('真能干！已经帮大尾巴小松鼠把第' + storedCones + '颗松果搬进树洞了，快把剩下的松果也搬进去吧！');
+    updateGuide(false);
+  } else {
+    completeTask('autumn_squirrel', '🐿 <b>秋季·松鼠</b>：把松果搬进树洞储粮过冬', '🐿 3 颗松果全存进树洞，过冬不愁吃啦！',
+      '太棒啦！秋天食物丰富，大尾巴小松鼠把一颗颗松果搬进树洞里储存起来，冬天就不愁挨饿啦！');
+  }
+}
+
+function doAutumnGeese() {
+  geeseGoal.set(SOUTH_POS.x - 0.35, SOUTH_POS.y - 0.05, SOUTH_POS.z + 0.25);
+  playChime([523, 659, 784, 988]);
+  completeTask('autumn_geese', '🐦 <b>秋季·大雁</b>：排成「人」字形飞往南方过冬', '🐦 大雁排成「人」字形飞向南方暖阳！',
+    '真壮观！秋天天气转凉，大雁排成整齐的人字形队伍，成群结队向温暖的南方迁徙过冬！');
+}
+
+function doWinterHareMolt() {
+  moltGoal.copy(HARE_POS);
+  moltBadgeG.visible = false;
+  hareAlertRing.visible = false;
+  playChime([659, 784, 988, 1175]);
+  completeTask('winter_hare', '🐇 <b>冬季·北极兔</b>：换雪白冬毛融入雪地躲避雄鹰', '❄️ 瞬间换成雪白冬毛！雄鹰找不到飞走啦！',
+    '太神奇啦！长耳北极兔在冬天换上了雪白的冬毛，和雪坡融为一体形成保护色，雄鹰找不到它只好扇翅飞走啦！');
+}
+
+function doWinterEagleWarn() {
+  wrongDropCount++;
+  playChime([330, 262]);
+  spawnFloat('🦅 棕褐毛在雪地里太显眼！快点雪花换白毛！', 50, 38, 'warn');
+  speak('哎呀！棕褐色的长耳北极兔在雪地里太显眼啦，雄鹰一眼就盯上它了！快点或拖雪花徽章帮它换成雪白冬毛躲起来吧！');
+}
+
+function doWinterHedgehog() {
+  hedgeGoal.set(HOLLOW_POS.x, HOLLOW_POS.y - 0.08, HOLLOW_POS.z + 0.14);
+  playChime([440, 523, 659]);
+  completeTask('winter_hedgehog', '🦔 <b>冬季·刺猬</b>：钻进暖落叶树洞蜷缩冬眠', '💤 小刺猬蜷成球进暖树洞呼呼冬眠啦！',
+    '好温暖呀！冬天寒冷缺少食物，小刺猬钻进铺满枯叶的大树洞里，蜷缩成圆球呼呼冬眠度过寒冬！');
+}
+
+function doWinterMacaques() {
+  playChime([523, 659, 784]);
+  completeTask('winter_macaques', '🐵 <b>冬季·猕猴</b>：紧紧抱团互相取暖御寒', '🐵 3 只小猕猴紧紧抱团，一起取暖不怕冷啦！',
+    '真暖心！寒风呼呼吹，三只小猕猴紧紧靠在一起抱团取暖，减少热量散失度过冬天！');
+}
+
+/* ===== 纯 Mesh 优先拾取 + 屏幕射线直命超大碰撞体 + 拖拽中目标发光高亮（U8） ===== */
+var ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+var dragPlaneH = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.45);
+var dragPlaneSky = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0.35);
+var dragPt = new THREE.Vector3();
+
+var dragKind = null; // 'eggs' | 'buffalo' | 'pinecone' | 'geese' | 'molt' | 'hedgehog'
+var dragExtra = -1;
+var downX = 0, downY = 0, moved = false;
+
+function setRay(e) {
+  var r = cv.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+}
+
+function pickPriority(e) {
+  setRay(e);
+  // 1) 最前景 4 块季节石碑（z=3.04，最近镜头，绝不被中后景大碰撞体从背后截胡！）
+  var hs = ray.intersectObjects(steleHitMeshes, false);
+  if (hs.length) return { kind: 'stele', seasonIdx: hs[0].object.userData.seasonIdx };
+  // 2) 当前季节专属动物与道具
+  if (curSeason === 0) {
+    if (!tasks.spring_egret && ray.intersectObject(eggHitMesh, false).length) return { kind: 'eggs' };
+    if (ray.intersectObject(langurHitMesh, false).length) return { kind: 'langur' };
+    if (ray.intersectObject(nestHitMesh, false).length) return { kind: 'nest' };
+  } else if (curSeason === 1) {
+    if (ray.intersectObject(buffaloHitMesh, false).length) return { kind: 'buffalo' };
+    if (ray.intersectObject(cicadaHitMesh, false).length) return { kind: 'cicada' };
+    if (ray.intersectObject(pondHitMesh, false).length) return { kind: 'pond' };
+  } else if (curSeason === 2) {
+    var activeCones = pineconeHitMeshes.filter(function (m) { return !pinecones[m.userData.coneIdx].stored; });
+    var hc = ray.intersectObjects(activeCones, false);
+    if (hc.length) return { kind: 'pinecone', coneIdx: hc[0].object.userData.coneIdx };
+    if (ray.intersectObject(geeseHitMesh, false).length) return { kind: 'geese' };
+    if (ray.intersectObject(hollowHitMesh, false).length) return { kind: 'hollow' };
+  } else if (curSeason === 3) {
+    if (!tasks.winter_hare && ray.intersectObject(moltHitMesh, false).length) return { kind: 'molt' };
+    if (ray.intersectObject(hareHitMesh, false).length) return { kind: 'hare' };
+    if (!tasks.winter_hare && ray.intersectObject(eagleHitMesh, false).length) return { kind: 'eagle' };
+    if (ray.intersectObject(hedgeHitMesh, false).length) return { kind: 'hedgehog' };
+    if (ray.intersectObject(macaqueHitMesh, false).length) return { kind: 'macaques' };
+    if (ray.intersectObject(hollowHitMesh, false).length) return { kind: 'hollow' };
+  }
+  return null;
+}
+
+function markInteracted() { document.body.classList.add('interacted'); }
+
+cv.addEventListener('pointerdown', function (e) {
+  markInteracted();
+  if (demo) stopDemo();
+  downX = e.clientX; downY = e.clientY; moved = false;
+  var hit = pickPriority(e);
+  if (!hit) return;
+
+  if (hit.kind === 'stele') { switchSeason(hit.seasonIdx, true); return; }
+  if (hit.kind === 'langur') { doSpringLangur(); return; }
+  if (hit.kind === 'nest') {
+    if (!tasks.spring_egret) doSpringEgret();
+    else { playChirp(); spawnFloat('🐤 小雏鸟在编织鸟巢里安心长大！', 44, 34, 'ok'); speak('池鹭妈妈在树枝编织鸟巢里照顾刚孵出的小雏鸟！'); }
+    return;
+  }
+  if (hit.kind === 'cicada') { doSummerCicada(); return; }
+  if (hit.kind === 'pond') {
+    if (!tasks.summer_buffalo) doSummerBuffaloSuccess();
+    else { playSplash(); spawnFloat('💧 清凉水塘让水牛超级凉快！', 55, 48, 'ok'); speak('水牛泡在清凉水塘里，浑身凉爽不怕酷暑啦！'); }
+    return;
+  }
+  if (hit.kind === 'eagle') { doWinterEagleWarn(); return; }
+  if (hit.kind === 'hare') {
+    if (!tasks.winter_hare) doWinterHareMolt();
+    else { playChime([659, 880]); spawnFloat('🐇 雪白冬毛完美隐身在雪坡里！', 52, 46, 'ok'); speak('换上雪白冬毛的北极兔和雪坡融为一体，雄鹰根本找不到它！'); }
+    return;
+  }
+  if (hit.kind === 'macaques') { doWinterMacaques(); return; }
+  if (hit.kind === 'hollow') {
+    if (curSeason === 2 && !tasks.autumn_squirrel) {
+      var nc = pinecones.find(function (c) { return !c.stored; });
+      if (nc) doAutumnPinecone(nc.idx);
+    } else if (curSeason === 3 && !tasks.winter_hedgehog) {
+      doWinterHedgehog();
+    }
+    return;
+  }
+
+  if (hit.kind === 'eggs' || hit.kind === 'buffalo' || hit.kind === 'pinecone' || hit.kind === 'geese' || hit.kind === 'molt' || hit.kind === 'hedgehog') {
+    dragKind = hit.kind;
+    dragExtra = hit.kind === 'pinecone' ? hit.coneIdx : -1;
+    cv.classList.add('grabbing');
+    if (cv.setPointerCapture) try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+  }
+});
+
+cv.addEventListener('pointermove', function (e) {
+  if (!dragKind) {
+    var hv = pickPriority(e);
+    cv.style.cursor = hv ? 'pointer' : 'default';
+    return;
+  }
+  if (!moved && Math.hypot(e.clientX - downX, e.clientY - downY) >= 14) moved = true;
+  if (!moved) return;
+
+  setRay(e);
+  if (dragKind === 'geese') {
+    if (ray.ray.intersectPlane(dragPlaneSky, dragPt)) {
+      geeseGoal.set(Math.max(-3.2, Math.min(3.2, dragPt.x)), Math.max(2.2, Math.min(4.0, dragPt.y)), -0.95);
+    }
+  } else if (dragKind === 'eggs') {
+    if (ray.ray.intersectPlane(dragPlaneSky, dragPt)) {
+      eggsGoal.set(Math.max(-3.2, Math.min(2.6, dragPt.x)), Math.max(0.32, Math.min(3.2, dragPt.y)), -0.20);
+    }
+  } else if (ray.ray.intersectPlane(dragPlaneH, dragPt)) {
+    var tx = Math.max(-3.6, Math.min(3.6, dragPt.x));
+    var tz = Math.max(-1.8, Math.min(2.4, dragPt.z));
+    if (dragKind === 'buffalo') buffaloGoal.set(tx, 0.72, tz);
+    else if (dragKind === 'pinecone' && dragExtra !== -1) pinecones[dragExtra].goalPos.set(tx, 0.85, tz);
+    else if (dragKind === 'molt') moltGoal.set(tx, 0.88, tz);
+    else if (dragKind === 'hedgehog') hedgeGoal.set(tx, 0.78, tz);
+  }
+});
+
+function finishDrag(e) {
+  if (!dragKind) return;
+  var kind = dragKind, extra = dragExtra;
+  dragKind = null; dragExtra = -1;
+  cv.classList.remove('grabbing');
+  if (cv.releasePointerCapture && e && e.pointerId !== undefined) try { cv.releasePointerCapture(e.pointerId); } catch (err) {}
+
+  if (e) setRay(e);
+
+  if (kind === 'eggs') {
+    var hitNest = e && ray.intersectObject(nestHitMesh, false).length > 0;
+    if (!moved || hitNest || eggsGoal.distanceTo(NEST_POS) < 2.05) doSpringEgret();
+    else eggsGoal.copy(EGG_HOME);
+  } else if (kind === 'buffalo') {
+    if (!moved) {
+      if (!tasks.summer_buffalo) doSummerBuffaloSuccess();
+      else { playSplash(); speak('水牛泡在清凉的水塘里可凉快啦！'); }
+    } else {
+      var hitPond = e && ray.intersectObject(pondHitMesh, false).length > 0;
+      var distPond = Math.hypot(buffaloGoal.x - POND_POS.x, buffaloGoal.z - POND_POS.z);
+      if (hitPond || distPond < 2.15) doSummerBuffaloSuccess();
+      else doSummerBuffaloWrong();
+    }
+  } else if (kind === 'pinecone' && extra !== -1) {
+    var pc = pinecones[extra];
+    var overHollow = e && ray.intersectObject(hollowHitMesh, false).length > 0;
+    if (!moved || overHollow || Math.hypot(pc.goalPos.x - HOLLOW_POS.x, pc.goalPos.z - HOLLOW_POS.z) < 2.40) {
+      doAutumnPinecone(extra);
+    } else {
+      pc.goalPos.copy(pc.homePos);
+    }
+  } else if (kind === 'geese') {
+    var hitSouth = e && ray.intersectObject(southHitMesh, false).length > 0;
+    if (!moved || hitSouth || geeseGoal.distanceTo(SOUTH_POS) < 2.75) doAutumnGeese();
+    else geeseGoal.copy(GEESE_HOME);
+  } else if (kind === 'molt') {
+    var hitHare = e && ray.intersectObject(hareHitMesh, false).length > 0;
+    if (!moved || hitHare || Math.hypot(moltGoal.x - HARE_POS.x, moltGoal.z - HARE_POS.z) < 2.15) doWinterHareMolt();
+    else moltGoal.copy(MOLT_HOME);
+  } else if (kind === 'hedgehog') {
+    var overHollowH = e && ray.intersectObject(hollowHitMesh, false).length > 0;
+    if (!moved || overHollowH || Math.hypot(hedgeGoal.x - HOLLOW_POS.x, hedgeGoal.z - HOLLOW_POS.z) < 2.50) doWinterHedgehog();
+    else hedgeGoal.copy(HEDGE_HOME);
+  }
+}
+cv.addEventListener('pointerup', finishDrag);
+cv.addEventListener('pointercancel', finishDrag);
+
+/* ===== 慢速配音分步演示（U2，不触发通关） ===== */
+function stopDemo() {
+  if (!demo) return;
+  demo = false;
+  $('#demoBtn').classList.remove('on');
+  $('#demoBtn').textContent = '▶ 演示';
+}
+function startDemo() {
+  markInteracted();
+  if (demo) { stopDemo(); stopVoice(); return; }
+  demo = true;
+  resetGen++;
+  var g = resetGen;
+  $('#demoBtn').classList.add('on');
+  $('#demoBtn').textContent = '⏸ 停止';
+
+  var steps = [
+    { s: 0, msg: '春天到！池鹭筑巢孵蛋，白头叶猴产下金毛小宝宝，这是动物繁育新生的季节！' },
+    { s: 1, msg: '夏天三十八度好热！水牛喜欢泡进清凉水塘降温，大蝉停在树干上阵阵鸣叫！' },
+    { s: 2, msg: '秋天天气转凉！大尾巴小松鼠忙着把松果存进树洞，大雁排成人字形飞去温暖的南方！' },
+    { s: 3, msg: '冬天大雪纷飞！长耳北极兔换成雪白冬毛躲避雄鹰，小刺猬钻进暖树洞冬眠，小猕猴抱团取暖！' }
+  ];
+  steps.forEach(function (st, idx) {
+    setTimeout(function () {
+      if (g !== resetGen || !demo) return;
+      switchSeason(st.s, false);
+      speak(st.msg, true);
+      spawnFloat(SEASON_META[st.s].badge, 50, 32, 'ok');
+    }, idx * 3400);
+  });
+  setTimeout(function () {
+    if (g !== resetGen) return;
+    stopDemo();
+    switchSeason(0, false);
+    speak('演示结束！现在请你点石碑游历春夏秋冬，亲手帮助每一种小动物吧！', true);
+  }, steps.length * 3400 + 300);
+}
+
+function resetAll() {
+  resetGen++;
+  stopDemo();
+  stopVoice();
+  dragKind = null; dragExtra = -1; forcePondCue = false;
+  for (var k in tasks) tasks[k] = false;
+  storedCones = 0; cicadaBuzzT = 0; hareWhiteAmt = 0; wrongDropCount = 0;
+  stamps = { s1: false, s2: false, s3: false }; celebrated = false;
+
+  eggsG.visible = true; eggFloorRing.visible = true; eggsGoal.copy(EGG_HOME); eggsG.position.copy(EGG_HOME);
+  chicksG.visible = false; egretG.position.copy(EGRET_INIT);
+  buffaloGoal.copy(BUFFALO_HOME); buffaloG.position.copy(BUFFALO_HOME);
+  sweatG.visible = true; coolBubblesG.visible = false;
+  pinecones.forEach(function (p) { p.stored = false; p.ring.visible = true; p.goalPos.copy(p.homePos); p.group.position.copy(p.homePos); });
+  geeseGoal.copy(GEESE_HOME); geeseG.position.copy(GEESE_HOME);
+  moltBadgeG.visible = true; moltGoal.copy(MOLT_HOME); moltBadgeG.position.copy(MOLT_HOME);
+  hareAlertRing.visible = true; hareFurMat.color.set('#7a5538');
+  eagleG.position.set(0.45, 3.20, -0.35); eagleG.visible = true;
+  hedgeGoal.copy(HEDGE_HOME); hedgeG.position.copy(HEDGE_HOME);
+  macaques.forEach(function (m, i) { m.position.set(macApart[i][0], macApart[i][1], macApart[i][2]); });
+  warmHalo.material.opacity = 0;
+
+  $('#ntList').innerHTML = ''; $('#ntCnt').textContent = '0/9';
+  $$('.st').forEach(function (s) { s.classList.remove('lit'); });
+  $('#winToast').classList.remove('show');
+  $('#cmpModal').classList.remove('show');
+  $('#qFb').textContent = ''; $('#qFb').className = 'qfb';
+  $$('.qopt').forEach(function (b) { b.classList.remove('ok', 'bad'); });
+  updateCompareUI();
+  switchSeason(0, false);
+}
+
+/* ===== 控件事件 ===== */
+$('#voiceBtn').addEventListener('click', function () {
+  markInteracted();
+  voiceOn = !voiceOn;
+  this.classList.toggle('on', voiceOn);
+  if (voiceOn) updateGuide(true); else stopVoice();
+});
+$('#demoBtn').addEventListener('click', startDemo);
+$('#guideBar').addEventListener('click', function () { markInteracted(); updateGuide(true); });
+$('#resetBtn').addEventListener('click', resetAll);
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+$('#cmpBtn').addEventListener('click', function () { markInteracted(); updateCompareUI(); $('#cmpModal').classList.add('show'); });
+$('#cmpCloseBtn').addEventListener('click', function () { $('#cmpModal').classList.remove('show'); });
+$('#winKeepBtn').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgainBtn').addEventListener('click', resetAll);
+$('#qOpts').addEventListener('click', function (e) {
+  var b = e.target.closest('.qopt');
+  if (!b) return;
+  if (b.dataset.ok === '1') {
+    b.classList.add('ok');
+    $('#qFb').textContent = '🌸 答对啦！雪白冬毛既保暖又能融入白雪躲避雄鹰！获得小红花！';
+    $('#qFb').className = 'qfb ok';
+    saveProgress(LESSON_ID, true);
+    playChime([659, 784, 1046]);
+    speak('答对啦！获得本课小红花！', true);
+  } else {
+    b.classList.add('bad');
+    var h = b.dataset.hint || '再想想哦！';
+    $('#qFb').textContent = h;
+    $('#qFb').className = 'qfb';
+    speak(h, true);
+  }
+});
+
+/* ===== 帧循环 ===== */
+var introT0 = performance.now(), lastT = performance.now();
+var brownCol = new THREE.Color('#7a5538'), whiteCol = new THREE.Color('#f4f8fc');
+var lastZzzAt = 0;
+
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  camera.updateProjectionMatrix();
+  resizeConfetti();
+}
+window.addEventListener('resize', fit);
+fit();
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (now - lastT) / 1000));
+  lastT = now;
+  var t = now * 0.001;
+
+  var pop = Math.min(1, (performance.now() - introT0) / 680);
+  live.scale.setScalar(0.01 + 0.99 * (1 - Math.pow(1 - pop, 3)));
+
+  // 4 块季节石碑脉冲光环
+  for (var si = 0; si < 4; si++) {
+    var act = (si === curSeason);
+    steleRings[si].scale.setScalar(act ? (1.1 + Math.sin(t * 4.2) * 0.08) : 0.96);
+    steleRings[si].material.opacity = act ? 0.90 : 0.38;
+  }
+
+  // 拖拽中目标发光高亮引导
+  nestTargetRing.material.opacity = (dragKind === 'eggs') ? (0.72 + Math.sin(t * 7) * 0.22) : 0;
+  pondTargetRing.material.opacity = (dragKind === 'buffalo') ? (0.72 + Math.sin(t * 7) * 0.22) : 0;
+  hollowTargetRing.material.opacity = (dragKind === 'pinecone' || dragKind === 'hedgehog') ? (0.76 + Math.sin(t * 7) * 0.22) : 0;
+  hareTargetRing.material.opacity = (dragKind === 'molt') ? (0.76 + Math.sin(t * 7) * 0.22) : 0;
+
+  // 水塘水波（冬季结冰静止）
+  pondRipple.visible = (curSeason !== 3);
+  if (curSeason !== 3) {
+    pondRipple.scale.setScalar(0.85 + ((t * 0.6) % 1) * 1.15);
+    pondRipple.material.opacity = 0.65 * (1 - ((t * 0.6) % 1));
+  }
+
+  // 🌸 春季动画
+  if (curSeason === 0) {
+    eggsG.position.lerp(eggsGoal, Math.min(1, dt * 11));
+    eggFloorRing.scale.setScalar(1 + Math.sin(t * 4) * 0.08);
+    if (tasks.spring_egret) chicksG.position.y = NEST_POS.y + 0.22 + Math.abs(Math.sin(t * 7)) * 0.07;
+    babyMonkeyG.rotation.z = Math.sin(t * 3.5) * (tasks.spring_langur ? 0.22 : 0.07);
+    langurRing.scale.setScalar(1 + Math.sin(t * 3.2) * 0.07);
+  }
+
+  // ☀️ 夏季动画
+  if (curSeason === 1) {
+    buffaloG.position.lerp(buffaloGoal, Math.min(1, dt * 10));
+    bufTailG.rotation.z = Math.sin(t * 5) * 0.28;
+    if (!tasks.summer_buffalo) {
+      sweatG.position.y = Math.sin(t * 6.5) * 0.07;
+      buffaloG.scale.setScalar(1 + Math.sin(t * 5.2) * 0.025);
+    } else {
+      coolBubblesG.position.y = Math.sin(t * 4) * 0.08;
+      buffaloG.scale.setScalar(1);
+    }
+    if (cicadaBuzzT > 0) {
+      cicadaBuzzT = Math.max(0, cicadaBuzzT - dt);
+      ciWingL.rotation.y = -0.38 + Math.sin(t * 75) * 0.36;
+      ciWingR.rotation.y = 0.38 - Math.sin(t * 75) * 0.36;
+      ciWave.scale.setScalar(1 + (1.65 - cicadaBuzzT) * 1.6);
+      ciWave.material.opacity = Math.min(0.88, cicadaBuzzT * 0.6);
+    } else {
+      ciWave.material.opacity = 0;
+    }
+  }
+
+  // 🍁 秋季动画
+  if (curSeason === 2) {
+    pinecones.forEach(function (p) { p.group.position.lerp(p.goalPos, Math.min(1, dt * 11)); });
+    squirrelG.position.y = 0.42 + Math.abs(Math.sin(t * (tasks.autumn_squirrel ? 4 : 7.5))) * 0.10;
+    squirrelG.rotation.y = tasks.autumn_squirrel ? 0.45 : (0.42 + Math.sin(t * 2.5) * 0.45);
+    geeseG.position.lerp(geeseGoal, Math.min(1, dt * 4.5));
+    for (var gi = 0; gi < gooseUnits.length; gi++) {
+      var u = gooseUnits[gi];
+      var tgt = tasks.autumn_geese ? gooseVForm[gi] : gooseScatter[gi];
+      u.position.lerp(new THREE.Vector3(tgt[0], tgt[1], tgt[2]), Math.min(1, dt * 6));
+      var fl = Math.sin(t * 8 + u.userData.ph) * 0.48;
+      u.userData.wL.rotation.x = fl;
+      u.userData.wR.rotation.x = -fl;
+    }
+    southRing.scale.setScalar(1 + Math.sin(t * 3.5) * 0.12);
+  }
+
+  // ❄️ 冬季动画
+  if (curSeason === 3) {
+    for (var fi = 0; fi < snowFlakes.length; fi++) {
+      var fm = snowFlakes[fi];
+      fm.position.y -= dt * fm.userData.vy;
+      fm.position.x += Math.sin(t * 1.5 + fm.userData.ph) * dt * 0.42;
+      fm.rotation.z += dt * fm.userData.vr;
+      if (fm.position.y < 0.18) { fm.position.y = 4.8; fm.position.x = (Math.random() - 0.5) * 8.8; }
+    }
+    if (tasks.winter_hare) {
+      hareWhiteAmt = Math.min(1, hareWhiteAmt + dt * 2.2);
+      hareFurMat.color.copy(brownCol).lerp(whiteCol, hareWhiteAmt);
+      eagleG.position.x += dt * 2.6;
+      eagleG.position.y += dt * 1.4;
+      if (eagleG.position.x > 8.5) eagleG.visible = false;
+    } else {
+      hareAlertRing.scale.setScalar(1 + Math.sin(t * 6.5) * 0.16);
+      eagleG.position.set(HARE_POS.x + Math.cos(t * 1.5) * 1.40, 3.12 + Math.sin(t * 2.4) * 0.14, HARE_POS.z - 0.85 + Math.sin(t * 1.5) * 0.65);
+      eagleG.rotation.y = -t * 1.5;
+      moltBadgeG.position.lerp(moltGoal, Math.min(1, dt * 11));
+      if (dragKind !== 'molt') moltBadgeG.position.y += Math.sin(t * 3.2) * 0.004;
+    }
+    var ew = Math.sin(t * 6) * 0.32;
+    egWingL.rotation.x = ew; egWingR.rotation.x = -ew;
+
+    hedgeG.position.lerp(hedgeGoal, Math.min(1, dt * 10));
+    if (!tasks.winter_hedgehog && dragKind !== 'hedgehog') {
+      hedgeG.rotation.z = Math.sin(t * 28) * 0.09;
+    } else {
+      hedgeG.rotation.z = 0;
+      if (tasks.winter_hedgehog && t - lastZzzAt > 2.4 && !$('#winToast').classList.contains('show')) {
+        lastZzzAt = t;
+        var zp = projectToScreen(HOLLOW_POS.clone().add(new THREE.Vector3(0, 0.55, 0)));
+        spawnFloat('💤 Zzz...', (zp.x / window.innerWidth) * 100, (zp.y / window.innerHeight) * 100, 'ok');
+      }
+    }
+
+    for (var mi = 0; mi < 3; mi++) {
+      var mt = tasks.winter_macaques ? macHuddle[mi] : macApart[mi];
+      macaques[mi].position.lerp(new THREE.Vector3(mt[0], mt[1], mt[2]), Math.min(1, dt * 8));
+      macaques[mi].rotation.z = tasks.winter_macaques ? 0 : Math.sin(t * 26 + mi) * 0.08;
+    }
+    warmHalo.material.opacity = tasks.winter_macaques ? (0.24 + Math.sin(t * 3) * 0.08) : 0;
+  }
+
+  tickConfetti();
+  updateTargetCue();
+  renderer.render(scene, camera);
+}
+
+/* ===== 验收与自检接口 ===== */
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () {
+    return {
+      triangles: renderer.info.render.triangles,
+      celebrated: celebrated,
+      doneCount: countDone(),
+      curSeason: curSeason,
+      wrongDropCount: wrongDropCount
+    };
+  },
+  getState: function () {
+    return {
+      curSeason: curSeason,
+      tasks: Object.assign({}, tasks),
+      storedCones: storedCones,
+      wrongDropCount: wrongDropCount,
+      celebrated: celebrated
+    };
+  },
+  getScreenPoints: function () {
+    return {
+      steles: steleXs.map(function (sx) { return projectToScreen(new THREE.Vector3(sx, 0.52, 3.04)); }),
+      eggs: projectToScreen(eggsG.position.clone()),
+      nest: projectToScreen(NEST_POS),
+      langur: projectToScreen(langurG.position.clone().add(new THREE.Vector3(0, 0.24, 0.12))),
+      buffalo: projectToScreen(buffaloG.position.clone().add(new THREE.Vector3(0.22, 0.12, 0))),
+      pond: projectToScreen(POND_POS.clone().add(new THREE.Vector3(0, 0.25, 0))),
+      dryRock: projectToScreen(dryRockPos.clone()),
+      cicada: projectToScreen(cicadaG.position.clone()),
+      pinecones: pinecones.map(function (p) { return projectToScreen(p.group.position.clone()); }),
+      hollow: projectToScreen(HOLLOW_POS.clone()),
+      geese: projectToScreen(geeseG.position.clone()),
+      southSun: projectToScreen(SOUTH_POS.clone()),
+      molt: projectToScreen(moltBadgeG.position.clone()),
+      hare: projectToScreen(HARE_POS.clone().add(new THREE.Vector3(0.1, 0.2, 0))),
+      eagle: projectToScreen(eagleG.position.clone()),
+      hedgehog: projectToScreen(hedgeG.position.clone()),
+      macaques: projectToScreen(macaqueG.position.clone())
+    };
+  }
+};
+
+updateCompareUI();
+switchSeason(0, false);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

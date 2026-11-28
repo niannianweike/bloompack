@@ -1,0 +1,1972 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第9课 季节变化对植物的影响 · 苹果树四季观测台</title>
+<style>
+:root{--accent:#2b8a57;--accent-dark:#1c643d;--warm:#d96b1f;--ink:#2c241b;--line:#dfd0b8;--card:rgba(255,252,246,.95)}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#8ecae6;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:pointer}
+canvas#cv.grabbing{cursor:grabbing}
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.46em;color:#7a6a52;font-weight:600}
+body.no-py rt{display:none}
+
+/* 左上标题卡片 */
+#hudTL{position:fixed;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:10px;
+  padding:7px 14px 7px 9px;border-radius:16px;background:var(--card);border:1.5px solid var(--line);
+  box-shadow:0 4px 16px rgba(38,28,16,.15)}
+#backBtn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:#5c4b34;font-size:19px;font-weight:900}
+#backBtn:hover{border-color:var(--accent);color:var(--accent)}
+.hd-t{font-size:16px;font-weight:900;line-height:1.5}
+.hd-sub{font-size:11.5px;color:#766650;font-weight:700}
+
+/* 顶部中央动态分步小助手（U2） */
+#guideBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:6;
+  max-width:min(460px,calc(100vw - 640px));display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:15px;background:rgba(255,250,242,.96);
+  border:2px solid #e0822b;box-shadow:0 6px 18px rgba(120,62,14,.16);
+  font-size:13.5px;font-weight:800;color:#73390c;cursor:pointer;line-height:1.38;transition:all .2s}
+#guideBar:active{transform:translateX(-50%) scale(.98)}
+#guideBar.done{border-color:#2b8a57;background:#effbf4;color:#185c37}
+@media (max-width:1180px){
+  #guideBar{top:62px;left:12px;transform:none;max-width:min(440px,calc(100vw - 260px))}
+  #guideBar:active{transform:scale(.98)}
+}
+
+/* 右上工具条 + 顶部防遮挡入口微标签（U2） */
+#hudTR{position:fixed;top:12px;right:12px;z-index:7;display:flex;align-items:center;gap:6px}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:38px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);
+  background:var(--card);font-family:inherit;font-size:13.5px;font-weight:800;color:#4a3c28;cursor:pointer;
+  box-shadow:0 3px 0 #d5c4a6;transition:all .14s;white-space:nowrap}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:var(--accent-dark);color:#fff;box-shadow:0 3px 0 var(--accent-dark)}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#ffedd5;border:1.5px solid var(--warm);color:#a8440a;font-size:10.5px;font-weight:900;
+  white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(217,107,31,.24);
+  animation:cuePop 1.6s ease-in-out infinite;transition:opacity .25s}
+body.interacted .entry-cue{opacity:0;animation:none}
+@keyframes cuePop{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+
+/* 右上可收起窄版发现栏（D3 防遮挡） */
+#notes{position:fixed;top:60px;right:12px;z-index:6;width:224px;padding:9px 11px;border-radius:15px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 6px 18px rgba(38,28,16,.14)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+.nt-title{font-size:13.5px;font-weight:900}
+.nt-cnt{font-size:12.5px;font-weight:900;color:var(--accent)}
+.nt-tog{padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:11px;font-weight:800;color:#6c5c45;cursor:pointer}
+.stamps{display:flex;gap:4px;margin-bottom:6px}
+.st{flex:1;text-align:center;padding:3px 2px;border-radius:8px;font-size:11px;font-weight:800;
+  border:1.5px dashed #d7c5a4;color:#9b8a70;background:#faf4e8;transition:all .2s;line-height:1.4}
+.st.lit{border-style:solid;border-color:var(--accent);background:#e7faee;color:#166534;animation:pop .4s cubic-bezier(.2,1.6,.4,1)}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList,#notes.collapsed .stamps{display:none}
+#notes.collapsed .nt-head{margin-bottom:0}
+.stk{padding:5px 8px;border-radius:10px;background:#fff;border:1px solid #ece0c9;font-size:12px;font-weight:700;line-height:1.4;animation:pop .35s cubic-bezier(.2,1.5,.4,1)}
+.stk b{color:#166534}
+@keyframes pop{0%{transform:scale(.68);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* 左侧 280x280 圆形高清 2D Canvas 植物特写放大镜（U11 说=见，不挡中央树与右上 #notes） */
+#lensWrap{position:fixed;left:16px;top:82px;z-index:7;display:none;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+#lensWrap.show{display:flex;animation:lensPop .24s ease-out}
+@keyframes lensPop{0%{opacity:0;transform:scale(.82)}100%{opacity:1;transform:scale(1)}}
+.lens-ring{position:relative;width:238px;height:238px;border-radius:50%;padding:8px;
+  background:linear-gradient(135deg,#2b8a57,#166534,#6ee7b7);
+  box-shadow:0 12px 32px rgba(20,66,42,.34)}
+.lens-ring.autumn{background:linear-gradient(135deg,#d97706,#b45309,#fcd34d)}
+.lens-ring.winter{background:linear-gradient(135deg,#0284c7,#1e40af,#93c5fd)}
+.lens-inner{position:relative;width:222px;height:222px;border-radius:50%;overflow:hidden;background:#f8fafc;border:3px solid #fff}
+canvas#lensCv{width:222px;height:222px;display:block}
+.lens-tag{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);padding:2px 9px;border-radius:99px;
+  background:rgba(20,66,42,.92);color:#fff;font-size:10.5px;font-weight:800;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.22)}
+.lens-caption{padding:4px 12px;border-radius:99px;background:rgba(255,252,246,.96);border:1.5px solid #86c5a0;
+  font-size:12px;font-weight:900;color:#14532d;box-shadow:0 4px 12px rgba(0,0,0,.14);white-space:nowrap;text-align:center}
+
+/* 当前季节徽标（纯状态显示） */
+#seasonBadge{position:fixed;left:16px;top:76px;z-index:5;padding:6px 13px;border-radius:99px;
+  background:rgba(255,252,246,.94);border:2px solid #6ab88a;font-size:13px;font-weight:900;color:#1c5f3b;
+  box-shadow:0 4px 12px rgba(30,50,35,.14);pointer-events:none;transition:opacity .2s}
+body.lens-open #seasonBadge{opacity:0}
+
+/* 3D 浮动反馈词层 + 单焦点跳动提示气泡（U10） */
+#floatLayer{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden}
+.cue3d{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:6px 14px;border-radius:99px;
+  background:#fff7ed;border:2px solid #d96b1f;color:#9a3412;font-size:13px;font-weight:900;white-space:nowrap;
+  box-shadow:0 4px 14px rgba(217,107,31,.30);animation:cueBob 1.3s ease-in-out infinite;display:none;pointer-events:none}
+.cue3d.show{display:block}
+@keyframes cueBob{0%,100%{transform:translate(-50%,-100%) translateY(0)}50%{transform:translate(-50%,-100%) translateY(-6px)}}
+.fword{position:absolute;transform:translate(-50%,-100%);padding:5px 13px;border-radius:99px;
+  background:rgba(255,252,244,.96);border:2px solid var(--accent);color:#14532d;
+  font-size:14px;font-weight:900;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.18);
+  animation:floatUp 1.85s ease-out forwards;pointer-events:none}
+.fword.warn{border-color:#d96b1f;color:#9a3412;background:#fff7ed}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-60%) scale(.75)}16%{opacity:1;transform:translate(-50%,-100%) scale(1.04)}100%{opacity:0;transform:translate(-50%,-185%) scale(1)}}
+
+/* 通关彩带 + 结论与1题巩固弹窗（D2 + U1 + U3） */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+#winToast{position:fixed;inset:0;z-index:35;display:none;place-items:center;background:rgba(34,24,12,.38);padding:16px}
+#winToast.show{display:grid}
+.win-card{width:min(460px,100%);max-height:86vh;overflow-y:auto;background:#fffdf8;
+  border:2.5px solid var(--accent);border-radius:22px;padding:18px 20px;text-align:center;
+  box-shadow:0 20px 50px rgba(36,22,8,.28);animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+.win-concl{margin:10px 0;padding:10px 12px;border-radius:13px;background:#ecfdf3;border:1.5px solid #86efac;
+  text-align:left;font-size:13.5px;line-height:1.58;color:#14532d}
+.win-quiz{margin:10px 0;padding:10px 12px;border-radius:13px;background:#f8fafc;border:1.5px solid #d9e2ec;text-align:left}
+.win-quiz h4{margin:0 0 7px;font-size:13.5px;color:#1f7542}
+.qopts{display:flex;flex-direction:column;gap:7px}
+.qopt{padding:8px 11px;border-radius:11px;border:1.5px solid #d9d0be;background:#fff;
+  font-family:inherit;font-size:13.5px;font-weight:800;text-align:left;cursor:pointer;transition:all .14s;color:var(--ink)}
+.qopt:hover{border-color:var(--accent);background:#f0fdf4}
+.qopt.ok{border-color:#16a34a;background:#dcfce7;color:#14532d}
+.qopt.bad{border-color:#e03131;background:#fff5f5;color:#c92a2a}
+.qfb{margin-top:7px;font-size:12.5px;font-weight:800;min-height:18px;color:#b45309}
+.qfb.ok{color:#166534}
+.win-acts{display:flex;justify-content:center;gap:10px;margin-top:12px}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="floatLayer">
+  <div class="cue3d" id="targetCue">🔍 拖或点放大镜观察春季苹果树</div>
+</div>
+<canvas id="confetti"></canvas>
+
+<div id="hudTL">
+  <a id="backBtn" href="../index.html" title="返回书包">‹</a>
+  <div>
+    <div class="hd-t" data-py="dì kè jì jié biàn huà duì zhí wù de yǐng xiǎng">第9课 季节变化对植物的影响</div>
+    <div class="hd-sub">活页 · 课本第 37 页「苹果树四季观测与盲序排卡」</div>
+  </div>
+</div>
+
+<div id="guideBar" title="点我重听当前步骤">
+  <span id="guideIco">🌸</span>
+  <span id="guideTxt">第1步：先拖或点放大镜观察春季苹果树，再拖小太阳看遍四季！</span>
+</div>
+
+<div id="hudTR">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<div id="seasonBadge">🌸 当前：春季 · 抽芽开花</div>
+
+<!-- 280x280 高清圆形 2D Canvas 植物特写镜 -->
+<div id="lensWrap">
+  <div class="lens-ring" id="lensRing">
+    <div class="lens-inner">
+      <canvas id="lensCv" width="280" height="280"></canvas>
+      <div class="lens-tag" id="lensTag">✨ 苹果树细节特写</div>
+    </div>
+  </div>
+  <div class="lens-caption" id="lensCap">🌸 春季：嫩绿新叶 + 粉白苹果花</div>
+</div>
+
+<aside id="notes">
+  <div class="nt-head">
+    <span class="nt-title" data-py="wǒ de fā xiàn">我的发现</span>
+    <span class="nt-cnt" id="ntCnt">0/8</span>
+    <button class="nt-tog" id="ntTog" type="button">收起</button>
+  </div>
+  <div class="stamps">
+    <span class="st" id="st1" data-py="sì jì guān chá">四季观察</span>
+    <span class="st" id="st2" data-py="tè xiě jì lù">特写记录</span>
+    <span class="st" id="st3" data-py="guī lǜ pái kǎ">规律排卡</span>
+  </div>
+  <div id="ntList"></div>
+</aside>
+
+<div id="winToast">
+  <div class="win-card">
+    <div style="font-size:40px">🏆</div>
+    <h3 style="margin:4px 0;color:#14532d" data-py="tài bàng la píng guǒ shù sì jì guī lǜ quán zhǎng wò">太棒啦！苹果树四季规律全掌握！</h3>
+    <div class="win-concl">
+      <b>✨ 科学小结论：</b>随着春夏秋冬的季节变化，苹果树等落叶植物会呈现出明显的周期变化：春天发芽开花、夏天枝繁叶茂结青果、秋天黄叶飘落结红果、冬天落叶留下休眠冬芽准备来年再发芽！
+    </div>
+    <div class="win-quiz">
+      <h4>💡 考考你 · 答对领小红花 🌸</h4>
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:8px">把苹果树一年四季的生长过程按先后顺序排列，哪一组才是正确的？</div>
+      <div class="qopts" id="qOpts">
+        <button class="qopt" type="button" data-ok="1">🌸 嫩芽开粉白花 → 🍏 绿叶结青小果 → 🍎 黄叶熟红苹果 → ❄️ 落叶光枝留冬芽</button>
+        <button class="qopt" type="button" data-hint="再想想哦！苹果树必须先在春天开花、夏天结青果，秋天苹果才会成熟变红。">🍎 先结红苹果 → 🌸 再开粉白花 → 🍏 变青小果 → ❄️ 落叶休眠</button>
+        <button class="qopt" type="button" data-hint="不对哦！落叶光枝和棕色冬芽是寒冷冬天的样子，春天才会重新抽芽开花。">❄️ 冬天先开满花 → ☀️ 夏天落光叶 → 🍁 秋天刚发芽 → 🌸 春天结红果</button>
+      </div>
+      <div class="qfb" id="qFb"></div>
+    </div>
+    <div class="win-acts">
+      <button class="tbtn" id="winKeepBtn" type="button">继续玩</button>
+      <button class="tbtn on" id="winAgainBtn" type="button">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js?v=doubao-2"></script>
+<script src="../vendor/voice.js?v=doubao-2"></script>
+<script>
+(function () {
+'use strict';
+
+try { sessionStorage.setItem('xk_last_vol', 'k2a'); } catch (e) {}
+
+var LESSON_ID = 'k2a-09';
+var BOOK_PROGRESS_KEY = 'xk_k2a_progress';
+
+var $ = function (s) { return document.querySelector(s); };
+var $$ = function (s) { return document.querySelectorAll(s); };
+
+/* ===== 严格 1 对 1 拼音标注 ===== */
+var HAN = /[\u3400-\u9fff]/;
+var pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function ruby(text, py) {
+  if (!py) return esc(text);
+  var syl = py.trim().split(/\s+/), i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) {
+      var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; }
+      out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>';
+    } else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+$$('[data-py]').forEach(function (el) { el.innerHTML = ruby(el.textContent, el.dataset.py); });
+
+$('#backBtn').addEventListener('click', function () {
+  try { sessionStorage.setItem('xk_last_vol', 'k2a'); } catch (e) {}
+});
+
+/* ===== 语音与轻柔音效 ===== */
+var voiceOn = true;
+function stopVoice() {
+  if (window.__xkVoice) window.__xkVoice.stop();
+  else if (window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
+}
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text, '../audio/', true); return; }
+}
+
+var audioCtx = null;
+function playChime(freqs) {
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!audioCtx) audioCtx = new AC();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    var now = audioCtx.currentTime;
+    freqs.forEach(function (f, idx) {
+      var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(f, now + idx * 0.085);
+      g.gain.setValueAtTime(0.001, now + idx * 0.085);
+      g.gain.exponentialRampToValueAtTime(0.11, now + idx * 0.085 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.085 + 0.24);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(now + idx * 0.085); o.stop(now + idx * 0.085 + 0.26);
+    });
+  } catch (e) {}
+}
+
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem(BOOK_PROGRESS_KEY) || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem(BOOK_PROGRESS_KEY, JSON.stringify(d));
+  } catch (e) {}
+}
+
+/* ===== 彩带庆祝 ===== */
+var cCv = $('#confetti'), cCtx = cCv.getContext('2d'), cfParts = [];
+function resizeConfetti() { cCv.width = window.innerWidth; cCv.height = window.innerHeight; }
+function burstConfetti() {
+  cfParts = [];
+  var cols = ['#2b8a57', '#d97706', '#dc2626', '#0284c7', '#ec4899', '#eab308'];
+  for (var i = 0; i < 90; i++) {
+    cfParts.push({
+      x: cCv.width * (0.2 + Math.random() * 0.6), y: cCv.height * 0.28,
+      vx: (Math.random() - 0.5) * 9, vy: -4 - Math.random() * 7,
+      s: 6 + Math.random() * 6, r: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.24,
+      col: cols[i % cols.length], life: 1
+    });
+  }
+}
+function tickConfetti() {
+  if (!cfParts.length) return;
+  cCtx.clearRect(0, 0, cCv.width, cCv.height);
+  for (var i = cfParts.length - 1; i >= 0; i--) {
+    var p = cfParts[i];
+    p.x += p.vx; p.y += p.vy; p.vy += 0.21; p.r += p.vr; p.life -= 0.008;
+    if (p.life <= 0 || p.y > cCv.height + 24) { cfParts.splice(i, 1); continue; }
+    cCtx.save(); cCtx.globalAlpha = Math.max(0, p.life);
+    cCtx.translate(p.x, p.y); cCtx.rotate(p.r);
+    cCtx.fillStyle = p.col; cCtx.fillRect(-p.s * 0.5, -p.s * 0.3, p.s, p.s * 0.6);
+    cCtx.restore();
+  }
+}
+
+/* ===== 四季教学数据 ===== */
+var SEASONS = [
+  {
+    key: 'spring', idx: 0, t: 0.0, label: '春', icon: '🌸', name: '春季', col: '#2b8a57',
+    badge: '🌸 当前：春季 · 抽芽开花',
+    cap: '🌸 春季特写：嫩绿新叶 + 五瓣粉白苹果花',
+    tag: '✨ 春季 · 嫩叶与五瓣苹果花',
+    note: '🌸 <b>春季</b>：长出嫩绿新叶，开满粉白苹果花',
+    spoken: '春天暖和啦！苹果树抽出嫩绿的新叶，枝头开满五瓣粉白苹果花！',
+    slotOk: '放对啦！第 1 季是春天，苹果树抽出嫩芽、开满粉白苹果花！',
+    orderHint: '第 1 季应该是春天！快找找满树开着粉白小花的那张标本卡吧！'
+  },
+  {
+    key: 'summer', idx: 1, t: 1 / 3, label: '夏', icon: '☀️', name: '夏季', col: '#d97706',
+    badge: '☀️ 当前：夏季 · 茂叶结青果',
+    cap: '☀️ 夏季特写：浓密翠绿叶 + 青青小苹果',
+    tag: '✨ 夏季 · 茂密绿叶与青小果',
+    note: '☀️ <b>夏季</b>：枝叶浓密翠绿，结出青青小苹果',
+    spoken: '夏天阳光充足！苹果树枝繁叶茂，花瓣谢了，树枝上结出一颗颗青青的小苹果！',
+    slotOk: '放对啦！第 2 季是夏天，茂密绿叶里长出青青的小苹果！',
+    orderHint: '第 2 季应该是夏天！花谢之后树叶最浓绿，结出青青的小苹果，快找青果树卡吧！'
+  },
+  {
+    key: 'autumn', idx: 2, t: 2 / 3, label: '秋', icon: '🍁', name: '秋季', col: '#c2410c',
+    badge: '🍁 当前：秋季 · 黄叶熟红果',
+    cap: '🍁 秋季特写：金黄落叶 + 饱满红苹果',
+    tag: '✨ 秋季 · 黄叶飘落与大红果',
+    note: '🍁 <b>秋季</b>：树叶变黄飘落，苹果成熟变红变大',
+    spoken: '秋天凉爽啦！苹果树的叶子慢慢变黄飘落，枝头挂满了又大又甜的红苹果！',
+    slotOk: '放对啦！第 3 季是秋天，树叶变黄飘落，苹果成熟变红啦！',
+    orderHint: '第 3 季应该是秋天！青苹果慢慢长大成熟变红，树叶变黄，快找红果树卡吧！'
+  },
+  {
+    key: 'winter', idx: 3, t: 1.0, label: '冬', icon: '❄️', name: '冬季', col: '#0284c7',
+    badge: '❄️ 当前：冬季 · 落叶留冬芽',
+    cap: '❄️ 冬季特写：落叶光枝 + 棕色休眠冬芽',
+    tag: '✨ 冬季 · 积雪光枝与棕色冬芽',
+    note: '❄️ <b>冬季</b>：树叶落光，枝头留着棕色冬芽过冬',
+    spoken: '冬天寒冷下雪啦！苹果树落光了树叶，光秃秃的树枝上藏着棕色的小冬芽，安静休眠等春天再发芽！',
+    slotOk: '放对啦！第 4 季是冬天，树叶落光积着白雪，枝头留着冬芽过冬！',
+    orderHint: '第 4 季应该是冬天！天气最冷，树叶全部落光露出棕色冬芽，快找落叶雪枝树卡吧！'
+  }
+];
+
+/* ===== Three.js r147 去塑料自然三点光立体木质沙盘 ===== */
+var cv = $('#cv');
+var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color('#8ecae6');
+scene.fog = new THREE.Fog('#9cd2eb', 19, 46);
+
+var camera = new THREE.PerspectiveCamera(37, 16 / 9, 0.1, 90);
+camera.position.set(0.0, 5.45, 11.55);
+camera.lookAt(0.0, 1.28, 0.35);
+
+// 柔和三点光（绝不白底过曝、去塑料感！）
+var hemiL = new THREE.HemisphereLight('#fffbf0', '#4f684e', 0.66);
+scene.add(hemiL);
+var sunL = new THREE.DirectionalLight('#fff2d6', 0.80);
+sunL.position.set(-4.5, 8.8, 6.2);
+sunL.castShadow = true;
+sunL.shadow.mapSize.set(1024, 1024);
+sunL.shadow.camera.left = -9; sunL.shadow.camera.right = 9;
+sunL.shadow.camera.top = 9; sunL.shadow.camera.bottom = -9;
+sunL.shadow.bias = -0.0008;
+scene.add(sunL);
+var rimL = new THREE.DirectionalLight('#b8dcff', 0.24);
+rimL.position.set(5.5, 4.5, -6.5);
+scene.add(rimL);
+
+function stdMat(hex, extra) {
+  var o = { color: new THREE.Color(hex), roughness: 0.82, metalness: 0.02 };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshStandardMaterial(o);
+}
+function mesh(geo, mat, cast, recv) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = cast !== false;
+  m.receiveShadow = recv !== false;
+  return m;
+}
+function ctex(w, h, drawFn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  var ctx = c.getContext('2d'); drawFn(ctx, w, h);
+  var t = new THREE.CanvasTexture(c);
+  t.needsUpdate = true;
+  return t;
+}
+
+var HIT_MAT = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false });
+var live = new THREE.Group();
+scene.add(live);
+
+/* 1. 精致木质圆盘沙盘底座 + 柔和自然草地/雪地 + 远山 */
+var woodTex = ctex(256, 64, function (c, w, h) {
+  c.fillStyle = '#7c5332'; c.fillRect(0, 0, w, h);
+  for (var i = 0; i < 18; i++) {
+    c.fillStyle = i % 2 ? 'rgba(60,34,16,0.22)' : 'rgba(168,120,76,0.16)';
+    c.fillRect(0, i * 3.6, w, 2.2);
+  }
+});
+woodTex.wrapS = woodTex.wrapT = THREE.RepeatWrapping; woodTex.repeat.set(4, 1);
+
+var grassTex = ctex(256, 256, function (c, w, h) {
+  c.fillStyle = '#ffffff'; c.fillRect(0, 0, w, h);
+  for (var i = 0; i < 220; i++) {
+    c.fillStyle = i % 2 ? 'rgba(0,0,0,0.045)' : 'rgba(255,255,255,0.06)';
+    c.beginPath();
+    c.ellipse((i * 73) % w, (i * 119) % h, 9 + (i % 5) * 4, 4 + (i % 3) * 2, (i % 6) * 0.5, 0, Math.PI * 2);
+    c.fill();
+  }
+});
+
+var woodBaseMat = stdMat('#8a5e3b', { map: woodTex, roughness: 0.72 });
+var woodPedestal = mesh(new THREE.CylinderGeometry(7.42, 7.82, 0.58, 48), woodBaseMat, false, true);
+woodPedestal.position.set(0, -0.30, -0.2);
+live.add(woodPedestal);
+
+var groundMat = stdMat('#6da36d', { map: grassTex, roughness: 0.90 });
+var groundTop = mesh(new THREE.CylinderGeometry(7.16, 7.22, 0.14, 48), groundMat, false, true);
+groundTop.position.set(0, 0.01, -0.2);
+live.add(groundTop);
+
+var curbRim = mesh(new THREE.TorusGeometry(7.24, 0.16, 12, 52), stdMat('#9c6e44', { roughness: 0.65 }), false, true);
+curbRim.rotation.x = Math.PI / 2;
+curbRim.position.set(0, 0.05, -0.2);
+live.add(curbRim);
+
+var hillMat = stdMat('#55875a', { roughness: 0.92 });
+[[-4.2, 0.65, -4.5, 2.85, 1.32], [4.1, 0.72, -4.7, 3.15, 1.48], [0.2, 0.55, -5.3, 3.55, 1.15]].forEach(function (h) {
+  var hm = mesh(new THREE.SphereGeometry(h[3], 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.52), hillMat, false, true);
+  hm.scale.set(1, h[4] / h[3], 0.66);
+  hm.position.set(h[0], -0.02, h[2]);
+  live.add(hm);
+});
+
+// 树下暖棕土壤花坛 + 石块围边
+var soilMound = mesh(new THREE.CylinderGeometry(1.12, 1.44, 0.24, 28), stdMat('#6e4b30', { roughness: 0.92 }), false, true);
+soilMound.position.set(0, 0.16, -1.05);
+live.add(soilMound);
+var pebbleMat = stdMat('#9a9284', { roughness: 0.85 });
+for (var pb = 0; pb < 12; pb++) {
+  var pa = pb * Math.PI * 2 / 12;
+  var pbm = mesh(new THREE.DodecahedronGeometry(0.13 + (pb % 2) * 0.03, 0), pebbleMat, true, true);
+  pbm.scale.set(1.25, 0.62, 1.0);
+  pbm.position.set(Math.cos(pa) * 1.40, 0.12, -1.05 + Math.sin(pa) * 1.35);
+  live.add(pbm);
+}
+
+// 冬季柔和浅灰蓝积雪地毯（绝不惨白刺眼！）
+var snowBlanketMat = stdMat('#c8dced', { roughness: 0.90, transparent: true, opacity: 0 });
+var snowBlanket = mesh(new THREE.CylinderGeometry(7.04, 7.12, 0.08, 42), snowBlanketMat, false, true);
+snowBlanket.position.set(0, 0.08, -0.2);
+live.add(snowBlanket);
+
+/* 2. 中央写实精雕 3D 苹果树（深褐树皮纵纹 + 粗干分枝 + 嫩绿/浓绿/金红叶簇 + 5瓣苹果花 + 青苹果 + 光泽红苹果 + 棕色冬芽 + 枝雪） */
+var appleTreeG = new THREE.Group();
+appleTreeG.position.set(0, 0.24, -1.05);
+live.add(appleTreeG);
+
+var barkTex = ctex(128, 256, function (c, w, h) {
+  c.fillStyle = '#5e3b22'; c.fillRect(0, 0, w, h);
+  for (var i = 0; i < 26; i++) {
+    c.fillStyle = i % 2 ? 'rgba(36,18,8,0.38)' : 'rgba(130,86,52,0.25)';
+    c.fillRect((i * 11) % w, 0, 4 + (i % 3) * 2, h);
+  }
+});
+var barkMat = stdMat('#694226', { map: barkTex, roughness: 0.90 });
+var barkDarkMat = stdMat('#4f301b', { roughness: 0.92 });
+
+// 树干与稳健树根
+var trunk = mesh(new THREE.CylinderGeometry(0.24, 0.40, 1.92, 16), barkMat);
+trunk.position.y = 0.94;
+appleTreeG.add(trunk);
+
+for (var rt = 0; rt < 5; rt++) {
+  var ra = rt * Math.PI * 2 / 5 + 0.3;
+  var rootM = mesh(new THREE.CylinderGeometry(0.075, 0.16, 0.62, 8), barkDarkMat);
+  rootM.position.set(Math.cos(ra) * 0.30, 0.14, Math.sin(ra) * 0.30);
+  rootM.rotation.z = -Math.cos(ra) * 0.92;
+  rootM.rotation.x = Math.sin(ra) * 0.92;
+  appleTreeG.add(rootM);
+}
+
+// 5 条粗壮主枝 + 12 条自然细枝（冬天光枝极有层次感）
+var branchSpecs = [
+  { p: [-0.46, 2.00, 0.12], rx: 0.18, rz: 0.62, len: 1.54, r1: 0.08, r2: 0.16 },
+  { p: [0.48, 2.04, 0.08],  rx: 0.14, rz: -0.64, len: 1.58, r1: 0.08, r2: 0.16 },
+  { p: [0.02, 2.28, -0.22], rx: -0.34, rz: 0.04, len: 1.45, r1: 0.072, r2: 0.14 },
+  { p: [-0.26, 2.28, 0.38], rx: 0.54, rz: 0.32, len: 1.22, r1: 0.062, r2: 0.12 },
+  { p: [0.28, 2.24, -0.34], rx: -0.50, rz: -0.34, len: 1.24, r1: 0.062, r2: 0.12 }
+];
+branchSpecs.forEach(function (b) {
+  var br = mesh(new THREE.CylinderGeometry(b.r1, b.r2, b.len, 10), barkMat);
+  br.position.set(b.p[0], b.p[1], b.p[2]);
+  br.rotation.set(b.rx, 0, b.rz);
+  appleTreeG.add(br);
+});
+
+var twigSpecs = [
+  [-0.98, 2.54, 0.24, 0.2, 0.88], [-0.74, 2.82, -0.14, -0.25, 0.45], [-1.18, 2.34, 0.12, 0.12, 1.05],
+  [1.00, 2.56, 0.18, 0.18, -0.84], [0.78, 2.86, -0.16, -0.28, -0.42], [1.20, 2.36, 0.10, 0.12, -1.02],
+  [0.05, 3.04, 0.24, 0.38, -0.12], [-0.34, 2.94, 0.50, 0.52, 0.36],
+  [0.44, 2.74, 0.44, 0.48, -0.44], [-0.12, 2.78, -0.56, -0.55, 0.18],
+  [-0.54, 3.16, 0.08, 0.15, 0.56], [0.54, 3.14, 0.06, 0.14, -0.56]
+];
+twigSpecs.forEach(function (tw) {
+  var tm = mesh(new THREE.CylinderGeometry(0.03, 0.055, 0.82, 7), barkDarkMat);
+  tm.position.set(tw[0], tw[1], tw[2]);
+  tm.rotation.set(tw[3], 0, tw[4]);
+  appleTreeG.add(tm);
+});
+
+// 18 簇分层树冠叶片（温和有层次的自然叶色，告别发白泡泡！）
+var foliageG = new THREE.Group();
+appleTreeG.add(foliageG);
+var leafMats = [
+  stdMat('#5fa85a', { roughness: 0.82 }),
+  stdMat('#478f45', { roughness: 0.84 }),
+  stdMat('#76bc6a', { roughness: 0.80 })
+];
+var leafClusterDefs = [
+  [0.0, 3.24, 0.0, 0.72], [-0.88, 2.76, 0.14, 0.65], [0.90, 2.78, 0.12, 0.66],
+  [-0.54, 3.12, 0.32, 0.60], [0.56, 3.10, 0.30, 0.60], [0.0, 2.88, 0.60, 0.56],
+  [-1.20, 2.40, 0.02, 0.54], [1.22, 2.42, 0.0, 0.55], [-0.62, 2.54, -0.52, 0.60],
+  [0.64, 2.56, -0.50, 0.60], [0.0, 3.00, -0.56, 0.64], [-0.30, 3.50, 0.06, 0.54],
+  [0.32, 3.46, -0.06, 0.52], [-0.74, 2.38, 0.54, 0.48], [0.76, 2.40, 0.52, 0.48],
+  [0.02, 2.48, 0.72, 0.46], [-0.94, 3.04, -0.14, 0.48], [0.94, 3.02, -0.16, 0.48]
+];
+var leafClusters = [];
+leafClusterDefs.forEach(function (d, idx) {
+  var c = mesh(new THREE.IcosahedronGeometry(d[3], 1), leafMats[idx % 3]);
+  c.position.set(d[0], d[1], d[2]);
+  c.rotation.set(idx * 0.4, idx * 0.7, 0);
+  c.scale.set(1.06, 0.84, 1.0);
+  foliageG.add(c);
+  leafClusters.push(c);
+});
+
+// 拖拽放大镜接近树冠时的柔和金色高亮光环
+var treeGlowRing = new THREE.Mesh(
+  new THREE.RingGeometry(1.58, 1.76, 36),
+  new THREE.MeshBasicMaterial({ color: '#fbbf24', transparent: true, opacity: 0, side: THREE.DoubleSide })
+);
+treeGlowRing.position.set(0, 2.75, 0.95);
+appleTreeG.add(treeGlowRing);
+
+// 春季 18 朵清晰五瓣粉白苹果花（带金黄花蕊，浮在树冠外层！）
+var blossomsG = new THREE.Group();
+appleTreeG.add(blossomsG);
+var petalWhiteMat = stdMat('#fff5f7', { roughness: 0.62 });
+var petalPinkMat = stdMat('#f9a8d4', { roughness: 0.65 });
+var stamenMat = stdMat('#f59e0b', { roughness: 0.5, emissive: '#d97706', emissiveIntensity: 0.18 });
+var blossomSpots = [
+  [-0.98, 2.70, 0.78], [-0.46, 3.20, 0.90], [0.10, 2.90, 1.12], [0.68, 3.12, 0.88],
+  [1.08, 2.68, 0.74], [-1.32, 2.38, 0.54], [1.34, 2.42, 0.52], [-0.52, 2.38, 1.00],
+  [0.56, 2.40, 0.98], [-0.16, 3.58, 0.62], [0.36, 3.52, 0.58], [-0.94, 3.04, 0.44],
+  [0.92, 3.02, 0.42], [0.02, 3.28, 0.84], [-1.14, 2.76, 0.36], [1.14, 2.76, 0.36],
+  [-0.18, 2.54, 1.14], [0.24, 2.58, 1.12]
+];
+blossomSpots.forEach(function (sp, idx) {
+  var fl = new THREE.Group();
+  fl.position.set(sp[0], sp[1], sp[2]);
+  fl.lookAt(sp[0] * 1.4, sp[1] + 0.5, sp[2] + 4.2);
+  for (var p = 0; p < 5; p++) {
+    var ang = p * Math.PI * 2 / 5;
+    var pet = mesh(new THREE.SphereGeometry(0.11, 10, 8), (p + idx) % 2 ? petalWhiteMat : petalPinkMat, false, false);
+    pet.scale.set(0.95, 1.28, 0.34);
+    pet.position.set(Math.cos(ang) * 0.115, Math.sin(ang) * 0.115, 0);
+    fl.add(pet);
+  }
+  var ctr = mesh(new THREE.SphereGeometry(0.068, 8, 8), stamenMat, false, false);
+  ctr.position.z = 0.036;
+  fl.add(ctr);
+  blossomsG.add(fl);
+});
+
+// 夏季 14 颗青翠小苹果（带果柄+小叶+光泽，完全显露在枝叶外侧）
+var greenApplesG = new THREE.Group();
+appleTreeG.add(greenApplesG);
+var greenApMat = stdMat('#84cc16', { roughness: 0.38 });
+var greenHiMat = new THREE.MeshBasicMaterial({ color: '#ecfccb' });
+var apStemMat = stdMat('#5c3a1e', { roughness: 0.9 });
+var apLeafMat = stdMat('#22c55e', { roughness: 0.72 });
+var fruitSpots = [
+  [-0.98, 2.56, 0.82], [-0.46, 3.12, 0.96], [0.06, 2.82, 1.16], [0.64, 3.04, 0.92],
+  [1.08, 2.58, 0.78], [-1.26, 2.28, 0.56], [1.26, 2.32, 0.54], [-0.48, 2.32, 1.02],
+  [0.52, 2.34, 1.00], [-0.18, 3.46, 0.68], [0.34, 3.42, 0.64], [-0.82, 2.94, 0.62],
+  [0.84, 2.92, 0.60], [0.02, 2.48, 1.16]
+];
+fruitSpots.forEach(function (fs) {
+  var ag = new THREE.Group();
+  ag.position.set(fs[0], fs[1], fs[2]);
+  var body = mesh(new THREE.SphereGeometry(0.145, 14, 12), greenApMat);
+  body.scale.set(1.06, 0.94, 1.0);
+  var hi = mesh(new THREE.SphereGeometry(0.035, 8, 8), greenHiMat, false, false);
+  hi.position.set(-0.05, 0.05, 0.12);
+  var st = mesh(new THREE.CylinderGeometry(0.014, 0.018, 0.13, 6), apStemMat, false, false);
+  st.position.y = 0.15;
+  var lf = mesh(new THREE.SphereGeometry(0.075, 8, 6), apLeafMat, false, false);
+  lf.scale.set(1.5, 0.25, 0.75); lf.position.set(0.07, 0.18, 0); lf.rotation.z = 0.38;
+  ag.add(body); ag.add(hi); ag.add(st); ag.add(lf);
+  greenApplesG.add(ag);
+});
+
+// 秋季 14 颗饱满光泽大红苹果（带果蒂+高光，绝不被黄叶吞没！）
+var redApplesG = new THREE.Group();
+appleTreeG.add(redApplesG);
+var redApMat = stdMat('#c81e1e', { roughness: 0.30 });
+var redHiMat = new THREE.MeshBasicMaterial({ color: '#fecaca' });
+fruitSpots.forEach(function (fs) {
+  var ag = new THREE.Group();
+  ag.position.set(fs[0], fs[1], fs[2] + 0.08);
+  var body = mesh(new THREE.SphereGeometry(0.205, 16, 14), redApMat);
+  body.scale.set(1.08, 0.94, 1.02);
+  var hi = mesh(new THREE.SphereGeometry(0.052, 8, 8), redHiMat, false, false);
+  hi.scale.set(0.75, 1.25, 0.5);
+  hi.position.set(-0.075, 0.068, 0.165);
+  var st = mesh(new THREE.CylinderGeometry(0.018, 0.022, 0.16, 6), apStemMat, false, false);
+  st.position.y = 0.20;
+  var lf = mesh(new THREE.SphereGeometry(0.075, 8, 6), stdMat('#d97706'), false, false);
+  lf.scale.set(1.4, 0.22, 0.7); lf.position.set(0.08, 0.22, 0); lf.rotation.z = 0.42;
+  ag.add(body); ag.add(hi); ag.add(st); ag.add(lf);
+  redApplesG.add(ag);
+});
+
+// 冬季 14 颗明显棕色休眠冬芽 + 柔和枝雪（U6/U11 严格说=见）
+var winterBudsG = new THREE.Group();
+appleTreeG.add(winterBudsG);
+var budMat = stdMat('#5c2d14', { roughness: 0.72 });
+var budTipMat = stdMat('#9c5a2c', { roughness: 0.65 });
+var budSpots = [
+  [-1.02, 2.78, 0.28], [-1.32, 2.52, 0.16], [-0.74, 3.04, -0.10],
+  [1.02, 2.80, 0.24], [1.34, 2.52, 0.14], [0.78, 3.08, -0.14],
+  [0.06, 3.28, 0.28], [-0.36, 3.16, 0.56], [0.46, 2.94, 0.52], [-0.14, 3.00, -0.60],
+  [-0.64, 3.34, 0.12], [0.64, 3.32, 0.10], [-0.90, 2.48, 0.34], [0.92, 2.50, 0.30]
+];
+budSpots.forEach(function (bs) {
+  var bg = new THREE.Group();
+  bg.position.set(bs[0], bs[1], bs[2]);
+  var cone = mesh(new THREE.ConeGeometry(0.065, 0.20, 8), budMat, false, false);
+  cone.position.y = 0.10;
+  var base = mesh(new THREE.SphereGeometry(0.065, 8, 8), budTipMat, false, false);
+  bg.add(cone); bg.add(base);
+  winterBudsG.add(bg);
+});
+
+var snowCapsG = new THREE.Group();
+appleTreeG.add(snowCapsG);
+var snowMat = stdMat('#f2f8ff', { roughness: 0.85 });
+[[-0.52, 2.18, 0.14, 0.38], [0.54, 2.22, 0.10, 0.38], [-0.96, 2.62, 0.24, 0.26],
+ [0.98, 2.64, 0.18, 0.26], [0.02, 2.50, -0.22, 0.32], [-0.26, 2.48, 0.38, 0.24],
+ [0.30, 2.44, -0.34, 0.24], [-1.18, 2.38, 0.12, 0.20], [1.20, 2.40, 0.10, 0.20]].forEach(function (sc) {
+  var sm = mesh(new THREE.SphereGeometry(sc[3], 12, 8), snowMat, false, false);
+  sm.scale.set(1.28, 0.32, 0.72);
+  sm.position.set(sc[0], sc[1], sc[2]);
+  snowCapsG.add(sm);
+});
+
+// 苹果树纯 Mesh 大碰撞球（屏幕射线直命，拖拽放大镜 100% 好触发！）
+var treeHitMesh = new THREE.Mesh(new THREE.SphereGeometry(2.15, 16, 14), HIT_MAT);
+treeHitMesh.position.set(0, 2.75, 0.12);
+treeHitMesh.userData.hit = 'tree';
+appleTreeG.add(treeHitMesh);
+
+/* 3. 半圆形四季太阳日历轨道 + 4 个微仰 50° 清晰正立节气牌桩 + 可丝滑拖拽 3D 小太阳 */
+var TRACK_CX = 0, TRACK_CZ = -0.82, TRACK_RX = 3.22, TRACK_RZ = 2.42;
+function trackPoint(t) {
+  var ang = Math.PI * (0.86 - t * 0.72); // 0->left(春), 1->right(冬)
+  return new THREE.Vector3(
+    TRACK_CX + Math.cos(ang) * TRACK_RX,
+    0.16,
+    TRACK_CZ + Math.sin(ang) * TRACK_RZ
+  );
+}
+
+var trackG = new THREE.Group();
+live.add(trackG);
+
+// 半圆彩色圆润轨道弧（自然柔和色调）
+var trackSegs = 40;
+for (var ts = 0; ts < trackSegs; ts++) {
+  var p1 = trackPoint(ts / trackSegs), p2 = trackPoint((ts + 1) / trackSegs);
+  var mid = p1.clone().add(p2).multiplyScalar(0.5);
+  var segLen = p1.distanceTo(p2) + 0.06;
+  var segCol = ts < 10 ? '#69b87a' : (ts < 20 ? '#d9a944' : (ts < 30 ? '#d4793b' : '#5aa6d6'));
+  var seg = mesh(new THREE.BoxGeometry(segLen, 0.12, 0.44), stdMat(segCol, { roughness: 0.72 }), false, true);
+  seg.position.set(mid.x, 0.11, mid.z);
+  seg.rotation.y = -Math.atan2(p2.z - p1.z, p2.x - p1.x);
+  trackG.add(seg);
+}
+
+// 4 个微仰 50° 面对镜头的立体直立节气牌桩（🌸 春 / ☀️ 夏 / 🍁 秋 / ❄️ 冬）
+var postHitMeshes = [];
+var postRings = [];
+var postChecks = [];
+var postWorldPos = [];
+
+SEASONS.forEach(function (s, idx) {
+  var pt = trackPoint(s.t);
+  postWorldPos.push(pt.clone().add(new THREE.Vector3(0, 0.92, 0)));
+
+  var pg = new THREE.Group();
+  pg.position.set(pt.x, 0.10, pt.z);
+  trackG.add(pg);
+
+  // 木墩底座
+  var baseCyl = mesh(new THREE.CylinderGeometry(0.38, 0.45, 0.22, 20), stdMat('#8a5e3b', { roughness: 0.78 }));
+  baseCyl.position.y = 0.11; pg.add(baseCyl);
+
+  // 支撑木柱
+  var stem = mesh(new THREE.CylinderGeometry(0.08, 0.10, 0.36, 10), stdMat('#6b4426', { roughness: 0.85 }));
+  stem.position.set(0, 0.32, -0.06); pg.add(stem);
+
+  // 微仰 50° 正面朝向镜头的清晰立牌（tilt = -0.35 rad，即牌面与水平夹角约 70°、微仰面向高视角镜头清晰无压扁！）
+  var signTex = ctex(240, 150, function (c, w, h) {
+    c.fillStyle = '#fffdf8'; c.fillRect(0, 0, w, h);
+    c.lineWidth = 14; c.strokeStyle = s.col; c.strokeRect(8, 8, w - 16, h - 16);
+    c.fillStyle = '#251e16'; c.font = 'bold 64px "Microsoft YaHei",sans-serif';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(s.icon + ' ' + s.label, w / 2, h / 2 + 4);
+  });
+  var woodEdgeMat = stdMat('#d4b895', { roughness: 0.75 });
+  var signFaceMat = new THREE.MeshBasicMaterial({ map: signTex });
+  var signBoard = mesh(new THREE.BoxGeometry(1.02, 0.64, 0.14),
+    [woodEdgeMat, woodEdgeMat, woodEdgeMat, woodEdgeMat, signFaceMat, woodEdgeMat]);
+  signBoard.position.set(0, 0.58, 0.04);
+  signBoard.rotation.x = -0.46; // 微仰面向高角度镜头，字大清亮！
+  pg.add(signBoard);
+
+  // 底座脉冲光环
+  var ring = new THREE.Mesh(
+    new THREE.RingGeometry(0.46, 0.60, 28),
+    new THREE.MeshBasicMaterial({ color: s.col, transparent: true, opacity: 0.55, side: THREE.DoubleSide })
+  );
+  ring.rotation.x = -Math.PI / 2; ring.position.y = 0.04;
+  pg.add(ring);
+  postRings.push(ring);
+
+  // 完成绿勾徽章（挂右上角绝不挡汉字）
+  var chkTex = ctex(64, 64, function (c) {
+    c.fillStyle = '#16a34a'; c.beginPath(); c.arc(32, 32, 28, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = '#ffffff'; c.lineWidth = 6; c.lineCap = 'round'; c.lineJoin = 'round';
+    c.beginPath(); c.moveTo(18, 33); c.lineTo(28, 43); c.lineTo(46, 22); c.stroke();
+  });
+  var chk = new THREE.Mesh(new THREE.CircleGeometry(0.18, 18), new THREE.MeshBasicMaterial({ map: chkTex, side: THREE.DoubleSide }));
+  chk.position.set(0.48, 0.86, 0.22);
+  chk.visible = false;
+  pg.add(chk);
+  postChecks.push(chk);
+
+  var phit = new THREE.Mesh(new THREE.BoxGeometry(1.18, 1.05, 0.88), HIT_MAT);
+  phit.position.set(0, 0.52, 0.04);
+  phit.userData.hit = 'post';
+  phit.userData.seasonIdx = idx;
+  pg.add(phit);
+  postHitMeshes.push(phit);
+});
+
+// 发光可丝滑拖动的 3D 小太阳（悬在节气牌上方，笑脸金日清晰醒目）
+var sunG = new THREE.Group();
+live.add(sunG);
+var sunCore = new THREE.Mesh(new THREE.SphereGeometry(0.35, 22, 18), new THREE.MeshBasicMaterial({ color: '#ffcf33' }));
+sunG.add(sunCore);
+var sunHalo = new THREE.Mesh(new THREE.SphereGeometry(0.50, 18, 14),
+  new THREE.MeshBasicMaterial({ color: '#f59e0b', transparent: true, opacity: 0.34 }));
+sunG.add(sunHalo);
+var sunRaysG = new THREE.Group();
+for (var sr = 0; sr < 10; sr++) {
+  var ra2 = sr * Math.PI * 2 / 10;
+  var coneR = new THREE.Mesh(new THREE.ConeGeometry(0.065, 0.23, 6), new THREE.MeshBasicMaterial({ color: '#fde047' }));
+  coneR.position.set(Math.cos(ra2) * 0.49, Math.sin(ra2) * 0.49, 0);
+  coneR.rotation.z = ra2 - Math.PI / 2;
+  sunRaysG.add(coneR);
+}
+sunG.add(sunRaysG);
+var sunStem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.56, 6),
+  new THREE.MeshBasicMaterial({ color: '#fbbf24', transparent: true, opacity: 0.72 }));
+sunStem.position.y = -0.46;
+sunG.add(sunStem);
+
+var sunHitMesh = new THREE.Mesh(new THREE.SphereGeometry(0.84, 14, 12), HIT_MAT);
+sunHitMesh.userData.hit = 'sun';
+sunG.add(sunHitMesh);
+
+/* 4. 左侧木质托垫上的可拖/可点 3D 观察放大镜（1280x800 安全区内，与春牌留出清爽间距） */
+var MAG_HOME = new THREE.Vector3(-4.15, 0.62, 1.08);
+var magCoaster = mesh(new THREE.CylinderGeometry(0.52, 0.58, 0.10, 24), stdMat('#d9a84e', { roughness: 0.68 }), false, true);
+magCoaster.position.set(MAG_HOME.x, 0.11, MAG_HOME.z);
+live.add(magCoaster);
+
+var magRing = new THREE.Mesh(new THREE.RingGeometry(0.58, 0.72, 28),
+  new THREE.MeshBasicMaterial({ color: '#2b8a57', transparent: true, opacity: 0.56, side: THREE.DoubleSide }));
+magRing.rotation.x = -Math.PI / 2;
+magRing.position.set(MAG_HOME.x, 0.13, MAG_HOME.z);
+live.add(magRing);
+
+var magG = new THREE.Group();
+magG.position.copy(MAG_HOME);
+magG.rotation.y = 0.34;
+live.add(magG);
+
+var magRim = mesh(new THREE.TorusGeometry(0.40, 0.065, 14, 30), stdMat('#d97706', { roughness: 0.35, metalness: 0.25 }));
+magRim.position.y = 0.30; magG.add(magRim);
+var magGlass = new THREE.Mesh(new THREE.CircleGeometry(0.38, 26),
+  new THREE.MeshBasicMaterial({ color: '#e0f2fe', transparent: true, opacity: 0.44, side: THREE.DoubleSide }));
+magGlass.position.y = 0.30; magG.add(magGlass);
+var magGlint = new THREE.Mesh(new THREE.RingGeometry(0.22, 0.29, 16, 1, 0.5, 1.15),
+  new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.82, side: THREE.DoubleSide }));
+magGlint.position.set(0, 0.30, 0.025); magG.add(magGlint);
+var magHandle = mesh(new THREE.CylinderGeometry(0.062, 0.082, 0.68, 12), stdMat('#6e3b1b', { roughness: 0.62 }));
+magHandle.position.set(-0.30, -0.22, 0); magHandle.rotation.z = -0.52; magG.add(magHandle);
+
+var magHitMesh = new THREE.Mesh(new THREE.SphereGeometry(0.84, 14, 12), HIT_MAT);
+magHitMesh.position.set(0, 0.18, 0);
+magHitMesh.userData.hit = 'mag';
+magG.add(magHitMesh);
+var magGoal = MAG_HOME.clone();
+
+/* 5. 四季自然形态飘落粒子（真正花瓣 / 带脉秋叶 / 六角雪花，告别呆板方块！） */
+var petalTex = ctex(64, 64, function (c) {
+  c.clearRect(0, 0, 64, 64);
+  var g = c.createRadialGradient(32, 32, 4, 32, 32, 26);
+  g.addColorStop(0, '#fff5f7'); g.addColorStop(1, '#f472b6');
+  c.fillStyle = g;
+  c.beginPath(); c.moveTo(32, 8); c.bezierCurveTo(54, 14, 52, 48, 32, 58); c.bezierCurveTo(12, 48, 10, 14, 32, 8); c.fill();
+});
+var leafTex = ctex(64, 64, function (c) {
+  c.clearRect(0, 0, 64, 64);
+  c.fillStyle = '#e07a1f';
+  c.beginPath(); c.moveTo(32, 6); c.bezierCurveTo(56, 20, 52, 46, 32, 58); c.bezierCurveTo(12, 46, 8, 20, 32, 6); c.fill();
+  c.strokeStyle = '#fde68a'; c.lineWidth = 2.5;
+  c.beginPath(); c.moveTo(32, 10); c.lineTo(32, 54); c.stroke();
+});
+var snowTex = ctex(64, 64, function (c) {
+  c.clearRect(0, 0, 64, 64);
+  c.save(); c.translate(32, 32); c.strokeStyle = '#ffffff'; c.lineWidth = 4; c.lineCap = 'round';
+  for (var k = 0; k < 6; k++) {
+    c.rotate(Math.PI / 3);
+    c.beginPath(); c.moveTo(0, 0); c.lineTo(0, -24); c.stroke();
+    c.beginPath(); c.moveTo(0, -14); c.lineTo(-6, -19); c.moveTo(0, -14); c.lineTo(6, -19); c.stroke();
+  }
+  c.restore();
+});
+
+var partsG = new THREE.Group();
+live.add(partsG);
+var weatherParts = [];
+var partGeo = new THREE.PlaneGeometry(0.24, 0.24);
+var partMat = new THREE.MeshBasicMaterial({ map: petalTex, transparent: true, opacity: 0.92, side: THREE.DoubleSide, depthWrite: false });
+var curPartKind = 'spring';
+for (var wp = 0; wp < 42; wp++) {
+  var pm = new THREE.Mesh(partGeo, partMat);
+  pm.position.set((Math.random() - 0.5) * 8.4, 0.5 + Math.random() * 4.8, -2.4 + Math.random() * 4.8);
+  pm.userData = {
+    vy: 0.42 + Math.random() * 0.50,
+    vx: (Math.random() - 0.5) * 0.40,
+    ph: Math.random() * 6.28,
+    vr: (Math.random() - 0.5) * 2.4
+  };
+  partsG.add(pm);
+  weatherParts.push(pm);
+}
+
+/* 6. 阶段 2（课本 P39 盲序四季排卡）：4 个空白编号展槽 + 4 块打乱无字 3D 苹果树标本卡 */
+var stage2G = new THREE.Group();
+stage2G.position.y = -2.8;
+stage2G.visible = false;
+live.add(stage2G);
+
+var rackBase = mesh(new THREE.BoxGeometry(6.85, 0.22, 1.44), stdMat('#6b4426', { map: woodTex, roughness: 0.76 }), true, true);
+rackBase.position.set(0, 0.14, 2.02);
+stage2G.add(rackBase);
+
+var slotXs = [-2.36, -0.79, 0.79, 2.36];
+var slotHitMeshes = [];
+var slotFrames = [];
+var slotTargets = [];
+
+for (var si = 0; si < 4; si++) {
+  var sx = slotXs[si];
+  slotTargets.push(new THREE.Vector3(sx, 0.56, 2.02));
+
+  // 绝不剧透春夏秋冬文字！仅写空白编号：第 1 季 -> 第 4 季
+  var slTex = ctex(220, 240, function (c, w, h) {
+    c.fillStyle = '#faf3e6'; c.fillRect(0, 0, w, h);
+    c.strokeStyle = '#b99668'; c.lineWidth = 8; c.setLineDash([14, 10]);
+    c.strokeRect(12, 12, w - 24, h - 24);
+    c.setLineDash([]);
+    c.fillStyle = '#5c3f1f'; c.font = 'bold 38px "Microsoft YaHei",sans-serif';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText('第 ' + (si + 1) + ' 季', w / 2, h * 0.40);
+    c.fillStyle = '#9a7e56'; c.font = 'bold 24px "Microsoft YaHei",sans-serif';
+    c.fillText('拖入树影卡', w / 2, h * 0.64);
+  });
+  var slBoard = mesh(new THREE.BoxGeometry(1.24, 0.08, 1.14), new THREE.MeshBasicMaterial({ map: slTex }), false, true);
+  slBoard.position.set(sx, 0.28, 2.02);
+  slBoard.rotation.x = 0.16;
+  stage2G.add(slBoard);
+
+  var slFrame = new THREE.Mesh(
+    new THREE.RingGeometry(0.64, 0.76, 4),
+    new THREE.MeshBasicMaterial({ color: '#f59e0b', transparent: true, opacity: 0.48, side: THREE.DoubleSide })
+  );
+  slFrame.rotation.x = -Math.PI / 2 + 0.16;
+  slFrame.rotation.z = Math.PI / 4;
+  slFrame.position.set(sx, 0.34, 2.02);
+  stage2G.add(slFrame);
+  slotFrames.push(slFrame);
+
+  if (si < 3) {
+    var arrTex = ctex(64, 64, function (c) {
+      c.fillStyle = '#fde68a'; c.font = 'bold 46px sans-serif';
+      c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('→', 32, 32);
+    });
+    var arrM = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 0.32), new THREE.MeshBasicMaterial({ map: arrTex, transparent: true }));
+    arrM.rotation.x = -Math.PI / 2 + 0.16;
+    arrM.position.set(sx + 0.79, 0.29, 2.02);
+    stage2G.add(arrM);
+  }
+
+  var slHit = new THREE.Mesh(new THREE.BoxGeometry(1.48, 1.15, 1.48), HIT_MAT);
+  slHit.position.set(sx, 0.58, 2.02);
+  slHit.userData.hit = 'slot';
+  slHit.userData.slotIdx = si;
+  stage2G.add(slHit);
+  slotHitMeshes.push(slHit);
+}
+
+// 绘制清晰高辨识度的纯视觉无文字 3D 苹果树标本卡（白花树 / 青果树 / 红果树 / 落叶冬芽树）
+function makeTreeCardTexture(seasonKey) {
+  return ctex(256, 256, function (c, w, h) {
+    var bg = c.createLinearGradient(0, 0, 0, h);
+    if (seasonKey === 'spring') { bg.addColorStop(0, '#d8f0fc'); bg.addColorStop(1, '#eaf7e4'); }
+    else if (seasonKey === 'summer') { bg.addColorStop(0, '#bfe3fa'); bg.addColorStop(1, '#d8f0d4'); }
+    else if (seasonKey === 'autumn') { bg.addColorStop(0, '#fae6c8'); bg.addColorStop(1, '#f5e4be'); }
+    else { bg.addColorStop(0, '#c8dff0'); bg.addColorStop(1, '#e1eef7'); }
+    c.fillStyle = bg; c.fillRect(0, 0, w, h);
+
+    c.strokeStyle = '#9c784c'; c.lineWidth = 10; c.strokeRect(8, 8, w - 16, h - 16);
+
+    c.fillStyle = seasonKey === 'winter' ? '#b8d0e4' : (seasonKey === 'autumn' ? '#b38d4c' : '#65a664');
+    c.beginPath(); c.ellipse(w/2, h - 22, 110, 32, 0, 0, Math.PI * 2); c.fill();
+
+    // 树干和分枝
+    c.strokeStyle = '#5e381e'; c.lineCap = 'round';
+    c.lineWidth = 22;
+    c.beginPath(); c.moveTo(w/2, h - 30); c.lineTo(w/2, 146); c.stroke();
+    c.lineWidth = 11;
+    var brs = [[128, 152, 70, 106], [128, 152, 186, 104], [128, 146, 128, 84], [94, 124, 58, 124], [162, 122, 198, 122]];
+    brs.forEach(function (b) { c.beginPath(); c.moveTo(b[0], b[1]); c.lineTo(b[2], b[3]); c.stroke(); });
+
+    if (seasonKey === 'spring') {
+      var greens = [[128, 92, 42], [84, 110, 34], [172, 110, 34], [106, 74, 30], [152, 76, 30]];
+      c.fillStyle = '#6db86a';
+      greens.forEach(function (g) { c.beginPath(); c.arc(g[0], g[1], g[2], 0, Math.PI * 2); c.fill(); });
+      var fls = [[82, 96], [128, 70], [172, 96], [102, 124], [156, 124], [130, 104], [68, 122], [188, 118]];
+      fls.forEach(function (f) {
+        for (var p = 0; p < 5; p++) {
+          var a = p * Math.PI * 2 / 5;
+          c.fillStyle = p % 2 ? '#ffffff' : '#f9a8d4';
+          c.beginPath(); c.arc(f[0] + Math.cos(a) * 9.5, f[1] + Math.sin(a) * 9.5, 7.2, 0, Math.PI * 2); c.fill();
+        }
+        c.fillStyle = '#f59e0b'; c.beginPath(); c.arc(f[0], f[1], 4.8, 0, Math.PI * 2); c.fill();
+      });
+    } else if (seasonKey === 'summer') {
+      var dgreens = [[128, 92, 54], [74, 112, 42], [182, 112, 42], [98, 66, 38], [160, 68, 38], [128, 122, 44]];
+      c.fillStyle = '#257d3e';
+      dgreens.forEach(function (g) { c.beginPath(); c.arc(g[0], g[1], g[2], 0, Math.PI * 2); c.fill(); });
+      c.fillStyle = '#389e52';
+      [[110, 82, 26], [152, 86, 24], [86, 108, 22]].forEach(function (g) { c.beginPath(); c.arc(g[0], g[1], g[2], 0, Math.PI * 2); c.fill(); });
+      var gas = [[84, 112], [126, 84], [170, 110], [110, 126], [152, 126], [100, 74], [156, 78]];
+      gas.forEach(function (ga) {
+        c.fillStyle = '#a3e635'; c.beginPath(); c.arc(ga[0], ga[1], 11, 0, Math.PI * 2); c.fill();
+        c.strokeStyle = '#3f6212'; c.lineWidth = 2.2; c.stroke();
+        c.fillStyle = '#ecfccb'; c.beginPath(); c.arc(ga[0] - 3, ga[1] - 3, 3, 0, Math.PI * 2); c.fill();
+      });
+    } else if (seasonKey === 'autumn') {
+      var ags = [[128, 92, 48], [78, 112, 38], [178, 112, 38], [100, 70, 34], [158, 72, 34]];
+      ags.forEach(function (g, gi) {
+        c.fillStyle = gi % 2 ? '#d97706' : '#eab308';
+        c.beginPath(); c.arc(g[0], g[1], g[2], 0, Math.PI * 2); c.fill();
+      });
+      var ras = [[82, 112], [128, 86], [172, 110], [108, 124], [154, 124], [102, 72], [158, 78]];
+      ras.forEach(function (ra) {
+        c.fillStyle = '#c81e1e'; c.beginPath(); c.arc(ra[0], ra[1], 14.5, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#fecaca'; c.beginPath(); c.arc(ra[0] - 4, ra[1] - 4, 4.2, 0, Math.PI * 2); c.fill();
+      });
+      c.fillStyle = '#d97706';
+      [[54, 178], [198, 168], [76, 206], [184, 198]].forEach(function (fl) {
+        c.beginPath(); c.ellipse(fl[0], fl[1], 9, 5, 0.5, 0, Math.PI * 2); c.fill();
+      });
+    } else {
+      c.strokeStyle = '#f8fbff'; c.lineWidth = 6.5;
+      [[70, 102, 116, 138], [186, 100, 140, 138], [128, 82, 128, 126]].forEach(function (s) {
+        c.beginPath(); c.moveTo(s[0], s[1]); c.lineTo(s[2], s[3]); c.stroke();
+      });
+      c.fillStyle = '#6e3415';
+      [[70, 100], [186, 98], [128, 78], [58, 120], [198, 118]].forEach(function (bd) {
+        c.beginPath(); c.arc(bd[0], bd[1], 7, 0, Math.PI * 2); c.fill();
+      });
+      c.fillStyle = '#0284c7';
+      [[50, 62], [204, 66], [44, 152], [208, 158], [160, 46], [92, 48]].forEach(function (sf) {
+        c.beginPath(); c.arc(sf[0], sf[1], 4.5, 0, Math.PI * 2); c.fill();
+      });
+    }
+  });
+}
+
+// 4 块打乱顺序的无字 3D 标本卡（严格确保初始乱序！）
+var CARD_SHUFFLE_ORDER = [2, 0, 3, 1];
+var cards = [];
+var cardHitMeshes = [];
+
+function buildStage2Cards() {
+  CARD_SHUFFLE_ORDER.forEach(function (seasonIdx, homeIdx) {
+    var s = SEASONS[seasonIdx];
+    var homePos = new THREE.Vector3(slotXs[homeIdx], 0.54, 3.55);
+
+    var cg = new THREE.Group();
+    cg.position.copy(homePos);
+    stage2G.add(cg);
+
+    var sideMat = stdMat('#d8be98', { roughness: 0.72 });
+    var faceMat = new THREE.MeshBasicMaterial({ map: makeTreeCardTexture(s.key) });
+    var cardBox = mesh(new THREE.BoxGeometry(1.18, 0.14, 1.14), [sideMat, sideMat, faceMat, sideMat, sideMat, sideMat], true, true);
+    cardBox.rotation.x = 0.28;
+    cg.add(cardBox);
+
+    var borderMesh = new THREE.Mesh(
+      new THREE.RingGeometry(0.65, 0.75, 4),
+      new THREE.MeshBasicMaterial({ color: '#d96b1f', transparent: true, opacity: 0.0, side: THREE.DoubleSide })
+    );
+    borderMesh.rotation.x = -Math.PI / 2 + 0.28;
+    borderMesh.rotation.z = Math.PI / 4;
+    borderMesh.position.y = 0.09;
+    cg.add(borderMesh);
+
+    var chit = new THREE.Mesh(new THREE.BoxGeometry(1.38, 0.78, 1.36), HIT_MAT);
+    chit.position.y = 0.12;
+    chit.userData.hit = 'card';
+    chit.userData.cardIdx = cards.length;
+    cg.add(chit);
+    cardHitMeshes.push(chit);
+
+    cards.push({
+      idx: cards.length,
+      seasonIdx: seasonIdx,
+      homePos: homePos.clone(),
+      goalPos: homePos.clone(),
+      group: cg,
+      box: cardBox,
+      border: borderMesh,
+      placedSlot: -1,
+      shakeT: 0
+    });
+  });
+}
+buildStage2Cards();
+
+/* ===== 280x280 高清 2D Canvas 植物特征特写绘制（U11 说=见） ===== */
+var lensCv = $('#lensCv'), lensCtx = lensCv.getContext('2d');
+function drawLensCloseUp(seasonIdx) {
+  var c = lensCtx, w = 280, h = 280;
+  c.clearRect(0, 0, w, h);
+
+  var bg = c.createRadialGradient(140, 130, 18, 140, 140, 142);
+  if (seasonIdx === 0) { bg.addColorStop(0, '#f2fbf4'); bg.addColorStop(1, '#d2efd9'); }
+  else if (seasonIdx === 1) { bg.addColorStop(0, '#edf9f0'); bg.addColorStop(1, '#b6e6c3'); }
+  else if (seasonIdx === 2) { bg.addColorStop(0, '#fdf6e4'); bg.addColorStop(1, '#f5d489'); }
+  else { bg.addColorStop(0, '#e6f2fa'); bg.addColorStop(1, '#a8cce6'); }
+  c.fillStyle = bg; c.fillRect(0, 0, w, h);
+
+  c.strokeStyle = '#5e381e'; c.lineWidth = 14; c.lineCap = 'round';
+  c.beginPath(); c.moveTo(22, 198); c.quadraticCurveTo(126, 152, 248, 124); c.stroke();
+  c.lineWidth = 8;
+  c.beginPath(); c.moveTo(114, 156); c.quadraticCurveTo(132, 112, 156, 78); c.stroke();
+
+  function drawLeaf(x, y, ang, sc, fillCol, veinCol) {
+    c.save(); c.translate(x, y); c.rotate(ang); c.scale(sc, sc);
+    c.fillStyle = fillCol;
+    c.beginPath();
+    c.moveTo(0, 0);
+    c.bezierCurveTo(-24, -18, -22, -56, 0, -76);
+    c.bezierCurveTo(22, -56, 24, -18, 0, 0);
+    c.fill();
+    c.strokeStyle = veinCol; c.lineWidth = 2.4;
+    c.beginPath(); c.moveTo(0, -4); c.lineTo(0, -66); c.stroke();
+    for (var vi = 1; vi <= 3; vi++) {
+      var vy = -14 * vi;
+      c.beginPath(); c.moveTo(0, vy); c.lineTo(-10, vy - 10); c.stroke();
+      c.beginPath(); c.moveTo(0, vy); c.lineTo(10, vy - 10); c.stroke();
+    }
+    c.restore();
+  }
+
+  if (seasonIdx === 0) {
+    drawLeaf(88, 166, -0.75, 0.85, '#73c476', '#1e6e36');
+    drawLeaf(192, 138, 0.55, 0.88, '#4ea658', '#14532d');
+    drawLeaf(148, 92, -0.25, 0.72, '#8cd68b', '#1e6e36');
+    [[118, 118, 1.05], [186, 102, 0.82]].forEach(function (fl) {
+      c.save(); c.translate(fl[0], fl[1]); c.scale(fl[2], fl[2]);
+      for (var p = 0; p < 5; p++) {
+        c.save(); c.rotate(p * Math.PI * 2 / 5);
+        var pg = c.createRadialGradient(0, -18, 2, 0, -18, 22);
+        pg.addColorStop(0, '#ffffff'); pg.addColorStop(1, '#f48fb1');
+        c.fillStyle = pg;
+        c.beginPath(); c.ellipse(0, -20, 14, 20, 0, 0, Math.PI * 2); c.fill();
+        c.strokeStyle = '#ec4899'; c.lineWidth = 1.4; c.stroke();
+        c.restore();
+      }
+      c.fillStyle = '#fbbf24'; c.beginPath(); c.arc(0, 0, 11, 0, Math.PI * 2); c.fill();
+      for (var st = 0; st < 8; st++) {
+        var sa = st * Math.PI * 2 / 8;
+        c.fillStyle = '#b45309'; c.beginPath(); c.arc(Math.cos(sa) * 14, Math.sin(sa) * 14, 2.5, 0, Math.PI * 2); c.fill();
+      }
+      c.restore();
+    });
+  } else if (seasonIdx === 1) {
+    drawLeaf(74, 174, -0.82, 1.15, '#1e7e42', '#a7f3d0');
+    drawLeaf(136, 136, -0.35, 1.18, '#166534', '#86efac');
+    drawLeaf(206, 136, 0.62, 1.12, '#2b9348', '#d1fae5');
+    drawLeaf(168, 92, 0.22, 1.02, '#1e7e42', '#a7f3d0');
+    [[116, 178, 24], [174, 166, 22], [146, 112, 19]].forEach(function (ap) {
+      c.strokeStyle = '#5c3a1e'; c.lineWidth = 3.5;
+      c.beginPath(); c.moveTo(ap[0], ap[1] - ap[2] - 12); c.lineTo(ap[0], ap[1] - ap[2] + 3); c.stroke();
+      var ag = c.createRadialGradient(ap[0] - 6, ap[1] - 6, 3, ap[0], ap[1], ap[2]);
+      ag.addColorStop(0, '#d9f99d'); ag.addColorStop(0.55, '#84cc16'); ag.addColorStop(1, '#4d7c0f');
+      c.fillStyle = ag; c.beginPath(); c.arc(ap[0], ap[1], ap[2], 0, Math.PI * 2); c.fill();
+      c.fillStyle = 'rgba(255,255,255,.72)'; c.beginPath(); c.ellipse(ap[0] - 7, ap[1] - 7, 5, 3, -0.5, 0, Math.PI * 2); c.fill();
+    });
+  } else if (seasonIdx === 2) {
+    drawLeaf(76, 166, -0.85, 1.0, '#d97706', '#fef08a');
+    drawLeaf(216, 132, 0.72, 0.96, '#ca8a04', '#fef9c3');
+    drawLeaf(214, 226, 2.1, 0.66, '#c2410c', '#fed7aa');
+    drawLeaf(68, 86, -1.6, 0.58, '#d97706', '#fef08a');
+    [[122, 168, 34], [182, 136, 30]].forEach(function (ap) {
+      c.strokeStyle = '#5c3a1e'; c.lineWidth = 4;
+      c.beginPath(); c.moveTo(ap[0], ap[1] - ap[2] - 12); c.lineTo(ap[0], ap[1] - ap[2] + 4); c.stroke();
+      var ag = c.createRadialGradient(ap[0] - 10, ap[1] - 10, 4, ap[0], ap[1], ap[2]);
+      ag.addColorStop(0, '#fecaca'); ag.addColorStop(0.35, '#dc2626'); ag.addColorStop(1, '#991b1b');
+      c.fillStyle = ag; c.beginPath(); c.arc(ap[0], ap[1], ap[2], 0, Math.PI * 2); c.fill();
+      c.fillStyle = 'rgba(255,255,255,.78)'; c.beginPath(); c.ellipse(ap[0] - 10, ap[1] - 10, 7, 4, -0.5, 0, Math.PI * 2); c.fill();
+    });
+  } else {
+    c.strokeStyle = '#f8fbff'; c.lineWidth = 10; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(34, 188); c.quadraticCurveTo(124, 144, 240, 116); c.stroke();
+    [[118, 142, -0.45], [158, 76, 0.25], [202, 124, 0.45]].forEach(function (bd) {
+      c.save(); c.translate(bd[0], bd[1]); c.rotate(bd[2]);
+      c.fillStyle = '#6e3415';
+      c.beginPath(); c.moveTo(-10, 6); c.quadraticCurveTo(0, -28, 10, 6); c.closePath(); c.fill();
+      c.fillStyle = '#a65728';
+      c.beginPath(); c.moveTo(-6, 4); c.quadraticCurveTo(0, -16, 6, 4); c.closePath(); c.fill();
+      c.restore();
+    });
+    [[74, 88], [214, 78], [86, 212], [206, 206]].forEach(function (sf) {
+      c.save(); c.translate(sf[0], sf[1]); c.strokeStyle = '#0284c7'; c.lineWidth = 2.4;
+      for (var k = 0; k < 6; k++) {
+        c.rotate(Math.PI / 3);
+        c.beginPath(); c.moveTo(0, 0); c.lineTo(0, -12); c.stroke();
+      }
+      c.restore();
+    });
+  }
+}
+
+/* ===== 状态管理与双阶段核心逻辑 ===== */
+var curT = 0.0, targetT = 0.0;
+var curSeasonIdx = 0;
+var observed = [false, false, false, false];
+var stage2Active = false;
+var stage2Lift = 0;
+var placedCount = 0;
+var wrongTries = 0;
+var selectedCardIdx = -1;
+var stamps = { s1: false, s2: false, s3: false };
+var celebrated = false, demo = false, resetGen = 0;
+var lensOpen = false;
+var curGuideSpeech = '';
+var hoveringTree = false;
+var hoveringSlot = -1;
+
+function countObserved() { return observed.filter(Boolean).length; }
+function updateNotesCount() { $('#ntCnt').textContent = (countObserved() + placedCount) + '/8'; }
+
+function spawnFloat(text, xPct, yPct, isWarn) {
+  var el = document.createElement('div');
+  el.className = 'fword' + (isWarn ? ' warn' : '');
+  el.textContent = text;
+  el.style.left = xPct + '%';
+  el.style.top = yPct + '%';
+  $('#floatLayer').appendChild(el);
+  setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1900);
+}
+
+function addNoteSticker(html) {
+  var el = document.createElement('div');
+  el.className = 'stk';
+  el.innerHTML = html;
+  $('#ntList').prepend(el);
+  updateNotesCount();
+}
+
+function showLensForSeason(idx) {
+  var s = SEASONS[idx];
+  drawLensCloseUp(idx);
+  $('#lensCap').textContent = s.cap;
+  $('#lensTag').textContent = s.tag;
+  $('#lensRing').className = 'lens-ring' + (idx === 2 ? ' autumn' : (idx === 3 ? ' winter' : ''));
+  $('#lensWrap').classList.add('show');
+  document.body.classList.add('lens-open');
+  lensOpen = true;
+}
+function hideLens() {
+  $('#lensWrap').classList.remove('show');
+  document.body.classList.remove('lens-open');
+  lensOpen = false;
+}
+
+function setSeasonTarget(idx, announce) {
+  curSeasonIdx = Math.max(0, Math.min(3, idx));
+  targetT = SEASONS[curSeasonIdx].t;
+  $('#seasonBadge').textContent = SEASONS[curSeasonIdx].badge;
+  if (lensOpen) showLensForSeason(curSeasonIdx);
+  if (announce && !demo) {
+    var s = SEASONS[curSeasonIdx];
+    if (!observed[curSeasonIdx]) {
+      spawnFloat(s.icon + ' 来到' + s.name + '，快用放大镜细看苹果树！', 50, 34, false);
+      speak('来到' + s.name + '啦！快把放大镜拖到或点到苹果树上，看看这时的叶、花、果有什么变化！');
+    } else {
+      spawnFloat(s.badge, 50, 34, false);
+      speak(s.spoken);
+    }
+  }
+  updateGuide(false);
+}
+
+function inspectCurrentSeason() {
+  var s = SEASONS[curSeasonIdx];
+  showLensForSeason(curSeasonIdx);
+  magGoal.set(-1.35, 2.55, 0.72);
+  var g = resetGen;
+  setTimeout(function () {
+    if (g !== resetGen) return;
+    if (!dragKind) magGoal.copy(MAG_HOME);
+  }, 1150);
+
+  var isNew = !observed[curSeasonIdx];
+  if (isNew) {
+    observed[curSeasonIdx] = true;
+    postChecks[curSeasonIdx].visible = true;
+    addNoteSticker(s.note);
+    playChime([523, 659, 784]);
+    spawnFloat(s.icon + ' ' + s.name + '特写已记录！', 48, 30, false);
+
+    var obsCnt = countObserved();
+    if (obsCnt >= 2 && !stamps.s1) { stamps.s1 = true; $('#st1').classList.add('lit'); }
+    if (obsCnt === 4 && !stamps.s2) { stamps.s2 = true; $('#st2').classList.add('lit'); }
+
+    if (obsCnt === 4 && !stage2Active) {
+      stage2Active = true;
+      stage2G.visible = true;
+      updateGuide(false);
+      if (!demo) {
+        speak(s.spoken + ' 太棒啦！四个季节全部观察完啦！现在进入盲序排卡挑战，请按植物生长规律把 4 张苹果树卡放进第 1 季到第 4 季展槽吧！');
+      }
+      var g2 = resetGen;
+      setTimeout(function () { if (g2 === resetGen && stage2Active && placedCount < 4) hideLens(); }, 2200);
+      return;
+    }
+  } else {
+    playChime([587, 784]);
+    spawnFloat(s.cap, 48, 30, false);
+  }
+  updateGuide(false);
+  if (!demo) speak(s.spoken);
+}
+
+function nextEmptySlot() {
+  for (var i = 0; i < 4; i++) {
+    var filled = cards.some(function (c) { return c.placedSlot === i; });
+    if (!filled) return i;
+  }
+  return -1;
+}
+
+function tryPlaceCardInSlot(cardIdx, slotIdx) {
+  var card = cards[cardIdx];
+  if (!card || card.placedSlot !== -1) return;
+  if (cards.some(function (c) { return c.placedSlot === slotIdx; })) {
+    card.goalPos.copy(card.homePos);
+    card.shakeT = 0.45;
+    spawnFloat('这个展槽已经有卡片啦，放进空展槽吧！', 50, 56, true);
+    speak('这个展槽已经放好卡片啦，试试放进还没有卡片的展槽吧！');
+    return;
+  }
+
+  if (card.seasonIdx === slotIdx) {
+    card.placedSlot = slotIdx;
+    card.goalPos.copy(slotTargets[slotIdx]);
+    card.border.material.color.set('#16a34a');
+    card.border.material.opacity = 0.90;
+    slotFrames[slotIdx].material.color.set('#16a34a');
+    slotFrames[slotIdx].material.opacity = 0.92;
+    selectedCardIdx = -1;
+    placedCount++;
+    setSeasonTarget(slotIdx, false);
+    addNoteSticker('✓ <b>第 ' + (slotIdx + 1) + ' 季</b>：' + SEASONS[slotIdx].name + '生长规律排对啦');
+    playChime([523, 659, 784, 988]);
+    spawnFloat('✓ 第 ' + (slotIdx + 1) + ' 季排对啦！', 50, 44, false);
+
+    if (placedCount === 4 && !stamps.s3) {
+      stamps.s3 = true;
+      $('#st3').classList.add('lit');
+    }
+    updateGuide(false);
+
+    if (!demo && !celebrated && countObserved() === 4 && placedCount === 4) {
+      celebrated = true;
+      saveProgress(LESSON_ID, true);
+      burstConfetti();
+      playChime([523, 659, 784, 1046]);
+      var g = resetGen;
+      setTimeout(function () {
+        if (g !== resetGen) return;
+        $('#winToast').classList.add('show');
+        speak('太棒啦！你用放大镜看遍了苹果树的春夏秋冬，又按抽芽开花、结青果、熟红果、落叶休眠的规律排对了全部四季卡片！快来看科学小结论领小红花吧！', true);
+      }, 650);
+      return;
+    }
+    if (!demo) speak(SEASONS[slotIdx].slotOk);
+  } else {
+    wrongTries++;
+    card.goalPos.copy(card.homePos);
+    card.shakeT = 0.55;
+    card.border.material.color.set('#ef4444');
+    card.border.material.opacity = 0.88;
+    selectedCardIdx = -1;
+    playChime([330, 262]);
+    var g = resetGen;
+    setTimeout(function () {
+      if (g !== resetGen) return;
+      if (card.placedSlot === -1) card.border.material.opacity = 0;
+    }, 850);
+
+    var hintMsg = '要先在春天开满花、夏天长出青青小果，秋天苹果才会变红，冬天再落叶休眠哦！' + SEASONS[slotIdx].orderHint;
+    spawnFloat('↺ 顺序不对哦，再想想植物生长规律！', 50, 48, true);
+    if (!demo) speak(hintMsg);
+    updateGuide(false);
+  }
+}
+
+function updateGuide(speakIt) {
+  var ico = '🌸';
+  if (countObserved() < 4) {
+    if (!observed[curSeasonIdx]) {
+      ico = '🔍';
+      curGuideSpeech = '第1步：把左侧放大镜拖到或点到苹果树上，细看' + SEASONS[curSeasonIdx].name + '苹果树的叶、花、果！';
+    } else {
+      var nextS = observed.indexOf(false);
+      ico = SEASONS[nextS].icon;
+      curGuideSpeech = '第1步：很棒！再拖动小太阳或点「' + SEASONS[nextS].label + '」节气牌，观察' + SEASONS[nextS].name + '苹果树！';
+    }
+  } else if (placedCount < 4) {
+    var slot = nextEmptySlot();
+    ico = '🃏';
+    curGuideSpeech = '第2步：盲序排卡！按开花→青果→红果→落叶的顺序，把对应树卡拖或点进「第 ' + (slot + 1) + ' 季」展槽！';
+  } else {
+    ico = '🏆';
+    curGuideSpeech = '太棒啦！苹果树四季规律全掌握，随时自由拖小太阳和放大镜继续观察！';
+  }
+  $('#guideIco').textContent = ico;
+  $('#guideTxt').textContent = curGuideSpeech;
+  $('#guideBar').classList.toggle('done', countObserved() === 4 && placedCount === 4);
+  if (speakIt) speak(curGuideSpeech, true);
+}
+
+/* ===== 单焦点 #targetCue（U10：永不遮挡 #notes 与 #guideBar） ===== */
+var cueEl = $('#targetCue');
+var tmpV = new THREE.Vector3();
+function projectToScreen(worldPos) {
+  tmpV.copy(worldPos).project(camera);
+  return {
+    x: (tmpV.x * 0.5 + 0.5) * window.innerWidth,
+    y: (-tmpV.y * 0.5 + 0.5) * window.innerHeight
+  };
+}
+
+function updateTargetCue() {
+  if ($('#winToast').classList.contains('show') || demo) {
+    cueEl.classList.remove('show');
+    return;
+  }
+  var targetPos = null, label = '';
+  if (countObserved() < 4) {
+    if (!observed[curSeasonIdx]) {
+      targetPos = new THREE.Vector3(MAG_HOME.x, MAG_HOME.y + 0.92, MAG_HOME.z);
+      label = '🔍 拖或点放大镜看' + SEASONS[curSeasonIdx].name + '苹果树';
+    } else {
+      var ns = observed.indexOf(false);
+      targetPos = postWorldPos[ns];
+      label = '☀️ 拖太阳或点「' + SEASONS[ns].icon + ' ' + SEASONS[ns].label + '」';
+    }
+  } else if (placedCount < 4) {
+    var slot = nextEmptySlot();
+    if (selectedCardIdx !== -1) {
+      targetPos = slotTargets[slot].clone().add(new THREE.Vector3(0, 0.62, 0));
+      label = '👇 点进「第 ' + (slot + 1) + ' 季」展槽';
+    } else {
+      var rightCard = cards.find(function (c) { return c.seasonIdx === slot && c.placedSlot === -1; });
+      if (rightCard) {
+        targetPos = rightCard.group.position.clone().add(new THREE.Vector3(0, 0.68, 0));
+        label = '🃏 拖或点第 ' + (slot + 1) + ' 季树影卡进槽';
+      }
+    }
+  }
+  if (!targetPos) {
+    cueEl.classList.remove('show');
+    return;
+  }
+  var p = projectToScreen(targetPos);
+  var cx = Math.max(125, Math.min(window.innerWidth - 255, p.x));
+  var cy = Math.max(115, Math.min(window.innerHeight - 28, p.y));
+  cueEl.style.left = cx + 'px';
+  cueEl.style.top = cy + 'px';
+  cueEl.textContent = label;
+  cueEl.classList.add('show');
+}
+
+/* ===== 纯 Mesh 优先拾取 + 丝滑太阳圆弧拖动 + 屏幕射线直命（U8） ===== */
+var ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+var dragPlaneH = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.52);
+var dragPlaneV = new THREE.Plane(new THREE.Vector3(0, 0, 1), -0.65);
+var dragHitPt = new THREE.Vector3();
+
+var dragKind = null; // 'sun' | 'mag' | 'card'
+var dragCardIdx = -1;
+var downX = 0, downY = 0, moved = false;
+
+function setRay(e) {
+  var r = cv.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+}
+
+function pickPriority(e) {
+  setRay(e);
+  if (stage2Active && stage2Lift > 0.35) {
+    var activeCards = cardHitMeshes.filter(function (m) { return cards[m.userData.cardIdx].placedSlot === -1; });
+    var hc = ray.intersectObjects(activeCards, false);
+    if (hc.length) return { kind: 'card', cardIdx: hc[0].object.userData.cardIdx };
+    var hs = ray.intersectObjects(slotHitMeshes, false);
+    if (hs.length) return { kind: 'slot', slotIdx: hs[0].object.userData.slotIdx };
+  }
+  if (ray.intersectObject(magHitMesh, false).length) return { kind: 'mag' };
+  if (ray.intersectObject(sunHitMesh, false).length) return { kind: 'sun' };
+  var hp = ray.intersectObjects(postHitMeshes, false);
+  if (hp.length) return { kind: 'post', seasonIdx: hp[0].object.userData.seasonIdx };
+  if (ray.intersectObject(treeHitMesh, false).length) return { kind: 'tree' };
+  return null;
+}
+
+// 丝滑太阳轨道投影：结合圆弧角与 X 投影，边缘不跳变！
+function nearestTrackT(worldPt) {
+  var dx = worldPt.x - TRACK_CX;
+  var dz = Math.max(0.25, worldPt.z - TRACK_CZ);
+  var ang = Math.atan2(dz, dx);
+  var tArc = (0.86 * Math.PI - ang) / (0.72 * Math.PI);
+  var tX = (worldPt.x / (TRACK_RX * 0.92) + 1) * 0.5;
+  var t = tArc * 0.72 + tX * 0.28;
+  return Math.max(0, Math.min(1, t));
+}
+
+function markInteracted() { document.body.classList.add('interacted'); }
+
+cv.addEventListener('pointerdown', function (e) {
+  markInteracted();
+  if (demo) stopDemo();
+  downX = e.clientX; downY = e.clientY; moved = false;
+  var hit = pickPriority(e);
+  if (!hit) {
+    if (selectedCardIdx !== -1) {
+      cards[selectedCardIdx].border.material.opacity = 0;
+      selectedCardIdx = -1;
+    }
+    return;
+  }
+
+  if (hit.kind === 'sun' || hit.kind === 'mag' || hit.kind === 'card') {
+    dragKind = hit.kind;
+    dragCardIdx = hit.kind === 'card' ? hit.cardIdx : -1;
+    cv.classList.add('grabbing');
+    if (cv.setPointerCapture) try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+    return;
+  }
+
+  if (hit.kind === 'post') {
+    setSeasonTarget(hit.seasonIdx, true);
+    return;
+  }
+
+  if (hit.kind === 'tree') {
+    inspectCurrentSeason();
+    return;
+  }
+
+  if (hit.kind === 'slot') {
+    if (selectedCardIdx !== -1) {
+      tryPlaceCardInSlot(selectedCardIdx, hit.slotIdx);
+    } else {
+      spawnFloat('先点或拖下方一张树影卡放进这个展槽吧！', 50, 56, false);
+      speak('请先选中或拖起前面的一张苹果树影卡，再放进第' + (hit.slotIdx + 1) + '季展槽里！');
+    }
+  }
+});
+
+cv.addEventListener('pointermove', function (e) {
+  if (!dragKind) {
+    var hv = pickPriority(e);
+    cv.style.cursor = hv ? ((hv.kind === 'sun' || hv.kind === 'mag' || hv.kind === 'card') ? 'grab' : 'pointer') : 'default';
+    return;
+  }
+  if (!moved && Math.hypot(e.clientX - downX, e.clientY - downY) >= 14) {
+    moved = true;
+  }
+  if (!moved) return;
+
+  setRay(e);
+  if (dragKind === 'sun') {
+    if (ray.ray.intersectPlane(dragPlaneH, dragHitPt)) {
+      targetT = nearestTrackT(dragHitPt);
+      curT = targetT;
+      var sIdx = Math.max(0, Math.min(3, Math.round(curT * 3)));
+      if (sIdx !== curSeasonIdx) {
+        curSeasonIdx = sIdx;
+        $('#seasonBadge').textContent = SEASONS[curSeasonIdx].badge;
+        if (lensOpen) showLensForSeason(curSeasonIdx);
+        updateGuide(false);
+      }
+    }
+  } else if (dragKind === 'mag') {
+    if (ray.ray.intersectPlane(dragPlaneV, dragHitPt)) {
+      magGoal.set(
+        Math.max(-4.5, Math.min(3.6, dragHitPt.x)),
+        Math.max(0.55, Math.min(4.25, dragHitPt.y)),
+        0.65
+      );
+    }
+    var overTree = ray.intersectObject(treeHitMesh, false).length > 0;
+    var lensWorld = new THREE.Vector3(magGoal.x, magGoal.y + 0.30, magGoal.z);
+    hoveringTree = overTree || lensWorld.distanceTo(new THREE.Vector3(0, 2.75, -0.5)) < 2.45;
+    if (hoveringTree && !lensOpen) showLensForSeason(curSeasonIdx);
+  } else if (dragKind === 'card' && dragCardIdx !== -1) {
+    var card = cards[dragCardIdx];
+    if (ray.ray.intersectPlane(dragPlaneH, dragHitPt)) {
+      card.goalPos.set(
+        Math.max(-4.2, Math.min(4.2, dragHitPt.x)),
+        0.96,
+        Math.max(1.1, Math.min(4.2, dragHitPt.z))
+      );
+    }
+    var hs = ray.intersectObjects(slotHitMeshes, false);
+    hoveringSlot = hs.length ? hs[0].object.userData.slotIdx : -1;
+  }
+});
+
+function finishDrag(e) {
+  if (!dragKind) return;
+  var kind = dragKind;
+  var cIdx = dragCardIdx;
+  dragKind = null;
+  dragCardIdx = -1;
+  hoveringTree = false;
+  hoveringSlot = -1;
+  cv.classList.remove('grabbing');
+  if (cv.releasePointerCapture && e && e.pointerId !== undefined) try { cv.releasePointerCapture(e.pointerId); } catch (err) {}
+
+  if (kind === 'sun') {
+    if (!moved) {
+      var nextS = observed.indexOf(false);
+      if (nextS === -1 || nextS === curSeasonIdx) nextS = (curSeasonIdx + 1) % 4;
+      setSeasonTarget(nextS, true);
+    } else {
+      var snap = Math.max(0, Math.min(3, Math.round(curT * 3)));
+      setSeasonTarget(snap, true);
+    }
+  } else if (kind === 'mag') {
+    if (!moved) {
+      inspectCurrentSeason();
+    } else {
+      var hitTree = false;
+      if (e) { setRay(e); hitTree = ray.intersectObject(treeHitMesh, false).length > 0; }
+      var lensPos = new THREE.Vector3(magGoal.x, magGoal.y + 0.30, magGoal.z);
+      if (hitTree || lensPos.distanceTo(new THREE.Vector3(0, 2.75, -0.5)) < 2.65) {
+        inspectCurrentSeason();
+      } else {
+        magGoal.copy(MAG_HOME);
+      }
+    }
+  } else if (kind === 'card' && cIdx !== -1) {
+    var card = cards[cIdx];
+    if (!moved) {
+      if (selectedCardIdx === cIdx) {
+        var nextSl = nextEmptySlot();
+        if (nextSl !== -1) tryPlaceCardInSlot(cIdx, nextSl);
+      } else {
+        cards.forEach(function (c) { if (c.placedSlot === -1) c.border.material.opacity = 0; });
+        selectedCardIdx = cIdx;
+        card.border.material.color.set('#d96b1f');
+        card.border.material.opacity = 0.9;
+        playChime([587]);
+        var sl = nextEmptySlot();
+        spawnFloat('已选中卡片！再点上方「第 ' + (sl + 1) + ' 季」展槽放进去吧！', 50, 56, false);
+        speak('选好卡片啦！快点上面对应的数字展槽，把这张苹果树卡放进去吧！');
+      }
+    } else {
+      // 优先屏幕射线直命展槽，其次 3D 距离兜底！
+      var bestSlot = -1;
+      if (e) {
+        setRay(e);
+        var hSlot = ray.intersectObjects(slotHitMeshes, false);
+        if (hSlot.length) bestSlot = hSlot[0].object.userData.slotIdx;
+      }
+      if (bestSlot === -1) {
+        var bestDist = 1.48;
+        for (var i = 0; i < 4; i++) {
+          var d = Math.hypot(card.goalPos.x - slotTargets[i].x, card.goalPos.z - slotTargets[i].z);
+          if (d < bestDist) { bestDist = d; bestSlot = i; }
+        }
+      }
+      if (bestSlot !== -1) tryPlaceCardInSlot(cIdx, bestSlot);
+      else card.goalPos.copy(card.homePos);
+    }
+  }
+}
+cv.addEventListener('pointerup', finishDrag);
+cv.addEventListener('pointercancel', finishDrag);
+
+/* ===== 慢速配音分步演示（U2，绝不触发通关） ===== */
+function stopDemo() {
+  if (!demo) return;
+  demo = false;
+  $('#demoBtn').classList.remove('on');
+  $('#demoBtn').textContent = '▶ 演示';
+}
+function startDemo() {
+  markInteracted();
+  if (demo) { stopDemo(); stopVoice(); return; }
+  demo = true;
+  resetGen++;
+  var g = resetGen;
+  $('#demoBtn').classList.add('on');
+  $('#demoBtn').textContent = '⏸ 停止';
+
+  var steps = [
+    { s: 0, msg: '看春天！苹果树长出嫩绿新叶，枝头开满五瓣粉白苹果花。' },
+    { s: 1, msg: '拖到夏天！树叶变得浓密深绿，结出青青的小苹果。' },
+    { s: 2, msg: '来到秋天！树叶慢慢变黄飘落，苹果成熟又大又红！' },
+    { s: 3, msg: '进入冬天！树叶落光积起白雪，树枝上藏着棕色冬芽等待来年发芽！' }
+  ];
+  steps.forEach(function (st, idx) {
+    setTimeout(function () {
+      if (g !== resetGen || !demo) return;
+      setSeasonTarget(st.s, false);
+      showLensForSeason(st.s);
+      speak(st.msg, true);
+      spawnFloat(SEASONS[st.s].badge, 50, 32, false);
+    }, idx * 3300);
+  });
+  setTimeout(function () {
+    if (g !== resetGen) return;
+    stopDemo();
+    hideLens();
+    setSeasonTarget(0, false);
+    speak('演示结束！现在请你亲自用放大镜细看四季苹果树，再挑战盲序排卡吧！', true);
+  }, steps.length * 3300 + 300);
+}
+
+function resetAll() {
+  resetGen++;
+  stopDemo();
+  stopVoice();
+  dragKind = null; dragCardIdx = -1; selectedCardIdx = -1;
+  hoveringTree = false; hoveringSlot = -1;
+  curT = 0; targetT = 0; curSeasonIdx = 0;
+  observed = [false, false, false, false];
+  stage2Active = false; stage2Lift = 0; stage2G.visible = false; stage2G.position.y = -2.8;
+  placedCount = 0; wrongTries = 0;
+  stamps = { s1: false, s2: false, s3: false };
+  celebrated = false;
+  hideLens();
+  magGoal.copy(MAG_HOME); magG.position.copy(MAG_HOME);
+  postChecks.forEach(function (c) { c.visible = false; });
+  slotFrames.forEach(function (f) { f.material.color.set('#f59e0b'); f.material.opacity = 0.48; });
+  cards.forEach(function (c) {
+    c.placedSlot = -1; c.shakeT = 0;
+    c.goalPos.copy(c.homePos); c.group.position.copy(c.homePos);
+    c.border.material.opacity = 0;
+  });
+  $('#seasonBadge').textContent = SEASONS[0].badge;
+  $('#ntList').innerHTML = ''; updateNotesCount();
+  $$('.st').forEach(function (s) { s.classList.remove('lit'); });
+  $('#winToast').classList.remove('show');
+  $('#qFb').textContent = ''; $('#qFb').className = 'qfb';
+  $$('.qopt').forEach(function (b) { b.classList.remove('ok', 'bad'); });
+  updateGuide(false);
+}
+
+/* ===== 顶部控件绑定 ===== */
+$('#voiceBtn').addEventListener('click', function () {
+  markInteracted();
+  voiceOn = !voiceOn;
+  this.classList.toggle('on', voiceOn);
+  if (voiceOn) updateGuide(true); else stopVoice();
+});
+$('#demoBtn').addEventListener('click', startDemo);
+$('#guideBar').addEventListener('click', function () { markInteracted(); updateGuide(true); });
+$('#resetBtn').addEventListener('click', resetAll);
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+$('#winKeepBtn').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgainBtn').addEventListener('click', resetAll);
+$('#qOpts').addEventListener('click', function (e) {
+  var b = e.target.closest('.qopt');
+  if (!b) return;
+  if (b.dataset.ok === '1') {
+    b.classList.add('ok');
+    $('#qFb').textContent = '🌸 答对啦！春天开花→夏天青果→秋天红果→冬天落叶留冬芽！获得小红花！';
+    $('#qFb').className = 'qfb ok';
+    saveProgress(LESSON_ID, true);
+    playChime([659, 784, 1046]);
+    speak('答对啦！获得本课小红花！', true);
+  } else {
+    b.classList.add('bad');
+    var h = b.dataset.hint || '再想想哦！';
+    $('#qFb').textContent = h;
+    $('#qFb').className = 'qfb';
+    speak(h, true);
+  }
+});
+
+/* ===== 柔和自然高级四季色板插值引擎 ===== */
+var skyCols = [new THREE.Color('#8ecae6'), new THREE.Color('#66b5e3'), new THREE.Color('#d9b589'), new THREE.Color('#95b7d2')];
+var grdCols = [new THREE.Color('#6da36d'), new THREE.Color('#4b8c4e'), new THREE.Color('#9c7b4a'), new THREE.Color('#b8cfe3')];
+var hillCols = [new THREE.Color('#55875a'), new THREE.Color('#38713e'), new THREE.Color('#82643a'), new THREE.Color('#9ab7cf')];
+var leafCols0 = [new THREE.Color('#66b566'), new THREE.Color('#2c7d3c'), new THREE.Color('#d98c24'), new THREE.Color('#b8601c')];
+var leafCols1 = [new THREE.Color('#4d9950'), new THREE.Color('#1f6630'), new THREE.Color('#c85a1c'), new THREE.Color('#9e4816')];
+var leafCols2 = [new THREE.Color('#7fc878'), new THREE.Color('#3d944a'), new THREE.Color('#e2aa30'), new THREE.Color('#cc7220')];
+
+function samplePalette(arr, u, out) {
+  var x = Math.max(0, Math.min(3, u * 3));
+  var i0 = Math.floor(x), i1 = Math.min(3, i0 + 1), f = x - i0;
+  return out.copy(arr[i0]).lerp(arr[i1], f);
+}
+
+function bell(u, center, width) {
+  var d = Math.abs(u - center) / width;
+  return d >= 1 ? 0 : Math.cos(d * Math.PI * 0.5);
+}
+
+function applySeasonVisuals(u, nowSec, dt) {
+  samplePalette(skyCols, u, scene.background);
+  scene.fog.color.copy(scene.background);
+  samplePalette(grdCols, u, groundMat.color);
+  samplePalette(hillCols, u, hillMat.color);
+
+  var snowAmt = Math.max(0, (u - 0.72) / 0.28);
+  snowBlanketMat.opacity = snowAmt * 0.88;
+  snowCapsG.visible = snowAmt > 0.08;
+  snowCapsG.scale.setScalar(0.01 + 0.99 * snowAmt);
+  winterBudsG.visible = snowAmt > 0.12;
+  winterBudsG.scale.setScalar(0.01 + 0.99 * snowAmt);
+
+  samplePalette(leafCols0, u, leafMats[0].color);
+  samplePalette(leafCols1, u, leafMats[1].color);
+  samplePalette(leafCols2, u, leafMats[2].color);
+
+  var leafScale;
+  if (u < 1 / 3) leafScale = 0.80 + (u / (1 / 3)) * 0.30;
+  else if (u < 2 / 3) leafScale = 1.10 - ((u - 1 / 3) / (1 / 3)) * 0.22;
+  else leafScale = Math.max(0, 0.88 * (1 - (u - 2 / 3) / 0.30));
+
+  foliageG.visible = leafScale > 0.03;
+  for (var i = 0; i < leafClusters.length; i++) {
+    var sw = Math.sin(nowSec * 1.5 + i * 0.7) * 0.02;
+    var s = Math.max(0.001, leafScale + sw);
+    leafClusters[i].scale.set(1.06 * s, 0.84 * s, 1.0 * s);
+  }
+
+  var spW = bell(u, 0.0, 0.32);
+  var suW = bell(u, 1 / 3, 0.28);
+  var auW = bell(u, 2 / 3, 0.28);
+
+  blossomsG.visible = spW > 0.04;
+  blossomsG.scale.setScalar(Math.max(0.01, spW));
+  greenApplesG.visible = suW > 0.04;
+  greenApplesG.scale.setScalar(Math.max(0.01, suW));
+  redApplesG.visible = auW > 0.04;
+  redApplesG.scale.setScalar(Math.max(0.01, auW));
+
+  var tp = trackPoint(u);
+  var sunArcH = 1.38 + Math.sin(Math.min(1, u * 1.18) * Math.PI) * 0.52;
+  sunG.position.set(tp.x, sunArcH + Math.sin(nowSec * 2.5) * 0.04, tp.z);
+  sunRaysG.rotation.z = nowSec * 0.72;
+  sunL.position.set(tp.x * 1.6, 7.2 + sunArcH * 2.0, 5.8);
+  sunL.intensity = 0.84 - snowAmt * 0.16;
+
+  // 自然形态飘落花瓣 / 秋叶 / 六角雪花
+  var showParts = spW > 0.25 || auW > 0.25 || snowAmt > 0.25;
+  partsG.visible = showParts;
+  if (showParts) {
+    var nextKind = snowAmt > 0.25 ? 'winter' : (auW > 0.25 ? 'autumn' : 'spring');
+    if (nextKind !== curPartKind) {
+      curPartKind = nextKind;
+      partMat.map = nextKind === 'winter' ? snowTex : (nextKind === 'autumn' ? leafTex : petalTex);
+      partMat.needsUpdate = true;
+    }
+    for (var k = 0; k < weatherParts.length; k++) {
+      var p = weatherParts[k], ud = p.userData;
+      p.position.y -= dt * ud.vy * (snowAmt > 0.25 ? 0.72 : 0.95);
+      p.position.x += Math.sin(nowSec * 1.3 + ud.ph) * dt * 0.50 + ud.vx * dt;
+      p.rotation.x += dt * ud.vr;
+      p.rotation.z += dt * ud.vr * 0.65;
+      if (p.position.y < 0.22) {
+        p.position.y = 4.6 + Math.random() * 1.2;
+        p.position.x = (Math.random() - 0.5) * 8.2;
+      }
+    }
+  }
+}
+
+/* ===== 帧循环 ===== */
+var introT0 = performance.now(), lastT = performance.now();
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  camera.updateProjectionMatrix();
+  resizeConfetti();
+}
+window.addEventListener('resize', fit);
+fit();
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (now - lastT) / 1000));
+  lastT = now;
+  var nowSec = now * 0.001;
+
+  var pop = Math.min(1, (performance.now() - introT0) / 680);
+  live.scale.setScalar(0.01 + 0.99 * (1 - Math.pow(1 - pop, 3)));
+
+  if (dragKind !== 'sun') {
+    curT += (targetT - curT) * Math.min(1, dt * 8.0);
+  }
+  applySeasonVisuals(curT, nowSec, dt);
+
+  // 拖放大镜接近树冠时的柔和发光提示
+  var glowGoal = hoveringTree ? (0.68 + Math.sin(nowSec * 6) * 0.16) : 0;
+  treeGlowRing.material.opacity += (glowGoal - treeGlowRing.material.opacity) * Math.min(1, dt * 10);
+
+  magG.position.lerp(magGoal, Math.min(1, dt * 12));
+  if (dragKind !== 'mag') magG.position.y += Math.sin(nowSec * 2.4) * 0.003;
+  magRing.scale.setScalar(1 + Math.sin(nowSec * 3.2) * 0.08);
+
+  for (var pi = 0; pi < postRings.length; pi++) {
+    var active = (pi === curSeasonIdx);
+    postRings[pi].scale.setScalar(active ? (1.1 + Math.sin(nowSec * 4.5) * 0.09) : 0.96);
+    postRings[pi].material.opacity = active ? 0.88 : 0.40;
+  }
+
+  if (stage2Active) {
+    stage2Lift = Math.min(1, stage2Lift + dt * 3.8);
+    var ease2 = 1 - Math.pow(1 - stage2Lift, 3);
+    stage2G.position.y = -2.8 * (1 - ease2);
+
+    for (var si2 = 0; si2 < 4; si2++) {
+      var filled = cards.some(function (c) { return c.placedSlot === si2; });
+      if (!filled) {
+        var isHov = (hoveringSlot === si2);
+        slotFrames[si2].material.color.set(isHov ? '#16a34a' : '#f59e0b');
+        slotFrames[si2].material.opacity = isHov ? 0.95 : (0.45 + Math.sin(nowSec * 3.5 + si2) * 0.12);
+      }
+    }
+
+    for (var ci = 0; ci < cards.length; ci++) {
+      var cd = cards[ci];
+      cd.group.position.lerp(cd.goalPos, Math.min(1, dt * 12));
+      if (cd.shakeT > 0) {
+        cd.shakeT = Math.max(0, cd.shakeT - dt);
+        cd.group.rotation.z = Math.sin(cd.shakeT * 36) * 0.22;
+      } else {
+        cd.group.rotation.z *= 0.8;
+      }
+    }
+  }
+
+  tickConfetti();
+  updateTargetCue();
+  renderer.render(scene, camera);
+}
+
+/* ===== 验收与自检接口 ===== */
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () {
+    return {
+      triangles: renderer.info.render.triangles,
+      celebrated: celebrated,
+      observedCount: countObserved(),
+      stage2Active: stage2Active,
+      placedCount: placedCount,
+      wrongTries: wrongTries
+    };
+  },
+  getState: function () {
+    return {
+      curSeasonIdx: curSeasonIdx,
+      observed: observed.slice(),
+      stage2Active: stage2Active,
+      placedCount: placedCount,
+      wrongTries: wrongTries,
+      celebrated: celebrated,
+      lensOpen: lensOpen
+    };
+  },
+  getScreenPoints: function () {
+    return {
+      mag: projectToScreen(magG.position.clone().add(new THREE.Vector3(0, 0.24, 0))),
+      sun: projectToScreen(sunG.position.clone()),
+      tree: projectToScreen(new THREE.Vector3(0, 2.85, -1.05)),
+      posts: postWorldPos.map(function (p) { return projectToScreen(p.clone().add(new THREE.Vector3(0, -0.35, 0))); }),
+      slots: slotTargets.map(function (p) { return projectToScreen(p.clone().add(new THREE.Vector3(0, stage2G.position.y, 0))); }),
+      cards: cards.map(function (c) {
+        return {
+          idx: c.idx,
+          seasonIdx: c.seasonIdx,
+          placedSlot: c.placedSlot,
+          pos: projectToScreen(c.group.position.clone().add(new THREE.Vector3(0, stage2G.position.y, 0)))
+        };
+      })
+    };
+  }
+};
+
+updateGuide(false);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

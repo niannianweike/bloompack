@@ -1,21 +1,34 @@
-# 教材原文件与扫描页（版权归出版社，严禁入库）
+# 教材 PDF：体积大（近 1GB），版权属出版社，不进仓库
 *.pdf
-pages/
 
-# 内部过程稿与验收临时文件
-review/
+# PDF 渲染出来的书页图（验收时临时看）
+review/pages/
+
+# 验收截图
+review/shots/
+
+# 改文件前的临时备份
+review/backups/
 lessons/_v1/
 
-# 本地造书工作台密钥与临时上传（严禁入库）
+# 额度缓存与日志：每次查询都变，属本机状态
+review/.quota-cache.json
+review/quota-log.csv
+
+# 每轮的临时提示词
+review/_prompt.md
+
+# 依赖
+node_modules/
+
+# Mimosa 扫描器本机状态
+.mimosa/
+
+# Python 字节码
+__pycache__/
+
+# 开源造书工作台本地密钥与临时上传教材（严禁入库）
 studio/.env
 studio/uploads/
 studio/jobs/
 studio/generated-books.json
-
-# 依赖与本机缓存
-node_modules/
-.mimosa/
-__pycache__/
-*.pyc
-.DS_Store
-Thumbs.db

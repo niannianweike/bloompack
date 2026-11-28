@@ -1,0 +1,2210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第1课 认识空气 · 3D空气取证实验台</title>
+<style>
+:root{--accent:#0284c7;--accent-dark:#0369a1;--ink:#241d15;--line:#e4d5ba;--card:rgba(255,253,248,.95)}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#4e3929;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas#cv.grabbing{cursor:grabbing}
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.46em;color:#6d5f49;font-weight:600}
+body.no-py rt{display:none}
+
+/* 左上标题卡片 */
+#hudTL{position:fixed;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:10px;
+  padding:7px 14px 7px 9px;border-radius:16px;background:var(--card);border:1.5px solid var(--line);
+  box-shadow:0 4px 16px rgba(24,14,4,.22)}
+#backBtn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;text-decoration:none;
+  background:#fff;border:1.5px solid var(--line);color:#5c4b34;font-size:19px;font-weight:900}
+#backBtn:hover{border-color:var(--accent);color:var(--accent)}
+.hd-t{font-size:16px;font-weight:900;line-height:1.5}
+.hd-sub{font-size:11.5px;color:#7b6c56;font-weight:700}
+
+/* 顶部中央动态分步小助手（U2） */
+#guideBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:6;
+  max-width:min(470px,calc(100vw - 630px));display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:15px;background:rgba(255,252,244,.97);
+  border:2px solid var(--accent);box-shadow:0 6px 18px rgba(2,132,199,.22);
+  font-size:13.5px;font-weight:800;color:#0c4a6e;cursor:pointer;line-height:1.38;transition:all .2s}
+#guideBar.flash{transform:translateX(-50%) scale(1.04)}
+#guideBar.stage2{border-color:#16a34a;background:#f0fdf4;color:#14532d}
+
+/* 右上工具条 */
+#hudTR{position:fixed;top:12px;right:12px;z-index:7;display:flex;align-items:center;gap:6px}
+.tbtn-wrap{position:relative;display:inline-flex}
+.tbtn{height:38px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);
+  background:var(--card);font-size:13.5px;font-weight:800;color:#4a3c28;cursor:pointer;
+  box-shadow:0 3px 0 #d9c8ab;transition:all .14s;white-space:nowrap}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.on{background:var(--accent);border-color:var(--accent-dark);color:#fff;box-shadow:0 3px 0 var(--accent-dark)}
+.entry-cue{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 7px;border-radius:99px;
+  background:#e0f2fe;border:1.5px solid var(--accent);color:#0369a1;font-size:10.5px;font-weight:900;
+  white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(2,132,199,.24);
+  animation:cuePop 1.6s ease-in-out infinite;transition:opacity .25s}
+body.interacted .entry-cue{opacity:0;animation:none}
+@keyframes cuePop{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+
+/* 右上可收起窄版发现栏（D3 防遮挡） */
+#notes{position:fixed;top:60px;right:12px;z-index:6;width:224px;padding:9px 11px;border-radius:15px;
+  background:var(--card);border:1.5px solid var(--line);box-shadow:0 6px 18px rgba(24,14,4,.22)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+.nt-title{font-size:13.5px;font-weight:900}
+.nt-cnt{font-size:12.5px;font-weight:900;color:var(--accent)}
+.nt-tog{padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:11px;font-weight:800;color:#6c5c45;cursor:pointer}
+.stamps{display:flex;gap:4px;margin-bottom:6px}
+.st{flex:1;text-align:center;padding:3px 2px;border-radius:8px;font-size:11px;font-weight:800;
+  border:1.5px dashed #d7c5a4;color:#9b8a70;background:#faf4e8;transition:all .2s;line-height:1.4}
+.st.lit{border-style:solid;border-color:var(--accent);background:#e0f2fe;color:#0369a1}
+#ntList{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto;padding-right:2px}
+#notes.collapsed #ntList,#notes.collapsed .stamps{display:none}
+#notes.collapsed .nt-head{margin-bottom:0}
+.stk{padding:5px 8px;border-radius:10px;background:#fff;border:1px solid #ece0c9;font-size:12px;font-weight:700;line-height:1.4}
+.stk b{color:#0369a1}
+
+/* 左上进度胶囊 */
+#scoreBadge{position:fixed;left:14px;top:74px;z-index:5;display:flex;align-items:center;gap:8px;
+  padding:6px 12px;border-radius:99px;background:var(--card);border:1.5px solid var(--line);
+  font-size:12.5px;font-weight:900;color:#3f311e;box-shadow:0 4px 12px rgba(24,14,4,.18)}
+#scoreBadge span.num{color:var(--accent);font-size:14px}
+
+/* 2D 透明对比卡（U11 Say=See，小熊放到杯后触发，左下角不挡桌面） */
+#compareCard{position:fixed;left:14px;bottom:14px;z-index:7;width:272px;padding:10px 12px;border-radius:16px;
+  background:rgba(255,253,248,.97);border:2px solid #0284c7;box-shadow:0 10px 26px rgba(15,23,42,.32);
+  display:none;animation:cardIn .28s ease-out}
+#compareCard.show{display:block}
+@keyframes cardIn{0%{opacity:0;transform:translateY(14px) scale(.94)}100%{opacity:1;transform:translateY(0) scale(1)}}
+.cmp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-size:12.5px;font-weight:900;color:#0c4a6e}
+.cmp-close{width:22px;height:22px;border-radius:7px;border:1px solid #cbd5e1;background:#fff;color:#475569;font-weight:900;cursor:pointer;line-height:1}
+#cmpCanvas{width:248px;height:112px;display:block;border-radius:10px;background:#1e293b}
+.cmp-cap{margin-top:6px;font-size:11.5px;font-weight:800;color:#334155;line-height:1.4}
+
+/* 3D 场景浮动标签与单焦点指引（U10） */
+#nameTags{position:fixed;inset:0;pointer-events:none;z-index:3}
+.ntag{position:absolute;transform:translate(-50%,-100%);padding:3px 10px;border-radius:99px;
+  background:rgba(15,23,42,.86);color:#f8fafc;border:1.5px solid rgba(148,163,184,.55);
+  font-size:12px;font-weight:800;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.25);transition:opacity .2s}
+.ntag.probe{background:rgba(3,105,161,.94);border-color:#7dd3fc}
+.ntag.done{background:rgba(21,128,61,.94);border-color:#86efac}
+
+#labels{position:fixed;inset:0;pointer-events:none;z-index:5}
+.cue3d{position:absolute;left:0;top:0;transform:translate(-50%,-100%);padding:5px 13px;border-radius:99px;
+  background:#e0f2fe;border:2px solid #0284c7;color:#0c4a6e;font-size:13px;font-weight:900;white-space:nowrap;
+  box-shadow:0 4px 14px rgba(2,132,199,.34);animation:cueBob 1.3s ease-in-out infinite;display:none;pointer-events:none}
+.cue3d.show{display:block}
+.cue3d.drop{background:#dcfce7;border-color:#16a34a;color:#14532d;box-shadow:0 4px 16px rgba(22,163,74,.42)}
+@keyframes cueBob{0%,100%{transform:translate(-50%,-100%) translateY(0)}50%{transform:translate(-50%,-100%) translateY(-6px)}}
+.popword{position:absolute;transform:translate(-50%,-100%);padding:5px 13px;border-radius:99px;
+  background:rgba(3,105,161,.95);color:#fff;font-size:13.5px;font-weight:800;white-space:nowrap;
+  box-shadow:0 4px 12px rgba(0,0,0,.28);animation:popFloat 1.95s ease-out forwards;pointer-events:none}
+.popword.warn{background:rgba(194,65,12,.96)}
+.popword.good{background:rgba(21,128,61,.96)}
+@keyframes popFloat{0%{opacity:0;transform:translate(-50%,-70%) scale(.75)}16%{opacity:1;transform:translate(-50%,-110%) scale(1.05)}82%{opacity:1;transform:translate(-50%,-140%) scale(1)}100%{opacity:0;transform:translate(-50%,-178%) scale(.96)}}
+
+/* 通关弹窗（D2 + U1 + U3） */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+#winToast{position:fixed;inset:0;z-index:35;display:none;place-items:center;background:rgba(24,18,12,.40);padding:16px}
+#winToast.show{display:grid}
+.win-card{width:min(454px,100%);max-height:85vh;overflow-y:auto;background:#fffdf8;
+  border:2.5px solid var(--accent);border-radius:22px;padding:18px 20px;text-align:center;
+  box-shadow:0 20px 50px rgba(20,12,4,.34)}
+.win-concl{margin:10px 0;padding:10px 12px;border-radius:13px;background:#e0f2fe;border:1.5px solid #7dd3fc;
+  text-align:left;font-size:13.5px;line-height:1.58;color:#0c4a6e}
+.win-quiz{margin:10px 0;padding:10px 12px;border-radius:13px;background:#f8fafc;border:1.5px solid #d9e2ec;text-align:left}
+.win-quiz h4{margin:0 0 8px;font-size:13.5px;color:#0369a1}
+.qopts{display:flex;flex-direction:column;gap:7px}
+.qopt{padding:8px 11px;border-radius:11px;border:1.5px solid #d9d0be;background:#fff;
+  font-size:13.5px;font-weight:800;text-align:left;cursor:pointer;transition:all .14s}
+.qopt:hover{border-color:var(--accent);background:#f0f9ff}
+.qopt.ok{border-color:#16a34a;background:#dcfce7;color:#14532d}
+.qopt.bad{border-color:#e03131;background:#fff5f5;color:#c92a2a}
+.qfb{margin-top:7px;font-size:12.5px;font-weight:800;min-height:18px;color:#166534}
+.win-acts{display:flex;justify-content:center;gap:10px;margin-top:12px}
+
+@media (max-width:960px){
+  #guideBar{top:58px;max-width:min(420px,calc(100vw - 260px));font-size:12.5px}
+}
+@media (max-width:740px){
+  #guideBar{top:54px;left:10px;right:10px;transform:none;max-width:none}
+  #scoreBadge{display:none}
+}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="nameTags"></div>
+<div id="labels">
+  <div class="cue3d" id="targetCue">👆 拖起或点保鲜袋在空中兜空气</div>
+</div>
+<canvas id="confetti"></canvas>
+
+<div id="hudTL">
+  <a id="backBtn" href="../index.html" title="返回书包">‹</a>
+  <div>
+    <div class="hd-t" data-py="dì kè rèn shi kōng qì">第1课 认识空气</div>
+    <div class="hd-sub">活页 · 课本第 3 页「抓空气取证 + 玻璃杯验特征」</div>
+  </div>
+</div>
+
+<div id="guideBar" title="点我重听当前步骤">
+  <span id="guideIco">🌬</span>
+  <span id="guideTxt">阶段1：先拖起或点一点保鲜袋在空中挥舞，把看不见的空气兜进袋子里！</span>
+</div>
+
+<div id="hudTR">
+  <span class="tbtn-wrap"><button class="tbtn on" id="voiceBtn" type="button">🔊 语音</button><span class="entry-cue">点我听玩法</span></span>
+  <span class="tbtn-wrap"><button class="tbtn" id="demoBtn" type="button">▶ 演示</button><span class="entry-cue">不会玩点演示</span></span>
+  <button class="tbtn" id="resetBtn" type="button">↺ 重来</button>
+  <button class="tbtn" id="pyBtn" type="button">拼音</button>
+</div>
+
+<div id="scoreBadge"><span id="phaseLabel">🌬 空气取证：</span><span class="num" id="progNum">0 / 6</span></div>
+
+<aside id="notes">
+  <div class="nt-head">
+    <span class="nt-title" data-py="wǒ de fā xiàn">我的发现</span>
+    <span class="nt-cnt" id="ntCnt">0</span>
+    <button class="nt-tog" id="ntTog" type="button">收起</button>
+  </div>
+  <div class="stamps">
+    <span class="st" id="st1" data-py="zhuā kōng qì">抓空气</span>
+    <span class="st" id="st2" data-py="kàn tòu míng">看透明</span>
+    <span class="st" id="st3" data-py="yàn tè zhēng">验特征</span>
+  </div>
+  <div id="ntList"></div>
+</aside>
+
+<div id="compareCard">
+  <div class="cmp-head">
+    <span>🐻 透明对比卡：空气 vs 牛奶</span>
+    <button class="cmp-close" id="cmpClose" type="button">×</button>
+  </div>
+  <canvas id="cmpCanvas" width="496" height="224"></canvas>
+  <div class="cmp-cap">透过空气杯清清楚楚看见小熊（无色透明）；牛奶杯白色不透明挡住小熊！</div>
+</div>
+
+<div id="winToast">
+  <div class="win-card">
+    <div style="font-size:38px">🏆</div>
+    <h3 style="margin:4px 0;color:#0c4a6e">太棒啦！空气的全部秘密都找到啦！</h3>
+    <div class="win-concl">
+      <b>✨ 科学小结论：</b>空气就在我们周围，虽然看不见、摸不到，但它真实占据空间、会流动，而且没有颜色、没有气味、是透明的。
+    </div>
+    <div class="win-quiz">
+      <h4>💡 考考你 · 答对领小红花 🌸</h4>
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:8px">把保鲜袋兜满空气扎紧，扎一个小孔挤压还能吹转小风车，这最能证明什么？</div>
+      <div class="qopts" id="qOpts">
+        <button class="qopt" type="button" data-ok="1">🌬 空气虽然看不见，但它占据空间而且会流动</button>
+        <button class="qopt" type="button" data-hint="再想想刚才小熊透视实验哦，空气和牛奶不一样，空气是无色透明的！">🥛 空气和牛奶一样是白色不透明的</button>
+        <button class="qopt" type="button" data-hint="瘪袋子扎孔吹不动风车，鼓袋子能把风车吹飞快，说明袋里真的装着空气哦！">📦 保鲜袋里其实什么也没有</button>
+      </div>
+      <div class="qfb" id="qFb"></div>
+    </div>
+    <div class="win-acts">
+      <button class="tbtn" id="winKeepBtn" type="button">继续玩</button>
+      <button class="tbtn on" id="winAgainBtn" type="button">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../audio/manifest.js?v=doubao-2"></script>
+<script src="../vendor/voice.js?v=doubao-2"></script>
+<script>
+(function () {
+'use strict';
+
+try { sessionStorage.setItem('xk_last_vol', 'k2a'); } catch (e) {}
+
+var LESSON_ID = 'k2a-01';
+var BOOK_PROGRESS_KEY = 'xk_k2a_progress';
+var $ = function (s) { return document.querySelector(s); };
+var $$ = function (s) { return document.querySelectorAll(s); };
+
+/* ===== 拼音标注 ===== */
+var HAN = /[\u3400-\u9fff]/;
+var pyErrors = [];
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function ruby(text, py) {
+  if (!py) return esc(text);
+  var syl = py.trim().split(/\s+/), i = 0, out = '';
+  for (var ch of text) {
+    if (HAN.test(ch)) {
+      var p = syl[i++]; if (!p) { pyErrors.push(text); p = ''; }
+      out += '<ruby>' + ch + '<rt>' + p + '</rt></ruby>';
+    } else out += esc(ch);
+  }
+  if (i !== syl.length) pyErrors.push(text);
+  return out;
+}
+$$('[data-py]').forEach(function (el) { el.innerHTML = ruby(el.textContent, el.dataset.py); });
+
+/* ===== 音效与离线豆包语音 ===== */
+var actx = null;
+function beep(freqs, dur) {
+  try {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    var t = actx.currentTime;
+    freqs.forEach(function (f, idx) {
+      var o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'triangle'; o.frequency.setValueAtTime(f, t + idx * 0.08);
+      g.gain.setValueAtTime(0.001, t + idx * 0.08);
+      g.gain.exponentialRampToValueAtTime(0.11, t + idx * 0.08 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.08 + (dur || 0.2));
+      o.connect(g); g.connect(actx.destination);
+      o.start(t + idx * 0.08); o.stop(t + idx * 0.08 + (dur || 0.22));
+    });
+  } catch (e) {}
+}
+
+var voiceOn = true;
+function stopVoice() {
+  if (window.__xkVoice) window.__xkVoice.stop();
+  else if (window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
+}
+function speak(text, force) {
+  if (!text || (!voiceOn && !force)) return;
+  if (window.__xkVoice) { window.__xkVoice.speak(text, '../audio/', true); return; }
+}
+
+function saveProgress(id, hasFlower) {
+  try {
+    var d = JSON.parse(localStorage.getItem(BOOK_PROGRESS_KEY) || '{}');
+    d[id] = { done: true, flower: !!(hasFlower || (d[id] && d[id].flower)), ts: Date.now() };
+    localStorage.setItem(BOOK_PROGRESS_KEY, JSON.stringify(d));
+  } catch (e) {}
+}
+
+/* ===== 彩带 ===== */
+var cfCanvas = $('#confetti'), cfCtx = cfCanvas.getContext('2d'), cfParts = [], cfOn = false;
+function fireConfetti() {
+  cfCanvas.width = window.innerWidth; cfCanvas.height = window.innerHeight;
+  cfParts = [];
+  var cols = ['#0284c7', '#22c55e', '#f59e0b', '#ec4899', '#38bdf8', '#facc15'];
+  for (var i = 0; i < 94; i++) {
+    cfParts.push({
+      x: cfCanvas.width * (0.14 + Math.random() * 0.72), y: -15 - Math.random() * 110,
+      vx: (Math.random() - 0.5) * 210, vy: 120 + Math.random() * 190,
+      r: 5 + Math.random() * 5, a: Math.random() * 6.28, va: (Math.random() - 0.5) * 9,
+      c: cols[i % cols.length]
+    });
+  }
+  cfOn = true;
+}
+
+/* ===== 2D 透明对比卡绘制（空气杯透明看小熊 vs 牛奶杯不透明挡小熊） ===== */
+function drawCompareCard() {
+  var c = $('#cmpCanvas'), g = c.getContext('2d');
+  var w = c.width, h = c.height;
+  g.clearRect(0, 0, w, h);
+
+  g.fillStyle = '#1e293b'; g.fillRect(0, 0, w / 2 - 2, h);
+  g.fillStyle = '#1e293b'; g.fillRect(w / 2 + 2, 0, w / 2 - 2, h);
+  g.fillStyle = '#475569'; g.fillRect(w / 2 - 2, 0, 4, h);
+
+  function drawBear(cx, cy, alpha) {
+    g.save();
+    g.globalAlpha = alpha;
+    g.fillStyle = '#92400e';
+    g.beginPath(); g.arc(cx - 24, cy - 32, 13, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.arc(cx + 24, cy - 32, 13, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#b45309';
+    g.beginPath(); g.ellipse(cx, cy + 28, 28, 32, 0, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.arc(cx, cy - 10, 28, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#fde68a';
+    g.beginPath(); g.ellipse(cx, cy - 3, 13, 10, 0, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.ellipse(cx, cy + 30, 16, 18, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#111827';
+    g.beginPath(); g.arc(cx - 10, cy - 16, 4, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.arc(cx + 10, cy - 16, 4, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.ellipse(cx, cy - 7, 5, 3.5, 0, 0, Math.PI * 2); g.fill();
+    g.restore();
+  }
+
+  function drawGlass(cx, cy, isMilk) {
+    g.save();
+    if (isMilk) {
+      g.fillStyle = '#f8fafc';
+      g.beginPath();
+      g.moveTo(cx - 46, cy - 34);
+      g.lineTo(cx - 38, cy + 56);
+      g.lineTo(cx + 38, cy + 56);
+      g.lineTo(cx + 46, cy - 34);
+      g.closePath();
+      g.fill();
+      g.fillStyle = '#e2e8f0';
+      g.beginPath(); g.ellipse(cx, cy - 34, 46, 10, 0, 0, Math.PI * 2); g.fill();
+    } else {
+      g.fillStyle = 'rgba(186,230,253,0.20)';
+      g.beginPath();
+      g.moveTo(cx - 48, cy - 48);
+      g.lineTo(cx - 38, cy + 56);
+      g.lineTo(cx + 38, cy + 56);
+      g.lineTo(cx + 48, cy - 48);
+      g.closePath();
+      g.fill();
+    }
+    g.strokeStyle = '#bae6fd';
+    g.lineWidth = 4;
+    g.beginPath();
+    g.moveTo(cx - 48, cy - 48);
+    g.lineTo(cx - 38, cy + 56);
+    g.lineTo(cx + 38, cy + 56);
+    g.lineTo(cx + 48, cy - 48);
+    g.stroke();
+    g.beginPath(); g.ellipse(cx, cy - 48, 48, 10, 0, 0, Math.PI * 2); g.stroke();
+    g.strokeStyle = 'rgba(255,255,255,0.55)';
+    g.lineWidth = 3;
+    g.beginPath(); g.moveTo(cx - 34, cy - 32); g.lineTo(cx - 28, cy + 44); g.stroke();
+    g.restore();
+  }
+
+  drawBear(124, 114, 1);
+  drawGlass(124, 118, false);
+  g.fillStyle = '#7dd3fc'; g.font = 'bold 22px "Microsoft YaHei",sans-serif'; g.textAlign = 'center';
+  g.fillText('空气杯：清晰透明 ✓', 124, 206);
+
+  drawBear(372, 114, 1);
+  drawGlass(372, 118, true);
+  g.fillStyle = '#fde68a'; g.font = 'bold 22px "Microsoft YaHei",sans-serif'; g.textAlign = 'center';
+  g.fillText('牛奶杯：挡住看不见 ✗', 372, 206);
+}
+drawCompareCard();
+
+/* ===== Three.js r147 深胡桃木+蓝灰高对比实验台（三灯柔和去塑料化，U11） ===== */
+var cv = $('#cv');
+var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color('#5a4230');
+var camera = new THREE.PerspectiveCamera(35, 16 / 9, 0.1, 80);
+camera.position.set(0.05, 6.2, 8.6);
+camera.lookAt(-0.1, 0.52, 0.2);
+
+scene.add(new THREE.HemisphereLight('#fffaf2', '#523b28', 0.80));
+var sunL = new THREE.DirectionalLight('#fff6e8', 0.78);
+sunL.position.set(-4.5, 10.5, 6.5);
+sunL.castShadow = true;
+sunL.shadow.mapSize.set(1024, 1024);
+sunL.shadow.camera.left = -8; sunL.shadow.camera.right = 8;
+sunL.shadow.camera.top = 8; sunL.shadow.camera.bottom = -8;
+sunL.shadow.bias = -0.0008;
+scene.add(sunL);
+var rimL = new THREE.DirectionalLight('#bae6fd', 0.34);
+rimL.position.set(5, 5, -5);
+scene.add(rimL);
+
+var ramp = new THREE.DataTexture(new Uint8Array([120,120,120,255, 184,184,184,255, 232,232,232,255, 255,255,255,255]), 4, 1, THREE.RGBAFormat);
+ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+
+function toon(hex, extra) {
+  var o = { color: new THREE.Color(hex), gradientMap: ramp };
+  if (extra) for (var k in extra) o[k] = extra[k];
+  return new THREE.MeshToonMaterial(o);
+}
+function mesh(geo, mat) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+function ctex(w, h, fn) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c);
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+
+// 深胡桃木桌底
+var woodTex = ctex(512, 512, function (g, w, h) {
+  g.fillStyle = '#5a3f2b'; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 80; i++) {
+    g.fillStyle = 'rgba(34,20,10,' + (0.04 + Math.random() * 0.08).toFixed(3) + ')';
+    g.fillRect(0, Math.random() * h, w, 2 + Math.random() * 4);
+  }
+});
+woodTex.wrapS = woodTex.wrapT = THREE.RepeatWrapping; woodTex.repeat.set(3, 3);
+var deskFloor = new THREE.Mesh(new THREE.PlaneGeometry(55, 55), new THREE.MeshLambertMaterial({ map: woodTex }));
+deskFloor.rotation.x = -Math.PI / 2; deskFloor.position.y = -0.18; deskFloor.receiveShadow = true;
+scene.add(deskFloor);
+
+var live = new THREE.Group();
+scene.add(live);
+
+// 蓝灰高对比实验垫（U11，让透明塑料保鲜袋、牙签、玻璃杯轮廓清晰锐利）
+var matTex = ctex(512, 360, function (g, w, h) {
+  g.fillStyle = '#283e52'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(148,184,214,0.16)'; g.lineWidth = 2;
+  for (var x = 32; x < w; x += 32) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); }
+  for (var y = 32; y < h; y += 32) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+  g.strokeStyle = '#5d86a8'; g.lineWidth = 10; g.strokeRect(8, 8, w - 16, h - 16);
+});
+var matBoard = mesh(new THREE.BoxGeometry(9.2, 0.14, 5.7), new THREE.MeshLambertMaterial({ map: matTex }));
+matBoard.position.set(-0.22, -0.07, 0.25); matBoard.castShadow = false;
+live.add(matBoard);
+
+var HIT_MAT = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.001, depthWrite: false });
+
+/* ===== 精致小深木托盘工厂（彻底告别刺眼惨白大煎蛋底座！） ===== */
+function makeWoodTray(r, rimCol) {
+  var tg = new THREE.Group();
+  var base = mesh(new THREE.CylinderGeometry(r, r + 0.04, 0.042, 26), toon('#3e2a1d'));
+  base.position.y = 0.021; base.castShadow = false; tg.add(base);
+  var inner = mesh(new THREE.CylinderGeometry(r - 0.045, r - 0.045, 0.046, 24), toon('#523929'));
+  inner.position.y = 0.023; inner.castShadow = false; tg.add(inner);
+  if (rimCol) {
+    var trim = new THREE.Mesh(new THREE.TorusGeometry(r - 0.015, 0.016, 8, 28),
+      new THREE.MeshBasicMaterial({ color: rimCol }));
+    trim.rotation.x = Math.PI / 2; trim.position.y = 0.045; tg.add(trim);
+  }
+  return tg;
+}
+
+/* ===== 精致圆润 5 指 3D 卡通小手工厂（圆润掌心 + 5 根圆头胶囊手指 + 浅蓝袖口） ===== */
+function buildCute3DHand(g, cuffHex) {
+  var skinMat = toon('#f0b592'); // 温润肉粉，绝不发白过曝
+  var palmBlushMat = toon('#e89e7c');
+  var cuffMat = toon(cuffHex || '#38bdf8');
+  var trimMat = toon('#e0f2fe');
+
+  // 浅蓝袖口 + 白色窄边
+  var cuff = mesh(new THREE.CylinderGeometry(0.115, 0.135, 0.18, 16), cuffMat);
+  cuff.position.set(0, 0.10, 0); g.add(cuff);
+  var cuffTrim = mesh(new THREE.TorusGeometry(0.118, 0.018, 8, 20), trimMat);
+  cuffTrim.rotation.x = Math.PI / 2; cuffTrim.position.set(0, 0.185, 0); g.add(cuffTrim);
+  var wrist = mesh(new THREE.CylinderGeometry(0.088, 0.095, 0.10, 14), skinMat);
+  wrist.position.set(0, 0.22, 0); g.add(wrist);
+
+  // 圆润立体掌心（柔和椭球组合，彻底告别僵硬白方砖）
+  var palm = mesh(new THREE.SphereGeometry(0.19, 18, 14), skinMat);
+  palm.scale.set(1.06, 1.04, 0.56);
+  palm.position.set(0.01, 0.39, 0); g.add(palm);
+
+  // 掌心浅红润软垫
+  var pad = mesh(new THREE.SphereGeometry(0.11, 14, 12), palmBlushMat);
+  pad.scale.set(1.0, 0.92, 0.35);
+  pad.position.set(0.01, 0.37, 0.075); g.add(pad);
+
+  // 大鱼际软垫
+  var thenar = mesh(new THREE.SphereGeometry(0.095, 12, 10), skinMat);
+  thenar.scale.set(0.95, 1.12, 0.72);
+  thenar.position.set(-0.11, 0.34, 0.04); g.add(thenar);
+
+  // 胶囊手指辅助函数（圆柱 + 圆顶指尖 + 圆底指根）
+  function addFinger(x, y, z, len, rad, rotZ, rotX) {
+    var fg = new THREE.Group();
+    fg.position.set(x, y, z);
+    fg.rotation.z = rotZ || 0;
+    fg.rotation.x = rotX || 0.10;
+    var seg = mesh(new THREE.CylinderGeometry(rad * 0.92, rad, len, 12), skinMat);
+    seg.position.y = len * 0.5; fg.add(seg);
+    var tip = mesh(new THREE.SphereGeometry(rad * 0.94, 12, 10), skinMat);
+    tip.position.y = len; fg.add(tip);
+    var base = mesh(new THREE.SphereGeometry(rad, 10, 8), skinMat);
+    fg.add(base);
+    g.add(fg);
+  }
+
+  // 四指错落有致（食指、中指最长、无名指、小指短）
+  addFinger(-0.125, 0.53, 0.005, 0.21, 0.040,  0.14, 0.12); // 食指
+  addFinger(-0.040, 0.56, 0.008, 0.25, 0.041,  0.04, 0.11); // 中指
+  addFinger( 0.052, 0.55, 0.005, 0.22, 0.039, -0.05, 0.12); // 无名指
+  addFinger( 0.135, 0.51, 0.000, 0.16, 0.035, -0.17, 0.13); // 小指
+  // 大拇指自然斜出微曲
+  addFinger(-0.175, 0.36, 0.035, 0.17, 0.044,  0.76, 0.18);
+}
+
+/* ===== 浮动名称标签工厂 ===== */
+function makeTag(text, cls) {
+  var el = document.createElement('div');
+  el.className = 'ntag' + (cls ? ' ' + cls : '');
+  el.textContent = text;
+  $('#nameTags').appendChild(el);
+  return el;
+}
+
+/* =====================================================================
+   阶段 1 3D 道具：真实长方形半透明塑料保鲜袋、明黄细橡皮圈、木质双尖牙签、小纸风车
+   ===================================================================== */
+var stage1Root = new THREE.Group();
+live.add(stage1Root);
+
+var pickMeshes = [];
+var dropZoneMeshes = { bag: [], airCup: [], milkCup: [] };
+
+function tagPick(root, kind, extra) {
+  root.traverse(function (ch) {
+    if (ch.isMesh) {
+      ch.userData.pickKind = kind;
+      if (extra) for (var k in extra) ch.userData[k] = extra[k];
+      pickMeshes.push(ch);
+    }
+  });
+}
+
+// 1. 真正的长方形半透明塑料保鲜袋（平铺长方袋 -> 立体胖枕头方袋 -> 扎口荷叶边！）
+var bagG = new THREE.Group();
+var bagHomeS1 = new THREE.Vector3(-0.68, 0.02, 0.58);
+var bagHomeS2 = new THREE.Vector3(-3.08, 0.02, -0.25);
+bagG.position.copy(bagHomeS1);
+stage1Root.add(bagG);
+
+var bagVisual = new THREE.Group();
+bagG.add(bagVisual);
+
+// 高清透明塑料保鲜袋纹理（冰蓝透明底 + 白色热压封边 + 顶部天蓝封口线 + 斜向塑料高光条纹，绝无灰点！）
+var bagTex = ctex(512, 512, function (g, w, h) {
+  g.clearRect(0, 0, w, h);
+  // 轻薄晶莹塑料基底
+  var grad = g.createLinearGradient(0, 0, w, h);
+  grad.addColorStop(0, 'rgba(215, 242, 255, 0.50)');
+  grad.addColorStop(0.45, 'rgba(186, 230, 253, 0.34)');
+  grad.addColorStop(1, 'rgba(224, 245, 255, 0.48)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, w, h);
+
+  // 斜向塑料反光高光条纹
+  g.save();
+  g.fillStyle = 'rgba(255, 255, 255, 0.36)';
+  g.beginPath(); g.moveTo(64, 56); g.lineTo(148, 56); g.lineTo(68, 430); g.lineTo(26, 430); g.closePath(); g.fill();
+  g.fillStyle = 'rgba(255, 255, 255, 0.22)';
+  g.beginPath(); g.moveTo(310, 72); g.lineTo(356, 72); g.lineTo(290, 440); g.lineTo(252, 440); g.closePath(); g.fill();
+  g.restore();
+
+  // 左右及底边半透明塑料热压封边线（方袋轮廓特征！）
+  g.strokeStyle = 'rgba(240, 249, 255, 0.85)';
+  g.lineWidth = 10;
+  g.strokeRect(12, 12, w - 24, h - 24);
+  g.strokeStyle = 'rgba(125, 211, 252, 0.65)';
+  g.lineWidth = 3;
+  g.strokeRect(24, 24, w - 48, h - 48);
+
+  // 顶部保鲜袋蓝色封口线 + 细小白色点断撕口线
+  g.fillStyle = 'rgba(14, 165, 233, 0.88)';
+  g.fillRect(14, 48, w - 28, 12);
+  g.fillStyle = 'rgba(255, 255, 255, 0.82)';
+  g.fillRect(14, 64, w - 28, 5);
+  g.setLineDash([12, 10]);
+  g.strokeStyle = 'rgba(255, 255, 255, 0.72)';
+  g.lineWidth = 3;
+  g.beginPath(); g.moveTo(22, 34); g.lineTo(w - 22, 34); g.stroke();
+  g.setLineDash([]);
+
+  // 轻柔的塑料折痕光泽线
+  g.strokeStyle = 'rgba(255, 255, 255, 0.28)';
+  g.lineWidth = 4;
+  g.beginPath(); g.moveTo(46, 210); g.quadraticCurveTo(w * 0.5, 235, w - 46, 198); g.stroke();
+  g.beginPath(); g.moveTo(56, 355); g.quadraticCurveTo(w * 0.48, 336, w - 56, 366); g.stroke();
+});
+
+var bagMat = new THREE.MeshPhongMaterial({
+  map: bagTex,
+  color: '#e6f6ff',
+  emissive: '#0c4a6e',
+  emissiveIntensity: 0.16,
+  specular: '#ffffff',
+  shininess: 120,
+  transparent: true,
+  opacity: 0.82,
+  side: THREE.DoubleSide,
+  depthWrite: false
+});
+
+// 参数化变形长方形保鲜袋网格（宽高 1.18 x 1.38，底 y=0，袋口 y=1.38）
+var BAG_W = 1.18, BAG_H = 1.38, BAG_THICK = 0.08;
+var bagGeo = new THREE.BoxGeometry(BAG_W, BAG_H, BAG_THICK, 14, 18, 2);
+bagGeo.translate(0, BAG_H * 0.5, 0); // 袋底在 y=0，袋口在 y=1.38
+var bagPosAttr = bagGeo.attributes.position;
+var bagOrigPos = new Float32Array(bagPosAttr.array.length);
+bagOrigPos.set(bagPosAttr.array);
+var lastDeformKey = '';
+
+var bagMesh = new THREE.Mesh(bagGeo, bagMat);
+bagMesh.castShadow = true;
+bagMesh.renderOrder = 2;
+bagVisual.add(bagMesh);
+
+// 顶部微张袋口蓝色封口环（瘪袋与未扎口鼓袋时可见，扎口后隐藏改由荷叶边和橡皮筋替代）
+var bagOpenLip = new THREE.Mesh(
+  new THREE.TorusGeometry(0.54, 0.018, 8, 32),
+  new THREE.MeshBasicMaterial({ color: '#38bdf8', transparent: true, opacity: 0.90 })
+);
+bagOpenLip.rotation.x = Math.PI / 2;
+bagOpenLip.scale.set(1.06, 0.14, 1);
+bagOpenLip.position.set(0, BAG_H - 0.04, 0);
+bagVisual.add(bagOpenLip);
+
+// 扎紧后的明黄细橡皮筋套环（贴合收束袋颈 y ≈ 1.07）
+var bagTiedBand = mesh(new THREE.TorusGeometry(0.145, 0.032, 12, 28), toon('#facc15'));
+bagTiedBand.rotation.x = Math.PI / 2;
+bagTiedBand.position.set(0, BAG_H * 0.78, 0);
+bagTiedBand.visible = false;
+bagVisual.add(bagTiedBand);
+
+// 扎出的小孔亮圈（朝向右侧风车）
+var bagHole = new THREE.Mesh(
+  new THREE.TorusGeometry(0.068, 0.022, 8, 18),
+  new THREE.MeshBasicMaterial({ color: '#38bdf8' })
+);
+bagHole.rotation.y = Math.PI / 2;
+bagHole.position.set(0.64, 0.62, 0);
+bagHole.visible = false;
+bagVisual.add(bagHole);
+
+// 袋内清晰淡蓝飘动光尘粒子（仅在鼓起 fill > 0.25 时柔和浮现，瘪袋时完全隐藏绝不出现灰点！）
+var bagAirParts = [];
+for (var bi = 0; bi < 16; bi++) {
+  var ap = new THREE.Mesh(
+    new THREE.SphereGeometry(0.036, 8, 6),
+    new THREE.MeshBasicMaterial({ color: bi % 2 === 0 ? '#7dd3fc' : '#ffffff', transparent: true, opacity: 0, depthWrite: false })
+  );
+  ap.userData.ang = (bi / 16) * Math.PI * 2;
+  ap.userData.radX = 0.16 + (bi % 4) * 0.085;
+  ap.userData.radZ = 0.10 + (bi % 3) * 0.065;
+  ap.userData.yBase = 0.28 + (bi % 5) * 0.14;
+  ap.visible = false;
+  bagVisual.add(ap);
+  bagAirParts.push(ap);
+}
+
+// 实时变形保鲜袋顶点函数（平铺褶皱方袋 → 饱满胖枕头方袋 → 顶部收束荷叶边！）
+function updateBagMeshDeform(fill, isTied, squeeze, timeSec) {
+  var arr = bagPosAttr.array;
+  var halfW = BAG_W * 0.5;
+  var halfT = BAG_THICK * 0.5;
+
+  for (var i = 0; i < bagPosAttr.count; i++) {
+    var ox = bagOrigPos[i * 3];
+    var oy = bagOrigPos[i * 3 + 1];
+    var oz = bagOrigPos[i * 3 + 2];
+
+    var nx = ox / halfW;          // -1 .. +1
+    var ny = oy / BAG_H;          // 0 (袋底) .. 1 (袋口)
+    var nz = oz / halfT;          // -1 .. +1
+
+    // 1. 瘪袋自然褶皱与微张袋口
+    var flatWrinkle = (1 - fill) * Math.sin(nx * 4.6 + ny * 3.8) * 0.022;
+    var openMouthZ = (1 - (isTied ? 1 : 0)) * Math.max(0, (ny - 0.84) / 0.16) * nz * (0.045 + 0.10 * fill);
+
+    // 2. 鼓胀胖枕头方袋包络（保持清晰长方袋角，绝不变成圆球！）
+    var envY = Math.pow(Math.sin(Math.min(1, ny * 1.02) * Math.PI), 0.52);
+    var envX = Math.pow(Math.cos(nx * Math.PI * 0.46), 0.42);
+    var pillow = envY * envX;
+
+    var x = ox * (1 + 0.09 * fill * envY - squeeze * 0.18 * fill * envY);
+    var y = oy * (1 + squeeze * 0.06 * fill);
+    var zHalf = 0.018 + fill * 0.40 * pillow * (1 - squeeze * 0.42);
+    var z = nz * zHalf + flatWrinkle + openMouthZ;
+
+    // 3. 橡皮筋扎紧：y=0.78 处收束袋颈，y>0.78 向上翘出塑料袋口荷叶边！
+    if (isTied && ny > 0.58) {
+      var angle = Math.atan2(nz * 0.65, nx);
+      if (ny <= 0.78) {
+        var u = (ny - 0.58) / 0.20; // 0..1 收束到袋颈
+        var ease = u * u * (3 - 2 * u);
+        var neckR = 0.135;
+        var curR = Math.hypot(x, z);
+        var tgtR = curR * (1 - ease) + neckR * ease;
+        var pleats = 1 + 0.08 * ease * Math.sin(angle * 8);
+        var sc = curR > 0.001 ? (tgtR / curR) * pleats : 1;
+        x *= sc;
+        z *= sc;
+      } else {
+        var v = (ny - 0.78) / 0.22; // 0..1 向上张开的塑料荷叶边！
+        var frillR = 0.135 + Math.pow(v, 0.85) * 0.22;
+        var wave = 1 + 0.22 * v * Math.sin(angle * 7 + v * 2.5);
+        var rOut = frillR * wave;
+        x = Math.cos(angle) * rOut;
+        z = Math.sin(angle) * rOut * 0.86;
+        y = oy + v * 0.05 + Math.sin(angle * 7) * 0.025 * v;
+      }
+    }
+
+    // 轻微生动呼吸感（鼓满时）
+    if (fill > 0.5) {
+      var breath = Math.sin(timeSec * 2.6 + ny * 3) * 0.008 * fill;
+      z += nz * breath;
+    }
+
+    arr[i * 3] = x;
+    arr[i * 3 + 1] = y;
+    arr[i * 3 + 2] = z;
+  }
+  bagPosAttr.needsUpdate = true;
+  bagGeo.computeVertexNormals();
+}
+updateBagMeshDeform(0, false, 0, 0);
+
+// 保鲜袋底部目标高亮脉冲环（拖橡皮筋/牙签靠近时亮绿提示松手！）
+var bagDropRing = new THREE.Mesh(
+  new THREE.RingGeometry(0.76, 0.94, 32),
+  new THREE.MeshBasicMaterial({ color: '#4ade80', transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false })
+);
+bagDropRing.rotation.x = -Math.PI / 2;
+bagDropRing.position.y = 0.025;
+bagG.add(bagDropRing);
+
+// 宽大透明碰撞体（用于拾取和拖拽投递双判）
+var bagHit = new THREE.Mesh(new THREE.BoxGeometry(1.55, 1.55, 1.55), HIT_MAT);
+bagHit.position.y = 0.65;
+bagG.add(bagHit);
+tagPick(bagG, 'bag');
+dropZoneMeshes.bag.push(bagHit);
+
+// 2. 桌面左侧明黄细橡皮圈（小巧深胡桃木托盘，彻底告别惨白煎蛋！）
+var bandHome = new THREE.Vector3(-3.08, 0.05, 1.38);
+var bandTray = makeWoodTray(0.42, '#facc15');
+bandTray.position.set(bandHome.x, 0.0, bandHome.z);
+stage1Root.add(bandTray);
+
+var bandG = new THREE.Group();
+bandG.position.copy(bandHome);
+stage1Root.add(bandG);
+
+function makeRubberBandGeo(r, tube) {
+  var geo = new THREE.TorusGeometry(r, tube, 12, 34);
+  var p = geo.attributes.position;
+  for (var i = 0; i < p.count; i++) {
+    var px = p.getX(i), py = p.getY(i), pz = p.getZ(i);
+    var a = Math.atan2(py, px);
+    // 细微自然橡皮筋波浪曲线，真实不僵硬
+    p.setZ(i, pz + Math.sin(a * 2 + 0.4) * 0.022);
+  }
+  geo.computeVertexNormals();
+  return geo;
+}
+var bandMesh = mesh(makeRubberBandGeo(0.24, 0.028), toon('#facc15'));
+bandMesh.rotation.x = Math.PI / 2;
+bandMesh.position.y = 0.07;
+bandG.add(bandMesh);
+// 第二根轻微叠放的备用细橡皮圈（提升真实辨识度）
+var bandMesh2 = mesh(makeRubberBandGeo(0.22, 0.025), toon('#eab308'));
+bandMesh2.rotation.x = Math.PI / 2 + 0.14;
+bandMesh2.rotation.z = 0.6;
+bandMesh2.position.set(0.05, 0.09, -0.02);
+bandG.add(bandMesh2);
+
+var bandHit = new THREE.Mesh(new THREE.SphereGeometry(0.56, 10, 8), HIT_MAT);
+bandHit.position.y = 0.22;
+bandG.add(bandHit);
+tagPick(bandTray, 'band');
+tagPick(bandG, 'band');
+
+// 3. 桌面左侧淡米黄木质双尖牙签（纤细真实双尖 + 防滑细刻槽 + 小深木托盘！）
+var pickHome = new THREE.Vector3(-3.08, 0.05, -0.05);
+var pickTray = makeWoodTray(0.44, '#d97706');
+pickTray.position.set(pickHome.x, 0.0, pickHome.z);
+stage1Root.add(pickTray);
+
+var toothpickG = new THREE.Group();
+toothpickG.position.copy(pickHome);
+stage1Root.add(toothpickG);
+
+var tpWoodMat = toon('#ebd2a0'); // 真实淡米黄竹木色
+var tpGrooveMat = toon('#b68952');
+var tpBody = mesh(new THREE.CylinderGeometry(0.024, 0.024, 0.78, 12), tpWoodMat);
+tpBody.rotation.z = Math.PI / 2; tpBody.position.y = 0.10; toothpickG.add(tpBody);
+// 两端纤细锥尖
+var tpTipR = mesh(new THREE.ConeGeometry(0.024, 0.22, 12), toon('#e2c287'));
+tpTipR.rotation.z = -Math.PI / 2; tpTipR.position.set(0.50, 0.10, 0); toothpickG.add(tpTipR);
+var tpTipL = mesh(new THREE.ConeGeometry(0.024, 0.20, 12), toon('#e2c287'));
+tpTipL.rotation.z = Math.PI / 2; tpTipL.position.set(-0.49, 0.10, 0); toothpickG.add(tpTipL);
+// 真实牙签一端的两道精致木质防滑刻槽环
+[-0.24, -0.29].forEach(function (gx) {
+  var grv = mesh(new THREE.TorusGeometry(0.026, 0.008, 8, 16), tpGrooveMat);
+  grv.rotation.y = Math.PI / 2; grv.position.set(gx, 0.10, 0); toothpickG.add(grv);
+});
+// 托盘里斜放两根微错开的牙签视觉感（主牙签略高，托盘上留一根装饰伴随）
+toothpickG.rotation.y = 0.22;
+var tpHit = new THREE.Mesh(new THREE.SphereGeometry(0.58, 10, 8), HIT_MAT);
+tpHit.position.y = 0.20;
+toothpickG.add(tpHit);
+tagPick(pickTray, 'toothpick');
+tagPick(toothpickG, 'toothpick');
+
+// 4. 彩色小纸风车 + 飘带
+var pinHomeS1 = new THREE.Vector3(1.62, 0, 0.55);
+var pinHomeS2 = new THREE.Vector3(-1.68, 0, -0.30);
+var pinG = new THREE.Group();
+pinG.position.copy(pinHomeS1);
+stage1Root.add(pinG);
+
+var pinBase = mesh(new THREE.CylinderGeometry(0.36, 0.44, 0.14, 20), toon('#475569'));
+pinBase.position.y = 0.07; pinG.add(pinBase);
+var pinPole = mesh(new THREE.CylinderGeometry(0.045, 0.055, 1.52, 12), toon('#e2e8f0'));
+pinPole.position.y = 0.84; pinG.add(pinPole);
+
+var pinHub = new THREE.Group();
+pinHub.position.set(0, 1.48, 0.08);
+pinG.add(pinHub);
+var bladeCols = ['#ef4444', '#facc15', '#22c55e', '#38bdf8'];
+for (var k = 0; k < 4; k++) {
+  var bg = new THREE.Group();
+  bg.rotation.z = k * Math.PI / 2;
+  var blade = mesh(new THREE.BoxGeometry(0.28, 0.52, 0.03), toon(bladeCols[k]));
+  blade.position.set(0.12, 0.28, 0);
+  blade.rotation.y = 0.28;
+  bg.add(blade);
+  var fold = mesh(new THREE.ConeGeometry(0.14, 0.24, 3), toon(bladeCols[(k + 1) % 4]));
+  fold.position.set(0.06, 0.16, 0.04);
+  fold.rotation.z = -0.5;
+  bg.add(fold);
+  pinHub.add(bg);
+}
+var pinCap = mesh(new THREE.SphereGeometry(0.09, 12, 10), toon('#ffffff'));
+pinCap.position.z = 0.05; pinHub.add(pinCap);
+
+var ribbons = [];
+['#f472b6', '#38bdf8'].forEach(function (col, idx) {
+  var rg = new THREE.Group();
+  rg.position.set(0.05, 1.26 - idx * 0.20, 0.02);
+  var segs = [];
+  for (var s = 0; s < 5; s++) {
+    var sm = mesh(new THREE.BoxGeometry(0.20, 0.07, 0.018), toon(col));
+    sm.position.set(0.10 + s * 0.19, -0.05 * s, 0);
+    rg.add(sm);
+    segs.push(sm);
+  }
+  pinG.add(rg);
+  ribbons.push({ g: rg, segs: segs, phase: idx * 1.4 });
+});
+
+var pinHit = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.8, 0.9), HIT_MAT);
+pinHit.position.y = 0.9; pinG.add(pinHit);
+tagPick(pinG, 'pinwheel');
+
+// 螺旋气流丝带组（挤压袋子时喷向风车）
+var windStreamG = new THREE.Group();
+live.add(windStreamG);
+var windStreams = [];
+for (var wi = 0; wi < 14; wi++) {
+  var wm = new THREE.Mesh(
+    new THREE.SphereGeometry(0.055 + (wi % 3) * 0.018, 8, 6),
+    new THREE.MeshBasicMaterial({ color: wi % 2 === 0 ? '#7dd3fc' : '#ffffff', transparent: true, opacity: 0 })
+  );
+  windStreamG.add(wm);
+  windStreams.push({ m: wm, t: wi / 14, r: 0.08 + (wi % 4) * 0.06 });
+}
+
+/* =====================================================================
+   阶段 2 3D 道具：透明空气玻璃杯、对比牛奶杯、3D小熊、精雕三感官探针
+   ===================================================================== */
+var stage2Root = new THREE.Group();
+stage2Root.visible = false;
+stage2Root.scale.setScalar(0.01);
+live.add(stage2Root);
+
+// 1. 透明玻璃杯（盛空气）
+var airCupPos = new THREE.Vector3(0.28, 0, 0.20);
+var airCupG = new THREE.Group();
+airCupG.position.copy(airCupPos);
+stage2Root.add(airCupG);
+
+var glassWallMat = new THREE.MeshPhongMaterial({
+  color: '#e0f2fe', specular: '#ffffff', shininess: 120,
+  transparent: true, opacity: 0.24, side: THREE.DoubleSide, depthWrite: false
+});
+var airWall = new THREE.Mesh(new THREE.CylinderGeometry(0.56, 0.48, 1.24, 28, 1, true), glassWallMat);
+airWall.position.y = 0.64; airCupG.add(airWall);
+var airBase = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.50, 0.08, 28),
+  new THREE.MeshPhongMaterial({ color: '#bae6fd', transparent: true, opacity: 0.52 }));
+airBase.position.y = 0.04; airCupG.add(airBase);
+var airRim = new THREE.Mesh(new THREE.TorusGeometry(0.56, 0.028, 10, 32),
+  new THREE.MeshBasicMaterial({ color: '#e0f2fe' }));
+airRim.rotation.x = Math.PI / 2; airRim.position.y = 1.26; airCupG.add(airRim);
+var airGlow = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.74, 30),
+  new THREE.MeshBasicMaterial({ color: '#38bdf8', transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
+airGlow.rotation.x = -Math.PI / 2; airGlow.position.y = 0.03; airCupG.add(airGlow);
+
+var airCupHit = new THREE.Mesh(new THREE.CylinderGeometry(0.80, 0.74, 1.65, 16), HIT_MAT);
+airCupHit.position.y = 0.80; airCupG.add(airCupHit);
+tagPick(airCupG, 'airCup');
+dropZoneMeshes.airCup.push(airCupHit);
+
+// 2. 对比牛奶杯（不透明白色牛奶）
+var milkCupPos = new THREE.Vector3(2.05, 0, 0.20);
+var milkCupG = new THREE.Group();
+milkCupG.position.copy(milkCupPos);
+stage2Root.add(milkCupG);
+
+var milkLiquid = mesh(new THREE.CylinderGeometry(0.50, 0.44, 1.02, 26), toon('#f8fafc'));
+milkLiquid.position.y = 0.55; milkCupG.add(milkLiquid);
+var milkWall = new THREE.Mesh(new THREE.CylinderGeometry(0.56, 0.48, 1.24, 28, 1, true), glassWallMat);
+milkWall.position.y = 0.64; milkCupG.add(milkWall);
+var milkRim = new THREE.Mesh(new THREE.TorusGeometry(0.56, 0.028, 10, 32),
+  new THREE.MeshBasicMaterial({ color: '#e0f2fe' }));
+milkRim.rotation.x = Math.PI / 2; milkRim.position.y = 1.26; milkCupG.add(milkRim);
+var milkGlow = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.74, 30),
+  new THREE.MeshBasicMaterial({ color: '#facc15', transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
+milkGlow.rotation.x = -Math.PI / 2; milkGlow.position.y = 0.03; milkCupG.add(milkGlow);
+
+var milkCupHit = new THREE.Mesh(new THREE.CylinderGeometry(0.80, 0.74, 1.65, 16), HIT_MAT);
+milkCupHit.position.y = 0.80; milkCupG.add(milkCupHit);
+tagPick(milkCupG, 'milkCup');
+dropZoneMeshes.milkCup.push(milkCupHit);
+
+// 3. 可爱 3D 小熊玩具
+var bearHome = new THREE.Vector3(-1.55, 0, 1.62);
+var bearAirBack = new THREE.Vector3(airCupPos.x, 0, airCupPos.z - 0.92);
+var bearMilkBack = new THREE.Vector3(milkCupPos.x, 0, milkCupPos.z - 0.92);
+var bearG = new THREE.Group();
+bearG.position.copy(bearHome);
+stage2Root.add(bearG);
+var bearGoal = bearHome.clone();
+var bearSlot = 'home';
+
+(function buildBear(g) {
+  var br = toon('#b45309'), dk = toon('#78350f'), cr = toon('#fde68a'), bk = toon('#111827'), rd = toon('#ef4444');
+  var body = mesh(new THREE.SphereGeometry(0.28, 16, 14), br);
+  body.scale.set(1.0, 1.12, 0.92); body.position.y = 0.34; g.add(body);
+  var belly = mesh(new THREE.SphereGeometry(0.18, 12, 10), cr);
+  belly.scale.set(0.95, 1.05, 0.55); belly.position.set(0, 0.34, 0.20); g.add(belly);
+  var head = mesh(new THREE.SphereGeometry(0.26, 16, 14), br);
+  head.position.set(0, 0.74, 0.02); g.add(head);
+  var snout = mesh(new THREE.SphereGeometry(0.11, 12, 10), cr);
+  snout.scale.set(1.15, 0.85, 0.9); snout.position.set(0, 0.68, 0.23); g.add(snout);
+  var nose = mesh(new THREE.SphereGeometry(0.042, 8, 8), bk);
+  nose.position.set(0, 0.71, 0.31); g.add(nose);
+  var bow = mesh(new THREE.BoxGeometry(0.22, 0.08, 0.06), rd);
+  bow.position.set(0, 0.54, 0.22); g.add(bow);
+  [-1, 1].forEach(function (s) {
+    var ear = mesh(new THREE.SphereGeometry(0.10, 10, 10), dk);
+    ear.position.set(s * 0.20, 0.95, 0); g.add(ear);
+    var eye = mesh(new THREE.SphereGeometry(0.036, 8, 8), bk);
+    eye.position.set(s * 0.095, 0.78, 0.23); g.add(eye);
+    var arm = mesh(new THREE.SphereGeometry(0.095, 10, 8), br);
+    arm.scale.set(0.85, 1.3, 0.85); arm.position.set(s * 0.28, 0.42, 0.08); arm.rotation.z = s * 0.45; g.add(arm);
+    var foot = mesh(new THREE.SphereGeometry(0.11, 10, 8), dk);
+    foot.scale.set(0.95, 0.75, 1.25); foot.position.set(s * 0.14, 0.09, 0.14); g.add(foot);
+  });
+  var hit = new THREE.Mesh(new THREE.SphereGeometry(0.62, 12, 10), HIT_MAT);
+  hit.position.y = 0.50; g.add(hit);
+})(bearG);
+tagPick(bearG, 'bear');
+
+// 4. 精雕三个 3D 感官探针（小深胡桃木圆托座，彻底告别惨白荧光大煎蛋！）
+var PROBES = {};
+function registerProbe(id, homePos, trimCol, labelTxt, buildFn) {
+  var tray = makeWoodTray(0.38, trimCol);
+  tray.position.set(homePos.x, 0.0, homePos.z);
+  stage2Root.add(tray);
+
+  var ring = new THREE.Mesh(new THREE.RingGeometry(0.41, 0.50, 28),
+    new THREE.MeshBasicMaterial({ color: trimCol, transparent: true, opacity: 0.20, side: THREE.DoubleSide, depthWrite: false }));
+  ring.rotation.x = -Math.PI / 2; ring.position.set(homePos.x, 0.04, homePos.z);
+  stage2Root.add(ring);
+
+  var g = new THREE.Group();
+  g.position.copy(homePos);
+  stage2Root.add(g);
+  buildFn(g);
+
+  var hit = new THREE.Mesh(new THREE.SphereGeometry(0.58, 10, 8), HIT_MAT);
+  hit.position.y = 0.40; g.add(hit);
+
+  var tag = makeTag(labelTxt, 'probe');
+  tag.style.display = 'none';
+
+  var rec = { id: id, g: g, home: homePos.clone(), goal: homePos.clone(), ring: ring, tagEl: tag, animT: 0, tested: false };
+  tagPick(tray, 'probe', { probeId: id });
+  tagPick(g, 'probe', { probeId: id });
+  PROBES[id] = rec;
+  return rec;
+}
+
+// 探针 A：👁 精雕小眼放大镜（真实胡桃木柄 + 蓝金属镜框 + 半透明晶莹镜片内高清卡通眼睛图标）
+var eyeLensTex = ctex(256, 256, function (g, w, h) {
+  var cx = w / 2, cy = h / 2;
+  g.clearRect(0, 0, w, h);
+  // 晶莹浅蓝玻璃底
+  var gr = g.createRadialGradient(cx - 24, cy - 28, 12, cx, cy, 118);
+  gr.addColorStop(0, 'rgba(240, 249, 255, 0.92)');
+  gr.addColorStop(0.65, 'rgba(186, 230, 253, 0.72)');
+  gr.addColorStop(1, 'rgba(125, 211, 252, 0.85)');
+  g.fillStyle = gr;
+  g.beginPath(); g.arc(cx, cy, 116, 0, Math.PI * 2); g.fill();
+
+  // 清晰可爱卡通大眼睛（杏仁眼白 + 湛蓝渐变虹膜 + 闪亮高光）
+  g.fillStyle = '#ffffff';
+  g.strokeStyle = '#0c4a6e';
+  g.lineWidth = 8;
+  g.beginPath();
+  g.moveTo(cx - 78, cy + 4);
+  g.quadraticCurveTo(cx, cy - 58, cx + 78, cy + 4);
+  g.quadraticCurveTo(cx, cy + 62, cx - 78, cy + 4);
+  g.closePath();
+  g.fill(); g.stroke();
+
+  // 湛蓝虹膜
+  var ig = g.createRadialGradient(cx, cy - 4, 8, cx, cy + 2, 36);
+  ig.addColorStop(0, '#38bdf8');
+  ig.addColorStop(0.65, '#0284c7');
+  ig.addColorStop(1, '#075985');
+  g.fillStyle = ig;
+  g.beginPath(); g.arc(cx, cy + 3, 35, 0, Math.PI * 2); g.fill();
+
+  // 瞳孔
+  g.fillStyle = '#0f172a';
+  g.beginPath(); g.arc(cx, cy + 3, 17, 0, Math.PI * 2); g.fill();
+
+  // 双高光点
+  g.fillStyle = '#ffffff';
+  g.beginPath(); g.arc(cx - 11, cy - 8, 9, 0, Math.PI * 2); g.fill();
+  g.beginPath(); g.arc(cx + 12, cy + 12, 4.5, 0, Math.PI * 2); g.fill();
+
+  // 上方可爱小睫毛
+  g.strokeStyle = '#0c4a6e'; g.lineWidth = 6; g.lineCap = 'round';
+  [[-42, -32, -52, -48], [0, -40, 0, -58], [42, -32, 52, -48]].forEach(function (l) {
+    g.beginPath(); g.moveTo(cx + l[0], cy + l[1]); g.lineTo(cx + l[2], cy + l[3]); g.stroke();
+  });
+
+  // 镜片玻璃反光弧
+  g.strokeStyle = 'rgba(255,255,255,0.68)'; g.lineWidth = 9;
+  g.beginPath(); g.arc(cx, cy, 98, -2.5, -1.7); g.stroke();
+});
+
+registerProbe('eye', new THREE.Vector3(0.05, 0.05, 1.78), '#38bdf8', '👁 小眼放大镜', function (g) {
+  var mg = new THREE.Group();
+  mg.rotation.z = -0.14;
+  // 真实木柄 + 金属套环
+  var handle = mesh(new THREE.CylinderGeometry(0.044, 0.056, 0.36, 14), toon('#8b5a2b'));
+  handle.position.set(0, 0.19, 0); mg.add(handle);
+  var collar = mesh(new THREE.CylinderGeometry(0.052, 0.050, 0.06, 14), toon('#94a3b8'));
+  collar.position.set(0, 0.37, 0); mg.add(collar);
+  // 蓝色金属镜框
+  var rim = mesh(new THREE.TorusGeometry(0.25, 0.042, 12, 32), toon('#0284c7'));
+  rim.position.set(0, 0.64, 0); mg.add(rim);
+  // 晶莹镜片（带高清卡通大眼睛 CanvasTexture）
+  var lensMat = new THREE.MeshBasicMaterial({ map: eyeLensTex, transparent: true, side: THREE.DoubleSide });
+  var lens = new THREE.Mesh(new THREE.CircleGeometry(0.23, 30), lensMat);
+  lens.position.set(0, 0.64, 0.015); mg.add(lens);
+  var lensBack = new THREE.Mesh(new THREE.CircleGeometry(0.23, 30), lensMat);
+  lensBack.rotation.y = Math.PI; lensBack.position.set(0, 0.64, -0.015); mg.add(lensBack);
+  g.add(mg);
+});
+
+// 探针 B：👃 精雕 Q 版小鼻徽章卡片牌（高清手绘卡通侧面小鼻子+呼吸小箭头，彻底告别肉瘤圆球！）
+var noseBadgeTex = ctex(256, 256, function (g, w, h) {
+  var cx = w / 2, cy = h / 2;
+  g.clearRect(0, 0, w, h);
+  // 柔和暖米白圆形徽章底
+  var bg = g.createRadialGradient(cx, cy - 20, 15, cx, cy, 120);
+  bg.addColorStop(0, '#fffbeb');
+  bg.addColorStop(1, '#fef3c7');
+  g.fillStyle = bg;
+  g.beginPath(); g.arc(cx, cy, 118, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = '#f59e0b'; g.lineWidth = 10;
+  g.beginPath(); g.arc(cx, cy, 113, 0, Math.PI * 2); g.stroke();
+
+  // 可爱卡通小孩侧面小鼻子与粉嫩脸颊
+  g.fillStyle = '#fde2c8';
+  g.strokeStyle = '#9a3412';
+  g.lineWidth = 7;
+  g.lineJoin = 'round'; g.lineCap = 'round';
+  g.beginPath();
+  g.moveTo(cx - 56, cy - 66);
+  g.quadraticCurveTo(cx - 32, cy - 42, cx - 22, cy - 18);
+  // 俏皮微翘小鼻尖
+  g.quadraticCurveTo(cx + 8, cy + 8, cx - 8, cy + 28);
+  g.quadraticCurveTo(cx - 26, cy + 36, cx - 38, cy + 28);
+  // 微微微笑的下唇线与下巴
+  g.quadraticCurveTo(cx - 28, cy + 48, cx - 34, cy + 68);
+  g.lineTo(cx - 80, cy + 68);
+  g.lineTo(cx - 80, cy - 66);
+  g.closePath();
+  g.fill();
+
+  // 只描外侧精致鼻梁轮廓线
+  g.beginPath();
+  g.moveTo(cx - 52, cy - 62);
+  g.quadraticCurveTo(cx - 30, cy - 38, cx - 22, cy - 18);
+  g.quadraticCurveTo(cx + 10, cy + 10, cx - 8, cy + 28);
+  g.quadraticCurveTo(cx - 24, cy + 36, cx - 38, cy + 26);
+  g.stroke();
+
+  // 鼻翼小弧 + 粉嫩小腮红 + 弯弯笑眼
+  g.beginPath(); g.arc(cx - 28, cy + 18, 7, 0.3, Math.PI * 1.1); g.stroke();
+  g.fillStyle = 'rgba(251, 113, 133, 0.42)';
+  g.beginPath(); g.ellipse(cx - 54, cy + 18, 16, 11, 0, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = '#7c2d12'; g.lineWidth = 6;
+  g.beginPath(); g.arc(cx - 56, cy - 16, 12, Math.PI * 1.12, Math.PI * 1.88); g.stroke();
+
+  // 右侧三道灵动青蓝色呼吸吸气波浪小箭头（一眼认出“闻一闻”）
+  [[-16, 0], [8, 12], [32, 24]].forEach(function (row, idx) {
+    var y0 = cy + row[0];
+    g.strokeStyle = idx === 1 ? '#0284c7' : '#38bdf8';
+    g.lineWidth = 7; g.lineCap = 'round';
+    g.beginPath();
+    g.moveTo(cx + 82, y0 + 18);
+    g.bezierCurveTo(cx + 58, y0 - 8, cx + 38, y0 + 24, cx + 12, y0 + 6);
+    g.stroke();
+    // 指向鼻尖的小箭头
+    g.beginPath();
+    g.moveTo(cx + 24, y0 - 2);
+    g.lineTo(cx + 10, y0 + 6);
+    g.lineTo(cx + 22, y0 + 16);
+    g.stroke();
+  });
+});
+
+registerProbe('nose', new THREE.Vector3(1.28, 0.05, 1.78), '#f59e0b', '👃 小鼻闻一闻', function (g) {
+  // 暖木小手柄
+  var stick = mesh(new THREE.CylinderGeometry(0.042, 0.052, 0.24, 12), toon('#92400e'));
+  stick.position.set(0, 0.13, 0); g.add(stick);
+  // 立体圆形木座徽章外框
+  var rim = mesh(new THREE.TorusGeometry(0.28, 0.036, 12, 32), toon('#d97706'));
+  rim.position.set(0, 0.50, 0); g.add(rim);
+  var disk = mesh(new THREE.CylinderGeometry(0.275, 0.275, 0.055, 30), toon('#fef3c7'));
+  disk.rotation.x = Math.PI / 2; disk.position.set(0, 0.50, 0); g.add(disk);
+  // 前后高清卡通小鼻插画牌面
+  var faceMat = new THREE.MeshBasicMaterial({ map: noseBadgeTex, transparent: true });
+  var front = new THREE.Mesh(new THREE.CircleGeometry(0.272, 30), faceMat);
+  front.position.set(0, 0.50, 0.032); g.add(front);
+  var back = new THREE.Mesh(new THREE.CircleGeometry(0.272, 30), faceMat);
+  back.rotation.y = Math.PI; back.position.set(0, 0.50, -0.032); g.add(back);
+});
+
+// 探针 C：✋ 精雕圆润 5 指小手探针（圆润掌心 + 5 根圆头胶囊手指 + 浅蓝袖口！）
+registerProbe('hand', new THREE.Vector3(2.48, 0.05, 1.78), '#38bdf8', '✋ 小手摸一摸', function (g) {
+  buildCute3DHand(g, '#38bdf8');
+});
+
+/* ===== 场景名称标签 ===== */
+var bagTag = makeTag('保鲜袋（瘪瘪的）');
+var bandTag = makeTag('黄色橡皮筋');
+var pickTag = makeTag('木质牙签');
+var pinTag = makeTag('小纸风车');
+var airCupTag = makeTag('空气玻璃杯'); airCupTag.style.display = 'none';
+var milkCupTag = makeTag('牛奶对比杯'); milkCupTag.style.display = 'none';
+var bearTag = makeTag('3D 小熊'); bearTag.style.display = 'none';
+
+/* ===== 粒子特效（严格 D4 自动消退） ===== */
+var fxParts = [];
+function spawnFX(x, y, z, col, count, dur) {
+  var maxL = dur || 1.6;
+  for (var i = 0; i < count; i++) {
+    var m = new THREE.Mesh(
+      new THREE.OctahedronGeometry(0.065, 0),
+      new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.95 })
+    );
+    m.position.set(x + (Math.random() - 0.5) * 0.45, y + Math.random() * 0.4, z + (Math.random() - 0.5) * 0.45);
+    live.add(m);
+    fxParts.push({
+      m: m,
+      vx: (Math.random() - 0.5) * 1.1,
+      vy: 0.8 + Math.random() * 0.8,
+      vz: (Math.random() - 0.5) * 1.1,
+      life: maxL, maxLife: maxL
+    });
+  }
+}
+
+/* ===== 核心教学状态 ===== */
+var phase = 1;
+var bagState = 'flat'; // 'flat' | 'full' | 'tied' | 'poked'
+var bagFill = 0; // 0..1
+var bagFillDisp = 0;
+var wavePx = 0;
+var bagScoopT = 0;
+var bagSqueezeT = 0;
+var pinSpinSpeed = 0;
+var windBlastT = 0;
+var bagGoal = bagHomeS1.clone();
+var bandGoal = bandHome.clone();
+var pickGoal = pickHome.clone();
+var pinGoal = pinHomeS1.clone();
+var stage2T0 = 0;
+
+var doneFlags = {
+  catchTie: false,
+  blowPinwheel: false,
+  bearSee: false,
+  probeEye: false,
+  probeNose: false,
+  probeHand: false
+};
+var testedFailPoke = false;
+var found = {}, stamps = { s1: false, s2: false, s3: false }, celebrated = false, demo = false;
+var resetGen = 0;
+var activeTimers = [];
+var curGuideSpeech = '阶段1：先拖起或点一点保鲜袋在空中挥舞，把看不见的空气兜进袋子里！';
+
+function later(fn, ms) {
+  var g = resetGen;
+  var id = setTimeout(function () { if (g === resetGen) fn(); }, ms);
+  activeTimers.push(id);
+  return id;
+}
+
+function markInteracted() { document.body.classList.add('interacted'); }
+
+function popLabelAt3D(worldPos, text, cls) {
+  var v = worldPos.clone().project(camera);
+  var x = (v.x * 0.5 + 0.5) * window.innerWidth;
+  var y = (-v.y * 0.5 + 0.5) * window.innerHeight;
+  var el = document.createElement('div');
+  el.className = 'popword' + (cls ? ' ' + cls : '');
+  el.textContent = text;
+  var topY = Math.max(76, Math.min(window.innerHeight - 100, y - 16));
+  var maxX = (topY < 310) ? (window.innerWidth - 380) : (window.innerWidth - 140);
+  el.style.left = Math.max(150, Math.min(maxX, x)) + 'px';
+  el.style.top = topY + 'px';
+  $('#labels').appendChild(el);
+  later(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1950);
+}
+
+function countDone() {
+  return (doneFlags.catchTie ? 1 : 0) + (doneFlags.blowPinwheel ? 1 : 0) +
+    (doneFlags.bearSee ? 1 : 0) + (doneFlags.probeEye ? 1 : 0) +
+    (doneFlags.probeNose ? 1 : 0) + (doneFlags.probeHand ? 1 : 0);
+}
+
+function lightStamp(id, key) {
+  if (!stamps[key]) {
+    stamps[key] = true;
+    var el = $('#' + id);
+    if (el) el.classList.add('lit');
+    beep([523, 659, 784], 0.22);
+  }
+}
+
+function addDiscovery(key, html, spoken) {
+  if (!found[key]) {
+    found[key] = true;
+    var el = document.createElement('div');
+    el.className = 'stk';
+    el.innerHTML = html;
+    $('#ntList').prepend(el);
+    $('#ntCnt').textContent = Object.keys(found).length;
+  }
+  $('#progNum').textContent = countDone() + ' / 6';
+
+  if (doneFlags.catchTie && doneFlags.blowPinwheel) lightStamp('st1', 's1');
+  if (doneFlags.bearSee) lightStamp('st2', 's2');
+  if (doneFlags.probeEye && doneFlags.probeNose && doneFlags.probeHand) lightStamp('st3', 's3');
+
+  updateGuide(false);
+
+  if (!demo && !celebrated && countDone() === 6 && stamps.s1 && stamps.s2 && stamps.s3) {
+    celebrated = true;
+    saveProgress(LESSON_ID, true);
+    fireConfetti();
+    beep([523, 659, 784, 1046], 0.28);
+    later(function () {
+      $('#winToast').classList.add('show');
+      speak('太棒啦！空气占据空间、会流动、无色无味又透明的秘密你全找到啦！快看看科学小结论领小红花吧！', true);
+    }, 650);
+    return;
+  }
+  if (spoken && !demo) speak(spoken);
+}
+
+function enterStage2() {
+  if (phase === 2) return;
+  phase = 2;
+  stage2T0 = performance.now();
+  stage2Root.visible = true;
+  bagGoal.copy(bagHomeS2);
+  pinGoal.copy(pinHomeS2);
+  airCupTag.style.display = 'block';
+  milkCupTag.style.display = 'block';
+  bearTag.style.display = 'block';
+  Object.keys(PROBES).forEach(function (k) { PROBES[k].tagEl.style.display = 'block'; });
+  $('#phaseLabel').textContent = '🔬 验空气特征：';
+  updateGuide(false);
+}
+
+function updateGuide(speakIt) {
+  if (phase === 1) {
+    $('#guideBar').classList.remove('stage2');
+    $('#guideIco').textContent = '🌬';
+    if (bagState === 'flat') {
+      curGuideSpeech = '第1步：拖起或点一点保鲜袋在空中挥舞，把看不见的空气兜进袋子里！';
+    } else if (bagState === 'full') {
+      curGuideSpeech = '第2步：袋子鼓起来啦！拖起或点黄色橡皮筋到保鲜袋上，把袋口扎紧吧！';
+    } else if (bagState === 'tied') {
+      curGuideSpeech = '第3步：拖起或点木质牙签到鼓鼓的保鲜袋上，扎一个小孔！';
+    } else {
+      curGuideSpeech = '第4步：快点一点或按压鼓鼓的保鲜袋，看看喷出的空气能不能吹转小纸风车！';
+    }
+  } else if (countDone() < 6) {
+    $('#guideBar').classList.add('stage2');
+    $('#guideIco').textContent = '🔬';
+    if (!doneFlags.bearSee) {
+      curGuideSpeech = '阶段2：把可爱小熊拖或点到透明空气玻璃杯后面，比一比透明和不透明！';
+    } else if (!doneFlags.probeEye) {
+      curGuideSpeech = '阶段2：拖或点小眼放大镜到玻璃杯口，看看空气有没有颜色！';
+    } else if (!doneFlags.probeNose) {
+      curGuideSpeech = '阶段2：拖或点小鼻探针到玻璃杯口，闻一闻空气有没有气味！';
+    } else {
+      curGuideSpeech = '阶段2：再拖或点小手探针伸进玻璃杯摸一摸空气，集齐全部发现！';
+    }
+  } else {
+    $('#guideBar').classList.add('stage2');
+    $('#guideIco').textContent = '🏆';
+    curGuideSpeech = '全部发现都集齐啦！你还可以继续点袋子吹风车、移动小熊或用探针自由探索哦！';
+  }
+  $('#guideTxt').textContent = curGuideSpeech;
+  $('#guideBar').classList.remove('flash');
+  void $('#guideBar').offsetWidth;
+  $('#guideBar').classList.add('flash');
+  if (speakIt) speak(curGuideSpeech, true);
+}
+
+/* ===== 阶段 1 与 阶段 2 具体实验动作 ===== */
+function inflateBagFull(fromTap) {
+  if (bagState !== 'flat') return;
+  bagState = 'full';
+  bagFill = 1;
+  bagTag.textContent = '保鲜袋（鼓满空气）';
+  if (fromTap) bagScoopT = 0.95;
+  spawnFX(bagG.position.x, 0.78, bagG.position.z, 0x7dd3fc, 10, 1.5);
+  beep([440, 554, 659], 0.18);
+  popLabelAt3D(bagG.position.clone().add(new THREE.Vector3(0, 1.35, 0)), '🌬 兜满空气，袋子鼓起来啦！', 'good');
+  updateGuide(false);
+  if (!demo) speak('哇，保鲜袋在空中兜满空气变得鼓鼓的啦！快拖起或点黄色橡皮筋把袋口扎紧吧！');
+}
+
+function applyBandToBag() {
+  markInteracted();
+  if (bagState === 'flat') {
+    beep([260, 220], 0.16);
+    popLabelAt3D(bagG.position.clone().add(new THREE.Vector3(0, 0.9, 0)), '⚠ 袋子还是瘪的，先兜空气哦！', 'warn');
+    if (!demo) speak('保鲜袋还是瘪的，里面还没有空气哦！先拖起或点一点保鲜袋在空中挥舞兜满空气，再用橡皮筋扎紧吧！', true);
+    return;
+  }
+  if (bagState === 'tied' || bagState === 'poked') {
+    popLabelAt3D(bagG.position.clone().add(new THREE.Vector3(0, 1.25, 0)), '✓ 袋口已经扎紧啦！');
+    if (!demo) speak('袋口已经用橡皮筋扎得紧紧的啦！');
+    return;
+  }
+  bagState = 'tied';
+  bagTiedBand.visible = true;
+  bagOpenLip.visible = false;
+  bandMesh.visible = false;
+  bandMesh2.visible = false;
+  bandTag.style.display = 'none';
+  bagTag.textContent = '鼓鼓保鲜袋（已扎口）';
+  doneFlags.catchTie = true;
+  spawnFX(bagG.position.x, 1.05, bagG.position.z, 0xfacc15, 10, 1.5);
+  beep([523, 659, 784], 0.2);
+  popLabelAt3D(bagG.position.clone().add(new THREE.Vector3(0, 1.45, 0)), '🎈 扎紧袋口！空气占据空间！', 'good');
+  addDiscovery(
+    'catch_tie',
+    '🎈 <b>保鲜袋兜气封口</b>：袋子鼓鼓的很有弹性，说明空气占据空间',
+    '太棒啦！用橡皮筋扎紧袋口，保鲜袋鼓得像胖枕头一样很有弹性，说明看不见的空气真的占据空间！现在拖或点木质牙签在袋身上扎个小孔吧！'
+  );
+}
+
+function applyToothpickToBag() {
+  markInteracted();
+  if (bagState === 'flat') {
+    testedFailPoke = true;
+    beep([250, 200], 0.18);
+    popLabelAt3D(bagG.position.clone().add(new THREE.Vector3(0, 0.85, 0)), '⚠ 袋子瘪瘪的，风车纹丝不动！', 'warn');
+    if (!demo) speak('哎呀，保鲜袋还是瘪的，里面还没有兜进空气，扎孔后小风车纹丝不动！快先拖起或点一点保鲜袋在空中挥舞兜空气吧！', true);
+    updateGuide(false);
+    return;
+  }
+  if (bagState === 'full') {
+    beep([290, 240], 0.16);
+    popLabelAt3D(bagG.position.clone().add(new THREE.Vector3(0, 1.25, 0)), '💡 先用黄色橡皮筋扎紧袋口哦！', 'warn');
+    if (!demo) speak('袋口还没扎紧，空气会从袋口跑掉哦！先拖或点黄色橡皮筋把袋口扎紧吧！', true);
+    return;
+  }
+  if (bagState === 'poked') {
+    squeezeBagBlow();
+    return;
+  }
+  bagState = 'poked';
+  bagHole.visible = true;
+  bagTag.textContent = '点我挤压吹风车 🌬';
+  spawnFX(bagG.position.x + 0.65, 0.65, bagG.position.z, 0x38bdf8, 8, 1.4);
+  beep([587, 740], 0.16);
+  popLabelAt3D(bagG.position.clone().add(new THREE.Vector3(0, 1.42, 0)), '✨ 扎出小孔！点袋子挤出空气！', 'good');
+  updateGuide(false);
+  if (!demo) speak('好啦，牙签在鼓鼓的袋身上扎了一个小孔！现在快点一点或按压鼓袋子，把空气挤向小风车吧！');
+}
+
+function squeezeBagBlow() {
+  markInteracted();
+  if (bagState !== 'poked') {
+    if (bagState === 'flat') inflateBagFull(true);
+    else if (bagState === 'full') speak('袋子已经鼓满空气啦，快用黄色橡皮筋把袋口扎紧吧！');
+    else if (bagState === 'tied') speak('袋口已经扎紧啦，快拖或点木质牙签在袋身上扎个小孔吧！');
+    return;
+  }
+  bagSqueezeT = 1.45;
+  windBlastT = 2.0;
+  pinSpinSpeed = 20;
+  spawnFX(pinG.position.x, 1.45, pinG.position.z, 0x7dd3fc, 10, 1.5);
+  beep([523, 659, 784, 988], 0.22);
+  popLabelAt3D(pinG.position.clone().add(new THREE.Vector3(0, 1.75, 0)), '🌬 气流吹得风车飞快转！', 'good');
+
+  if (!doneFlags.blowPinwheel) {
+    doneFlags.blowPinwheel = true;
+    addDiscovery(
+      'blow_pinwheel',
+      '🌬 <b>气流吹转风车</b>：挤压袋子喷出流动的空气，吹动风车和飘带',
+      '太神奇啦！挤压袋子喷出一股流动的空气，把小纸风车吹得飞快旋转、飘带飞扬！证明空气占据空间而且会流动！接下来我们用玻璃杯继续观察空气吧！'
+    );
+    later(function () { enterStage2(); }, 1150);
+  } else {
+    if (!demo) speak('呼呼呼！挤压保鲜袋喷出流动的空气，小纸风车又飞快转起来啦！');
+  }
+}
+
+function placeBear(slot) {
+  markInteracted();
+  bearSlot = slot;
+  if (slot === 'air') {
+    bearGoal.copy(bearAirBack);
+    doneFlags.bearSee = true;
+    $('#compareCard').classList.add('show');
+    spawnFX(airCupPos.x, 0.85, airCupPos.z, 0x7dd3fc, 10, 1.5);
+    beep([523, 659, 784], 0.2);
+    popLabelAt3D(airCupPos.clone().add(new THREE.Vector3(0, 1.45, 0)), '🐻 透过空气清清楚楚看见小熊！', 'good');
+    addDiscovery(
+      'bear_see',
+      '🐻 <b>隔杯看小熊</b>：透过空气杯清楚看见小熊，空气是透明的',
+      '哇！透过装满空气的玻璃杯，我们清清楚楚看见了后面的小熊！对比白色的牛奶杯，空气无色又透明！'
+    );
+  } else if (slot === 'milk') {
+    bearGoal.copy(bearMilkBack);
+    $('#compareCard').classList.add('show');
+    beep([360, 320], 0.16);
+    popLabelAt3D(milkCupPos.clone().add(new THREE.Vector3(0, 1.45, 0)), '🥛 牛奶是不透明的，挡住小熊啦！', 'warn');
+    if (!demo) speak('牛奶是白色的不透明液体，躲在牛奶杯后面小熊就被挡住啦！把小熊移到空气玻璃杯后面比一比吧！');
+  } else {
+    bearGoal.copy(bearHome);
+    beep([420], 0.1);
+    if (!demo) speak('小熊回到前面啦，随时可以把它放回玻璃杯或牛奶杯后面继续对比！');
+  }
+}
+
+function testProbeOnCup(probeId, targetCup) {
+  markInteracted();
+  var pr = PROBES[probeId];
+  if (!pr) return;
+  pr.animT = 1.15;
+
+  if (targetCup === 'milkCup') {
+    pr.goal.set(milkCupPos.x, 1.45, milkCupPos.z + 0.35);
+    beep([380, 440], 0.16);
+    popLabelAt3D(milkCupPos.clone().add(new THREE.Vector3(0, 1.5, 0)), '🥛 这是牛奶对比杯，去测空气玻璃杯吧！');
+    if (!demo) speak('牛奶是白色不透明、有奶香味的液体，快把探针移到左边的透明空气玻璃杯上测一测吧！');
+    later(function () { if (draggingKind !== 'probe') pr.goal.copy(pr.home); }, 1100);
+    return;
+  }
+
+  pr.goal.set(airCupPos.x, probeId === 'hand' ? 1.15 : 1.42, airCupPos.z + 0.30);
+  pr.tested = true;
+  pr.tagEl.classList.add('done');
+  spawnFX(airCupPos.x, 1.1, airCupPos.z, 0x38bdf8, 10, 1.5);
+  beep([523, 659, 784], 0.2);
+
+  if (probeId === 'eye') {
+    doneFlags.probeEye = true;
+    popLabelAt3D(airCupPos.clone().add(new THREE.Vector3(0, 1.52, 0)), '👁 空气没有颜色、清澈透明！', 'good');
+    addDiscovery(
+      'sense_eye',
+      '👁 <b>眼睛看空气</b>：没有颜色、清澈透明',
+      '用小眼放大镜仔细看玻璃杯里的空气，它没有颜色，清澈又透明！'
+    );
+  } else if (probeId === 'nose') {
+    doneFlags.probeNose = true;
+    popLabelAt3D(airCupPos.clone().add(new THREE.Vector3(0, 1.52, 0)), '👃 空气没有任何气味！', 'good');
+    addDiscovery(
+      'sense_nose',
+      '👃 <b>鼻子闻空气</b>：没有任何气味，是无味的',
+      '用小鼻在玻璃杯口轻轻闻一闻，空气没有任何气味，是无味的！'
+    );
+  } else if (probeId === 'hand') {
+    doneFlags.probeHand = true;
+    popLabelAt3D(airCupPos.clone().add(new THREE.Vector3(0, 1.52, 0)), '✋ 摸不到固定形状，但占空间！', 'good');
+    addDiscovery(
+      'sense_hand',
+      '✋ <b>小手摸空气</b>：摸不到固定形状，但真实占据空间',
+      '把小手伸进玻璃杯里轻轻摸一摸，空气抓不住也摸不到固定形状，但它真实占据着杯子里的空间！'
+    );
+  }
+
+  later(function () { if (draggingKind !== 'probe') pr.goal.copy(pr.home); }, 1150);
+}
+
+/* ===== 强化拖拽（射线直命 + 宽松3D/屏幕距离双判 + 目标脉冲高亮）+ 单击双通道 ===== */
+var ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+var dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.55);
+var dragPt = new THREE.Vector3();
+var draggingKind = null; // 'bag' | 'band' | 'toothpick' | 'bear' | 'probe'
+var draggingProbeId = null;
+var hoverDropTarget = null; // 'bag' | 'airCup' | 'milkCup' | null
+var downX = 0, downY = 0, lastPtrX = 0, lastPtrY = 0, didDrag = false;
+
+function getNDC(e) {
+  var r = cv.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+}
+
+function worldToScreen(wx, wy, wz) {
+  var v = new THREE.Vector3(wx, wy, wz).project(camera);
+  return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight };
+}
+
+function getActivePickMeshes() {
+  return pickMeshes.filter(function (m) {
+    var p = m;
+    while (p) { if (!p.visible) return false; p = p.parent; }
+    return true;
+  });
+}
+
+// 统一精准双判目标检测（射线直命目标碰撞体 OR 宽松 3D XZ 距离 OR 屏幕像素距离）
+function detectDropTarget(kind, clientX, clientY, objGoal) {
+  ray.setFromCamera(ptr, camera);
+
+  if (kind === 'band' || kind === 'toothpick') {
+    var bagHitRes = ray.intersectObjects(dropZoneMeshes.bag, false);
+    if (bagHitRes.length > 0) return 'bag';
+    var d3 = Math.hypot(objGoal.x - bagG.position.x, objGoal.z - bagG.position.z);
+    if (d3 < 1.85) return 'bag';
+    var sc = worldToScreen(bagG.position.x, bagG.position.y + 0.65, bagG.position.z);
+    if (Math.hypot(clientX - sc.x, clientY - sc.y) < 125) return 'bag';
+    return null;
+  }
+
+  if (kind === 'bear' || kind === 'probe') {
+    if (phase !== 2) return null;
+    // 1. 优先射线直命目标杯宽大碰撞体
+    var hAir = ray.intersectObjects(dropZoneMeshes.airCup, false);
+    var hMilk = ray.intersectObjects(dropZoneMeshes.milkCup, false);
+    if (hAir.length > 0 && hMilk.length === 0) return 'airCup';
+    if (hMilk.length > 0 && hAir.length === 0) return 'milkCup';
+    if (hAir.length > 0 && hMilk.length > 0) return hAir[0].distance <= hMilk[0].distance ? 'airCup' : 'milkCup';
+
+    // 2. 其次 3D XZ 距离 + 屏幕投影距离双重兜底（绝不因 dragPlane 视差漏判！）
+    var scAir = worldToScreen(airCupPos.x, 0.72, airCupPos.z);
+    var scMilk = worldToScreen(milkCupPos.x, 0.72, milkCupPos.z);
+    var dAirPx = Math.hypot(clientX - scAir.x, clientY - scAir.y);
+    var dMilkPx = Math.hypot(clientX - scMilk.x, clientY - scMilk.y);
+    var dAir3 = Math.hypot(objGoal.x - airCupPos.x, objGoal.z - airCupPos.z);
+    var dMilk3 = Math.hypot(objGoal.x - milkCupPos.x, objGoal.z - milkCupPos.z);
+
+    var airOk = (dAirPx < 118 || dAir3 < 1.55);
+    var milkOk = (dMilkPx < 118 || dMilk3 < 1.55);
+    if (airOk && milkOk) return (dAirPx <= dMilkPx) ? 'airCup' : 'milkCup';
+    if (airOk) return 'airCup';
+    if (milkOk) return 'milkCup';
+  }
+  return null;
+}
+
+cv.addEventListener('pointerdown', function (e) {
+  markInteracted();
+  getNDC(e);
+  ray.setFromCamera(ptr, camera);
+  downX = lastPtrX = e.clientX;
+  downY = lastPtrY = e.clientY;
+  didDrag = false;
+  hoverDropTarget = null;
+
+  var hits = ray.intersectObjects(getActivePickMeshes(), false);
+  if (!hits.length) return;
+  // 优先级拾取（U8）：可拖拽道具（尤其是躲在杯后的小熊、探针、橡皮筋、牙签）永远优先于静止杯子！
+  var prioHit = hits.find(function (h) {
+    var pk = h.object.userData.pickKind;
+    return pk === 'probe' || pk === 'band' || pk === 'toothpick' || pk === 'bear';
+  }) || hits[0];
+  var u = prioHit.object.userData;
+  var kind = u.pickKind;
+
+  if (kind === 'bag' || kind === 'band' || kind === 'toothpick' || kind === 'bear' || kind === 'probe') {
+    draggingKind = kind;
+    draggingProbeId = u.probeId || null;
+    cv.classList.add('grabbing');
+    beep([460], 0.07);
+    return;
+  }
+
+  if (kind === 'pinwheel') {
+    if (bagState === 'poked') {
+      squeezeBagBlow();
+    } else if (bagState === 'flat') {
+      popLabelAt3D(pinG.position.clone().add(new THREE.Vector3(0, 1.65, 0)), '🌬 没有气流，小风车转不动哦！', 'warn');
+      speak('现在没有风吹过来，小纸风车静静不动！先用保鲜袋兜满空气再吹吹它吧！');
+    } else {
+      popLabelAt3D(pinG.position.clone().add(new THREE.Vector3(0, 1.65, 0)), '💡 扎口再扎个小孔就能吹动风车啦！');
+      speak('把保鲜袋扎紧口再扎个小孔，一挤就能把小纸风车吹得飞快旋转哦！');
+    }
+    return;
+  }
+  if (kind === 'airCup') {
+    if (!doneFlags.bearSee) {
+      placeBear('air');
+    } else {
+      popLabelAt3D(airCupPos.clone().add(new THREE.Vector3(0, 1.42, 0)), '✨ 透明玻璃杯里装满了空气！');
+      speak('这个透明玻璃杯里看起来空空的，其实装满了看不见的空气！用下方探针测一测吧！');
+    }
+    return;
+  }
+  if (kind === 'milkCup') {
+    placeBear('milk');
+  }
+});
+
+window.addEventListener('pointermove', function (e) {
+  if (!draggingKind) return;
+  var stepPx = Math.hypot(e.clientX - lastPtrX, e.clientY - lastPtrY);
+  lastPtrX = e.clientX;
+  lastPtrY = e.clientY;
+
+  if (!didDrag && Math.hypot(e.clientX - downX, e.clientY - downY) >= 14) didDrag = true;
+  if (!didDrag) return;
+  getNDC(e);
+  ray.setFromCamera(ptr, camera);
+  if (!ray.ray.intersectPlane(dragPlane, dragPt)) return;
+
+  var gx = Math.max(-4.2, Math.min(3.4, dragPt.x));
+  var gz = Math.max(-1.8, Math.min(2.4, dragPt.z));
+
+  if (draggingKind === 'bag') {
+    bagGoal.set(gx, 0.72, gz);
+    if (bagState === 'flat') {
+      // 空中无论左右上下挥舞，累积超过 80px 立刻平滑鼓胀！
+      wavePx += stepPx;
+      bagFill = Math.min(1, wavePx / 80);
+      if (bagFill >= 0.99) inflateBagFull(false);
+    }
+    hoverDropTarget = null;
+  } else if (draggingKind === 'band') {
+    bandGoal.set(gx, 0.82, gz);
+    hoverDropTarget = detectDropTarget('band', e.clientX, e.clientY, bandGoal);
+  } else if (draggingKind === 'toothpick') {
+    pickGoal.set(gx, 0.82, gz);
+    hoverDropTarget = detectDropTarget('toothpick', e.clientX, e.clientY, pickGoal);
+  } else if (draggingKind === 'bear') {
+    bearGoal.set(gx, 0.45, gz);
+    hoverDropTarget = detectDropTarget('bear', e.clientX, e.clientY, bearGoal);
+  } else if (draggingKind === 'probe' && draggingProbeId) {
+    var pr = PROBES[draggingProbeId];
+    pr.goal.set(gx, 1.05, gz);
+    hoverDropTarget = detectDropTarget('probe', e.clientX, e.clientY, pr.goal);
+  }
+});
+
+window.addEventListener('pointerup', function (e) {
+  cv.classList.remove('grabbing');
+  if (!draggingKind) return;
+  var kind = draggingKind;
+  var pid = draggingProbeId;
+  var lastHover = hoverDropTarget;
+  draggingKind = null;
+  draggingProbeId = null;
+  hoverDropTarget = null;
+
+  if (!didDrag) {
+    // 单击双通道（U8）：轻点任何道具都能顺畅触发
+    if (kind === 'bag') {
+      if (bagState === 'flat') {
+        inflateBagFull(true);
+      } else if (bagState === 'poked') {
+        squeezeBagBlow();
+      } else if (bagState === 'full') {
+        popLabelAt3D(bagG.position.clone().add(new THREE.Vector3(0, 1.32, 0)), '💡 再拖或点黄色橡皮筋扎紧袋口！');
+        speak('保鲜袋已经兜满空气啦！现在拖起或点左边的黄色橡皮筋把袋口扎紧吧！');
+      } else if (bagState === 'tied') {
+        popLabelAt3D(bagG.position.clone().add(new THREE.Vector3(0, 1.32, 0)), '💡 拖或点木质牙签在袋身扎个小孔！');
+        speak('袋口已经扎紧鼓鼓的啦！现在拖起或点左边的木质牙签在袋身上扎一个小孔吧！');
+      }
+    } else if (kind === 'band') {
+      bandGoal.set(bagG.position.x, 1.05, bagG.position.z);
+      applyBandToBag();
+      later(function () { bandGoal.copy(bandHome); }, 600);
+    } else if (kind === 'toothpick') {
+      pickGoal.set(bagG.position.x - 0.55, 0.68, bagG.position.z);
+      applyToothpickToBag();
+      later(function () { pickGoal.copy(pickHome); }, 700);
+    } else if (kind === 'bear') {
+      if (bearSlot === 'home') placeBear('air');
+      else if (bearSlot === 'air') placeBear('milk');
+      else placeBear('home');
+    } else if (kind === 'probe' && pid) {
+      testProbeOnCup(pid, 'airCup');
+    }
+    return;
+  }
+
+  // 拖拽松手双判（射线直命 + 宽松距离 + 屏幕投影）
+  getNDC(e);
+  if (kind === 'bag') {
+    bagGoal.copy(phase === 1 ? bagHomeS1 : bagHomeS2);
+  } else if (kind === 'band') {
+    var tgtB = detectDropTarget('band', e.clientX, e.clientY, bandGoal) || lastHover;
+    if (tgtB === 'bag') applyBandToBag();
+    bandGoal.copy(bandHome);
+  } else if (kind === 'toothpick') {
+    var tgtP = detectDropTarget('toothpick', e.clientX, e.clientY, pickGoal) || lastHover;
+    if (tgtP === 'bag') applyToothpickToBag();
+    pickGoal.copy(pickHome);
+  } else if (kind === 'bear') {
+    var tgtBear = detectDropTarget('bear', e.clientX, e.clientY, bearGoal) || lastHover;
+    if (tgtBear === 'airCup') placeBear('air');
+    else if (tgtBear === 'milkCup') placeBear('milk');
+    else placeBear('home');
+  } else if (kind === 'probe' && pid) {
+    var pr = PROBES[pid];
+    var tgtPr = detectDropTarget('probe', e.clientX, e.clientY, pr.goal) || lastHover;
+    if (tgtPr === 'airCup') testProbeOnCup(pid, 'airCup');
+    else if (tgtPr === 'milkCup') testProbeOnCup(pid, 'milkCup');
+    else pr.goal.copy(pr.home);
+  }
+});
+
+/* ===== 顶部 HUD 与弹窗控制 ===== */
+$('#backBtn').addEventListener('click', function () { try { sessionStorage.setItem('xk_last_vol', 'k2a'); } catch (e) {} });
+$('#voiceBtn').addEventListener('click', function () {
+  markInteracted();
+  voiceOn = !voiceOn;
+  this.classList.toggle('on', voiceOn);
+  if (voiceOn) updateGuide(true); else stopVoice();
+});
+$('#guideBar').addEventListener('click', function () { markInteracted(); updateGuide(true); });
+$('#resetBtn').addEventListener('click', resetAll);
+$('#pyBtn').addEventListener('click', function () { document.body.classList.toggle('no-py'); });
+$('#ntTog').addEventListener('click', function () {
+  var c = $('#notes').classList.toggle('collapsed');
+  this.textContent = c ? '展开' : '收起';
+});
+$('#cmpClose').addEventListener('click', function () { $('#compareCard').classList.remove('show'); });
+$('#winKeepBtn').addEventListener('click', function () { $('#winToast').classList.remove('show'); });
+$('#winAgainBtn').addEventListener('click', resetAll);
+$('#qOpts').addEventListener('click', function (e) {
+  var b = e.target.closest('.qopt'); if (!b) return;
+  if (b.dataset.ok === '1') {
+    b.classList.add('ok');
+    $('#qFb').textContent = '🌸 答对啦！获得本课小红花！';
+    saveProgress(LESSON_ID, true);
+    beep([523, 659, 784, 1046], 0.24);
+    speak('答对啦！保鲜袋兜气变鼓并能吹转小风车，证明看不见的空气占据空间而且会流动，获得本课小红花！', true);
+  } else {
+    b.classList.add('bad');
+    beep([260, 220], 0.16);
+    var h = b.dataset.hint || '再想想刚才的实验现象哦！';
+    $('#qFb').textContent = '💡 ' + h;
+    speak(h, true);
+  }
+});
+
+/* ===== 演示模式（不触发通关） ===== */
+function startDemo() {
+  markInteracted();
+  resetAll();
+  demo = true;
+  $('#demoBtn').classList.add('on');
+  var steps = [
+    function () { inflateBagFull(true); speak('第1步，拖起保鲜袋在空中挥舞，看不见的空气立刻把袋子撑得鼓鼓的！', true); },
+    function () { applyBandToBag(); speak('第2步，用黄色橡皮筋扎紧袋口，证明空气真的占据空间！', true); },
+    function () { applyToothpickToBag(); speak('第3步，用木质牙签在鼓鼓的袋身上扎一个小孔！', true); },
+    function () { squeezeBagBlow(); speak('第4步，按压袋子喷出流动的气流，小纸风车飞快转起来啦！', true); },
+    function () { enterStage2(); placeBear('air'); speak('阶段2，把小熊放到玻璃杯后面，透过空气清清楚楚看见小熊，再挨个用三个探针测空气特征吧！', true); },
+    function () { testProbeOnCup('eye', 'airCup'); },
+    function () { demo = false; $('#demoBtn').classList.remove('on'); resetAll(); }
+  ];
+  steps.forEach(function (fn, idx) { later(fn, idx * 2700); });
+}
+$('#demoBtn').addEventListener('click', startDemo);
+
+function resetAll() {
+  resetGen++;
+  activeTimers.forEach(function (id) { clearTimeout(id); });
+  activeTimers = [];
+  stopVoice();
+  demo = false;
+  $('#demoBtn').classList.remove('on');
+  phase = 1;
+  bagState = 'flat';
+  bagFill = 0; bagFillDisp = 0; wavePx = 0; bagScoopT = 0; bagSqueezeT = 0;
+  pinSpinSpeed = 0; windBlastT = 0; stage2T0 = 0;
+  bagGoal.copy(bagHomeS1); bagG.position.copy(bagHomeS1);
+  bandGoal.copy(bandHome); bandG.position.copy(bandHome);
+  pickGoal.copy(pickHome); toothpickG.position.copy(pickHome);
+  pinGoal.copy(pinHomeS1); pinG.position.copy(pinHomeS1);
+  bagOpenLip.visible = true; bagTiedBand.visible = false; bagHole.visible = false;
+  bandMesh.visible = true; bandMesh2.visible = true; bandTag.style.display = 'block';
+  bagTag.textContent = '保鲜袋（瘪瘪的）';
+  updateBagMeshDeform(0, false, 0, 0);
+  stage2Root.visible = false; stage2Root.scale.setScalar(0.01);
+  airCupTag.style.display = 'none'; milkCupTag.style.display = 'none'; bearTag.style.display = 'none';
+  bearSlot = 'home'; bearGoal.copy(bearHome); bearG.position.copy(bearHome);
+  Object.keys(PROBES).forEach(function (k) {
+    var pr = PROBES[k];
+    pr.goal.copy(pr.home); pr.g.position.copy(pr.home);
+    pr.animT = 0; pr.tested = false;
+    pr.tagEl.classList.remove('done'); pr.tagEl.style.display = 'none';
+  });
+  doneFlags = { catchTie: false, blowPinwheel: false, bearSee: false, probeEye: false, probeNose: false, probeHand: false };
+  testedFailPoke = false;
+  found = {}; stamps = { s1: false, s2: false, s3: false }; celebrated = false;
+  draggingKind = null; draggingProbeId = null; hoverDropTarget = null;
+  cv.classList.remove('grabbing');
+  fxParts.forEach(function (f) { live.remove(f.m); }); fxParts = [];
+  $('#ntList').innerHTML = ''; $('#ntCnt').textContent = '0';
+  $('#phaseLabel').textContent = '🌬 空气取证：';
+  $('#progNum').textContent = '0 / 6';
+  $$('.st').forEach(function (s) { s.classList.remove('lit'); });
+  $('#compareCard').classList.remove('show');
+  $('#winToast').classList.remove('show');
+  $('#qFb').textContent = '';
+  $$('.qopt').forEach(function (b) { b.classList.remove('ok', 'bad'); });
+  updateGuide(false);
+}
+
+/* ===== 帧循环 ===== */
+var introT0 = performance.now(), lastT = performance.now();
+var projV = new THREE.Vector3();
+
+function fit() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', fit);
+fit();
+
+function placeTag(el, wx, wy, wz) {
+  if (el.style.display === 'none') return;
+  projV.set(wx, wy, wz).project(camera);
+  el.style.left = ((projV.x * 0.5 + 0.5) * window.innerWidth) + 'px';
+  el.style.top = ((-projV.y * 0.5 + 0.5) * window.innerHeight) + 'px';
+}
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  var dt = Math.max(0.001, Math.min(0.05, (now - lastT) / 1000));
+  lastT = now;
+  var t = now * 0.001;
+
+  var pop = Math.min(1, (performance.now() - introT0) / 680);
+  live.scale.setScalar(0.01 + 0.99 * (1 - Math.pow(1 - pop, 3)));
+
+  // 保鲜袋位置、平铺->竖立兜气平滑变形、挤压回弹与内部淡蓝空气光尘
+  var scoopX = 0, scoopY = 0;
+  if (bagScoopT > 0) {
+    bagScoopT = Math.max(0, bagScoopT - dt);
+    scoopX = Math.sin(bagScoopT * Math.PI * 4) * 0.65;
+    scoopY = Math.sin(bagScoopT * Math.PI) * 0.65;
+  }
+  bagG.position.x += ((bagGoal.x + scoopX) - bagG.position.x) * Math.min(1, dt * 11);
+  bagG.position.y += ((bagGoal.y + scoopY) - bagG.position.y) * Math.min(1, dt * 11);
+  bagG.position.z += (bagGoal.z - bagG.position.z) * Math.min(1, dt * 11);
+
+  var targetScale = (phase === 2) ? 0.72 : 1.0;
+  var hoverBoostBag = (hoverDropTarget === 'bag') ? 1.06 : 1.0;
+  bagG.scale.lerp(new THREE.Vector3(targetScale * hoverBoostBag, targetScale * hoverBoostBag, targetScale * hoverBoostBag), Math.min(1, dt * 8));
+  pinG.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), Math.min(1, dt * 7));
+  pinG.position.lerp(pinGoal, Math.min(1, dt * 7));
+
+  var targetFill = (bagState === 'flat') ? bagFill : 1;
+  bagFillDisp += (targetFill - bagFillDisp) * Math.min(1, dt * 7.5);
+  var sq = 0;
+  if (bagSqueezeT > 0) {
+    bagSqueezeT = Math.max(0, bagSqueezeT - dt);
+    sq = Math.sin(bagSqueezeT * Math.PI * 2.5) * 0.32;
+  }
+  var isTied = (bagState === 'tied' || bagState === 'poked');
+  var sqClamped = Math.max(0, sq);
+  var dKey = bagFillDisp.toFixed(3) + '|' + (isTied ? 1 : 0) + '|' + sqClamped.toFixed(3) + '|' + (bagFillDisp > 0.5 ? Math.floor(t * 10) : 0);
+  if (dKey !== lastDeformKey) {
+    lastDeformKey = dKey;
+    updateBagMeshDeform(bagFillDisp, isTied, sqClamped, t);
+  }
+
+  // 瘪的时候平铺在蓝灰实验垫上（rotation.x ≈ -PI/2），兜气时自然竖立起来
+  var targetBagTiltX = (1 - bagFillDisp) * (-Math.PI * 0.48);
+  bagVisual.rotation.x += (targetBagTiltX - bagVisual.rotation.x) * Math.min(1, dt * 7);
+  bagVisual.position.z = (1 - bagFillDisp) * 0.62;
+  bagVisual.position.y = 0.04;
+  bagOpenLip.scale.set(1.04 + 0.04 * bagFillDisp, 0.14 + 0.42 * bagFillDisp, 1);
+
+  // 保鲜袋目标高亮脉冲（拖橡皮筋/牙签靠近时亮绿）
+  if (hoverDropTarget === 'bag') {
+    bagDropRing.material.opacity = 0.65 + 0.30 * Math.sin(t * 14);
+  } else if ((draggingKind === 'band' || draggingKind === 'toothpick') && didDrag) {
+    bagDropRing.material.opacity = 0.28 + 0.18 * Math.sin(t * 6);
+  } else {
+    bagDropRing.material.opacity = 0;
+  }
+
+  // 袋内清晰淡蓝光尘粒子（仅在鼓起时浮现，瘪袋彻底隐藏）
+  bagAirParts.forEach(function (ap, idx) {
+    if (bagFillDisp > 0.25) {
+      ap.visible = true;
+      ap.material.opacity = Math.min(0.88, (bagFillDisp - 0.25) * 1.15);
+      var a = ap.userData.ang + t * (1.8 + (idx % 3) * 0.45);
+      ap.position.set(
+        Math.cos(a) * ap.userData.radX * bagFillDisp,
+        ap.userData.yBase * (0.65 + 0.35 * bagFillDisp) + Math.sin(t * 2.8 + idx) * 0.04,
+        Math.sin(a) * ap.userData.radZ * bagFillDisp
+      );
+    } else {
+      ap.visible = false;
+      ap.material.opacity = 0;
+    }
+  });
+
+  // 橡皮筋与牙签位置插值与阶段隐藏
+  bandG.position.lerp(bandGoal, Math.min(1, dt * 13));
+  toothpickG.position.lerp(pickGoal, Math.min(1, dt * 13));
+  if (phase === 2) {
+    bandTray.visible = false; pickTray.visible = false; toothpickG.visible = false;
+    pickTag.style.display = 'none';
+  } else {
+    bandTray.visible = true; pickTray.visible = true; toothpickG.visible = true;
+    pickTag.style.display = 'block';
+  }
+
+  // 风车旋转 + 飘带飘扬 + 螺旋气流丝带
+  pinHub.rotation.z -= pinSpinSpeed * dt;
+  pinSpinSpeed = Math.max(0, pinSpinSpeed - dt * 5.2);
+  var flutter = Math.min(1, pinSpinSpeed / 8);
+  ribbons.forEach(function (rb) {
+    rb.segs.forEach(function (sm, s) {
+      sm.position.y = -0.05 * s * (1 - flutter) + Math.sin(t * (10 + flutter * 14) - s * 0.9 + rb.phase) * (0.015 + 0.09 * flutter);
+      sm.rotation.z = Math.cos(t * (10 + flutter * 14) - s * 0.8 + rb.phase) * (0.04 + 0.28 * flutter);
+    });
+  });
+
+  if (windBlastT > 0) {
+    windBlastT = Math.max(0, windBlastT - dt);
+    var bx0 = bagG.position.x + 0.56 * targetScale, by0 = bagG.position.y + 0.65 * targetScale, bz0 = bagG.position.z;
+    var px1 = pinG.position.x - 0.10, py1 = pinG.position.y + 1.42 * targetScale, pz1 = pinG.position.z + 0.08;
+    windStreams.forEach(function (ws, idx) {
+      ws.t = (ws.t + dt * 1.9) % 1;
+      var u = ws.t;
+      var ang = u * Math.PI * 5 + t * 10 + idx;
+      var rad = ws.r * (0.5 + u * 1.4);
+      ws.m.position.set(
+        bx0 + (px1 - bx0) * u,
+        by0 + (py1 - by0) * u + Math.sin(ang) * rad,
+        bz0 + (pz1 - bz0) * u + Math.cos(ang) * rad
+      );
+      ws.m.material.opacity = Math.min(0.92, windBlastT * 0.9) * Math.sin(u * Math.PI);
+    });
+  } else {
+    windStreams.forEach(function (ws) { ws.m.material.opacity = 0; });
+  }
+
+  // 阶段 2 展开动画（时间驱动 320ms 必达 1.0，任何帧率下零偏差）+ 小熊 + 探针 + 拖拽目标杯高亮脉冲
+  if (phase === 2) {
+    var s2p = Math.min(1, (performance.now() - stage2T0) / 320);
+    stage2Root.scale.setScalar(0.35 + 0.65 * (1 - Math.pow(1 - s2p, 3)));
+    bearG.position.lerp(bearGoal, Math.min(1, dt * 12));
+    bearG.rotation.y = Math.sin(t * 1.8) * 0.12;
+
+    if (hoverDropTarget === 'airCup') {
+      airGlow.material.color.set('#4ade80');
+      airGlow.material.opacity = 0.72 + 0.24 * Math.sin(t * 14);
+      airCupG.scale.lerp(new THREE.Vector3(1.05, 1.05, 1.05), Math.min(1, dt * 10));
+    } else {
+      airGlow.material.color.set('#38bdf8');
+      airGlow.material.opacity = (draggingKind === 'bear' || draggingKind === 'probe') ? (0.38 + 0.22 * Math.sin(t * 6)) : (0.20 + 0.14 * Math.sin(t * 4));
+      airCupG.scale.lerp(new THREE.Vector3(1, 1, 1), Math.min(1, dt * 10));
+    }
+
+    if (hoverDropTarget === 'milkCup') {
+      milkGlow.material.opacity = 0.68 + 0.25 * Math.sin(t * 14);
+      milkCupG.scale.lerp(new THREE.Vector3(1.05, 1.05, 1.05), Math.min(1, dt * 10));
+    } else {
+      milkGlow.material.opacity = (draggingKind === 'bear' && didDrag) ? (0.24 + 0.14 * Math.sin(t * 6)) : 0;
+      milkCupG.scale.lerp(new THREE.Vector3(1, 1, 1), Math.min(1, dt * 10));
+    }
+
+    Object.keys(PROBES).forEach(function (k) {
+      var pr = PROBES[k];
+      var bob = (draggingProbeId !== k && pr.animT <= 0) ? Math.sin(t * 3 + pr.home.x) * 0.035 : 0;
+      pr.g.position.x += (pr.goal.x - pr.g.position.x) * Math.min(1, dt * 13);
+      pr.g.position.y += ((pr.goal.y + bob) - pr.g.position.y) * Math.min(1, dt * 13);
+      pr.g.position.z += (pr.goal.z - pr.g.position.z) * Math.min(1, dt * 13);
+      if (pr.animT > 0) {
+        pr.animT = Math.max(0, pr.animT - dt);
+        pr.g.rotation.z = Math.sin(pr.animT * 16) * 0.24;
+      } else {
+        pr.g.rotation.z *= 0.85;
+      }
+      pr.ring.material.opacity = pr.tested ? 0.14 : (0.42 + 0.32 * Math.sin(t * 5));
+      placeTag(pr.tagEl, pr.g.position.x, pr.g.position.y + 0.96, pr.g.position.z);
+    });
+    placeTag(airCupTag, airCupPos.x, 1.46, airCupPos.z);
+    placeTag(milkCupTag, milkCupPos.x, 1.46, milkCupPos.z);
+    placeTag(bearTag, bearG.position.x, bearG.position.y + 1.15, bearG.position.z);
+  }
+
+  // 阶段 1 浮动标签
+  placeTag(bagTag, bagG.position.x, bagG.position.y + (bagState === 'flat' ? 0.52 : 1.56) * targetScale, bagG.position.z);
+  placeTag(bandTag, bandG.position.x, bandG.position.y + 0.50, bandG.position.z);
+  placeTag(pickTag, toothpickG.position.x, toothpickG.position.y + 0.50, toothpickG.position.z);
+  placeTag(pinTag, pinG.position.x, pinG.position.y + 1.98 * targetScale, pinG.position.z);
+
+  // 单焦点 #targetCue（平时引导下一步；拖拽靠近有效目标时变身绿色“松手生效”提示！）
+  var cueEl = $('#targetCue');
+  var cueWorld = null, cueTxt = '', cueProbeId = null, isDropCue = false;
+  if (hoverDropTarget) {
+    isDropCue = true;
+    if (hoverDropTarget === 'bag') {
+      cueWorld = new THREE.Vector3(bagG.position.x, bagG.position.y + 1.62, bagG.position.z);
+      cueTxt = draggingKind === 'band' ? '✨ 松手扎紧保鲜袋口！' : '✨ 松手在袋身扎小孔！';
+    } else if (hoverDropTarget === 'airCup') {
+      cueWorld = new THREE.Vector3(airCupPos.x, 1.65, airCupPos.z);
+      cueTxt = draggingKind === 'bear' ? '✨ 松手放到空气杯后面！' : '✨ 松手测空气特征！';
+    } else if (hoverDropTarget === 'milkCup') {
+      cueWorld = new THREE.Vector3(milkCupPos.x, 1.65, milkCupPos.z);
+      cueTxt = draggingKind === 'bear' ? '✨ 松手放到牛奶杯后对比！' : '✨ 松手对比牛奶杯！';
+    }
+  } else if (!demo && !celebrated && !draggingKind) {
+    if (phase === 1) {
+      if (bagState === 'flat') {
+        cueWorld = new THREE.Vector3(bagG.position.x, bagG.position.y + 0.78, bagG.position.z);
+        cueTxt = '👆 拖起或点保鲜袋在空中兜空气';
+      } else if (bagState === 'full') {
+        cueWorld = new THREE.Vector3(bandG.position.x, bandG.position.y + 0.68, bandG.position.z);
+        cueTxt = '👆 拖起或点橡皮筋到袋口扎紧';
+      } else if (bagState === 'tied') {
+        cueWorld = new THREE.Vector3(toothpickG.position.x, toothpickG.position.y + 0.68, toothpickG.position.z);
+        cueTxt = '👆 拖起或点牙签到袋身扎孔';
+      } else {
+        cueWorld = new THREE.Vector3(bagG.position.x, bagG.position.y + 1.78, bagG.position.z);
+        cueTxt = '👆 按压或点鼓袋子吹风车！';
+      }
+    } else if (countDone() < 6) {
+      if (!doneFlags.bearSee) {
+        cueWorld = new THREE.Vector3(bearG.position.x, bearG.position.y + 1.32, bearG.position.z);
+        cueTxt = '👆 拖或点小熊到空气杯后';
+      } else if (!doneFlags.probeEye) {
+        cueProbeId = 'eye';
+        cueWorld = new THREE.Vector3(PROBES.eye.g.position.x, PROBES.eye.g.position.y + 1.05, PROBES.eye.g.position.z);
+        cueTxt = '👆 拖或点小眼看空气';
+      } else if (!doneFlags.probeNose) {
+        cueProbeId = 'nose';
+        cueWorld = new THREE.Vector3(PROBES.nose.g.position.x, PROBES.nose.g.position.y + 1.05, PROBES.nose.g.position.z);
+        cueTxt = '👆 拖或点小鼻闻空气';
+      } else if (!doneFlags.probeHand) {
+        cueProbeId = 'hand';
+        cueWorld = new THREE.Vector3(PROBES.hand.g.position.x, PROBES.hand.g.position.y + 1.05, PROBES.hand.g.position.z);
+        cueTxt = '👆 拖或点小手摸空气';
+      }
+    }
+  }
+  Object.keys(PROBES).forEach(function (k) { PROBES[k].tagEl.style.opacity = (cueProbeId === k) ? '0' : '1'; });
+  cueEl.classList.toggle('drop', isDropCue);
+  if (cueWorld && cueTxt) {
+    projV.copy(cueWorld).project(camera);
+    var cx = (projV.x * 0.5 + 0.5) * window.innerWidth;
+    var cy = (-projV.y * 0.5 + 0.5) * window.innerHeight;
+    if (cy < 290) cx = Math.min(window.innerWidth - 270, cx);
+    cueEl.textContent = cueTxt;
+    cueEl.style.left = Math.max(120, Math.min(window.innerWidth - 120, cx)) + 'px';
+    cueEl.style.top = Math.max(92, Math.min(window.innerHeight - 64, cy)) + 'px';
+    cueEl.classList.add('show');
+  } else {
+    cueEl.classList.remove('show');
+  }
+
+  // 临时粒子消退（D4）
+  for (var i = fxParts.length - 1; i >= 0; i--) {
+    var fp = fxParts[i];
+    fp.life -= dt;
+    fp.m.position.x += fp.vx * dt;
+    fp.m.position.y += fp.vy * dt;
+    fp.m.position.z += fp.vz * dt;
+    fp.m.rotation.y += 4.5 * dt;
+    fp.m.material.opacity = Math.max(0, fp.life / fp.maxLife);
+    if (fp.life <= 0) { live.remove(fp.m); fxParts.splice(i, 1); }
+  }
+
+  // 彩带
+  if (cfOn) {
+    cfCtx.clearRect(0, 0, cfCanvas.width, cfCanvas.height);
+    var alive = 0;
+    cfParts.forEach(function (p) {
+      p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 240 * dt; p.a += p.va * dt;
+      if (p.y < cfCanvas.height + 24) {
+        alive++;
+        cfCtx.save(); cfCtx.translate(p.x, p.y); cfCtx.rotate(p.a);
+        cfCtx.fillStyle = p.c; cfCtx.fillRect(-p.r, -p.r * 0.5, p.r * 2, p.r);
+        cfCtx.restore();
+      }
+    });
+    if (!alive) { cfOn = false; cfCtx.clearRect(0, 0, cfCanvas.width, cfCanvas.height); }
+  }
+
+  renderer.render(scene, camera);
+}
+
+window.__lesson = {
+  pyErrors: pyErrors,
+  info: function () {
+    return {
+      triangles: renderer.info.render.triangles,
+      celebrated: celebrated,
+      phase: phase,
+      bagState: bagState,
+      doneCount: countDone(),
+      testedFailPoke: testedFailPoke
+    };
+  },
+  getState: function () {
+    return {
+      phase: phase,
+      bagState: bagState,
+      bagFill: bagFill,
+      pinSpinSpeed: pinSpinSpeed,
+      bearSlot: bearSlot,
+      doneFlags: doneFlags,
+      stamps: stamps,
+      celebrated: celebrated,
+      testedFailPoke: testedFailPoke
+    };
+  },
+  project3D: function (x, y, z) {
+    var v = new THREE.Vector3(x, y, z).project(camera);
+    return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight };
+  },
+  getTargets: function () {
+    var self = this;
+    function wPt(obj, dy) {
+      var v = new THREE.Vector3();
+      obj.getWorldPosition(v);
+      v.y += (dy || 0);
+      return self.project3D(v.x, v.y, v.z);
+    }
+    return {
+      bag: wPt(bagG, bagState === 'flat' ? 0.14 : 0.68),
+      band: wPt(bandG, 0.12),
+      toothpick: wPt(toothpickG, 0.14),
+      pinwheel: wPt(pinG, 1.1),
+      airCup: wPt(airCupG, 0.72),
+      milkCup: wPt(milkCupG, 0.72),
+      bear: wPt(bearG, 0.48),
+      eye: wPt(PROBES.eye.g, 0.45),
+      nose: wPt(PROBES.nose.g, 0.45),
+      hand: wPt(PROBES.hand.g, 0.45)
+    };
+  },
+  startDemo: startDemo,
+  resetAll: resetAll
+};
+
+updateGuide(false);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

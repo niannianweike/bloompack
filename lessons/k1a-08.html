@@ -219,8 +219,8 @@ body.cues-off #notes{top:64px;max-height:calc(100% - 170px)}
 <svg id="hand" viewBox="0 0 64 64"><path d="M26 6c3 0 5 2 5 5v17l3-1c2-6 9-5 9 0 2-3 8-2 8 3 3-1 7 1 7 5v12c0 9-7 15-16 15h-6c-6 0-10-3-13-8L13 41c-2-3 0-7 4-7 2 0 3 1 4 2V11c0-3 2-5 5-5z" fill="#fff" stroke="#2a3040" stroke-width="3" stroke-linejoin="round"/></svg>
 
 <script src="../vendor/three.min.js"></script>
-<script src="../audio/manifest.js"></script>
-<script src="../vendor/voice.js"></script>
+<script src="../audio/manifest.js?v=doubao-2"></script>
+<script src="../vendor/voice.js?v=doubao-2"></script>
 <script>
 (function () {
 'use strict';
@@ -585,9 +585,7 @@ var voiceOn = true, greeted = false, guideHandT = 0;
 var CONCL_SPEECH = '太棒啦！全部天气都探索完啦！科学小结论：常见的天气有晴、阴、雨、雪、风！晴天太阳亮影子清，阴天云多，雨天起水花，雪天盖白雪，大风会把树吹弯、让风车转得飞快！快来答对下面的小问题领小红花吧！';
 function speak(text, force) {
   if (!text || (!voiceOn && !force)) return;
-  if (window.__xkVoice) { window.__xkVoice.speak(text); return; }
-  if (!('speechSynthesis' in window)) return;
-  try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.08; window.speechSynthesis.speak(u); } catch (e) {}
+  if (window.__xkVoice) { window.__xkVoice.speak(text, '../audio/', true); return; }
 }
 function greetOnce(quietIfSpoken) {
   if (greeted) return;
